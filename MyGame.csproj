@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net6.0</TargetFramework>
+		<TargetName>MyGame</TargetName>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+		<LangVersion>latest</LangVersion>
+		<StartupObject>MyGame.Program</StartupObject>
+		<AssemblyName>MyGame</AssemblyName>
+		<RootNamespace>MyGame</RootNamespace>
+		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ApplicationIcon />
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<Content Include="Content\**\*.*">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+	<PropertyGroup>
+		<DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
+	</ItemGroup>
+	<Import Project=".\CopyMoonlibs.targets" />
+</Project>
