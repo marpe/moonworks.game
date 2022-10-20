@@ -14,15 +14,10 @@ public class SpriteRenderer
         _sprite = sprite;
     }
 
-    public void Draw(CommandBuffer commandBuffer, SpriteBatch spriteBatch, Sampler sampler)
+    public void Draw(CommandBuffer commandBuffer, SpriteBatch spriteBatch, Matrix3x2 transform, Color color, float depth, Sampler sampler)
     {
         spriteBatch.Start(new TextureSamplerBinding(_sprite.Texture, sampler));
-        
-        for(var i = 0; i < 10; i++)
-        {
-            spriteBatch.Add(_sprite, Color.White, 0, Matrix3x2.CreateTranslation(i * 64, 0));
-        }
-
+        spriteBatch.Add(_sprite, color, depth, transform);
         spriteBatch.PushVertexData(commandBuffer);
     }
 }

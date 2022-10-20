@@ -2,27 +2,22 @@
 
 namespace MyGame;
 
-public struct Position2DTextureVertex
-{
-    public Vector2 Position;
-    public Vector2 TexCoord;
-
-    public Position2DTextureVertex(Vector2 position, Vector2 texcoord)
-    {
-        Position = position;
-        TexCoord = texcoord;
-    }
-}
-
-public struct Position3DTextureVertex
+public struct Position3DTextureColorVertex
 {
     public Vector3 Position;
     public Vector2 TexCoord;
+    public Vector4 Color;
 
-    public Position3DTextureVertex(Vector3 position, Vector2 texcoord)
+    public Position3DTextureColorVertex(Vector3 position, Vector2 texcoord, Color color)
     {
         Position = position;
         TexCoord = texcoord;
+        Color = new Vector4(
+            color.R / 255f,
+            color.G / 255f,
+            color.B / 255f,
+            color.A / 255f
+        );
     }
 }
 
@@ -30,10 +25,7 @@ public struct Position3DTextureVertex
 [StructLayout(LayoutKind.Explicit)]
 public struct VertexPositionTexcoord
 {
-    [FieldOffset(0)]
-    public Vector2 position;
-    [FieldOffset(8)]
-    public Vector2 texcoord;
-    [FieldOffset(16)]
-    public Color color;
+    [FieldOffset(0)] public Vector2 position;
+    [FieldOffset(8)] public Vector2 texcoord;
+    [FieldOffset(16)] public Color color;
 }

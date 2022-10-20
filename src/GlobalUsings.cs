@@ -1,7 +1,12 @@
-﻿global using MoonWorks.Graphics;
+﻿global using ldtk;
+global using MoonWorks.Graphics;
+global using MoonWorks.Input;
 global using MoonWorks.Math.Float;
 global using MoonWorks.Math;
 global using MoonWorks;
+global using MyGame.Aseprite;
 global using System.Collections.Generic;
+global using System.Diagnostics;
+global using System.IO;
 global using System.Runtime.CompilerServices;
 global using System;

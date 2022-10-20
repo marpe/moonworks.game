@@ -1,7 +1,3 @@
-using System.IO;
-using ldtk;
-using MyGame.Aseprite;
-
 namespace MyGame;
 
 public class MyGameMain : Game
@@ -13,6 +9,8 @@ public class MyGameMain : Game
     private GraphicsPipeline _spritePipeline;
     private readonly Sampler _sampler;
     private readonly SpriteRenderer _menuRenderer;
+    private float _menuDepth = 0;
+    private int _numberOfTimesPressed;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -20,6 +18,7 @@ public class MyGameMain : Game
         bool debugMode
     ) : base(windowCreateInfo, frameLimiterSettings, 60, debugMode)
     {
+        var sw = Stopwatch.StartNew();
         _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _spritePipeline = CreateGraphicsPipeline();
@@ -35,7 +34,7 @@ public class MyGameMain : Game
         var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
         _menuRenderer = new SpriteRenderer(menu);
 
-        Logger.LogInfo("Game Loaded");
+        Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
     private static Texture LoadPngTexture(GraphicsDevice device, string path)
@@ -45,25 +44,24 @@ public class MyGameMain : Game
         var commandBuffer = device.AcquireCommandBuffer();
         var texture = Texture.LoadPNG(device, commandBuffer, path);
         device.Submit(commandBuffer);
-        Logger.LogInfo($"Loaded png texture: {path}, size: {texture.Width}, {texture.Height}");
         return texture;
     }
 
     private GraphicsPipeline CreateGraphicsPipeline()
     {
-        var spriteVertexShader = new ShaderModule(GraphicsDevice, "Content/Shaders/sprite.vert.spv");
+        var spriteVertexShader = new ShaderModule(GraphicsDevice, "Content/Shaders/sg2_sprite.vert.spv");
         var spriteFragmentShader = new ShaderModule(GraphicsDevice, "Content/Shaders/sprite.frag.spv");
 
         var myVertexBindings = new VertexBinding[]
         {
-            VertexBinding.Create<VertexPositionTexcoord>()
+            VertexBinding.Create<Position3DTextureColorVertex>()
         };
 
         var myVertexAttributes = new VertexAttribute[]
         {
-            VertexAttribute.Create<VertexPositionTexcoord>(nameof(VertexPositionTexcoord.position), 0),
-            VertexAttribute.Create<VertexPositionTexcoord>(nameof(VertexPositionTexcoord.texcoord), 1),
-            VertexAttribute.Create<VertexPositionTexcoord>(nameof(VertexPositionTexcoord.color), 2),
+            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Position), 0),
+            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.TexCoord), 1),
+            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
         };
 
         var myVertexInputState = new VertexInputState
@@ -94,8 +92,14 @@ public class MyGameMain : Game
 
     protected override void Update(TimeSpan dt)
     {
+        if (Inputs.Keyboard.IsPressed(KeyCode.Space))
+        {
+            _menuDepth = _numberOfTimesPressed % 2 == 0 ? 0.1f : -0.1f;
+            _numberOfTimesPressed++;
+            Logger.LogInfo($"Depth: {_menuDepth}");
+        }
     }
-
+    
     protected override void Draw(double alpha)
     {
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
@@ -104,8 +108,8 @@ public class MyGameMain : Game
         if (swapchainTexture == null)
             return;
 
-        _spriteRenderer.Draw(commandBuffer, _spriteBatch, _sampler);
-        // _menuRenderer.Draw(commandBuffer, _spriteBatch, _sampler);
+        _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, _menuDepth, _sampler);
+        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0, _sampler);
 
         commandBuffer.BeginRenderPass(
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
@@ -119,8 +123,8 @@ public class MyGameMain : Game
 
         var projection = Matrix4x4.CreateOrthographicOffCenter(
             0,
-            480,
-            270,
+            MainWindow.Width,
+            MainWindow.Height,
             0,
             0.01f,
             4000f
