@@ -10,6 +10,8 @@ public static class ContentPaths
 
 		public static class Shaders
 		{
+			public const string Sg2_spriteVert = @"Shaders\sg2_sprite.vert";
+			public const string Sg2_spriteVertSpv = @"Shaders\sg2_sprite.vert.spv";
 			public const string SpriteFrag = @"Shaders\sprite.frag";
 			public const string SpriteFragSpv = @"Shaders\sprite.frag.spv";
 			public const string SpriteVert = @"Shaders\sprite.vert";

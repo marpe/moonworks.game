@@ -49,8 +49,8 @@ public class MyGameMain : Game
 
     private GraphicsPipeline CreateGraphicsPipeline()
     {
-        var spriteVertexShader = new ShaderModule(GraphicsDevice, "Content/Shaders/sg2_sprite.vert.spv");
-        var spriteFragmentShader = new ShaderModule(GraphicsDevice, "Content/Shaders/sprite.frag.spv");
+        var spriteVertexShader = new ShaderModule(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
+        var spriteFragmentShader = new ShaderModule(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
 
         var myVertexBindings = new VertexBinding[]
         {

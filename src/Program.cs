@@ -15,7 +15,8 @@ class Program
 			WindowWidth = 1280,
 			WindowHeight = 720,
 			WindowTitle = "ProjectName",
-			ScreenMode = ScreenMode.Windowed
+			ScreenMode = ScreenMode.Windowed,
+			SystemResizable = true
 		};
 		var frameLimiterSettings = new FrameLimiterSettings
 		{
