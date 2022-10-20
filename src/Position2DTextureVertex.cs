@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using System.Runtime.InteropServices;
+
+namespace MyGame;
 
 public struct Position2DTextureVertex
 {
@@ -22,4 +24,16 @@ public struct Position3DTextureVertex
         Position = position;
         TexCoord = texcoord;
     }
+}
+
+// SPIR-V requires vectors to not cross 16-byte boundaries
+[StructLayout(LayoutKind.Explicit)]
+public struct VertexPositionTexcoord
+{
+    [FieldOffset(0)]
+    public Vector2 position;
+    [FieldOffset(8)]
+    public Vector2 texcoord;
+    [FieldOffset(16)]
+    public Color color;
 }

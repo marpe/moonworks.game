@@ -2,23 +2,25 @@
 
 public class SpriteRenderer
 {
-    private readonly TextureSamplerBinding _samplerBinding;
     private Sprite _sprite;
 
-    public SpriteRenderer(GraphicsDevice graphicsDevice, Sprite sprite)
+    public SpriteRenderer(Texture texture)
     {
-        var sampler = new Sampler(graphicsDevice, SamplerCreateInfo.PointClamp);
-        _samplerBinding = new TextureSamplerBinding(sprite.Texture, sampler);
+        _sprite = new Sprite(texture);
+    }
+    
+    public SpriteRenderer(Sprite sprite)
+    {
         _sprite = sprite;
     }
 
-    public void Draw(CommandBuffer commandBuffer, SpriteBatch spriteBatch)
+    public void Draw(CommandBuffer commandBuffer, SpriteBatch spriteBatch, Sampler sampler)
     {
-        spriteBatch.Start(_samplerBinding);
+        spriteBatch.Start(new TextureSamplerBinding(_sprite.Texture, sampler));
         
         for(var i = 0; i < 10; i++)
         {
-            spriteBatch.Add(_sprite, 0, Matrix3x2.Identity);
+            spriteBatch.Add(_sprite, Color.White, 0, Matrix3x2.CreateTranslation(i * 64, 0));
         }
 
         spriteBatch.PushVertexData(commandBuffer);

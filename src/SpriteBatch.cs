@@ -11,7 +11,7 @@ public class SpriteBatch
     private Buffer VertexBuffer { get; }
     private Buffer IndexBuffer { get; }
 
-    private readonly Position3DTextureVertex[] Vertices;
+    private readonly VertexPositionTexcoord[] Vertices;
     private static readonly ushort[] Indices = GenerateIndexArray();
 
     private uint VertexCount { get; set; } = 0;
@@ -21,8 +21,8 @@ public class SpriteBatch
 
     public SpriteBatch(GraphicsDevice graphicsDevice)
     {
-        Vertices = new Position3DTextureVertex[MAX_VERTICES];
-        VertexBuffer = Buffer.Create<Position3DTextureVertex>(graphicsDevice, BufferUsageFlags.Vertex, MAX_VERTICES);
+        Vertices = new VertexPositionTexcoord[MAX_VERTICES];
+        VertexBuffer = Buffer.Create<VertexPositionTexcoord>(graphicsDevice, BufferUsageFlags.Vertex, MAX_VERTICES);
         IndexBuffer = Buffer.Create<ushort>(graphicsDevice, BufferUsageFlags.Index, MAX_INDICES);
 
         var commandBuffer = graphicsDevice.AcquireCommandBuffer();
@@ -46,21 +46,29 @@ public class SpriteBatch
         spriteSubBatchCount += 1;
     }
 
-    public void Add(Sprite sprite, float depth, Matrix3x2 transform)
+    public void Add(Sprite sprite, Color color, float depth, Matrix3x2 transform)
     {
         var offset = new Vector2(sprite.FrameRect.X, sprite.FrameRect.Y);
 
-        Vertices[VertexCount].Position = new Vector3(Vector2.Transform(Vector2.Zero - offset, transform), depth);
-        Vertices[VertexCount].TexCoord = sprite.UV.TopLeft;
+        var p0 = new Vector3(Vector2.Transform(Vector2.Zero - offset, transform), depth);
+        Vertices[VertexCount].position = new Vector2(p0.X, p0.Y);
+        Vertices[VertexCount].texcoord = sprite.UV.TopLeft;
+        Vertices[VertexCount].color = color;
 
-        Vertices[VertexCount + 1].Position = new Vector3(Vector2.Transform(new Vector2(0, sprite.SliceRect.H) - offset, transform), depth);
-        Vertices[VertexCount + 1].TexCoord = sprite.UV.BottomLeft;
+        var p1 = new Vector3(Vector2.Transform(new Vector2(0, sprite.SliceRect.H) - offset, transform), depth);
+        Vertices[VertexCount + 1].position = new Vector2(p1.X, p1.Y);
+        Vertices[VertexCount + 1].texcoord = sprite.UV.BottomLeft;
+        Vertices[VertexCount + 1].color = color;
 
-        Vertices[VertexCount + 2].Position = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, 0) - offset, transform), depth);
-        Vertices[VertexCount + 2].TexCoord = sprite.UV.TopRight;
+        var p2 = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, 0) - offset, transform), depth);
+        Vertices[VertexCount + 2].position = new Vector2(p2.X, p2.Y);
+        Vertices[VertexCount + 2].texcoord = sprite.UV.TopRight;
+        Vertices[VertexCount + 2].color = color;
 
-        Vertices[VertexCount + 3].Position = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, sprite.SliceRect.H) - offset, transform), depth);
-        Vertices[VertexCount + 3].TexCoord = sprite.UV.BottomRight;
+        var p3 = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, sprite.SliceRect.H) - offset, transform), depth);
+        Vertices[VertexCount + 3].position = new Vector2(p3.X, p3.Y);
+        Vertices[VertexCount + 3].texcoord = sprite.UV.BottomRight;
+        Vertices[VertexCount + 3].color = color;
 
         VertexCount += 4;
     }
