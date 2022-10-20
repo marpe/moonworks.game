@@ -13,6 +13,8 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ApplicationIcon />
 		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release</Configurations>
+		<Platforms>x64</Platforms>
 	</PropertyGroup>
 	<ItemGroup>
 		<Content Include="Content\**\*.*">
@@ -23,7 +25,11 @@
 		<DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
 	</PropertyGroup>
 	<ItemGroup>
+		<ProjectReference Include="lib\ldtk\LDtk.csproj" />
 		<ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
 	</ItemGroup>
 	<Import Project=".\CopyMoonlibs.targets" />
 </Project>

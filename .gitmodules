@@ -1,3 +1,6 @@
 [submodule "lib/MoonWorks"]
 	path = lib/MoonWorks
 	url = https://gitea.moonside.games/MoonsideGames/MoonWorks.git
+[submodule "lib/ldtk"]
+	path = lib/ldtk
+	url = git@github.com:marpe/ldtk.git
