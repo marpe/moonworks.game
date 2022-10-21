@@ -66,9 +66,7 @@ public class ImGuiRenderer
         _mouseCursors.Add(ImGuiMouseCursor.Hand, SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_HAND));
         _mouseCursors.Add(ImGuiMouseCursor.NotAllowed, SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO));
 
-        ImGui.GetStyle().Colors[(int)ImGuiCol.DockingEmptyBg] = Num.Vector4.Zero;
-
-        _textureSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointWrap);
+        _textureSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
         _pipeline = SetupPipeline(game.GraphicsDevice);
     }
 
@@ -99,7 +97,7 @@ public class ImGuiRenderer
         var pipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.NonPremultiplied)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0),
@@ -269,12 +267,10 @@ public class ImGuiRenderer
     }
 
 
-    public void End()
+    public void End(CommandBuffer commandBuffer, Texture swapchainTexture)
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         if (!_beginCalled)
         {
@@ -288,10 +284,10 @@ public class ImGuiRenderer
         _beginCalled = false;
         ImGui.Render();
 
-        Render(_game.MainWindow, ImGui.GetDrawData());
+        Render(commandBuffer, swapchainTexture, ImGui.GetDrawData());
 
         // Update and Render additional Platform Windows
-        /*var io = ImGui.GetIO(); // TODO (marpe): Fix
+        var io = ImGui.GetIO();
         if ((io.ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
         {
             ImGui.UpdatePlatformWindows();
@@ -300,35 +296,23 @@ public class ImGuiRenderer
             for (var i = 1; i < platformIO.Viewports.Size; i++)
             {
                 var vp = platformIO.Viewports[i];
-                var window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target!;
-                var windowCommandBuffer = Render(window, vp.DrawData);
-                commandBuffers.Add(windowCommandBuffer);
+                // var window = (ImGuiWindow)GCHandle.FromIntPtr(vp.PlatformUserData).Target!;
+                // var windowCommandBuffer = Render(window, vp.DrawData);
+                // commandBuffers.Add(windowCommandBuffer);
             }
-        }*/
+        }
     }
 
 
-    private void Render(Window window, ImDrawDataPtr drawData)
+    private void Render(CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawDataPtr drawData)
     {
-        var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-        var swapchainTexture = commandBuffer.AcquireSwapchainTexture(window);
-
-        if (swapchainTexture == null)
-        {
-            Logger.LogError("Could not acquire swapchain texture");
-            return;
-        }
-
         UpdateBuffers(_game.GraphicsDevice, commandBuffer, drawData);
         commandBuffer.BeginRenderPass(
-            new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
+            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load)
         );
         RenderDrawData(commandBuffer, drawData);
         commandBuffer.EndRenderPass();
-
-        _game.GraphicsDevice.Submit(commandBuffer);
     }
-
 
     private void UpdateBuffers(GraphicsDevice graphicsDevice, CommandBuffer commandBuffer, ImDrawDataPtr drawData)
     {
@@ -372,13 +356,11 @@ public class ImGuiRenderer
     private void RenderDrawData(CommandBuffer commandBuffer, ImDrawDataPtr drawData)
     {
         if (drawData.CmdListsCount == 0)
-        {
             return;
-        }
 
         commandBuffer.BindGraphicsPipeline(_pipeline);
 
-        /*commandBuffer.SetViewport(new Viewport
+        commandBuffer.SetViewport(new Viewport
         {
             X = 0,
             Y = 0,
@@ -386,13 +368,13 @@ public class ImGuiRenderer
             H = drawData.DisplaySize.Y,
             MaxDepth = 1,
             MinDepth = 0
-        });*/
+        });
 
         var viewProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
-            0, //drawData.DisplayPos.X,
-            drawData.DisplaySize.X,
-            drawData.DisplaySize.Y,
-            0,
+            drawData.DisplayPos.X,
+            drawData.DisplayPos.X + drawData.DisplaySize.X,
+            drawData.DisplayPos.Y + drawData.DisplaySize.Y,
+            drawData.DisplayPos.Y,
             -1f,
             1f
         );
@@ -408,7 +390,7 @@ public class ImGuiRenderer
         var clipOffset = drawData.DisplayPos; // (0,0) unless using multi-viewports
         var clipScale = drawData.FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-        var windowSize = new Vector2(_game.MainWindow.Width, _game.MainWindow.Height); // imGuiWindow.Size; // TODO (marpe): Fix?
+        var windowSize = new Vector2(1920, 1080);
 
         for (var n = 0; n < drawData.CmdListsCount; n++)
         {
@@ -466,7 +448,7 @@ public class ImGuiRenderer
                     W = (int)(clipMax.X - clipMin.X),
                     H = (int)(clipMax.Y - clipMin.Y)
                 };
-                // commandBuffer.SetScissor(scissor);
+                commandBuffer.SetScissor(scissor);
 
                 commandBuffer.DrawIndexedPrimitives(
                     vtxOffset + drawCmd.VtxOffset,
@@ -523,7 +505,7 @@ public class ImGuiRenderer
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        var id = new IntPtr(_textureId++);
+        var id = new IntPtr(++_textureId);
 
         _loadedTextures.Add(id, texture);
 
@@ -545,6 +527,7 @@ public class ImGuiRenderer
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
         var io = ImGui.GetIO();
+        // var defaultFontPtr = ImGui.GetIO().Fonts.AddFontDefault();
 
         var fa6IconRanges = stackalloc ushort[] { FontAwesome6.IconMin, FontAwesome6.IconMax, 0 };
         var fa6FontPath = Path.Combine(MyGameMain.ContentRoot, "fonts", FontAwesome6.FontIconFileName);
@@ -565,7 +548,7 @@ public class ImGuiRenderer
             return fontPtr;
         }
 
-        var fontPath = Path.Combine(MyGameMain.ContentRoot, "fonts", "Roboto-Regular.ttf");
+        var fontPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
 
         _fonts[ImGuiFont.Medium] = CreateFont(fontPath, 16, 14);
         _fonts[ImGuiFont.Small] = CreateFont(fontPath, 14, 12);

@@ -52,19 +52,19 @@ public class SpriteBatch
 
         Vertices[VertexCount].Position = new Vector3(Vector2.Transform(Vector2.Zero - offset, transform), depth);
         Vertices[VertexCount].TexCoord = sprite.UV.TopLeft;
-        Vertices[VertexCount].Color = color.ToVector4();
+        Vertices[VertexCount].Color = color;
 
         Vertices[VertexCount + 1].Position = new Vector3(Vector2.Transform(new Vector2(0, sprite.SliceRect.H) - offset, transform), depth);
         Vertices[VertexCount + 1].TexCoord = sprite.UV.BottomLeft;
-        Vertices[VertexCount + 1].Color = color.ToVector4();
+        Vertices[VertexCount + 1].Color = color;
 
         Vertices[VertexCount + 2].Position = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, 0) - offset, transform), depth);
         Vertices[VertexCount + 2].TexCoord = sprite.UV.TopRight;
-        Vertices[VertexCount + 2].Color = color.ToVector4();
+        Vertices[VertexCount + 2].Color = color;
 
         Vertices[VertexCount + 3].Position = new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, sprite.SliceRect.H) - offset, transform), depth);
         Vertices[VertexCount + 3].TexCoord = sprite.UV.BottomRight;
-        Vertices[VertexCount + 3].Color = color.ToVector4();
+        Vertices[VertexCount + 3].Color = color;
 
         VertexCount += 4;
     }

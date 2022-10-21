@@ -2,6 +2,12 @@ namespace MyGame;
 
 public static class ContentPaths
 {
+		public static class Fonts
+		{
+			public const string Fa6Solid900Ttf = @"fonts\fa-6-solid-900.ttf";
+			public const string RobotoRegularTtf = @"fonts\Roboto-Regular.ttf";
+		}
+
 		public static class Ldtk
 		{
 			public const string MapLdtk = @"ldtk\map.ldtk";

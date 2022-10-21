@@ -54,11 +54,11 @@ public class ImGuiScreen
         _imGuiRenderer.UpdateInput();
     }
 
-    public void Draw()
+    public void Draw(CommandBuffer commandBuffer, Texture swapchainTexture)
     {
         _imGuiRenderer.Begin((float)_game.Timestep.TotalSeconds);
         DrawInternal();
-        _imGuiRenderer.End();
+        _imGuiRenderer.End(commandBuffer, swapchainTexture);
     }
 
     private void DrawInternal()
@@ -66,6 +66,10 @@ public class ImGuiScreen
         ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
 
         var drawList = ImGui.GetBackgroundDrawList();
+        
+        ImGui.Begin("ImGuiWindow1");
+        ImGui.Text("ImGui Window 1");
+        ImGui.End();
 
         foreach (var (key, window) in Windows)
         {
