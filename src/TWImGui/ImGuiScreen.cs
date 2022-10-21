@@ -17,14 +17,13 @@ public class ImGuiScreen
     };
 
     private readonly ImGuiRenderer _imGuiRenderer;
-    private Game _game;
+    private MyGameMain _game;
 
-    public ImGuiScreen(Game game)
+    public ImGuiScreen(MyGameMain game)
     {
         _game = game;
         var timer = Stopwatch.StartNew();
         _imGuiRenderer = new ImGuiRenderer(game);
-        _imGuiRenderer.RebuildFontAtlas();
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
@@ -51,7 +50,6 @@ public class ImGuiScreen
 
     public void Update()
     {
-        _imGuiRenderer.UpdateInput();
     }
 
     public void Draw(CommandBuffer commandBuffer, Texture swapchainTexture)
@@ -66,9 +64,13 @@ public class ImGuiScreen
         ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
 
         var drawList = ImGui.GetBackgroundDrawList();
-        
+
         ImGui.Begin("ImGuiWindow1");
         ImGui.Text("ImGui Window 1");
+        ImGui.TextUnformatted($"FrameCount: {_game.FrameCount}");
+        ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
+        ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
+        ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
         ImGui.End();
 
         foreach (var (key, window) in Windows)

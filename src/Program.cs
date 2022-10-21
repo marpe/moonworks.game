@@ -20,7 +20,7 @@ class Program
 		};
 		var frameLimiterSettings = new FrameLimiterSettings
 		{
-			Mode = FrameLimiterMode.Uncapped,
+			Mode = FrameLimiterMode.Capped,
 			Cap = 60
 		};
 		var gameMain = new MyGameMain(

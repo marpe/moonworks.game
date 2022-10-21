@@ -6,12 +6,17 @@ public class MyGameMain : Game
 {
     public const string ContentRoot = "Content";
 
+    public ulong FrameCount { get; private set; }
+    public ulong RenderCount { get; private set; }
+    public float TotalElapsedTime { get; private set; }
+    
+    public float ElapsedTime { get; private set; }
+    
     private readonly SpriteBatch _spriteBatch;
     private readonly SpriteRenderer _spriteRenderer;
     private GraphicsPipeline _spritePipeline;
     private readonly Sampler _sampler;
     private readonly SpriteRenderer _menuRenderer;
-    private int _numberOfTimesPressed;
     private readonly Camera _camera;
     private Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
@@ -119,6 +124,10 @@ public class MyGameMain : Game
 
     protected override void Update(TimeSpan dt)
     {
+        FrameCount++;
+        ElapsedTime = (float)dt.TotalSeconds;
+        TotalElapsedTime += ElapsedTime;
+        
         var currentWindowSize = new Point((int)MainWindow.Width, (int)MainWindow.Height);
         if (currentWindowSize != _oldWindowSize)
         {
@@ -203,6 +212,7 @@ public class MyGameMain : Game
 
     protected override void Draw(double alpha)
     {
+        RenderCount++;
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
         var swapchainTexture = commandBuffer.AcquireSwapchainTexture(MainWindow);
 

@@ -19,10 +19,9 @@ public class ImGuiRenderer
 
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
 
-    private bool _beginCalled;
+    private bool _frameBegun;
 
-    private int _textureId;
-    private Texture? _fontAtlasTexture;
+    private int _textureIdCounter;
     private IntPtr? _fontAtlasTextureId;
 
     private MoonWorks.Graphics.Buffer? _indexBuffer;
@@ -68,6 +67,10 @@ public class ImGuiRenderer
 
         _textureSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
         _pipeline = SetupPipeline(game.GraphicsDevice);
+
+        Inputs.TextInput += OnTextInput;
+        
+        BuildFontAtlas();
     }
 
     private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice)
@@ -127,12 +130,26 @@ public class ImGuiRenderer
 
         if (isDisposing)
         {
-            _fontAtlasTexture?.Dispose();
+            foreach (var texture in _loadedTextures)
+            {
+                texture.Value.Dispose();
+            }
+
+            _loadedTextures.Clear();
+
+            foreach (var font in _fonts)
+            {
+                font.Value.Destroy();
+            }
+
+            _fonts.Clear();
 
             foreach (var cursor in _mouseCursors)
             {
                 SDL.SDL_FreeCursor(cursor.Value);
             }
+
+            Inputs.TextInput -= OnTextInput;
         }
 
         IsDisposed = true;
@@ -181,20 +198,10 @@ public class ImGuiRenderer
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        if (_beginCalled)
-        {
-            ImGui.Render();
-            ImGui.UpdatePlatformWindows();
+        if (_frameBegun)
+            throw new InvalidOperationException("Begin was called twice");
 
-            Logger.LogError(
-                "Begin has been called before calling End" +
-                " after the last call to Begin." +
-                " Begin cannot be called again until" +
-                " End has been successfully called."
-            );
-        }
-
-        _beginCalled = true;
+        _frameBegun = true;
         var io = ImGui.GetIO();
         io.DisplaySize = new Num.Vector2(
             _game.MainWindow.Width / _scaleFactor.X,
@@ -272,16 +279,10 @@ public class ImGuiRenderer
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        if (!_beginCalled)
-        {
-            Logger.LogError(
-                "End was called, but Begin has not yet" +
-                " been called. You must call Begin " +
-                " successfully before you can call End."
-            );
-        }
+        if (!_frameBegun)
+            throw new InvalidOperationException("Begin has not been called");
 
-        _beginCalled = false;
+        _frameBegun = false;
         ImGui.Render();
 
         Render(commandBuffer, swapchainTexture, ImGui.GetDrawData());
@@ -462,11 +463,10 @@ public class ImGuiRenderer
         }
     }
 
-
-    public void UpdateInput()
+    private void UpdateInput()
     {
         var io = ImGui.GetIO();
-
+        
         UpdateMouseCursor();
 
         for (var i = 0; i < io.KeysDown.Count; i++)
@@ -503,7 +503,7 @@ public class ImGuiRenderer
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        var id = new IntPtr(++_textureId);
+        var id = new IntPtr(++_textureIdCounter);
 
         _loadedTextures.Add(id, texture);
 
@@ -519,7 +519,7 @@ public class ImGuiRenderer
     }
 
 
-    public unsafe void RebuildFontAtlas()
+    private unsafe void BuildFontAtlas()
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
@@ -548,6 +548,13 @@ public class ImGuiRenderer
 
         var fontPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
 
+        foreach (var font in _fonts)
+        {
+            font.Value.Destroy();
+        }
+
+        _fonts.Clear();
+
         _fonts[ImGuiFont.Medium] = CreateFont(fontPath, 16, 14);
         _fonts[ImGuiFont.Small] = CreateFont(fontPath, 14, 12);
         _fonts[ImGuiFont.Tiny] = CreateFont(fontPath, 12, 12);
@@ -558,11 +565,10 @@ public class ImGuiRenderer
         var pixels = new byte[width * height * bytesPerPixel];
         Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length);
 
-        _fontAtlasTexture?.Dispose();
-        _fontAtlasTexture =
-            Texture.CreateTexture2D(_game.GraphicsDevice, (uint)width, (uint)height, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        var fontAtlasTexture = Texture.CreateTexture2D(_game.GraphicsDevice, (uint)width, (uint)height, TextureFormat.R8G8B8A8,
+            TextureUsageFlags.Sampler);
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-        commandBuffer.SetTextureData(_fontAtlasTexture, pixels);
+        commandBuffer.SetTextureData(fontAtlasTexture, pixels);
         _game.GraphicsDevice.Submit(commandBuffer);
 
         if (_fontAtlasTextureId.HasValue)
@@ -570,7 +576,7 @@ public class ImGuiRenderer
             UnbindTexture(_fontAtlasTextureId.Value);
         }
 
-        _fontAtlasTextureId = BindTexture(_fontAtlasTexture);
+        _fontAtlasTextureId = BindTexture(fontAtlasTexture);
         io.Fonts.SetTexID(_fontAtlasTextureId.Value);
         io.Fonts.ClearTexData();
 
