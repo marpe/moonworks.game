@@ -37,9 +37,9 @@ public class MyGameMain : Game
         _menuRenderer = new SpriteRenderer(menu);
 
         _camera = new Camera();
-        
+
         _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        
+
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -80,18 +80,18 @@ public class MyGameMain : Game
         {
             DepthTestEnable = true,
             DepthWriteEnable = true,
-            CompareOp = CompareOp.LessOrEqual,
+            CompareOp = CompareOp.GreaterOrEqual,
             DepthBoundsTestEnable = false,
             StencilTestEnable = false
         };
-        
+
         var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                // TextureFormat.D16,
+                TextureFormat.D16,
                 new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
             ),
-            DepthStencilState = DepthStencilState.Disable, // myDepthStencilState,
+            DepthStencilState = myDepthStencilState,
             VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0),
             FragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1),
             MultisampleState = MultisampleState.None,
@@ -114,6 +114,66 @@ public class MyGameMain : Game
             _numberOfTimesPressed++;
             Logger.LogInfo($"Depth: {_menuDepth}");
         }
+
+        if (Inputs.Keyboard.IsPressed(KeyCode.F1))
+        {
+            _camera.Use3D = !_camera.Use3D;
+        }
+
+        if (_camera.Use3D)
+        {
+            var cameraSpeed = 500f;
+            if (Inputs.Keyboard.IsDown(KeyCode.W))
+            {
+                _camera.Position3D += Vector3.Forward * 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+            }
+
+            if (Inputs.Keyboard.IsDown(KeyCode.S))
+            {
+                _camera.Position3D -= Vector3.Forward * 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+            }
+        
+            if (Inputs.Keyboard.IsDown(KeyCode.A))
+            {
+                _camera.Position3D += Vector3.Left * 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+            }
+        
+            if (Inputs.Keyboard.IsDown(KeyCode.D))
+            {
+                _camera.Position3D += Vector3.Right * 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+            }
+        }
+        else
+        {
+            var cameraSpeed = 500f;
+            if (Inputs.Keyboard.IsDown(KeyCode.W))
+            {
+                _camera.Position.Y += 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position: {_camera.Position}");
+            }
+
+            if (Inputs.Keyboard.IsDown(KeyCode.S))
+            {
+                _camera.Position.Y -= 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position: {_camera.Position}");
+            }
+        
+            if (Inputs.Keyboard.IsDown(KeyCode.A))
+            {
+                _camera.Position.X -= 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position: {_camera.Position}");
+            }
+        
+            if (Inputs.Keyboard.IsDown(KeyCode.D))
+            {
+                _camera.Position.X += 500f * (float)dt.TotalSeconds;
+                Logger.LogInfo($"Position: {_camera.Position}");
+            }
+        }
     }
 
     protected override void Draw(double alpha)
@@ -131,10 +191,9 @@ public class MyGameMain : Game
         _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0.05f, _sampler);
 
         commandBuffer.BeginRenderPass(
-            // new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
+            new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
-        
 
         commandBuffer.BindGraphicsPipeline(_spritePipeline);
 
