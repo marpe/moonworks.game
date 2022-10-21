@@ -11,6 +11,8 @@ public class MyGameMain : Game
     private readonly SpriteRenderer _menuRenderer;
     private float _menuDepth = 0;
     private int _numberOfTimesPressed;
+    private readonly Camera _camera;
+    private readonly Texture _depthTexture;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -34,6 +36,10 @@ public class MyGameMain : Game
         var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
         _menuRenderer = new SpriteRenderer(menu);
 
+        _camera = new Camera();
+        
+        _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
+        
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -70,12 +76,22 @@ public class MyGameMain : Game
             VertexAttributes = myVertexAttributes
         };
 
+        var myDepthStencilState = new DepthStencilState
+        {
+            DepthTestEnable = true,
+            DepthWriteEnable = true,
+            CompareOp = CompareOp.LessOrEqual,
+            DepthBoundsTestEnable = false,
+            StencilTestEnable = false
+        };
+        
         var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
+                // TextureFormat.D16,
                 new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
             ),
-            DepthStencilState = DepthStencilState.Disable,
+            DepthStencilState = DepthStencilState.Disable, // myDepthStencilState,
             VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0),
             FragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1),
             MultisampleState = MultisampleState.None,
@@ -94,7 +110,7 @@ public class MyGameMain : Game
     {
         if (Inputs.Keyboard.IsPressed(KeyCode.Space))
         {
-            _menuDepth = _numberOfTimesPressed % 2 == 0 ? 0.1f : -0.1f;
+            _menuDepth = _numberOfTimesPressed % 2 == 0 ? 0 : 0.1f;
             _numberOfTimesPressed++;
             Logger.LogInfo($"Depth: {_menuDepth}");
         }
@@ -106,35 +122,25 @@ public class MyGameMain : Game
         var swapchainTexture = commandBuffer.AcquireSwapchainTexture(MainWindow);
 
         if (swapchainTexture == null)
+        {
+            Logger.LogError("Could not acquire swapchain texture");
             return;
+        }
 
         _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, _menuDepth, _sampler);
-        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0, _sampler);
+        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0.05f, _sampler);
 
         commandBuffer.BeginRenderPass(
+            // new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
-
-        var view = Matrix4x4.CreateLookAt(
-            new Vector3(0, 0, 1),
-            Vector3.Zero,
-            Vector3.Up
-        );
-
-        var projection = Matrix4x4.CreateOrthographicOffCenter(
-            0,
-            MainWindow.Width,
-            MainWindow.Height,
-            0,
-            0.01f,
-            4000f
-        );
-
-        Matrix4x4 viewProjectionMatrix = view * projection;
+        
 
         commandBuffer.BindGraphicsPipeline(_spritePipeline);
 
-        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjectionMatrix);
+        _camera.Width = (int)MainWindow.Width;
+        _camera.Height = (int)MainWindow.Height;
+        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(_camera.ViewProjectionMatrix);
 
         _spriteBatch.Draw(commandBuffer, vertexParamOffset);
 
