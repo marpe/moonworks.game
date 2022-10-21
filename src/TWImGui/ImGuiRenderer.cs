@@ -500,8 +500,8 @@ public class ImGuiRenderer
         {
             X = 0,
             Y = 0,
-            W = drawData.DisplaySize.X,
-            H = drawData.DisplaySize.Y,
+            W = Math.Max(1, drawData.DisplaySize.X),
+            H = Math.Max(1, drawData.DisplaySize.Y),
             MaxDepth = 1,
             MinDepth = 0
         });
@@ -545,31 +545,20 @@ public class ImGuiRenderer
                 commandBuffer.BindFragmentSamplers(textureSamplerBindings);
 
                 // Project scissor/clipping rectangles into framebuffer space
-                var clipMin = new Vector2((drawCmd.ClipRect.X - clipOffset.X) * clipScale.X,
-                    (drawCmd.ClipRect.Y - clipOffset.Y) * clipScale.Y);
-                var clipMax = new Vector2((drawCmd.ClipRect.Z - clipOffset.X) * clipScale.X,
-                    (drawCmd.ClipRect.W - clipOffset.Y) * clipScale.Y);
+                var clipMin = new Vector2(
+                    (drawCmd.ClipRect.X - clipOffset.X) * clipScale.X,
+                    (drawCmd.ClipRect.Y - clipOffset.Y) * clipScale.Y
+                );
+                var clipMax = new Vector2(
+                    (drawCmd.ClipRect.Z - clipOffset.X) * clipScale.X,
+                    (drawCmd.ClipRect.W - clipOffset.Y) * clipScale.Y
+                );
 
                 // Clamp to viewport as vkCmdSetScissor() won't accept values that are off bounds
-                if (clipMin.X < 0.0f)
-                {
-                    clipMin.X = 0.0f;
-                }
-
-                if (clipMin.Y < 0.0f)
-                {
-                    clipMin.Y = 0.0f;
-                }
-
-                if (clipMax.X > drawData.DisplaySize.X)
-                {
-                    clipMax.X = drawData.DisplaySize.X;
-                }
-
-                if (clipMax.Y > drawData.DisplaySize.Y)
-                {
-                    clipMax.Y = drawData.DisplaySize.Y;
-                }
+                clipMin.X = Math.Max(0, clipMin.X);
+                clipMin.Y = Math.Max(0, clipMin.Y);
+                clipMax.X = Math.Min(drawData.DisplaySize.X, clipMax.X);
+                clipMax.Y = Math.Min(drawData.DisplaySize.Y, clipMax.Y);
 
                 if (clipMax.X <= clipMin.X || clipMax.Y <= clipMin.Y)
                     continue;
@@ -807,8 +796,7 @@ public class ImGuiRenderer
     private byte GetWindowMinimized(ImGuiViewportPtr vp)
     {
         var window = WindowFromUserData(vp.PlatformUserData);
-        var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Handle);
-        return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_MINIMIZED) != 0 ? (byte)1 : (byte)0;
+        return window.IsMinimized ? (byte)1 : (byte)0;
     }
 
     private unsafe void SetWindowTitle(ImGuiViewportPtr vp, IntPtr title)

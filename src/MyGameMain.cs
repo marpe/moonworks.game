@@ -9,9 +9,9 @@ public class MyGameMain : Game
     public ulong FrameCount { get; private set; }
     public ulong RenderCount { get; private set; }
     public float TotalElapsedTime { get; private set; }
-    
+
     public float ElapsedTime { get; private set; }
-    
+
     private readonly SpriteBatch _spriteBatch;
     private readonly SpriteRenderer _spriteRenderer;
     private GraphicsPipeline _spritePipeline;
@@ -24,7 +24,8 @@ public class MyGameMain : Game
     private bool _drawImGui;
     private Point _oldWindowSize;
     private bool _sizeChanged;
-    
+    private Point _currentWindowSize;
+
     public Point WindowSize => new((int)MainWindow.Width, (int)MainWindow.Height);
 
     public MyGameMain(
@@ -127,15 +128,16 @@ public class MyGameMain : Game
         FrameCount++;
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
-        
-        var currentWindowSize = new Point((int)MainWindow.Width, (int)MainWindow.Height);
-        if (currentWindowSize != _oldWindowSize)
+
+        _currentWindowSize = new Point((int)MainWindow.Width, (int)MainWindow.Height);
+        if (_currentWindowSize != _oldWindowSize)
         {
-            Logger.LogInfo($"Size changed: old ({_oldWindowSize}) -> new ({currentWindowSize}) ");
+            Logger.LogInfo($"Size changed: old ({_oldWindowSize}) -> new ({_currentWindowSize}) ");
             _sizeChanged = true;
         }
 
-        _oldWindowSize = currentWindowSize;
+        _oldWindowSize = _currentWindowSize;
+
         _imGuiScreen.Update();
 
         if (Inputs.Keyboard.IsPressed(KeyCode.F1))
@@ -212,6 +214,9 @@ public class MyGameMain : Game
 
     protected override void Draw(double alpha)
     {
+        if (MainWindow.IsMinimized)
+            return;
+
         RenderCount++;
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
         var swapchainTexture = commandBuffer.AcquireSwapchainTexture(MainWindow);
@@ -225,7 +230,8 @@ public class MyGameMain : Game
         if (_sizeChanged)
         {
             Logger.LogInfo($"SwapchainTextureSize: {swapchainTexture.Width}, {swapchainTexture.Height}");
-            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, swapchainTexture.Width, swapchainTexture.Height, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
+            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)_currentWindowSize.X, (uint)_currentWindowSize.Y,
+                TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
             _sizeChanged = false;
         }
 
