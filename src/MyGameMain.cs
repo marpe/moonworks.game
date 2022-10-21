@@ -99,7 +99,7 @@ public class MyGameMain : Game
             Logger.LogInfo($"Depth: {_menuDepth}");
         }
     }
-    
+
     protected override void Draw(double alpha)
     {
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
@@ -146,7 +146,7 @@ public class MyGameMain : Game
     private static Texture LoadAseprite(GraphicsDevice device, string path)
     {
         var aseprite = AsepriteFile.LoadAsepriteFile(path);
-        var (data, rects) = AsepriteToTextureAtlasConverter.GetTextureAtlas(aseprite);
+        var (data, rects) = AsepriteToTextureAtlasConverter.GetTextureData(aseprite);
         var texture = Texture.CreateTexture2D(
             device,
             aseprite.Header.Width * (uint)aseprite.Frames.Count,

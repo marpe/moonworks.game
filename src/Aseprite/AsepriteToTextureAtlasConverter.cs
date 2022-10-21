@@ -24,14 +24,22 @@ public static class AsepriteToTextureAtlasConverter
         return null;
     }
 
-    private static void GetTextureFromCel(Span<uint> result, int canvasWidth, int canvasHeight, AsepriteFile.Cel cel, AsepriteFile.LayerBlendMode blendMode, byte opacity)
+    private static void GetTextureFromCel(Span<uint> result, int frameIndex, AsepriteFile asepriteFile, AsepriteFile.Cel cel,
+        AsepriteFile.LayerBlendMode blendMode, byte opacity)
     {
+        var canvasWidth = asepriteFile.Header.Width;
+        var canvasHeight = asepriteFile.Header.Height;
+
+        var atlasWidth = asepriteFile.Header.Width * asepriteFile.Frames.Count;
+        var atlasHeight = asepriteFile.Header.Height;
+
         // skip data in file which is outside the canvas by clamping the values
         var y0 = Math.Clamp(cel.YPosition, 0, canvasHeight);
         var y1 = Math.Clamp(cel.YPosition + cel.Height, 0, canvasHeight);
         var x0 = Math.Clamp(cel.XPosition, 0, canvasWidth);
         var x1 = Math.Clamp(cel.XPosition + cel.Width, 0, canvasWidth);
-        var startIndexInColorArr = y0 * canvasWidth + x0;
+
+        var startIndexInColorArr = frameIndex * canvasWidth + y0 * atlasWidth + x0;
 
         for (var y = y0; y < y1; y++)
         {
@@ -40,8 +48,8 @@ public static class AsepriteToTextureAtlasConverter
                 var ys = (y - y0);
                 var xs = (x - x0);
                 var pixelIndex = cel.Width * ys + xs;
-                var colorIndex = startIndexInColorArr + canvasWidth * ys + xs;
                 var celPixel = cel.Pixels[pixelIndex];
+                var colorIndex = startIndexInColorArr + atlasWidth * ys + xs;
 
                 result[colorIndex] = blendMode switch
                 {
@@ -89,13 +97,13 @@ public static class AsepriteToTextureAtlasConverter
                 continue;
             }
 
-            GetTextureFromCel(result, aseprite.Header.Width, aseprite.Header.Height, cels[i], blendMode, opacity);
+            GetTextureFromCel(result, frameIndex, aseprite, cels[i], blendMode, opacity);
         }
     }
 
-    public static (uint[] data, List<Rectangle> rects) GetTextureAtlas(AsepriteFile aseprite)
+    public static (uint[] data, List<Rectangle> rects) GetTextureData(AsepriteFile aseprite)
     {
-        var atlasWidth = aseprite.Frames.Count * aseprite.Header.Width;
+        var atlasWidth = aseprite.Header.Width * aseprite.Frames.Count;
         var atlasHeight = aseprite.Header.Height;
 
         var atlas = new uint[atlasWidth * atlasHeight];
@@ -110,13 +118,7 @@ public static class AsepriteToTextureAtlasConverter
                 atlasHeight
             );
 
-            var frameSpan = new Span<uint>(
-                atlas,
-                i * aseprite.Header.Width * aseprite.Header.Height,
-                aseprite.Header.Width * aseprite.Header.Height
-            );
-            
-            GetFrame(aseprite, i, frameSpan);
+            GetFrame(aseprite, i, atlas);
             spriteRects.Add(spriteRect);
         }
 
