@@ -1,35 +1,46 @@
 <Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<OutputType>Exe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
-		<TargetName>MyGame</TargetName>
-		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-		<GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
-		<LangVersion>latest</LangVersion>
-		<StartupObject>MyGame.Program</StartupObject>
-		<AssemblyName>MyGame</AssemblyName>
-		<RootNamespace>MyGame</RootNamespace>
-		<TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-		<ApplicationIcon />
-		<Nullable>enable</Nullable>
-		<Configurations>Debug;Release</Configurations>
-		<Platforms>x64</Platforms>
-	</PropertyGroup>
-	<ItemGroup>
-		<Content Include="Content\**\*.*">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
-		</Content>
-	</ItemGroup>
-	<PropertyGroup>
-		<DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
-	</PropertyGroup>
-	<ItemGroup>
-		<ProjectReference Include="lib\ldtk\LDtk.csproj" />
-		<ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
-	</ItemGroup>
-	<Import Project=".\CopyMoonlibs.targets" />
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0</TargetFramework>
+        <TargetName>MyGame</TargetName>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+        <LangVersion>latest</LangVersion>
+        <StartupObject>MyGame.Program</StartupObject>
+        <AssemblyName>MyGame</AssemblyName>
+        <RootNamespace>MyGame</RootNamespace>
+        <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <ApplicationIcon />
+        <Nullable>enable</Nullable>
+        <Configurations>Debug;Release</Configurations>
+        <Platforms>x64</Platforms>
+    </PropertyGroup>
+    <ItemGroup>
+        <Content Include="Content\**\*.*">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+    <PropertyGroup>
+        <DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
+    </PropertyGroup>
+    <ItemGroup>
+        <ProjectReference Include="lib\ldtk\LDtk.csproj" />
+        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+    </ItemGroup>
+    <ItemGroup>
+        <Reference Include="ImGui.NET">
+            <HintPath>lib\ImGui.NET\net5.0\ImGui.NET.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <ItemGroup>
+        <ContentWithTargetPath Include="lib\ImGui.NET\deps\cimgui\win-x64\cimgui.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>cimgui.dll</TargetPath>
+        </ContentWithTargetPath>
+    </ItemGroup>
+    <Import Project=".\CopyMoonlibs.targets" />
 </Project>

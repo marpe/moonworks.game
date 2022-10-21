@@ -10,3 +10,4 @@ global using System.Diagnostics;
 global using System.IO;
 global using System.Runtime.CompilerServices;
 global using System;
+global using Num = System.Numerics; 

@@ -1,3 +1,5 @@
+using MyGame.TWImGui;
+
 namespace MyGame;
 
 public class MyGameMain : Game
@@ -13,6 +15,7 @@ public class MyGameMain : Game
     private readonly Camera _camera;
     private readonly Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
+    private ImGuiScreen _imGuiScreen;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -41,6 +44,8 @@ public class MyGameMain : Game
 
         _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
 
+        _imGuiScreen = new ImGuiScreen(this);
+        
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -109,6 +114,8 @@ public class MyGameMain : Game
 
     protected override void Update(TimeSpan dt)
     {
+        _imGuiScreen.Update();
+        
         if (Inputs.Keyboard.IsPressed(KeyCode.F1))
         {
             _camera.Use3D = !_camera.Use3D;
@@ -172,6 +179,9 @@ public class MyGameMain : Game
 
     protected override void Draw(double alpha)
     {
+        _imGuiScreen.Draw();
+        
+        /*
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
         var swapchainTexture = commandBuffer.AcquireSwapchainTexture(MainWindow);
 
@@ -199,7 +209,7 @@ public class MyGameMain : Game
 
         commandBuffer.EndRenderPass();
 
-        GraphicsDevice.Submit(commandBuffer);
+        GraphicsDevice.Submit(commandBuffer);*/
     }
 
     private static Texture LoadAseprite(GraphicsDevice device, string path)
