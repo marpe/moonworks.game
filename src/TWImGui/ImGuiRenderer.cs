@@ -69,7 +69,7 @@ public class ImGuiRenderer
         _pipeline = SetupPipeline(game.GraphicsDevice);
 
         Inputs.TextInput += OnTextInput;
-        
+
         BuildFontAtlas();
     }
 
@@ -216,7 +216,7 @@ public class ImGuiRenderer
         UpdateInput();
         UpdateMouseCursor();
         // UpdateWindows();
-        UpdateMonitors();
+        // UpdateMonitors();
         ImGui.NewFrame();
     }
 
@@ -466,7 +466,7 @@ public class ImGuiRenderer
     private void UpdateInput()
     {
         var io = ImGui.GetIO();
-        
+
         UpdateMouseCursor();
 
         for (var i = 0; i < io.KeysDown.Count; i++)
@@ -489,13 +489,7 @@ public class ImGuiRenderer
         io.MouseDown[1] = _game.Inputs.Mouse.RightButton.IsDown;
         io.MouseDown[2] = _game.Inputs.Mouse.MiddleButton.IsDown;
 
-        var scrollDelta = _game.Inputs.Mouse.Wheel;
-        io.MouseWheel = scrollDelta switch
-        {
-            > 0 => 1,
-            < 0 => -1,
-            _ => 0
-        };
+        io.MouseWheel = _game.Inputs.Mouse.WheelDelta;
     }
 
     public IntPtr BindTexture(Texture texture)

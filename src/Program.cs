@@ -1,13 +1,7 @@
-using System.Runtime.InteropServices;
-
 namespace MyGame;
 
 class Program
 {
-	[DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
-	[return: MarshalAs(UnmanagedType.Bool)]
-	static extern bool SetDllDirectory(string lpPathName);
-
 	static void Main(string[] args)
 	{
 		var windowCreateInfo = new WindowCreateInfo
