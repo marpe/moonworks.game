@@ -9,13 +9,10 @@ public class MyGameMain : Game
     private GraphicsPipeline _spritePipeline;
     private readonly Sampler _sampler;
     private readonly SpriteRenderer _menuRenderer;
-    private float _menuDepth = 0;
     private int _numberOfTimesPressed;
     private readonly Camera _camera;
     private readonly Texture _depthTexture;
-    private Quaternion _pressedRotation = Quaternion.Identity;
-    private bool _wasHeld;
-    private Vector2 _cameraRotation;
+    private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -40,6 +37,7 @@ public class MyGameMain : Game
         _menuRenderer = new SpriteRenderer(menu);
 
         _camera = new Camera();
+        _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
 
         _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
 
@@ -111,13 +109,6 @@ public class MyGameMain : Game
 
     protected override void Update(TimeSpan dt)
     {
-        if (Inputs.Keyboard.IsPressed(KeyCode.Space))
-        {
-            _menuDepth = _numberOfTimesPressed % 2 == 0 ? 0 : 0.1f;
-            _numberOfTimesPressed++;
-            Logger.LogInfo($"Depth: {_menuDepth}");
-        }
-
         if (Inputs.Keyboard.IsPressed(KeyCode.F1))
         {
             _camera.Use3D = !_camera.Use3D;
@@ -128,7 +119,7 @@ public class MyGameMain : Game
             if (Inputs.Mouse.LeftButton.IsHeld)
             {
                 var rotationSpeed = 0.1f;
-                _cameraRotation += new Vector2(-Inputs.Mouse.DeltaX, -Inputs.Mouse.DeltaY) * rotationSpeed * (float)dt.TotalSeconds;
+                _cameraRotation += new Vector2(Inputs.Mouse.DeltaX, -Inputs.Mouse.DeltaY) * rotationSpeed * (float)dt.TotalSeconds;
                 var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
                 _camera.Rotation3D = rotation;
             }
@@ -159,22 +150,22 @@ public class MyGameMain : Game
             var cameraSpeed = 500f;
             if (Inputs.Keyboard.IsDown(KeyCode.W))
             {
-                _camera.Position.Y += 500f * (float)dt.TotalSeconds;
+                _camera.Position.Y -= cameraSpeed * (float)dt.TotalSeconds;
             }
 
             if (Inputs.Keyboard.IsDown(KeyCode.S))
             {
-                _camera.Position.Y -= 500f * (float)dt.TotalSeconds;
+                _camera.Position.Y += cameraSpeed * (float)dt.TotalSeconds;
             }
 
             if (Inputs.Keyboard.IsDown(KeyCode.A))
             {
-                _camera.Position.X -= 500f * (float)dt.TotalSeconds;
+                _camera.Position.X -= cameraSpeed * (float)dt.TotalSeconds;
             }
 
             if (Inputs.Keyboard.IsDown(KeyCode.D))
             {
-                _camera.Position.X += 500f * (float)dt.TotalSeconds;
+                _camera.Position.X += cameraSpeed * (float)dt.TotalSeconds;
             }
         }
     }
@@ -190,8 +181,8 @@ public class MyGameMain : Game
             return;
         }
 
-        _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, _menuDepth, _sampler);
-        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 100f, _sampler);
+        _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 5f, _sampler);
+        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0, _sampler);
 
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),

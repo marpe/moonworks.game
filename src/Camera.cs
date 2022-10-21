@@ -18,10 +18,10 @@ public class Camera
 
     public Vector2 Position;
 
-    public Vector3 Position3D = new(0, 0, 2000);
+    public Vector3 Position3D = new(0, 0, -1000);
 
     private Matrix4x4 View => Matrix4x4.CreateLookAt(
-        new Vector3(Position.X, Position.Y, 1),
+        new Vector3(Position.X, Position.Y, 1000),
         new Vector3(Position.X, Position.Y, 0),
         Vector3.Up
     );
@@ -34,7 +34,7 @@ public class Camera
             return Matrix4x4.CreateLookAt(
                 position,
                 position + Vector3.Transform(Vector3.Forward, Rotation3D),
-                Vector3.Up
+                Vector3.Down
             );            
         }
     }
@@ -46,7 +46,7 @@ public class Camera
         Width,
         Height,
         0,
-        0.01f,
+        0.0001f,
         4000f
     );
 
