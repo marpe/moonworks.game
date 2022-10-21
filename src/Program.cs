@@ -12,8 +12,8 @@ class Program
 	{
 		var windowCreateInfo = new WindowCreateInfo
 		{
-			WindowWidth = 1280,
-			WindowHeight = 720,
+			WindowWidth = 1920,
+			WindowHeight = 1080,
 			WindowTitle = "ProjectName",
 			ScreenMode = ScreenMode.Windowed,
 			SystemResizable = true

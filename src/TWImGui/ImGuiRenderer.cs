@@ -390,8 +390,6 @@ public class ImGuiRenderer
         var clipOffset = drawData.DisplayPos; // (0,0) unless using multi-viewports
         var clipScale = drawData.FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-        var windowSize = new Vector2(1920, 1080);
-
         for (var n = 0; n < drawData.CmdListsCount; n++)
         {
             var cmdList = drawData.CmdListsRange[n];
@@ -427,14 +425,14 @@ public class ImGuiRenderer
                     clipMin.Y = 0.0f;
                 }
 
-                if (clipMax.X > windowSize.X)
+                if (clipMax.X > drawData.DisplaySize.X)
                 {
-                    clipMax.X = windowSize.X;
+                    clipMax.X = drawData.DisplaySize.X;
                 }
 
-                if (clipMax.Y > windowSize.Y)
+                if (clipMax.Y > drawData.DisplaySize.Y)
                 {
-                    clipMax.Y = windowSize.Y;
+                    clipMax.Y = drawData.DisplaySize.Y;
                 }
 
                 if (clipMax.X <= clipMin.X || clipMax.Y <= clipMin.Y)

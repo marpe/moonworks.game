@@ -13,11 +13,14 @@ public class MyGameMain : Game
     private readonly SpriteRenderer _menuRenderer;
     private int _numberOfTimesPressed;
     private readonly Camera _camera;
-    private readonly Texture _depthTexture;
+    private Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     private ImGuiScreen _imGuiScreen;
     private bool _drawImGui;
     private Point _oldWindowSize;
+    private bool _sizeChanged;
+    
+    public Point WindowSize => new((int)MainWindow.Width, (int)MainWindow.Height);
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -120,7 +123,9 @@ public class MyGameMain : Game
         if (currentWindowSize != _oldWindowSize)
         {
             Logger.LogInfo($"Size changed: old ({_oldWindowSize}) -> new ({currentWindowSize}) ");
+            _sizeChanged = true;
         }
+
         _oldWindowSize = currentWindowSize;
         _imGuiScreen.Update();
 
@@ -128,15 +133,21 @@ public class MyGameMain : Game
         {
             _camera.Use3D = !_camera.Use3D;
         }
-        
+
         if (Inputs.Keyboard.IsPressed(KeyCode.F2))
         {
             _drawImGui = !_drawImGui;
         }
 
+        if (Inputs.Keyboard.IsPressed(KeyCode.F3))
+        {
+            var nextMode = ((int)MainWindow.ScreenMode + 1) % 3;
+            MainWindow.ChangeScreenMode((ScreenMode)nextMode);
+        }
+
         if (_camera.Use3D)
         {
-            if (Inputs.Mouse.LeftButton.IsHeld)
+            if (Inputs.Mouse.RightButton.IsHeld)
             {
                 var rotationSpeed = 0.1f;
                 _cameraRotation += new Vector2(Inputs.Mouse.DeltaX, -Inputs.Mouse.DeltaY) * rotationSpeed * (float)dt.TotalSeconds;
@@ -144,7 +155,7 @@ public class MyGameMain : Game
                 _camera.Rotation3D = rotation;
             }
 
-            var cameraSpeed = 500f;
+            var cameraSpeed = 750f;
             if (Inputs.Keyboard.IsDown(KeyCode.W))
             {
                 _camera.Position3D += Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * cameraSpeed * (float)dt.TotalSeconds;
@@ -201,6 +212,13 @@ public class MyGameMain : Game
             return;
         }
 
+        if (_sizeChanged)
+        {
+            Logger.LogInfo($"SwapchainTextureSize: {swapchainTexture.Width}, {swapchainTexture.Height}");
+            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, swapchainTexture.Width, swapchainTexture.Height, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
+            _sizeChanged = false;
+        }
+
         _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 5f, _sampler);
         _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0, _sampler);
 
@@ -209,10 +227,12 @@ public class MyGameMain : Game
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
 
+        _camera.Size = WindowSize;
+        commandBuffer.SetViewport(new Viewport(0, 0, WindowSize.X, WindowSize.Y));
+        commandBuffer.SetScissor(new Rect(0, 0, WindowSize.X, WindowSize.Y));
+
         commandBuffer.BindGraphicsPipeline(_spritePipeline);
 
-        _camera.Width = (int)MainWindow.Width;
-        _camera.Height = (int)MainWindow.Height;
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(_camera.ViewProjectionMatrix);
 
         _spriteBatch.Draw(commandBuffer, vertexParamOffset);
@@ -223,8 +243,7 @@ public class MyGameMain : Game
         {
             _imGuiScreen.Draw(commandBuffer, swapchainTexture);
         }
-        
-        
+
         GraphicsDevice.Submit(commandBuffer);
     }
 
