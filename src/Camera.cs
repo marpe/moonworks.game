@@ -26,20 +26,20 @@ public class Camera
         Vector3.Up
     );
 
-    public Vector3 Forward3D = Vector3.Forward;
-    
     private Matrix4x4 View3D
     {
         get
         {
-            var position = new Vector3(Position3D.X, -Position3D.Y, Position3D.Z);
+            var position = new Vector3(Position3D.X, Position3D.Y, Position3D.Z);
             return Matrix4x4.CreateLookAt(
                 position,
-                position + Forward3D,
+                position + Vector3.Transform(Vector3.Forward, Rotation3D),
                 Vector3.Up
             );            
         }
     }
+    
+    public Quaternion Rotation3D = Quaternion.Identity;
 
     public Matrix4x4 Projection => Matrix4x4.CreateOrthographicOffCenter(
         0,

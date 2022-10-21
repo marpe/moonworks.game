@@ -13,6 +13,9 @@ public class MyGameMain : Game
     private int _numberOfTimesPressed;
     private readonly Camera _camera;
     private readonly Texture _depthTexture;
+    private Quaternion _pressedRotation = Quaternion.Identity;
+    private bool _wasHeld;
+    private Vector2 _cameraRotation;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -122,29 +125,33 @@ public class MyGameMain : Game
 
         if (_camera.Use3D)
         {
+            if (Inputs.Mouse.LeftButton.IsHeld)
+            {
+                var rotationSpeed = 0.1f;
+                _cameraRotation += new Vector2(-Inputs.Mouse.DeltaX, -Inputs.Mouse.DeltaY) * rotationSpeed * (float)dt.TotalSeconds;
+                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+                _camera.Rotation3D = rotation;
+            }
+
             var cameraSpeed = 500f;
             if (Inputs.Keyboard.IsDown(KeyCode.W))
             {
-                _camera.Position3D += Vector3.Forward * 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+                _camera.Position3D += Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * cameraSpeed * (float)dt.TotalSeconds;
             }
 
             if (Inputs.Keyboard.IsDown(KeyCode.S))
             {
-                _camera.Position3D -= Vector3.Forward * 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+                _camera.Position3D -= Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * cameraSpeed * (float)dt.TotalSeconds;
             }
-        
+
             if (Inputs.Keyboard.IsDown(KeyCode.A))
             {
-                _camera.Position3D += Vector3.Left * 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+                _camera.Position3D += Vector3.Transform(Vector3.Left, _camera.Rotation3D) * cameraSpeed * (float)dt.TotalSeconds;
             }
-        
+
             if (Inputs.Keyboard.IsDown(KeyCode.D))
             {
-                _camera.Position3D += Vector3.Right * 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position3D: {_camera.Position3D}");
+                _camera.Position3D += Vector3.Transform(Vector3.Right, _camera.Rotation3D) * cameraSpeed * (float)dt.TotalSeconds;
             }
         }
         else
@@ -153,25 +160,21 @@ public class MyGameMain : Game
             if (Inputs.Keyboard.IsDown(KeyCode.W))
             {
                 _camera.Position.Y += 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position: {_camera.Position}");
             }
 
             if (Inputs.Keyboard.IsDown(KeyCode.S))
             {
                 _camera.Position.Y -= 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position: {_camera.Position}");
             }
-        
+
             if (Inputs.Keyboard.IsDown(KeyCode.A))
             {
                 _camera.Position.X -= 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position: {_camera.Position}");
             }
-        
+
             if (Inputs.Keyboard.IsDown(KeyCode.D))
             {
                 _camera.Position.X += 500f * (float)dt.TotalSeconds;
-                Logger.LogInfo($"Position: {_camera.Position}");
             }
         }
     }
@@ -188,7 +191,7 @@ public class MyGameMain : Game
         }
 
         _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, _menuDepth, _sampler);
-        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0.05f, _sampler);
+        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 100f, _sampler);
 
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
