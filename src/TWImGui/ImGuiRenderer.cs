@@ -920,7 +920,7 @@ public class ImGuiRenderer
         var count = 0;
         while (titlePtr[count] != 0)
         {
-            titlePtr += 1;
+            count += 1;
         }
 
         var titleStr = Encoding.ASCII.GetString(titlePtr, count);

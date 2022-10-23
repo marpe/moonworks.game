@@ -211,7 +211,6 @@ public class MyGameMain : Game
             new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
-
         _camera.Size = windowSize;
         SpriteBatch.Draw(commandBuffer, _camera.ViewProjectionMatrix);
 
