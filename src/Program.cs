@@ -14,7 +14,7 @@ class Program
 		};
 		var frameLimiterSettings = new FrameLimiterSettings
 		{
-			Mode = FrameLimiterMode.Capped,
+			Mode = FrameLimiterMode.Uncapped,
 			Cap = 60
 		};
 		Logger.LogInfo = LogInfo;

@@ -39,9 +39,9 @@ public static class ImGuiThemes
 		colors[(int)ImGuiCol.CheckMark] = new Num.Vector4(2 / 255f, 115f / 255f, 235f / 255f, 255f / 255f); //new Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
 		colors[(int)ImGuiCol.SliderGrab] = new Num.Vector4(0.34f, 0.34f, 0.34f, 0.54f);
 		colors[(int)ImGuiCol.SliderGrabActive] = new Num.Vector4(0.56f, 0.56f, 0.56f, 0.54f);
-		colors[(int)ImGuiCol.Button] = new Num.Vector4(2 / 255f, 115f / 255f, 235f / 255f, 255f / 255f); // new Num.Vector4(0.05f, 0.05f, 0.05f, 0.54f);
-		colors[(int)ImGuiCol.ButtonHovered] = new Num.Vector4(12 / 255f, 109 / 255f, 221 / 255f, 255f / 255f); // new Num.Vector4(0.19f, 0.19f, 0.19f, 0.54f);
-		colors[(int)ImGuiCol.ButtonActive] = new Num.Vector4(25 / 255f, 94 / 255f, 181 / 255f, 255f / 255f); // new Num.Vector4(0.20f, 0.22f, 0.23f, 1.00f);
+		colors[(int)ImGuiCol.Button] = new Num.Vector4(0, 0.34f, 0.69f, 1); // new Num.Vector4(2 / 255f, 115f / 255f, 235f / 255f, 255f / 255f); // new Num.Vector4(0.05f, 0.05f, 0.05f, 0.54f);
+		colors[(int)ImGuiCol.ButtonHovered] = new Num.Vector4(0.1f, 0.32f, 0.62f, 1); // new Num.Vector4(0.19f, 0.19f, 0.19f, 0.54f);
+		colors[(int)ImGuiCol.ButtonActive] = new Num.Vector4(0.09f, 0.29f, 0.51f, 1f); // new Num.Vector4(0.20f, 0.22f, 0.23f, 1.00f);
 		colors[(int)ImGuiCol.Header] = new Num.Vector4(23 / 255f, 65 / 255f, 118 / 255f, 255 / 255f);
 		colors[(int)ImGuiCol.HeaderHovered] = new Num.Vector4(23 / 255f, 65 / 255f, 118 / 255f, 255 / 255f); // new Num.Vector4(45 / 255f, 45 / 255f, 45 / 255f, 255 / 255f);
 		colors[(int)ImGuiCol.HeaderActive] = new Num.Vector4(23 / 255f, 65 / 255f, 118 / 255f, 255 / 255f);

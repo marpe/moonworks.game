@@ -1,6 +1,108 @@
 using ImGuiNET;
+using MyGame.Utils;
 
 namespace MyGame.TWImGui;
+
+public class BlendStateEditor
+{
+    private static readonly string[] _blendOpNames;
+    private static readonly string[] _blendFactorNames;
+
+    static BlendStateEditor()
+    {
+        _blendOpNames = Enum.GetNames<BlendOp>();
+        _blendFactorNames = Enum.GetNames<BlendFactor>();
+    }
+
+    private static bool AreEqual(ColorAttachmentBlendState a, ColorAttachmentBlendState b)
+    {
+        return a.BlendEnable == b.BlendEnable &&
+               a.AlphaBlendOp == b.AlphaBlendOp &&
+               a.ColorBlendOp == b.ColorBlendOp &&
+               a.SourceColorBlendFactor == b.SourceColorBlendFactor &&
+               a.SourceAlphaBlendFactor == b.SourceAlphaBlendFactor &&
+               a.DestinationColorBlendFactor == b.DestinationColorBlendFactor &&
+               a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor;
+    }
+
+    public static bool ComboStep(string label, ref int currentIndex, string[] items)
+    {
+        var result = false;
+
+        ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
+        
+        if (ImGui.Button(FontAwesome6.ChevronLeft + "##Left" + label))
+        {
+            currentIndex = (items.Length + currentIndex - 1) % items.Length;
+            result = true;
+        }
+
+        ImGui.SameLine(0, 0);
+        if (ImGui.Button(FontAwesome6.ChevronRight + "##Right" + label))
+        {
+            currentIndex = (items.Length + currentIndex + 1) % items.Length;
+            result = true;
+        }
+
+        ImGui.PopStyleColor(3);
+        
+        ImGui.SameLine();
+        result |= ImGui.Combo(label, ref currentIndex, items, items.Length);
+
+        return result;
+    }
+
+    public static bool Draw(string name, ref ColorAttachmentBlendState state)
+    {
+        ImGui.PushID(name);
+        var alphaBlendOpIndex = (int)state.AlphaBlendOp;
+        var colorBlendOpIndex = (int)state.ColorBlendOp;
+        var destColorBlendFactorIndex = (int)state.DestinationColorBlendFactor;
+        var destAlphaBlendFactorIndex = (int)state.DestinationAlphaBlendFactor;
+        var sourceColorBlendFactorIndex = (int)state.SourceColorBlendFactor;
+        var sourceAlphaBlendFactorIndex = (int)state.SourceAlphaBlendFactor;
+        var blendEnabled = state.BlendEnable;
+        var prevState = state;
+        ImGui.Checkbox("Enabled", ref blendEnabled);
+        ComboStep("AlphaOp", ref alphaBlendOpIndex, _blendOpNames);
+        ComboStep("ColorOp", ref colorBlendOpIndex, _blendOpNames);
+        ComboStep("SourceColor", ref sourceColorBlendFactorIndex, _blendFactorNames);
+        ComboStep("SourceAlpha", ref sourceAlphaBlendFactorIndex, _blendFactorNames);
+        ComboStep("DestColor", ref destColorBlendFactorIndex, _blendFactorNames);
+        ComboStep("DestAlpha", ref destAlphaBlendFactorIndex, _blendFactorNames);
+        state.BlendEnable = blendEnabled;
+        state.AlphaBlendOp = (BlendOp)alphaBlendOpIndex;
+        state.ColorBlendOp = (BlendOp)colorBlendOpIndex;
+        state.SourceColorBlendFactor = (BlendFactor)sourceColorBlendFactorIndex;
+        state.SourceAlphaBlendFactor = (BlendFactor)sourceAlphaBlendFactorIndex;
+        state.DestinationColorBlendFactor = (BlendFactor)destColorBlendFactorIndex;
+        state.DestinationAlphaBlendFactor = (BlendFactor)destAlphaBlendFactorIndex;
+        /// Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
+        ImGui.Text($"sourceColor * {state.SourceColorBlendFactor} + destColor * {state.DestinationColorBlendFactor}");
+        ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor} + destAlpha * {state.DestinationAlphaBlendFactor}");
+        if (ImGui.Button("AlphaBlend"))
+        {
+            state = ColorAttachmentBlendState.AlphaBlend;
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("NonPremultiplied"))
+        {
+            state = ColorAttachmentBlendState.NonPremultiplied;
+        }
+
+        ImGui.SameLine();
+        if (ImGui.Button("Opaque"))
+        {
+            state = ColorAttachmentBlendState.Opaque;
+        }
+
+        ImGui.PopID();
+        return !AreEqual(prevState, state);
+    }
+}
 
 public class ImGuiScreen
 {
@@ -20,6 +122,11 @@ public class ImGuiScreen
     private MyGameMain _game;
     private float _alpha = 1.0f;
     private readonly Sampler _sampler;
+    private ulong _imGuiDrawCount;
+    private Texture? _lastRender;
+    private int _updateFps = 60;
+    private float _updateRate = 1 / 60f;
+    private float _lastRenderTime;
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -59,36 +166,25 @@ public class ImGuiScreen
     {
     }
 
-    public void Draw(SpriteBatch spriteBatch, Texture depthTexture, GraphicsPipeline pipeline, CommandBuffer commandBuffer,
-        Texture swapchainTexture)
+    public void Draw(Texture depthTexture, CommandBuffer commandBuffer, Texture swapchainTexture)
     {
-        _imGuiRenderer.Begin((float)_game.Timestep.TotalSeconds);
-        DrawInternal();
-        var render = _imGuiRenderer.End();
-        var sprite = new Sprite(render);
-        spriteBatch.Start(new TextureSamplerBinding(sprite.Texture, _sampler));
-        spriteBatch.Add(sprite, Color.White, 0, Matrix3x2.Identity);
-        spriteBatch.PushVertexData(commandBuffer);
+        if (_lastRender == null || _game.TotalElapsedTime - _lastRenderTime >= _updateRate)
+        {
+            _imGuiDrawCount++;
+            _imGuiRenderer.Begin((float)_game.Timestep.TotalSeconds);
+            DrawInternal();
+            _lastRender = _imGuiRenderer.End();
+            _lastRenderTime = _game.TotalElapsedTime;
+        }
 
-        commandBuffer.BeginRenderPass(new DepthStencilAttachmentInfo(depthTexture, new DepthStencilValue(0, 0)),
-            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load));
-        commandBuffer.BindGraphicsPipeline(pipeline);
-        var view = Matrix4x4.CreateLookAt(
-            new Vector3(0, 0, 1),
-            new Vector3(0, 0, 0),
-            Vector3.Up
+        var sprite = new Sprite(_lastRender);
+        _game.SpriteBatch.AddSingle(commandBuffer, sprite, Color.White, 0, Matrix3x2.Identity);
+
+        commandBuffer.BeginRenderPass(
+            new DepthStencilAttachmentInfo(depthTexture, new DepthStencilValue(0, 0)),
+            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load)
         );
-        var projection = Matrix4x4.CreateOrthographicOffCenter(
-            0,
-            swapchainTexture.Width,
-            swapchainTexture.Height,
-            0,
-            0.0001f,
-            4000f
-        );
-        var viewProjection = view * projection;
-        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
-        spriteBatch.Draw(commandBuffer, vertexParamOffset);
+        _game.SpriteBatch.Draw(commandBuffer, swapchainTexture.Width, swapchainTexture.Height);
         commandBuffer.EndRenderPass();
     }
 
@@ -105,7 +201,25 @@ public class ImGuiScreen
             ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
             ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
             ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
+            ImGui.TextUnformatted($"ImGuiDrawCount: {_imGuiDrawCount}");
+            if (ImGui.SliderInt("UpdateFPS", ref _updateFps, 1, 120))
+            {
+                _updateRate = 1.0f / _updateFps;
+            }
+
             ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
+            ImGui.Separator();
+            if (BlendStateEditor.Draw("SpriteBatch", ref _game.SpriteBatch.CustomBlendState))
+            {
+                _game.SpriteBatch.UpdateCustomBlendPipeline();
+            }
+
+            ImGui.Separator();
+            var blendState = _imGuiRenderer.BlendState;
+            if (BlendStateEditor.Draw("ImGui", ref blendState))
+            {
+                _imGuiRenderer.SetBlendState(blendState);
+            }
         }
 
         ImGui.End();

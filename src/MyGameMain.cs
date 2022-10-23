@@ -12,19 +12,14 @@ public class MyGameMain : Game
 
     public float ElapsedTime { get; private set; }
 
-    private readonly SpriteBatch _spriteBatch;
+    public readonly SpriteBatch SpriteBatch;
     private readonly SpriteRenderer _spriteRenderer;
-    private GraphicsPipeline _spritePipeline;
-    private readonly Sampler _sampler;
     private readonly SpriteRenderer _menuRenderer;
     private readonly Camera _camera;
     private Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     private ImGuiScreen _imGuiScreen;
     private bool _drawImGui;
-    private Point _oldWindowSize;
-    private bool _sizeChanged;
-    private Point _currentWindowSize;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -33,9 +28,7 @@ public class MyGameMain : Game
     ) : base(windowCreateInfo, frameLimiterSettings, 60, debugMode)
     {
         var sw = Stopwatch.StartNew();
-        _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _spritePipeline = CreateGraphicsPipeline();
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
 
         var ldtkPath = Path.Combine(ContentRoot, ContentPaths.Ldtk.MapLdtk);
         var jsonString = File.ReadAllText(ldtkPath);
@@ -68,73 +61,11 @@ public class MyGameMain : Game
         return texture;
     }
 
-    private GraphicsPipeline CreateGraphicsPipeline()
-    {
-        var spriteVertexShader = new ShaderModule(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
-        var spriteFragmentShader = new ShaderModule(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
-
-        var myVertexBindings = new VertexBinding[]
-        {
-            VertexBinding.Create<Position3DTextureColorVertex>()
-        };
-
-        var myVertexAttributes = new VertexAttribute[]
-        {
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Position), 0),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.TexCoord), 1),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
-        };
-
-        var myVertexInputState = new VertexInputState
-        {
-            VertexBindings = myVertexBindings,
-            VertexAttributes = myVertexAttributes
-        };
-
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false
-        };
-
-        var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
-        {
-            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
-            ),
-            DepthStencilState = myDepthStencilState,
-            VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0),
-            FragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1),
-            MultisampleState = MultisampleState.None,
-            RasterizerState = RasterizerState.CCW_CullNone,
-            PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = myVertexInputState,
-        };
-
-        return new GraphicsPipeline(
-            GraphicsDevice,
-            myGraphicsPipelineCreateInfo
-        );
-    }
-
     protected override void Update(TimeSpan dt)
     {
         FrameCount++;
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
-
-        _currentWindowSize = MainWindow.Size;
-        if (_currentWindowSize != _oldWindowSize)
-        {
-            Logger.LogInfo($"Size changed: old ({_oldWindowSize}) -> new ({_currentWindowSize}) ");
-            _sizeChanged = true;
-        }
-
-        _oldWindowSize = _currentWindowSize;
 
         _imGuiScreen.Update();
 
@@ -150,8 +81,20 @@ public class MyGameMain : Game
 
         if (Inputs.Keyboard.IsPressed(KeyCode.F3))
         {
-            var nextMode = ((int)MainWindow.ScreenMode + 1) % 3;
-            MainWindow.ChangeScreenMode((ScreenMode)nextMode);
+            var numBlendStates = Enum.GetValues<BlendState>().Length;
+            var nextMode = (numBlendStates + (int)SpriteBatch.BlendState + 1) % numBlendStates;
+            SpriteBatch.BlendState = (BlendState)nextMode;
+            Logger.LogInfo($"BlendState: {SpriteBatch.BlendState}");
+            // MainWindow.ChangeScreenMode((ScreenMode)nextMode);
+        }
+        
+        if (Inputs.Keyboard.IsPressed(KeyCode.F4))
+        {
+            var numBlendStates = Enum.GetValues<BlendState>().Length;
+            var nextMode = (numBlendStates + (int)SpriteBatch.BlendState - 1) % numBlendStates;
+            SpriteBatch.BlendState = (BlendState)nextMode;
+            Logger.LogInfo($"BlendState: {SpriteBatch.BlendState}");
+            // MainWindow.ChangeScreenMode((ScreenMode)nextMode);
         }
 
         if (_camera.Use3D)
@@ -225,38 +168,31 @@ public class MyGameMain : Game
             return;
         }
 
-        if (_sizeChanged)
+        
+        var windowSize = MainWindow.Size;
+        if (windowSize.X != _depthTexture.Width || windowSize.Y != _depthTexture.Height)
         {
             _depthTexture.Dispose();
-            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)_currentWindowSize.X, (uint)_currentWindowSize.Y,
+            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y,
                 TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-            _sizeChanged = false;
         }
 
-        _menuRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 5f, _sampler);
-        _spriteRenderer.Draw(commandBuffer, _spriteBatch, Matrix3x2.Identity, Color.White, 0, _sampler);
+        _menuRenderer.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 5f);
+        _spriteRenderer.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
 
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
 
-        var windowSize = MainWindow.Size;
         _camera.Size = windowSize;
-        commandBuffer.SetViewport(new Viewport(0, 0, windowSize.X, windowSize.Y));
-        commandBuffer.SetScissor(new Rect(0, 0, windowSize.X, windowSize.Y));
-
-        commandBuffer.BindGraphicsPipeline(_spritePipeline);
-
-        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(_camera.ViewProjectionMatrix);
-
-        _spriteBatch.Draw(commandBuffer, vertexParamOffset);
+        SpriteBatch.Draw(commandBuffer, _camera.ViewProjectionMatrix);
 
         commandBuffer.EndRenderPass();
 
         if (_drawImGui)
         {
-            _imGuiScreen.Draw(_spriteBatch, _depthTexture, _spritePipeline, commandBuffer, swapchainTexture);
+            _imGuiScreen.Draw(_depthTexture, commandBuffer, swapchainTexture);
         }
 
         GraphicsDevice.Submit(commandBuffer);

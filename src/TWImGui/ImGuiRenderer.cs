@@ -40,7 +40,7 @@ public class ImGuiRenderer
 
     private readonly Game _game;
     private readonly Sampler _textureSampler;
-    private readonly GraphicsPipeline _pipeline;
+    private GraphicsPipeline _pipeline;
 
     private Platform_CreateWindow _createWindow;
     private Platform_DestroyWindow _destroyWindow;
@@ -55,6 +55,7 @@ public class ImGuiRenderer
     private Platform_SetWindowTitle _setWindowTitle;
     private Platform_SetWindowAlpha _setWindowAlpha;
     private Texture _render;
+    public ColorAttachmentBlendState BlendState { get; private set; }
 
     public ImGuiRenderer(Game game)
     {
@@ -84,7 +85,18 @@ public class ImGuiRenderer
         _mouseCursors.Add(ImGuiMouseCursor.NotAllowed, SDL.SDL_CreateSystemCursor(SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_NO));
 
         _textureSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
-        _pipeline = SetupPipeline(game.GraphicsDevice);
+        BlendState = new ColorAttachmentBlendState()
+        {
+            BlendEnable = true,
+            AlphaBlendOp = BlendOp.Add,
+            ColorBlendOp = BlendOp.Add,
+            ColorWriteMask = ColorComponentFlags.RGBA,
+            SourceColorBlendFactor = BlendFactor.SourceAlpha,
+            SourceAlphaBlendFactor = BlendFactor.One,
+            DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
+            DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
+        };
+        _pipeline = SetupPipeline(game.GraphicsDevice, BlendState);
 
         var windowSize = game.MainWindow.Size;
         _render = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
@@ -212,7 +224,7 @@ public class ImGuiRenderer
         window.Disposed -= WindowDisposed;
     }
 
-    private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice)
+    private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice, ColorAttachmentBlendState blendState)
     {
         var vertexShader = new ShaderModule(graphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Imgui.SpriteVertSpv));
         var fragmentShader =
@@ -239,7 +251,7 @@ public class ImGuiRenderer
         var pipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.NonPremultiplied)
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0),
@@ -254,6 +266,13 @@ public class ImGuiRenderer
             graphicsDevice,
             pipelineCreateInfo
         );
+    }
+
+    public void SetBlendState(ColorAttachmentBlendState blendState)
+    {
+        _pipeline.Dispose();
+        BlendState = blendState;
+        _pipeline = SetupPipeline(_game.GraphicsDevice, blendState);
     }
 
     public void Dispose()
@@ -275,21 +294,22 @@ public class ImGuiRenderer
             {
                 texture.Value.Dispose();
             }
-
             _loadedTextures.Clear();
 
             foreach (var font in _fonts)
             {
                 font.Value.Destroy();
             }
-
             _fonts.Clear();
 
             foreach (var cursor in _mouseCursors)
             {
                 SDL.SDL_FreeCursor(cursor.Value);
             }
+            _mouseCursors.Clear();
 
+            _render.Dispose();
+            
             Inputs.TextInput -= OnTextInput;
             _game.Exiting -= Dispose;
         }
@@ -441,6 +461,8 @@ public class ImGuiRenderer
         ImGui.Render();
 
         var windowSize = _game.MainWindow.Size;
+        // SDL.SDL_Vulkan_GetDrawableSize(_game.MainWindow.Handle, out var width, out var height);
+        
         if (windowSize.X != _render.Width || windowSize.Y != _render.Height)
         {
             _render.Dispose();
