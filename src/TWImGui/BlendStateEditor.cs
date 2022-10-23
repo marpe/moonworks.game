@@ -32,14 +32,14 @@ public static class BlendStateEditor
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
 
-        if (ImGui.Button(FontAwesome6.ChevronLeft + "##Left" + label))
+        if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label))
         {
             currentIndex = (items.Length + currentIndex - 1) % items.Length;
             result = true;
         }
 
         ImGui.SameLine(0, 0);
-        if (ImGui.Button(FontAwesome6.ChevronRight + "##Right" + label))
+        if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label))
         {
             currentIndex = (items.Length + currentIndex + 1) % items.Length;
             result = true;

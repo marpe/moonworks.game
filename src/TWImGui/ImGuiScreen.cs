@@ -23,6 +23,7 @@ public class ImGuiScreen
     private float _lastRenderTime;
     private readonly string[] _blendStateNames;
     private List<ImGuiMenu> _menuItems = new();
+    private float _mainMenuPaddingY = 6f;
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -108,6 +109,10 @@ public class ImGuiScreen
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
             ImGui.Text("ImGui Window 1");
+            ImGui.Separator();
+            ImGui.SliderFloat("MenuPadding", ref _mainMenuPaddingY, 0, 100f);
+            ImGui.Separator();
+            ImGui.TextUnformatted($"Nav: {ImGui.GetIO().NavActive}");
             ImGui.TextUnformatted($"FrameCount: {_game.FrameCount}");
             ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
             ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
@@ -151,15 +156,28 @@ public class ImGuiScreen
         ImGui.End();
     }
 
-    private void DrawMenu(ImGuiMenu menu)
+    private void DrawMenu(ImGuiMenu menu, int depth = 0)
     {
         if (menu.Children.Count > 0)
         {
-            if (ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true))
+            if (depth == 0)
+            {
+                var style = ImGui.GetStyle();
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style.ItemSpacing.X, style.FramePadding.Y * 2f));
+            }
+
+            var result = ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true);
+            if (depth == 0)
+            {
+                ImGui.PopStyleVar(2);
+            }
+
+            if (result)
             {
                 foreach (var child in menu.Children)
                 {
-                    DrawMenu(child);
+                    DrawMenu(child, depth + 1);
                 }
 
                 ImGui.EndMenu();
@@ -192,31 +210,38 @@ public class ImGuiScreen
 
     private void DrawMenu()
     {
+        var style = ImGui.GetStyle();
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
         var result = ImGui.BeginMainMenuBar();
-        if (result)
+        ImGui.PopStyleVar();
+        if (!result)
+            return;
+
+        foreach (var menu in _menuItems)
         {
-            foreach (var menu in _menuItems)
-            {
-                DrawMenu(menu);
-            }
-
-            foreach (var menu in _menuItems)
-            {
-                CheckMenuShortcuts(menu);
-            }
-
-            if (ImGui.BeginMenu("Window"))
-            {
-                foreach (var (key, window) in Windows)
-                {
-                    ImGui.MenuItem(window.Title, window.KeyboardShortcut, ref window.IsOpen);
-                }
-
-                ImGui.EndMenu();
-            }
-
-            ImGui.EndMainMenuBar();
+            DrawMenu(menu);
         }
+
+        foreach (var menu in _menuItems)
+        {
+            CheckMenuShortcuts(menu);
+        }
+
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style.ItemSpacing.X, style.FramePadding.Y * 2f));
+        var windowMenu = ImGui.BeginMenu("Window");
+        ImGui.PopStyleVar(2);
+        if (windowMenu)
+        {
+            foreach (var (key, window) in Windows)
+            {
+                ImGui.MenuItem(window.Title, window.KeyboardShortcut, ref window.IsOpen);
+            }
+
+            ImGui.EndMenu();
+        }
+
+        ImGui.EndMainMenuBar();
     }
 
     private void DrawInternal()
