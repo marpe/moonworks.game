@@ -215,6 +215,14 @@ public class MyGameMain : Game
 
         if (_camera.Use3D)
         {
+            if (Inputs.Keyboard.IsPressed(KeyCode.Home))
+            {
+                _cameraRotation = new Vector2(0, MathHelper.Pi);
+                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+                _camera.Rotation3D = rotation;
+                _camera.Position3D = new Vector3(0, 0, -1000);
+            }
+
             if (Inputs.Mouse.RightButton.IsHeld)
             {
                 var rotationSpeed = 0.1f;
@@ -330,7 +338,7 @@ public class MyGameMain : Game
 
         if (_saveTexture)
         {
-            SaveTextureToPng(GraphicsDevice, _fontTexture, "fontTexture.png");
+            // SaveTextureToPng(GraphicsDevice, _fontTexture, "fontTexture.png");
             SaveTextureToPng(GraphicsDevice, _fontPacker.Texture, "fontPacker.png");
             _saveTexture = false;
         }
@@ -354,6 +362,7 @@ public class MyGameMain : Game
         {
             var prevLength = pixels.Length;
             Array.Resize(ref pixels, pixels.Length * 4);
+            var numZeroes = 0;
             for (var i = prevLength - 1; i >= 0; i--)
             {
                 var p = pixels[i];
@@ -362,7 +371,11 @@ public class MyGameMain : Game
                 pixels[i * 4 + 1] = 255;
                 pixels[i * 4 + 2] = 255;
                 pixels[i * 4 + 3] = p;
+                if (p == 0)
+                    numZeroes++;
             }
+
+            Logger.LogInfo($"NumZeros: {numZeroes}");
         }
 
         return pixels;
