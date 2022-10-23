@@ -155,7 +155,7 @@ public class ImGuiRenderer
                 break;
         }
 
-        return false;
+        return true;
     }
 
     private unsafe void SetupMultiViewport(Window mainWindow)

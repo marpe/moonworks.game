@@ -66,12 +66,30 @@ public class ImGuiScreen
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F2"
+            },
+            new ImGuiCallbackWindow("TestWindow2", DrawTestWindow2)
+            {
+                IsOpen = true,
+                KeyboardShortcut = "^F3"
             }
         };
         foreach (var window in windows)
         {
             Windows.Add(window.Title, window);
         }
+    }
+
+    private void DrawTestWindow2(ImGuiWindow window)
+    {
+        if (!window.IsOpen)
+            return;
+
+        if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
+        {
+            ImGui.TextUnformatted("LALLALALALAA");
+        }
+
+        ImGui.End();
     }
 
     public void Update()
