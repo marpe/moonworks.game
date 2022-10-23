@@ -206,12 +206,6 @@ public class SpriteBatch
         return view * projection;
     }
 
-    public void Draw(CommandBuffer commandBuffer, uint width, uint height)
-    {
-        var viewProjection = GetViewProjection(0, 0, width, height);
-        Draw(commandBuffer, viewProjection);
-    }
-
     public void Draw(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
         // commandBuffer.SetViewport(new Viewport(0, 0, windowSize.X, windowSize.Y));

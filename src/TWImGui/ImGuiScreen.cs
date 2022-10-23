@@ -1,6 +1,5 @@
 using ImGuiNET;
 using MyGame.Graphics;
-using MyGame.Utils;
 
 namespace MyGame.TWImGui;
 
@@ -97,7 +96,7 @@ public class ImGuiScreen
     {
     }
 
-    public void Draw(Texture depthTexture, CommandBuffer commandBuffer, Texture swapchainTexture)
+    public void Draw(Renderer renderer)
     {
         if (_lastRender == null || _game.TotalElapsedTime - _lastRenderTime >= _updateRate)
         {
@@ -109,14 +108,11 @@ public class ImGuiScreen
         }
 
         var sprite = new Sprite(_lastRender);
-        _game.SpriteBatch.AddSingle(commandBuffer, sprite, Color.White, 0, Matrix3x2.Identity);
+        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
 
-        commandBuffer.BeginRenderPass(
-            new DepthStencilAttachmentInfo(depthTexture, new DepthStencilValue(0, 0)),
-            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load)
-        );
-        _game.SpriteBatch.Draw(commandBuffer, swapchainTexture.Width, swapchainTexture.Height);
-        commandBuffer.EndRenderPass();
+        var swap = renderer.Swap ?? throw new InvalidOperationException();
+        renderer.BeginRenderPass(SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height), false);
+        renderer.EndRenderPass();
     }
 
     private void DrawTestWindow(ImGuiWindow window)
@@ -144,14 +140,14 @@ public class ImGuiScreen
 
             ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
             ImGui.Separator();
-            var spriteBatchBlendStateIndex = (int)_game.SpriteBatch.BlendState;
+            var spriteBatchBlendStateIndex = (int)_game.Renderer.SpriteBatch.BlendState;
             if (ImGui.BeginCombo("SpriteBatchBlendState", _blendStateNames[spriteBatchBlendStateIndex]))
             {
                 for (var i = 0; i < _blendStateNames.Length; i++)
                 {
                     var isSelected = i == spriteBatchBlendStateIndex;
                     if (ImGui.Selectable(_blendStateNames[i], isSelected))
-                        _game.SpriteBatch.BlendState = (BlendState)i;
+                        _game.Renderer.SpriteBatch.BlendState = (BlendState)i;
                     if (isSelected)
                         ImGui.SetItemDefaultFocus();
                 }
@@ -159,16 +155,16 @@ public class ImGuiScreen
                 ImGui.EndCombo();
             }
 
-            if (BlendStateEditor.Draw("SpriteBatch", ref _game.SpriteBatch.CustomBlendState))
+            if (BlendStateEditor.Draw("SpriteBatch", ref _game.Renderer.SpriteBatch.CustomBlendState))
             {
-                _game.SpriteBatch.UpdateCustomBlendPipeline();
+                _game.Renderer.SpriteBatch.UpdateCustomBlendPipeline();
             }
 
             ImGui.Separator();
 
-            if (BlendStateEditor.Draw("FontPipe", ref _game.FontPipelineBlend))
+            if (BlendStateEditor.Draw("FontPipe", ref _game.Renderer.FontPipelineBlend))
             {
-                _game.RecreateFontPipeline();
+                _game.Renderer.RecreateFontPipeline();
             }
 
             ImGui.Separator();

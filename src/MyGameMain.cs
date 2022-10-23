@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using MoonWorks.Graphics.Font;
+using MyGame.Components;
 using MyGame.Graphics;
 using MyGame.TWImGui;
 
@@ -15,23 +16,17 @@ public class MyGameMain : Game
 
     public float ElapsedTime { get; private set; }
 
-    public readonly SpriteBatch SpriteBatch;
-    private SpriteRenderer? _spriteRenderer;
-    private SpriteRenderer? _menuRenderer;
+    private Sprite? _spriteRenderer;
+    private Sprite? _menuRenderer;
     private readonly Camera _camera;
-    private Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     private ImGuiScreen? _imGuiScreen;
     private bool _drawImGui = true;
     private KeyCode[] _modifierKeys;
-    private Font _font;
-    private Packer _fontPacker;
+
     private bool _saveTexture;
-    private TextBatch _textBatch;
-    private readonly Sampler _sampler;
-    private GraphicsPipeline _fontPipeline;
-    public ColorAttachmentBlendState FontPipelineBlend = ColorAttachmentBlendState.AlphaBlend;
-    private Texture _fontTexture;
+
+    public readonly Renderer Renderer;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -40,19 +35,15 @@ public class MyGameMain : Game
     ) : base(windowCreateInfo, frameLimiterSettings, 60, debugMode)
     {
         var sw = Stopwatch.StartNew();
-        SpriteBatch = new SpriteBatch(GraphicsDevice);
+
+        Renderer = new Renderer(this);
 
         LoadLDtk();
 
         LoadTextures();
 
-        LoadFonts();
-
         _camera = new Camera();
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
-
-        _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
-        _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
 
         Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
 
@@ -71,49 +62,6 @@ public class MyGameMain : Game
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
-    private unsafe Texture CreateTexture(GraphicsDevice device, uint width, uint height, byte[] pixels)
-    {
-        var texture = Texture.CreateTexture2D(GraphicsDevice, width, height,
-            TextureFormat.R8G8B8A8,
-            TextureUsageFlags.Sampler
-        );
-        var cmdBuffer = GraphicsDevice.AcquireCommandBuffer();
-        fixed (byte* p = pixels)
-        {
-            cmdBuffer.SetTextureData(texture, (IntPtr)p, (uint)pixels.Length);
-            GraphicsDevice.Submit(cmdBuffer);
-        }
-
-        return texture;
-    }
-
-    private void LoadFonts()
-    {
-        _fontPipeline = SpriteBatch.CreateGraphicsPipeline(GraphicsDevice, FontPipelineBlend);
-        var fontPath = Path.Combine(ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
-        _font = new Font(fontPath);
-
-        _fontPacker = new Packer(GraphicsDevice, _font, 48, 512, 512);
-        var fontRange = new FontRange()
-        {
-            FirstCodepoint = 0x20,
-            NumChars = 0x7e - 0x20 + 1,
-            OversampleH = 0,
-            OversampleV = 0
-        };
-        var result = _fontPacker.PackFontRanges(fontRange);
-
-        var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
-        _fontPacker.SetTextureData(commandBuffer);
-        GraphicsDevice.Submit(commandBuffer);
-
-        var pixels = ConvertTextureFormat(GraphicsDevice, _fontPacker.Texture);
-        var (width, height) = (_fontPacker.Texture.Width, _fontPacker.Texture.Height);
-        _fontTexture = CreateTexture(GraphicsDevice, width, height, pixels);
-
-        _textBatch = new TextBatch(GraphicsDevice);
-    }
-
     private void LoadTextures()
     {
         Task.Run(() =>
@@ -121,10 +69,10 @@ public class MyGameMain : Game
             var sw2 = Stopwatch.StartNew();
             var asepritePath = Path.Combine(ContentRoot, ContentPaths.Ldtk.Tileset1Aseprite);
             var asepriteTexture = LoadAseprite(GraphicsDevice, asepritePath);
-            _spriteRenderer = new SpriteRenderer(asepriteTexture);
+            _spriteRenderer = new Sprite(asepriteTexture);
 
             var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
-            _menuRenderer = new SpriteRenderer(menu);
+            _menuRenderer = new Sprite(menu);
             Logger.LogInfo($"Loaded textures in {sw2.ElapsedMilliseconds} ms");
         });
     }
@@ -162,12 +110,6 @@ public class MyGameMain : Game
         return false;
     }
 
-    public void RecreateFontPipeline()
-    {
-        _fontPipeline.Dispose();
-        _fontPipeline = SpriteBatch.CreateGraphicsPipeline(GraphicsDevice, FontPipelineBlend);
-    }
-
     protected override void Update(TimeSpan dt)
     {
         FrameCount++;
@@ -195,7 +137,7 @@ public class MyGameMain : Game
             _drawImGui = !_drawImGui;
         }
 
-        if (Inputs.Keyboard.IsPressed(KeyCode.F3))
+        /*if (Inputs.Keyboard.IsPressed(KeyCode.F3))
         {
             var numBlendStates = Enum.GetValues<BlendState>().Length;
             var nextMode = (numBlendStates + (int)SpriteBatch.BlendState + 1) % numBlendStates;
@@ -211,7 +153,7 @@ public class MyGameMain : Game
             SpriteBatch.BlendState = (BlendState)nextMode;
             Logger.LogInfo($"BlendState: {SpriteBatch.BlendState}");
             // MainWindow.ChangeScreenMode((ScreenMode)nextMode);
-        }
+        }*/
 
         if (_camera.Use3D)
         {
@@ -284,106 +226,47 @@ public class MyGameMain : Game
             return;
 
         RenderCount++;
-        var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
-        var swapchainTexture = commandBuffer.AcquireSwapchainTexture(MainWindow);
 
-        if (swapchainTexture == null)
-        {
-            Logger.LogError("Could not acquire swapchain texture");
+        if (!Renderer.BeginFrame())
             return;
-        }
 
-        var windowSize = MainWindow.Size;
-        if (windowSize.X != _depthTexture.Width || windowSize.Y != _depthTexture.Height)
-        {
-            _depthTexture.Dispose();
-            _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y,
-                TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        }
+        var (cb, sp) = (
+            Renderer.CommandBuffer ?? throw new InvalidOperationException(),
+            Renderer.Swap ?? throw new InvalidOperationException()
+        );
 
-        _menuRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100), Color.White, 200f);
+        if (_menuRenderer != null)
+            Renderer.DrawSprite(_menuRenderer.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100), Color.White,
+                200f);
+
+        Renderer.DrawText("Hello hej!", 0, 0, 0, Color.White);
+        Renderer.DrawText("Oooga chacakka!", 100, 100, 0, Color.White);
+
         // _spriteRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
 
-        _textBatch.Start(_fontPacker);
-        _textBatch.Draw("Text", 0, 0, 0, Color.White);
-        _textBatch.Draw("Rendering With", 100, 100, 0, Color.White);
-        _textBatch.Draw("Wellspring ", 300, 300, 0, Color.White);
-        _textBatch.UploadBufferData(commandBuffer);
-
-        commandBuffer.BeginRenderPass(
-            new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
-            new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
-        );
-        _camera.Size = windowSize;
-        SpriteBatch.Draw(commandBuffer, _camera.ViewProjectionMatrix);
-
-        // render text
-        {
-            commandBuffer.BindGraphicsPipeline(_fontPipeline);
-            var vtxUniformOffset = commandBuffer.PushVertexShaderUniforms(_camera.ViewProjectionMatrix);
-            commandBuffer.BindVertexBuffers(_textBatch.VertexBuffer);
-            commandBuffer.BindIndexBuffer(_textBatch.IndexBuffer, IndexElementSize.ThirtyTwo);
-            commandBuffer.BindFragmentSamplers(new TextureSamplerBinding(_fontTexture, _sampler));
-            commandBuffer.DrawIndexedPrimitives(0, 0, _textBatch.PrimitiveCount, vtxUniformOffset, 0);
-        }
-
-        commandBuffer.EndRenderPass();
+        _camera.Size = MainWindow.Size;
+        Renderer.BeginRenderPass(_camera.ViewProjectionMatrix);
+        // stuff
+        Renderer.EndRenderPass();
 
         if (_imGuiScreen != null && _drawImGui)
         {
-            _imGuiScreen.Draw(_depthTexture, commandBuffer, swapchainTexture);
+            _imGuiScreen.Draw(Renderer);
         }
 
-        GraphicsDevice.Submit(commandBuffer);
+        Renderer.EndFrame();
 
         if (_saveTexture)
         {
             // SaveTextureToPng(GraphicsDevice, _fontTexture, "fontTexture.png");
-            SaveTextureToPng(GraphicsDevice, _fontPacker.Texture, "fontPacker.png");
+            SaveTextureToPng(GraphicsDevice, Renderer.FontPacker.Texture, "fontPacker.png");
             _saveTexture = false;
         }
     }
 
-    private static byte[] ConvertTextureFormat(GraphicsDevice device, Texture texture)
-    {
-        var pixelSize = texture.Format switch
-        {
-            TextureFormat.R8 => 8u,
-            _ => 32u,
-        };
-        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
-        var commandBuffer = device.AcquireCommandBuffer();
-        commandBuffer.CopyTextureToBuffer(texture, buffer);
-        device.Submit(commandBuffer);
-        device.Wait();
-        var pixels = new byte[buffer.Size];
-        buffer.GetData(pixels, (uint)pixels.Length);
-        if (texture.Format == TextureFormat.R8)
-        {
-            var prevLength = pixels.Length;
-            Array.Resize(ref pixels, pixels.Length * 4);
-            var numZeroes = 0;
-            for (var i = prevLength - 1; i >= 0; i--)
-            {
-                var p = pixels[i];
-                pixels[i] = 0;
-                pixels[i * 4] = 255;
-                pixels[i * 4 + 1] = 255;
-                pixels[i * 4 + 2] = 255;
-                pixels[i * 4 + 3] = p;
-                if (p == 0)
-                    numZeroes++;
-            }
-
-            Logger.LogInfo($"NumZeros: {numZeroes}");
-        }
-
-        return pixels;
-    }
-
     private static void SaveTextureToPng(GraphicsDevice device, Texture texture, string path)
     {
-        var pixels = ConvertTextureFormat(device, texture);
+        var pixels = Renderer.ConvertTextureFormat(device, texture);
         Texture.SavePNG(path, (int)texture.Width, (int)texture.Height, TextureFormat.R8G8B8A8, pixels);
     }
 
