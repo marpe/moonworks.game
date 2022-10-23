@@ -20,6 +20,7 @@ public class MyGameMain : Game
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     private ImGuiScreen _imGuiScreen;
     private bool _drawImGui;
+    private KeyCode[] _modifierKeys;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -48,6 +49,18 @@ public class MyGameMain : Game
 
         _imGuiScreen = new ImGuiScreen(this);
 
+        _modifierKeys = new KeyCode[]
+        {
+            KeyCode.LeftControl,
+            KeyCode.RightControl,
+            KeyCode.LeftShift,
+            KeyCode.RightShift,
+            KeyCode.LeftAlt,
+            KeyCode.RightAlt,
+            KeyCode.LeftMeta,
+            KeyCode.RightMeta,
+        };
+
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -61,6 +74,17 @@ public class MyGameMain : Game
         return texture;
     }
 
+    private bool IsAnyModifierKeyDown()
+    {
+        foreach (var key in _modifierKeys)
+        {
+            if (Inputs.Keyboard.IsDown(key))
+                return true;
+        }
+
+        return false;
+    }
+
     protected override void Update(TimeSpan dt)
     {
         FrameCount++;
@@ -68,6 +92,9 @@ public class MyGameMain : Game
         TotalElapsedTime += ElapsedTime;
 
         _imGuiScreen.Update();
+
+        if (IsAnyModifierKeyDown())
+            return;
 
         if (Inputs.Keyboard.IsPressed(KeyCode.F1))
         {
@@ -87,7 +114,7 @@ public class MyGameMain : Game
             Logger.LogInfo($"BlendState: {SpriteBatch.BlendState}");
             // MainWindow.ChangeScreenMode((ScreenMode)nextMode);
         }
-        
+
         if (Inputs.Keyboard.IsPressed(KeyCode.F4))
         {
             var numBlendStates = Enum.GetValues<BlendState>().Length;
@@ -168,7 +195,7 @@ public class MyGameMain : Game
             return;
         }
 
-        
+
         var windowSize = MainWindow.Size;
         if (windowSize.X != _depthTexture.Width || windowSize.Y != _depthTexture.Height)
         {

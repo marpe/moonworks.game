@@ -3,107 +3,6 @@ using MyGame.Utils;
 
 namespace MyGame.TWImGui;
 
-public class BlendStateEditor
-{
-    private static readonly string[] _blendOpNames;
-    private static readonly string[] _blendFactorNames;
-
-    static BlendStateEditor()
-    {
-        _blendOpNames = Enum.GetNames<BlendOp>();
-        _blendFactorNames = Enum.GetNames<BlendFactor>();
-    }
-
-    private static bool AreEqual(ColorAttachmentBlendState a, ColorAttachmentBlendState b)
-    {
-        return a.BlendEnable == b.BlendEnable &&
-               a.AlphaBlendOp == b.AlphaBlendOp &&
-               a.ColorBlendOp == b.ColorBlendOp &&
-               a.SourceColorBlendFactor == b.SourceColorBlendFactor &&
-               a.SourceAlphaBlendFactor == b.SourceAlphaBlendFactor &&
-               a.DestinationColorBlendFactor == b.DestinationColorBlendFactor &&
-               a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor;
-    }
-
-    public static bool ComboStep(string label, ref int currentIndex, string[] items)
-    {
-        var result = false;
-
-        ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
-        
-        if (ImGui.Button(FontAwesome6.ChevronLeft + "##Left" + label))
-        {
-            currentIndex = (items.Length + currentIndex - 1) % items.Length;
-            result = true;
-        }
-
-        ImGui.SameLine(0, 0);
-        if (ImGui.Button(FontAwesome6.ChevronRight + "##Right" + label))
-        {
-            currentIndex = (items.Length + currentIndex + 1) % items.Length;
-            result = true;
-        }
-
-        ImGui.PopStyleColor(3);
-        
-        ImGui.SameLine();
-        result |= ImGui.Combo(label, ref currentIndex, items, items.Length);
-
-        return result;
-    }
-
-    public static bool Draw(string name, ref ColorAttachmentBlendState state)
-    {
-        ImGui.PushID(name);
-        var alphaBlendOpIndex = (int)state.AlphaBlendOp;
-        var colorBlendOpIndex = (int)state.ColorBlendOp;
-        var destColorBlendFactorIndex = (int)state.DestinationColorBlendFactor;
-        var destAlphaBlendFactorIndex = (int)state.DestinationAlphaBlendFactor;
-        var sourceColorBlendFactorIndex = (int)state.SourceColorBlendFactor;
-        var sourceAlphaBlendFactorIndex = (int)state.SourceAlphaBlendFactor;
-        var blendEnabled = state.BlendEnable;
-        var prevState = state;
-        ImGui.Checkbox("Enabled", ref blendEnabled);
-        ComboStep("AlphaOp", ref alphaBlendOpIndex, _blendOpNames);
-        ComboStep("ColorOp", ref colorBlendOpIndex, _blendOpNames);
-        ComboStep("SourceColor", ref sourceColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("SourceAlpha", ref sourceAlphaBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestColor", ref destColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestAlpha", ref destAlphaBlendFactorIndex, _blendFactorNames);
-        state.BlendEnable = blendEnabled;
-        state.AlphaBlendOp = (BlendOp)alphaBlendOpIndex;
-        state.ColorBlendOp = (BlendOp)colorBlendOpIndex;
-        state.SourceColorBlendFactor = (BlendFactor)sourceColorBlendFactorIndex;
-        state.SourceAlphaBlendFactor = (BlendFactor)sourceAlphaBlendFactorIndex;
-        state.DestinationColorBlendFactor = (BlendFactor)destColorBlendFactorIndex;
-        state.DestinationAlphaBlendFactor = (BlendFactor)destAlphaBlendFactorIndex;
-        /// Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
-        ImGui.Text($"sourceColor * {state.SourceColorBlendFactor} + destColor * {state.DestinationColorBlendFactor}");
-        ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor} + destAlpha * {state.DestinationAlphaBlendFactor}");
-        if (ImGui.Button("AlphaBlend"))
-        {
-            state = ColorAttachmentBlendState.AlphaBlend;
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button("NonPremultiplied"))
-        {
-            state = ColorAttachmentBlendState.NonPremultiplied;
-        }
-
-        ImGui.SameLine();
-        if (ImGui.Button("Opaque"))
-        {
-            state = ColorAttachmentBlendState.Opaque;
-        }
-
-        ImGui.PopID();
-        return !AreEqual(prevState, state);
-    }
-}
-
 public class ImGuiScreen
 {
     internal SortedList<string, ImGuiWindow> Windows = new();
@@ -112,11 +11,6 @@ public class ImGuiScreen
 
     public Vector2 MousePositionInWorld;
     public Vector2 MousePosition;
-
-    private ImGuiWindow _imGuiDemoWindow = new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
-    {
-        IsOpen = true
-    };
 
     private readonly ImGuiRenderer _imGuiRenderer;
     private MyGameMain _game;
@@ -127,6 +21,8 @@ public class ImGuiScreen
     private int _updateFps = 60;
     private float _updateRate = 1 / 60f;
     private float _lastRenderTime;
+    private readonly string[] _blendStateNames;
+    private List<ImGuiMenu> _menuItems = new();
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -134,10 +30,20 @@ public class ImGuiScreen
         _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
         var timer = Stopwatch.StartNew();
         _imGuiRenderer = new ImGuiRenderer(game);
+        _blendStateNames = Enum.GetNames<BlendState>();
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
+        AddDefaultMenus();
     }
+
+    private void AddDefaultMenus()
+    {
+        var file = new ImGuiMenu("File")
+            .AddChild(new ImGuiMenu("Quit", "^Q", () => _game.Quit()));
+        _menuItems.Add(file);
+    }
+
 
     private static void ShowImGuiDemoWindow(ImGuiWindow window)
     {
@@ -150,10 +56,15 @@ public class ImGuiScreen
     {
         var windows = new[]
         {
-            _imGuiDemoWindow,
+            new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
+            {
+                IsOpen = true,
+                KeyboardShortcut = "^F1"
+            },
             new ImGuiCallbackWindow("TestWindow", DrawTestWindow)
             {
-                IsOpen = true
+                IsOpen = true,
+                KeyboardShortcut = "^F2"
             }
         };
         foreach (var window in windows)
@@ -209,6 +120,21 @@ public class ImGuiScreen
 
             ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
             ImGui.Separator();
+            var spriteBatchBlendStateIndex = (int)_game.SpriteBatch.BlendState;
+            if (ImGui.BeginCombo("SpriteBatchBlendState", _blendStateNames[spriteBatchBlendStateIndex]))
+            {
+                for (var i = 0; i < _blendStateNames.Length; i++)
+                {
+                    var isSelected = i == spriteBatchBlendStateIndex;
+                    if (ImGui.Selectable(_blendStateNames[i], isSelected))
+                        _game.SpriteBatch.BlendState = (BlendState)i;
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+
+                ImGui.EndCombo();
+            }
+
             if (BlendStateEditor.Draw("SpriteBatch", ref _game.SpriteBatch.CustomBlendState))
             {
                 _game.SpriteBatch.UpdateCustomBlendPipeline();
@@ -225,19 +151,58 @@ public class ImGuiScreen
         ImGui.End();
     }
 
+    private void DrawMenu(ImGuiMenu menu)
+    {
+        if (menu.Children.Count > 0)
+        {
+            if (ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true))
+            {
+                foreach (var child in menu.Children)
+                {
+                    DrawMenu(child);
+                }
+
+                ImGui.EndMenu();
+            }
+        }
+        else
+        {
+            if (ImGui.MenuItem(menu.Text, menu.Shortcut))
+            {
+                menu.Callback?.Invoke();
+            }
+        }
+    }
+
+    private void CheckMenuShortcuts(ImGuiMenu menu)
+    {
+        if (!(menu.IsEnabled ?? true))
+            return;
+
+        if (ImGuiExt.IsKeyboardShortcutPressed(menu.Shortcut))
+        {
+            menu.Callback?.Invoke();
+        }
+
+        foreach (var child in menu.Children)
+        {
+            CheckMenuShortcuts(child);
+        }
+    }
+
     private void DrawMenu()
     {
         var result = ImGui.BeginMainMenuBar();
         if (result)
         {
-            if (ImGui.BeginMenu("File"))
+            foreach (var menu in _menuItems)
             {
-                if (ImGui.MenuItem("Quit"))
-                {
-                    _game.Quit();
-                }
+                DrawMenu(menu);
+            }
 
-                ImGui.EndMenu();
+            foreach (var menu in _menuItems)
+            {
+                CheckMenuShortcuts(menu);
             }
 
             if (ImGui.BeginMenu("Window"))
@@ -276,26 +241,9 @@ public class ImGuiScreen
     {
         foreach (var (key, window) in Windows)
         {
-            var keyboardShortcut = window.KeyboardShortcut;
-            if (keyboardShortcut != null && keyboardShortcut.Length > 0 && !ImGui.GetIO().WantCaptureKeyboard)
+            if (!ImGui.GetIO().WantTextInput)
             {
-                var result = true;
-                for (var j = 0; j < keyboardShortcut.Length; j++)
-                {
-                    if (keyboardShortcut[j] == '^')
-                        result = result && (ImGui.IsKeyDown((int)KeyCode.LeftControl) ||
-                                            ImGui.IsKeyDown((int)KeyCode.RightControl));
-                    else if (keyboardShortcut[j] == '+')
-                        result = result && (ImGui.IsKeyDown((int)KeyCode.LeftShift) ||
-                                            ImGui.IsKeyDown((int)KeyCode.RightShift));
-                    else if (keyboardShortcut[j] == '!')
-                        result = result && (ImGui.IsKeyDown((int)KeyCode.LeftAlt) ||
-                                            ImGui.IsKeyDown((int)KeyCode.RightAlt));
-                    else
-                        result = result && ImGui.IsKeyPressed((int)Enum.Parse<KeyCode>(keyboardShortcut.AsSpan().Slice(j, 1)));
-                }
-
-                if (result)
+                if (ImGuiExt.IsKeyboardShortcutPressed(window.KeyboardShortcut))
                     window.IsOpen = !window.IsOpen;
             }
 

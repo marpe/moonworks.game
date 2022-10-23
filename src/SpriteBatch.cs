@@ -46,7 +46,6 @@ public class SpriteBatch
         DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
     };
 
-
     public SpriteBatch(GraphicsDevice device)
     {
         _device = device;
