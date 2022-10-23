@@ -54,6 +54,7 @@ public class ImGuiRenderer
     private Platform_GetWindowMinimized _getWindowMinimized;
     private Platform_SetWindowTitle _setWindowTitle;
     private Platform_SetWindowAlpha _setWindowAlpha;
+    private Texture _render;
 
     public ImGuiRenderer(Game game)
     {
@@ -85,6 +86,10 @@ public class ImGuiRenderer
         _textureSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
         _pipeline = SetupPipeline(game.GraphicsDevice);
 
+        var windowSize = game.MainWindow.Size;
+        _render = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        
         Inputs.TextInput += OnTextInput;
 
         BuildFontAtlas();
@@ -184,6 +189,8 @@ public class ImGuiRenderer
 
         var io = ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.ViewportsEnable;
+        io.ConfigDockingTransparentPayload = true;
+        // io.ConfigViewportsNoAutoMerge = true;
         io.NativePtr->BackendPlatformName = (byte*)new FixedAsciiString("MoonWorks.SDL").DataPtr;
         io.BackendFlags |= ImGuiBackendFlags.HasMouseCursors;
         io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
@@ -193,7 +200,7 @@ public class ImGuiRenderer
         // io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
 
         SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
-        SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
+        // SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
         UpdateMonitors();
     }
@@ -422,7 +429,7 @@ public class ImGuiRenderer
         }
     }*/
 
-    public void End(CommandBuffer commandBuffer, Texture swapchainTexture)
+    public Texture End()
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
@@ -433,7 +440,17 @@ public class ImGuiRenderer
         _frameBegun = false;
         ImGui.Render();
 
-        Render(commandBuffer, swapchainTexture, ImGui.GetDrawData());
+        var windowSize = _game.MainWindow.Size;
+        if (windowSize.X != _render.Width || windowSize.Y != _render.Height)
+        {
+            _render.Dispose();
+            _render = Texture.CreateTexture2D(_game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+                TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        }
+        
+        var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
+        Render(commandBuffer, _render, ImGui.GetDrawData());
+        _game.GraphicsDevice.Submit(commandBuffer);
 
         // Update and Render additional Platform Windows
         var io = ImGui.GetIO();
@@ -461,6 +478,8 @@ public class ImGuiRenderer
                 _game.GraphicsDevice.Submit(windowCommandBuffer);
             }
         }
+
+        return _render;
     }
 
     private static Window WindowFromUserData(IntPtr userData)
@@ -470,15 +489,15 @@ public class ImGuiRenderer
 
     private void Render(CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawDataPtr drawData)
     {
-        UpdateBuffers(_game.GraphicsDevice, commandBuffer, drawData);
+        UpdateBuffers(commandBuffer, drawData);
         commandBuffer.BeginRenderPass(
-            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load)
+            new ColorAttachmentInfo(swapchainTexture, Color.Transparent)
         );
         RenderDrawData(commandBuffer, drawData);
         commandBuffer.EndRenderPass();
     }
 
-    private void UpdateBuffers(GraphicsDevice graphicsDevice, CommandBuffer commandBuffer, ImDrawDataPtr drawData)
+    private void UpdateBuffers(CommandBuffer commandBuffer, ImDrawDataPtr drawData)
     {
         var totalVtxBufferSize =
             (uint)(drawData.TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>()); // Unsafe.SizeOf<ImDrawVert>());
@@ -487,7 +506,7 @@ public class ImGuiRenderer
             _vertexBuffer?.Dispose();
 
             _vertexBufferSize = (uint)(drawData.TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>());
-            _vertexBuffer = new MoonWorks.Graphics.Buffer(graphicsDevice, BufferUsageFlags.Vertex, _vertexBufferSize);
+            _vertexBuffer = new MoonWorks.Graphics.Buffer(_game.GraphicsDevice, BufferUsageFlags.Vertex, _vertexBufferSize);
         }
 
         var totalIdxBufferSize = (uint)(drawData.TotalIdxCount * sizeof(ushort));
@@ -496,7 +515,7 @@ public class ImGuiRenderer
             _indexBuffer?.Dispose();
 
             _indexBufferSize = (uint)(drawData.TotalIdxCount * sizeof(ushort));
-            _indexBuffer = new MoonWorks.Graphics.Buffer(graphicsDevice, BufferUsageFlags.Index, _indexBufferSize);
+            _indexBuffer = new MoonWorks.Graphics.Buffer(_game.GraphicsDevice, BufferUsageFlags.Index, _indexBufferSize);
         }
 
         var vtxOffset = 0u;
@@ -620,10 +639,10 @@ public class ImGuiRenderer
         var io = ImGui.GetIO();
 
         // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations outside
-        var captureMouse = SDL.SDL_bool.SDL_FALSE;
+        /*var captureMouse = SDL.SDL_bool.SDL_FALSE;
         if (_game.Inputs.Mouse.AnyPressed && (IntPtr)ImGui.GetDragDropPayload().NativePtr == IntPtr.Zero)
             captureMouse = SDL.SDL_bool.SDL_TRUE;
-        SDL.SDL_CaptureMouse(captureMouse);
+        SDL.SDL_CaptureMouse(captureMouse);*/
 
         /*var focusedWindow = SDL.SDL_GetKeyboardFocus();
         var focusedViewport = ImGui.FindViewportByPlatformHandle(focusedWindow);
@@ -666,7 +685,7 @@ public class ImGuiRenderer
         io.MouseDown[1] = _game.Inputs.Mouse.RightButton.IsDown;
         io.MouseDown[2] = _game.Inputs.Mouse.MiddleButton.IsDown;
 
-        io.MouseWheel = _game.Inputs.Mouse.WheelDelta;
+        io.MouseWheel = _game.Inputs.Mouse.Wheel;
     }
 
     public IntPtr BindTexture(Texture texture)
@@ -804,6 +823,8 @@ public class ImGuiRenderer
         if (gcHandle.Target != null)
         {
             var window = (Window)gcHandle.Target;
+            if (window.Claimed)
+                _game.GraphicsDevice.UnclaimWindow(window);
             if (!window.IsDisposed)
                 window.Dispose();
         }
@@ -881,6 +902,7 @@ public class ImGuiRenderer
         }
 
         var titleStr = Encoding.ASCII.GetString(titlePtr, count);
+        Logger.LogInfo($"Window title: {titleStr}");
         SDL.SDL_SetWindowTitle(window.Handle, titleStr);
     }
 
@@ -888,6 +910,7 @@ public class ImGuiRenderer
     {
         var window = WindowFromUserData(viewport.PlatformUserData);
         SDL.SDL_SetWindowOpacity(window.Handle, alpha);
+        Logger.LogInfo($"Setting alpha: {alpha}");
     }
 }
 

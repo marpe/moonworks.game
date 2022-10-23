@@ -18,10 +18,13 @@ public class ImGuiScreen
 
     private readonly ImGuiRenderer _imGuiRenderer;
     private MyGameMain _game;
+    private float _alpha = 1.0f;
+    private readonly Sampler _sampler;
 
     public ImGuiScreen(MyGameMain game)
     {
         _game = game;
+        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
         var timer = Stopwatch.StartNew();
         _imGuiRenderer = new ImGuiRenderer(game);
         ImGuiThemes.DarkTheme();
@@ -56,17 +59,44 @@ public class ImGuiScreen
     {
     }
 
-    public void Draw(CommandBuffer commandBuffer, Texture swapchainTexture)
+    public void Draw(SpriteBatch spriteBatch, Texture depthTexture, GraphicsPipeline pipeline, CommandBuffer commandBuffer,
+        Texture swapchainTexture)
     {
         _imGuiRenderer.Begin((float)_game.Timestep.TotalSeconds);
         DrawInternal();
-        _imGuiRenderer.End(commandBuffer, swapchainTexture);
+        var render = _imGuiRenderer.End();
+        var sprite = new Sprite(render);
+        spriteBatch.Start(new TextureSamplerBinding(sprite.Texture, _sampler));
+        spriteBatch.Add(sprite, Color.White, 0, Matrix3x2.Identity);
+        spriteBatch.PushVertexData(commandBuffer);
+
+        commandBuffer.BeginRenderPass(new DepthStencilAttachmentInfo(depthTexture, new DepthStencilValue(0, 0)),
+            new ColorAttachmentInfo(swapchainTexture, LoadOp.Load));
+        commandBuffer.BindGraphicsPipeline(pipeline);
+        var view = Matrix4x4.CreateLookAt(
+            new Vector3(0, 0, 1),
+            new Vector3(0, 0, 0),
+            Vector3.Up
+        );
+        var projection = Matrix4x4.CreateOrthographicOffCenter(
+            0,
+            swapchainTexture.Width,
+            swapchainTexture.Height,
+            0,
+            0.0001f,
+            4000f
+        );
+        var viewProjection = view * projection;
+        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
+        spriteBatch.Draw(commandBuffer, vertexParamOffset);
+        commandBuffer.EndRenderPass();
     }
 
     private void DrawTestWindow(ImGuiWindow window)
     {
         if (!window.IsOpen)
             return;
+        ImGui.SetNextWindowBgAlpha(_alpha);
 
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
@@ -75,6 +105,7 @@ public class ImGuiScreen
             ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
             ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
             ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
+            ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
         }
 
         ImGui.End();
@@ -85,6 +116,16 @@ public class ImGuiScreen
         var result = ImGui.BeginMainMenuBar();
         if (result)
         {
+            if (ImGui.BeginMenu("File"))
+            {
+                if (ImGui.MenuItem("Quit"))
+                {
+                    _game.Quit();
+                }
+
+                ImGui.EndMenu();
+            }
+
             if (ImGui.BeginMenu("Window"))
             {
                 foreach (var (key, window) in Windows)
@@ -94,7 +135,7 @@ public class ImGuiScreen
 
                 ImGui.EndMenu();
             }
-            
+
             ImGui.EndMainMenuBar();
         }
     }
@@ -114,6 +155,11 @@ public class ImGuiScreen
 
         var drawList = ImGui.GetBackgroundDrawList();
 
+        DrawWindows();
+    }
+
+    private void DrawWindows()
+    {
         foreach (var (key, window) in Windows)
         {
             var keyboardShortcut = window.KeyboardShortcut;

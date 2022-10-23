@@ -227,7 +227,6 @@ public class MyGameMain : Game
 
         if (_sizeChanged)
         {
-            Logger.LogInfo($"SwapchainTextureSize: {swapchainTexture.Width}, {swapchainTexture.Height}");
             _depthTexture.Dispose();
             _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)_currentWindowSize.X, (uint)_currentWindowSize.Y,
                 TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
@@ -257,7 +256,7 @@ public class MyGameMain : Game
 
         if (_drawImGui)
         {
-            _imGuiScreen.Draw(commandBuffer, swapchainTexture);
+            _imGuiScreen.Draw(_spriteBatch, _depthTexture, _spritePipeline, commandBuffer, swapchainTexture);
         }
 
         GraphicsDevice.Submit(commandBuffer);
