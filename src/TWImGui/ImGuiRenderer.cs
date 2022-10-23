@@ -15,6 +15,8 @@ public enum ImGuiFont
 
 public class ImGuiRenderer
 {
+    public delegate void Platform_SetWindowAlpha(ImGuiViewportPtr vp, float alpha);
+
     private readonly Dictionary<IntPtr, Texture> _loadedTextures = new();
     private readonly Dictionary<ImGuiFont, ImFontPtr> _fonts = new();
 
@@ -51,10 +53,12 @@ public class ImGuiRenderer
     private Platform_GetWindowFocus _getWindowFocus;
     private Platform_GetWindowMinimized _getWindowMinimized;
     private Platform_SetWindowTitle _setWindowTitle;
+    private Platform_SetWindowAlpha _setWindowAlpha;
 
     public ImGuiRenderer(Game game)
     {
         _game = game;
+        game.Exiting += Dispose;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -88,13 +92,62 @@ public class ImGuiRenderer
         SetupMultiViewport(_game.MainWindow);
     }
 
+    private bool HandleWindowEvent(Window window, SDL.SDL_Event evt)
+    {
+        switch (evt.window.windowEvent)
+        {
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_ENTER:
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_LEAVE:
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
+                ImGui.GetIO().AddFocusEvent(true);
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST:
+                ImGui.GetIO().AddFocusEvent(false);
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
+            {
+                var viewport = ImGui.FindViewportByPlatformHandle(window.Handle);
+                viewport.PlatformRequestResize = true;
+            }
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_MOVED:
+            {
+                var viewport = ImGui.FindViewportByPlatformHandle(window.Handle);
+                viewport.PlatformRequestMove = true;
+            }
+                break;
+            case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
+            {
+                var viewport = ImGui.FindViewportByPlatformHandle(window.Handle);
+                viewport.PlatformRequestClose = true;
+
+                if (window == _game.MainWindow)
+                {
+                    Dispose();
+                    _game.Quit();
+                }
+            }
+                break;
+            default:
+                // Logger.LogWarn($"Unhandled window event: {evt.window.windowEvent}");
+                break;
+        }
+
+        return false;
+    }
+
     private unsafe void SetupMultiViewport(Window mainWindow)
     {
         var platformIO = ImGui.GetPlatformIO();
         var mainViewport = ImGui.GetMainViewport();
+        mainWindow.WindowEvent += HandleWindowEvent;
+        mainWindow.Disposed += WindowDisposed;
         mainViewport.PlatformHandle = mainWindow.Handle;
         var gcHandle = GCHandle.Alloc(mainWindow);
         mainViewport.PlatformUserData = (IntPtr)gcHandle;
+
         SDL.SDL_SysWMinfo info = new();
         SDL.SDL_VERSION(out info.version);
         if (SDL.SDL_bool.SDL_TRUE == SDL.SDL_GetWindowWMInfo(mainWindow.Handle, ref info))
@@ -113,6 +166,7 @@ public class ImGuiRenderer
         _getWindowFocus = GetWindowFocus;
         _getWindowMinimized = GetWindowMinimized;
         _setWindowTitle = SetWindowTitle;
+        _setWindowAlpha = SetWindowAlpha;
 
         platformIO.Platform_CreateWindow = Marshal.GetFunctionPointerForDelegate(_createWindow);
         platformIO.Platform_DestroyWindow = Marshal.GetFunctionPointerForDelegate(_destroyWindow);
@@ -123,6 +177,7 @@ public class ImGuiRenderer
         platformIO.Platform_GetWindowFocus = Marshal.GetFunctionPointerForDelegate(_getWindowFocus);
         platformIO.Platform_GetWindowMinimized = Marshal.GetFunctionPointerForDelegate(_getWindowMinimized);
         platformIO.Platform_SetWindowTitle = Marshal.GetFunctionPointerForDelegate(_setWindowTitle);
+        platformIO.Platform_SetWindowAlpha = Marshal.GetFunctionPointerForDelegate(_setWindowAlpha);
 
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowPos(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowPos));
         ImGuiNative.ImGuiPlatformIO_Set_Platform_GetWindowSize(platformIO.NativePtr, Marshal.GetFunctionPointerForDelegate(_getWindowSize));
@@ -134,11 +189,20 @@ public class ImGuiRenderer
         io.BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
         io.BackendFlags |= ImGuiBackendFlags.PlatformHasViewports;
         io.BackendFlags |= ImGuiBackendFlags.RendererHasViewports;
+        io.ConfigViewportsNoDecoration = true;
         // io.BackendFlags |= ImGuiBackendFlags.HasMouseHoveredViewport;
 
         SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+        SDL.SDL_SetHint(SDL.SDL_HINT_MOUSE_AUTO_CAPTURE, "0");
 
         UpdateMonitors();
+    }
+
+    private void WindowDisposed(Window window)
+    {
+        Logger.LogInfo("Window disposed");
+        window.WindowEvent -= HandleWindowEvent;
+        window.Disposed -= WindowDisposed;
     }
 
     private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice)
@@ -198,6 +262,8 @@ public class ImGuiRenderer
 
         if (isDisposing)
         {
+            ImGui.DestroyPlatformWindows();
+
             foreach (var texture in _loadedTextures)
             {
                 texture.Value.Dispose();
@@ -218,6 +284,7 @@ public class ImGuiRenderer
             }
 
             Inputs.TextInput -= OnTextInput;
+            _game.Exiting -= Dispose;
         }
 
         IsDisposed = true;
@@ -275,72 +342,18 @@ public class ImGuiRenderer
         _frameBegun = true;
 
         var io = ImGui.GetIO();
+        var mainWindowSize = _game.MainWindow.Size;
         io.DisplaySize = new Num.Vector2(
-            _game.MainWindow.Width / _scaleFactor.X,
-            _game.MainWindow.Height / _scaleFactor.Y
+            mainWindowSize.X / _scaleFactor.X,
+            mainWindowSize.Y / _scaleFactor.Y
         );
         io.DisplayFramebufferScale = _scaleFactor;
-
-        // TODO (marpe): Check if this is needed
-        var platformIo = ImGui.GetPlatformIO();
-        SDL.SDL_GetWindowPosition(_game.MainWindow.Handle, out var x, out var y);
-        platformIo.Viewports[0].Pos = new Num.Vector2(x, y);
-        platformIo.Viewports[0].Size = new Num.Vector2(_game.MainWindow.Width, _game.MainWindow.Height);
 
         io.DeltaTime = deltaTimeInSeconds;
         UpdateInput();
         UpdateMouseCursor();
-        UpdateWindows();
         UpdateMonitors();
         ImGui.NewFrame();
-    }
-
-    private void UpdateWindows()
-    {
-        var viewports = ImGui.GetPlatformIO().Viewports;
-        for (var i = 1; i < viewports.Size; i++)
-        {
-            var vp = viewports[i];
-            var window = WindowFromUserData(vp.PlatformUserData);
-            UpdateWindow(window, vp);
-        }
-    }
-
-    private void UpdateWindow(Window window, ImGuiViewportPtr viewport)
-    {
-        var id = SDL.SDL_GetWindowID(window.Handle);
-
-        while (SDL.SDL_PollEvent(out var evt) == 1)
-        {
-            if (evt.type != SDL.SDL_EventType.SDL_WINDOWEVENT)
-                continue;
-
-            if (id != evt.window.windowID)
-                continue;
-
-            Logger.LogInfo($"Received Event: {evt.window.type}");
-            switch (evt.window.windowEvent)
-            {
-                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_GAINED:
-                    ImGui.GetIO().AddFocusEvent(true);
-                    break;
-                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_FOCUS_LOST:
-                    ImGui.GetIO().AddFocusEvent(false);
-                    break;
-                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_RESIZED:
-                    viewport.PlatformRequestResize = true;
-                    break;
-                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_MOVED:
-                    viewport.PlatformRequestMove = true;
-                    break;
-                case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
-                    viewport.PlatformRequestClose = true;
-                    break;
-                default:
-                    Logger.LogWarn($"Unhandled window event: {evt.window.windowEvent}");
-                    break;
-            }
-        }
     }
 
     private unsafe void UpdateMonitors()
@@ -396,6 +409,18 @@ public class ImGuiRenderer
         _lastCursor = cursor;
     }
 
+    /*public static void CheckRequestClose([CallerLineNumber] int lineNumber = 0, [CallerFilePath] string caller = "")
+    {
+        var platformIO = ImGui.GetPlatformIO();
+        for (var i = 0; i < platformIO.Viewports.Size; i++)
+        {
+            var vp = platformIO.Viewports[i];
+            if (vp.PlatformRequestClose)
+            {
+                Logger.LogInfo($"{Path.GetFileName(caller)}:{lineNumber} Requested close: {i}");
+            }
+        }
+    }*/
 
     public void End(CommandBuffer commandBuffer, Texture swapchainTexture)
     {
@@ -420,6 +445,9 @@ public class ImGuiRenderer
             for (var i = 1; i < platformIO.Viewports.Size; i++)
             {
                 var vp = platformIO.Viewports[i];
+                if ((vp.Flags & ImGuiViewportFlags.Minimized) != 0)
+                    continue;
+
                 var window = WindowFromUserData(vp.PlatformUserData);
                 var windowCommandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
                 var windowSwapchainTexture = windowCommandBuffer.AcquireSwapchainTexture(window);
@@ -587,9 +615,32 @@ public class ImGuiRenderer
         }
     }
 
-    private void UpdateInput()
+    private unsafe void UpdateInput()
     {
         var io = ImGui.GetIO();
+
+        // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations outside
+        var captureMouse = SDL.SDL_bool.SDL_FALSE;
+        if (_game.Inputs.Mouse.AnyPressed && (IntPtr)ImGui.GetDragDropPayload().NativePtr == IntPtr.Zero)
+            captureMouse = SDL.SDL_bool.SDL_TRUE;
+        SDL.SDL_CaptureMouse(captureMouse);
+
+        /*var focusedWindow = SDL.SDL_GetKeyboardFocus();
+        var focusedViewport = ImGui.FindViewportByPlatformHandle(focusedWindow);
+        var isAppFocused = _game.MainWindow.Handle == focusedWindow || ((IntPtr)focusedViewport.NativePtr) != IntPtr.Zero;
+
+        if (isAppFocused && !_game.Inputs.Mouse.AnyPressed)
+        {
+            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
+            io.AddMousePosEvent((float)globalMouseX, (float)globalMouseY);
+        }*/
+
+        /*if ((io.BackendFlags & ImGuiBackendFlags.HasMouseHoveredViewport) != 0)
+        {
+            var mouseWindow = SDL.SDL_GetWindowFromID(bd->MouseWindowID);
+            var mouseViewport = ImGui.FindViewportByPlatformHandle(mouseWindow);
+            io.AddMouseViewportEvent(mouseViewport.ID);
+        }*/
 
         for (var i = 0; i < io.KeysDown.Count; i++)
         {
@@ -716,20 +767,34 @@ public class ImGuiRenderer
 
         var windowCreateInfo = new WindowCreateInfo
         {
-            WindowWidth = 200,
-            WindowHeight = 200,
-            WindowTitle = "ProjectName",
+            WindowWidth = (uint)vp.Size.X,
+            WindowHeight = (uint)vp.Size.Y,
+            WindowTitle = "No Title Yet",
             ScreenMode = ScreenMode.Windowed,
             SystemResizable = true
         };
-        var ImGuiWindow = new Window(windowCreateInfo, flags);
-        if (!_game.GraphicsDevice.ClaimWindow(ImGuiWindow, windowCreateInfo.PresentMode))
+        var window = new Window(windowCreateInfo, flags);
+        window.WindowEvent += HandleWindowEvent;
+        window.Disposed += WindowDisposed;
+        window.SetWindowPosition((int)vp.Pos.X, (int)vp.Pos.Y);
+
+        // claim window calls SDL_Vulkan_CreateSurface
+        if (!_game.GraphicsDevice.ClaimWindow(window, windowCreateInfo.PresentMode))
         {
             throw new SystemException("Could not claim window!");
         }
 
-        var gcHandle = GCHandle.Alloc(ImGuiWindow);
+        var gcHandle = GCHandle.Alloc(window);
+        vp.PlatformHandle = window.Handle;
         vp.PlatformUserData = (IntPtr)gcHandle;
+
+        SDL.SDL_SysWMinfo info = new();
+        SDL.SDL_VERSION(out info.version);
+        if (SDL.SDL_bool.SDL_TRUE == SDL.SDL_GetWindowWMInfo(window.Handle, ref info))
+        {
+            vp.PlatformHandleRaw = info.info.win.window;
+        }
+
         Logger.LogInfo("Created window");
     }
 
@@ -739,11 +804,16 @@ public class ImGuiRenderer
         if (gcHandle.Target != null)
         {
             var window = (Window)gcHandle.Target;
-            window.Dispose();
+            if (!window.IsDisposed)
+                window.Dispose();
         }
 
-        vp.PlatformUserData = IntPtr.Zero;
         gcHandle.Free();
+
+        vp.PlatformUserData = IntPtr.Zero;
+        vp.PlatformHandle = IntPtr.Zero;
+        vp.PlatformHandleRaw = IntPtr.Zero;
+
         Logger.LogInfo("Destroyed window");
     }
 
@@ -770,7 +840,8 @@ public class ImGuiRenderer
     private unsafe void GetWindowSize(ImGuiViewportPtr vp, Num.Vector2* outSize)
     {
         var window = WindowFromUserData(vp.PlatformUserData);
-        var size = new Num.Vector2(window.Width, window.Height);
+        var windowSize = window.Size;
+        var size = new Num.Vector2(windowSize.X, windowSize.Y);
         *outSize = size;
     }
 
@@ -811,6 +882,12 @@ public class ImGuiRenderer
 
         var titleStr = Encoding.ASCII.GetString(titlePtr, count);
         SDL.SDL_SetWindowTitle(window.Handle, titleStr);
+    }
+
+    private void SetWindowAlpha(ImGuiViewportPtr viewport, float alpha)
+    {
+        var window = WindowFromUserData(viewport.PlatformUserData);
+        SDL.SDL_SetWindowOpacity(window.Handle, alpha);
     }
 }
 

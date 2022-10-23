@@ -41,6 +41,10 @@ public class ImGuiScreen
         var windows = new[]
         {
             _imGuiDemoWindow,
+            new ImGuiCallbackWindow("TestWindow", DrawTestWindow)
+            {
+                IsOpen = true
+            }
         };
         foreach (var window in windows)
         {
@@ -59,19 +63,56 @@ public class ImGuiScreen
         _imGuiRenderer.End(commandBuffer, swapchainTexture);
     }
 
+    private void DrawTestWindow(ImGuiWindow window)
+    {
+        if (!window.IsOpen)
+            return;
+
+        if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
+        {
+            ImGui.Text("ImGui Window 1");
+            ImGui.TextUnformatted($"FrameCount: {_game.FrameCount}");
+            ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
+            ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
+            ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
+        }
+
+        ImGui.End();
+    }
+
+    private void DrawMenu()
+    {
+        var result = ImGui.BeginMainMenuBar();
+        if (result)
+        {
+            if (ImGui.BeginMenu("Window"))
+            {
+                foreach (var (key, window) in Windows)
+                {
+                    ImGui.MenuItem(window.Title, window.KeyboardShortcut, ref window.IsOpen);
+                }
+
+                ImGui.EndMenu();
+            }
+            
+            ImGui.EndMainMenuBar();
+        }
+    }
+
     private void DrawInternal()
     {
+        if (ImGui.IsAnyItemHovered())
+        {
+            var cursor = ImGui.GetMouseCursor();
+            if (cursor == ImGuiMouseCursor.Arrow)
+                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+        }
+
         ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
 
-        var drawList = ImGui.GetBackgroundDrawList();
+        DrawMenu();
 
-        ImGui.Begin("ImGuiWindow1");
-        ImGui.Text("ImGui Window 1");
-        ImGui.TextUnformatted($"FrameCount: {_game.FrameCount}");
-        ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
-        ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
-        ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
-        ImGui.End();
+        var drawList = ImGui.GetBackgroundDrawList();
 
         foreach (var (key, window) in Windows)
         {

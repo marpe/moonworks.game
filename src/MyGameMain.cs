@@ -26,8 +26,6 @@ public class MyGameMain : Game
     private bool _sizeChanged;
     private Point _currentWindowSize;
 
-    public Point WindowSize => new((int)MainWindow.Width, (int)MainWindow.Height);
-
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -129,7 +127,7 @@ public class MyGameMain : Game
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
-        _currentWindowSize = new Point((int)MainWindow.Width, (int)MainWindow.Height);
+        _currentWindowSize = MainWindow.Size;
         if (_currentWindowSize != _oldWindowSize)
         {
             Logger.LogInfo($"Size changed: old ({_oldWindowSize}) -> new ({_currentWindowSize}) ");
@@ -230,6 +228,7 @@ public class MyGameMain : Game
         if (_sizeChanged)
         {
             Logger.LogInfo($"SwapchainTextureSize: {swapchainTexture.Width}, {swapchainTexture.Height}");
+            _depthTexture.Dispose();
             _depthTexture = Texture.CreateTexture2D(GraphicsDevice, (uint)_currentWindowSize.X, (uint)_currentWindowSize.Y,
                 TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
             _sizeChanged = false;
@@ -243,9 +242,10 @@ public class MyGameMain : Game
             new ColorAttachmentInfo(swapchainTexture, Color.CornflowerBlue)
         );
 
-        _camera.Size = WindowSize;
-        commandBuffer.SetViewport(new Viewport(0, 0, WindowSize.X, WindowSize.Y));
-        commandBuffer.SetScissor(new Rect(0, 0, WindowSize.X, WindowSize.Y));
+        var windowSize = MainWindow.Size;
+        _camera.Size = windowSize;
+        commandBuffer.SetViewport(new Viewport(0, 0, windowSize.X, windowSize.Y));
+        commandBuffer.SetScissor(new Rect(0, 0, windowSize.X, windowSize.Y));
 
         commandBuffer.BindGraphicsPipeline(_spritePipeline);
 
