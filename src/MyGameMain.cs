@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using MyGame.TWImGui;
 
 namespace MyGame;
@@ -13,13 +14,13 @@ public class MyGameMain : Game
     public float ElapsedTime { get; private set; }
 
     public readonly SpriteBatch SpriteBatch;
-    private readonly SpriteRenderer _spriteRenderer;
-    private readonly SpriteRenderer _menuRenderer;
+    private SpriteRenderer? _spriteRenderer;
+    private SpriteRenderer? _menuRenderer;
     private readonly Camera _camera;
     private Texture _depthTexture;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
-    private ImGuiScreen _imGuiScreen;
-    private bool _drawImGui;
+    private ImGuiScreen? _imGuiScreen;
+    private bool _drawImGui = true;
     private KeyCode[] _modifierKeys;
 
     public MyGameMain(
@@ -31,23 +32,16 @@ public class MyGameMain : Game
         var sw = Stopwatch.StartNew();
         SpriteBatch = new SpriteBatch(GraphicsDevice);
 
-        var ldtkPath = Path.Combine(ContentRoot, ContentPaths.Ldtk.MapLdtk);
-        var jsonString = File.ReadAllText(ldtkPath);
-        var ldtkJson = LdtkJson.FromJson(jsonString);
+        LoadLDtk();
 
-        var asepritePath = Path.Combine(ContentRoot, ContentPaths.Ldtk.Tileset1Aseprite);
-        var asepriteTexture = LoadAseprite(GraphicsDevice, asepritePath);
-        _spriteRenderer = new SpriteRenderer(asepriteTexture);
-
-        var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
-        _menuRenderer = new SpriteRenderer(menu);
+        LoadTextures();
 
         _camera = new Camera();
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
 
         _depthTexture = Texture.CreateTexture2D(GraphicsDevice, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
 
-        _imGuiScreen = new ImGuiScreen(this);
+        Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
 
         _modifierKeys = new KeyCode[]
         {
@@ -62,6 +56,33 @@ public class MyGameMain : Game
         };
 
         Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
+    }
+
+    private void LoadTextures()
+    {
+        Task.Run(() =>
+        {
+            var sw2 = Stopwatch.StartNew();
+            var asepritePath = Path.Combine(ContentRoot, ContentPaths.Ldtk.Tileset1Aseprite);
+            var asepriteTexture = LoadAseprite(GraphicsDevice, asepritePath);
+            _spriteRenderer = new SpriteRenderer(asepriteTexture);
+
+            var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
+            _menuRenderer = new SpriteRenderer(menu);
+            Logger.LogInfo($"Loaded textures in {sw2.ElapsedMilliseconds} ms");
+        });
+    }
+
+    private void LoadLDtk()
+    {
+        Task.Run(() =>
+        {
+            var sw2 = Stopwatch.StartNew();
+            var ldtkPath = Path.Combine(ContentRoot, ContentPaths.Ldtk.MapLdtk);
+            var jsonString = File.ReadAllText(ldtkPath);
+            var ldtkJson = LdtkJson.FromJson(jsonString);
+            Logger.LogInfo($"Loaded LDtk in {sw2.ElapsedMilliseconds} ms");
+        });
     }
 
     private static Texture LoadPngTexture(GraphicsDevice device, string path)
@@ -91,7 +112,8 @@ public class MyGameMain : Game
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
-        _imGuiScreen.Update();
+        if (_imGuiScreen != null)
+            _imGuiScreen.Update();
 
         if (IsAnyModifierKeyDown())
             return;
@@ -204,8 +226,8 @@ public class MyGameMain : Game
                 TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
         }
 
-        _menuRenderer.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 5f);
-        _spriteRenderer.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
+        _menuRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 5f);
+        _spriteRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
 
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(_depthTexture, new DepthStencilValue(0, 0)),
@@ -216,7 +238,7 @@ public class MyGameMain : Game
 
         commandBuffer.EndRenderPass();
 
-        if (_drawImGui)
+        if (_imGuiScreen != null && _drawImGui)
         {
             _imGuiScreen.Draw(_depthTexture, commandBuffer, swapchainTexture);
         }

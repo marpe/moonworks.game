@@ -8,9 +8,12 @@ namespace MyGame.TWImGui;
 public enum ImGuiFont
 {
     Tiny,
+    TinyBold,
     Small,
+    SmallBold,
     Medium,
-    Default = Medium,
+    MediumBold,
+    Default,
 }
 
 public class ImGuiRenderer
@@ -732,11 +735,8 @@ public class ImGuiRenderer
 
     private unsafe void BuildFontAtlas()
     {
-        if (IsDisposed)
-            throw new ObjectDisposedException(nameof(ImGuiRenderer));
-
+        var sw = Stopwatch.StartNew();
         var io = ImGui.GetIO();
-        // var defaultFontPtr = ImGui.GetIO().Fonts.AddFontDefault();
 
         var fa6IconRanges = stackalloc ushort[] { FontAwesome6.IconMin, FontAwesome6.IconMax, 0 };
         var fa6FontPath = Path.Combine(MyGameMain.ContentRoot, "fonts", FontAwesome6.FontIconFileName);
@@ -758,6 +758,7 @@ public class ImGuiRenderer
         }
 
         var fontPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
+        var fontPathBold = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoBoldTtf);
 
         foreach (var font in _fonts)
         {
@@ -767,10 +768,13 @@ public class ImGuiRenderer
         _fonts.Clear();
 
         _fonts[ImGuiFont.Medium] = CreateFont(fontPath, 16, 14);
+        /*_fonts[ImGuiFont.Default] = ImGui.GetIO().Fonts.AddFontDefault();
+        _fonts[ImGuiFont.MediumBold] = CreateFont(fontPathBold, 16, 14);
         _fonts[ImGuiFont.Small] = CreateFont(fontPath, 14, 12);
+        _fonts[ImGuiFont.SmallBold] = CreateFont(fontPathBold, 14, 12);
         _fonts[ImGuiFont.Tiny] = CreateFont(fontPath, 12, 12);
+        _fonts[ImGuiFont.TinyBold] = CreateFont(fontPathBold, 12, 12);*/
 
-        io.Fonts.TexDesiredWidth = 4096;
         io.Fonts.GetTexDataAsRGBA32(out byte* pixelData, out var width, out var height, out var bytesPerPixel);
 
         var pixels = new byte[width * height * bytesPerPixel];
@@ -791,7 +795,9 @@ public class ImGuiRenderer
         io.Fonts.SetTexID(_fontAtlasTextureId.Value);
         io.Fonts.ClearTexData();
 
-        io.NativePtr->FontDefault = _fonts[ImGuiFont.Default];
+        // io.NativePtr->FontDefault = _fonts[ImGuiFont.Default];
+
+        Logger.LogInfo($"Build ImGui fonts in {sw.ElapsedMilliseconds} ms");
     }
 
     private void CreateWindow(ImGuiViewportPtr vp)

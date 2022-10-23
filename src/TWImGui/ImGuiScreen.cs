@@ -28,14 +28,14 @@ public class ImGuiScreen
     public ImGuiScreen(MyGameMain game)
     {
         _game = game;
-        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
         var timer = Stopwatch.StartNew();
+        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
         _imGuiRenderer = new ImGuiRenderer(game);
         _blendStateNames = Enum.GetNames<BlendState>();
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
-        Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
         AddDefaultMenus();
+        Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
     }
 
     private void AddDefaultMenus()
