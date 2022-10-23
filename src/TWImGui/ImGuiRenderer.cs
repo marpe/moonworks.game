@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 using ImGuiNET;
+using MyGame.Graphics;
 using SDL2;
 
 namespace MyGame.TWImGui;

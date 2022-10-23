@@ -1,4 +1,5 @@
 using ImGuiNET;
+using MyGame.Graphics;
 using MyGame.Utils;
 
 namespace MyGame.TWImGui;
@@ -161,6 +162,13 @@ public class ImGuiScreen
             if (BlendStateEditor.Draw("SpriteBatch", ref _game.SpriteBatch.CustomBlendState))
             {
                 _game.SpriteBatch.UpdateCustomBlendPipeline();
+            }
+
+            ImGui.Separator();
+
+            if (BlendStateEditor.Draw("FontPipe", ref _game.FontPipelineBlend))
+            {
+                _game.RecreateFontPipeline();
             }
 
             ImGui.Separator();

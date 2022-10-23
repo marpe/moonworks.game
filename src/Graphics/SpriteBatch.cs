@@ -1,6 +1,6 @@
 ﻿using Buffer = MoonWorks.Graphics.Buffer;
 
-namespace MyGame;
+namespace MyGame.Graphics;
 
 public enum BlendState
 {
@@ -77,8 +77,8 @@ public class SpriteBatch
 
         _sampler = new Sampler(device, SamplerCreateInfo.PointClamp);
     }
-
-    private static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
+    
+    public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
         var spriteVertexShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
         var spriteFragmentShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
@@ -188,11 +188,11 @@ public class SpriteBatch
         }
     }
 
-    public void Draw(CommandBuffer commandBuffer, uint width, uint height)
+    public static Matrix4x4 GetViewProjection(int x, int y, uint width, uint height)
     {
         var view = Matrix4x4.CreateLookAt(
-            new Vector3(0, 0, 1),
-            new Vector3(0, 0, 0),
+            new Vector3(x, y, 1),
+            new Vector3(x, y, 0),
             Vector3.Up
         );
         var projection = Matrix4x4.CreateOrthographicOffCenter(
@@ -203,7 +203,12 @@ public class SpriteBatch
             0.0001f,
             4000f
         );
-        var viewProjection = view * projection;
+        return view * projection;
+    }
+
+    public void Draw(CommandBuffer commandBuffer, uint width, uint height)
+    {
+        var viewProjection = GetViewProjection(0, 0, width, height);
         Draw(commandBuffer, viewProjection);
     }
 

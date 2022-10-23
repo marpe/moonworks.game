@@ -1,6 +1,4 @@
-﻿using System.Runtime.InteropServices;
-
-namespace MyGame;
+﻿namespace MyGame.Graphics;
 
 // SPIR-V requires vectors to not cross 16-byte boundaries
 // [StructLayout(LayoutKind.Explicit)]

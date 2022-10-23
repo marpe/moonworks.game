@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using MyGame.Graphics;
+
+namespace MyGame;
 
 public class SpriteRenderer
 {
