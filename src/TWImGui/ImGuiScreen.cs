@@ -111,7 +111,7 @@ public class ImGuiScreen
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
 
         var swap = renderer.Swap ?? throw new InvalidOperationException();
-        renderer.BeginRenderPass(SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height), false);
+        renderer.BeginRenderPass(SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height),  false);
         renderer.EndRenderPass();
     }
 
@@ -155,9 +155,9 @@ public class ImGuiScreen
                 ImGui.EndCombo();
             }
 
-            if (BlendStateEditor.Draw("SpriteBatch", ref _game.Renderer.SpriteBatch.CustomBlendState))
+            if (BlendStateEditor.Draw("SpriteBatch", ref _game.Renderer.CustomBlendState))
             {
-                _game.Renderer.SpriteBatch.UpdateCustomBlendPipeline();
+                _game.Renderer.UpdateCustomBlendPipeline();
             }
 
             ImGui.Separator();

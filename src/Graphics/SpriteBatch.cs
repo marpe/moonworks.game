@@ -15,7 +15,7 @@ public enum BlendState
 
 public class SpriteBatch
 {
-    public const int MAX_SPRITES = 1024;
+    private const int MAX_SPRITES = 1024;
     private const int MAX_VERTICES = MAX_SPRITES * 4;
     private const int MAX_INDICES = MAX_SPRITES * 6;
 
@@ -26,25 +26,13 @@ public class SpriteBatch
     private readonly Position3DTextureColorVertex[] _vertices;
 
     private uint _vertexCount;
+    private uint _addCountSinceDraw;
+    public uint AddCountSinceDraw => _addCountSinceDraw;
 
     private SpriteSubBatch[] _spriteSubBatches = new SpriteSubBatch[1];
     private uint _spriteSubBatchCount = 0;
-    private GraphicsPipeline[] _pipelines;
-    private readonly Sampler _sampler;
     private readonly GraphicsDevice _device;
     public BlendState BlendState = BlendState.AlphaBlend;
-
-    public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
-    {
-        BlendEnable = true,
-        AlphaBlendOp = BlendOp.Add,
-        ColorBlendOp = BlendOp.Add,
-        ColorWriteMask = ColorComponentFlags.RGBA,
-        SourceColorBlendFactor = BlendFactor.One,
-        SourceAlphaBlendFactor = BlendFactor.SourceAlpha,
-        DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
-        DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
-    };
 
     public SpriteBatch(GraphicsDevice device)
     {
@@ -56,81 +44,8 @@ public class SpriteBatch
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.SetBufferData(_indexBuffer, _indices);
         device.Submit(commandBuffer);
-
-        var blendStates = Enum.GetValues<BlendState>();
-        _pipelines = new GraphicsPipeline[blendStates.Length];
-        for (var i = 0; i < blendStates.Length; i++)
-        {
-            var blendState = blendStates[i] switch
-            {
-                BlendState.Additive => ColorAttachmentBlendState.Additive,
-                BlendState.AlphaBlend => ColorAttachmentBlendState.AlphaBlend,
-                BlendState.NonPremultiplied => ColorAttachmentBlendState.NonPremultiplied,
-                BlendState.Opaque => ColorAttachmentBlendState.Opaque,
-                BlendState.None => ColorAttachmentBlendState.None,
-                BlendState.Disable => ColorAttachmentBlendState.Disable,
-                BlendState.Custom => CustomBlendState,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            _pipelines[i] = CreateGraphicsPipeline(device, blendState);
-        }
-
-        _sampler = new Sampler(device, SamplerCreateInfo.PointClamp);
     }
     
-    public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
-    {
-        var spriteVertexShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
-        var spriteFragmentShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
-
-        var myVertexBindings = new VertexBinding[]
-        {
-            VertexBinding.Create<Position3DTextureColorVertex>()
-        };
-
-        var myVertexAttributes = new VertexAttribute[]
-        {
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Position), 0),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.TexCoord), 1),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
-        };
-
-        var myVertexInputState = new VertexInputState
-        {
-            VertexBindings = myVertexBindings,
-            VertexAttributes = myVertexAttributes
-        };
-
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false
-        };
-
-        var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
-        {
-            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
-            ),
-            DepthStencilState = myDepthStencilState,
-            VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0),
-            FragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1),
-            MultisampleState = MultisampleState.None,
-            RasterizerState = RasterizerState.CCW_CullNone,
-            PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = myVertexInputState,
-        };
-
-        return new GraphicsPipeline(
-            device,
-            myGraphicsPipelineCreateInfo
-        );
-    }
-
     public void Start(TextureSamplerBinding binding)
     {
         End();
@@ -149,6 +64,8 @@ public class SpriteBatch
 
     public void Add(Sprite sprite, Color color, float depth, Matrix3x2 transform)
     {
+        _addCountSinceDraw++;
+        
         var offset = new Vector2(sprite.FrameRect.X, sprite.FrameRect.Y);
 
         _vertices[_vertexCount].Position = new Vector3(Vector2.Transform(Vector2.Zero - offset, transform), depth);
@@ -208,11 +125,6 @@ public class SpriteBatch
 
     public void Draw(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
-        // commandBuffer.SetViewport(new Viewport(0, 0, windowSize.X, windowSize.Y));
-        // commandBuffer.SetScissor(new Rect(0, 0, windowSize.X, windowSize.Y));
-
-        commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
-
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
         var fragmentParamOffset = 0u;
 
@@ -236,6 +148,7 @@ public class SpriteBatch
 
         _spriteSubBatchCount = 0;
         _vertexCount = 0;
+        _addCountSinceDraw = 0;
     }
 
     private static ushort[] GenerateIndexArray()
@@ -254,15 +167,9 @@ public class SpriteBatch
         return result;
     }
 
-    public void AddSingle(CommandBuffer commandBuffer, Sprite sprite, Color color, float depth, Matrix3x2 transform)
+    public void AddSingle(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler)
     {
-        Start(new TextureSamplerBinding(sprite.Texture, _sampler));
+        Start(new TextureSamplerBinding(sprite.Texture, sampler));
         Add(sprite, color, depth, transform);
-        PushVertexData(commandBuffer);
-    }
-
-    public void UpdateCustomBlendPipeline()
-    {
-        _pipelines[(int)BlendState.Custom] = CreateGraphicsPipeline(_device, CustomBlendState);
     }
 }
