@@ -1,9 +1,12 @@
+using System.Globalization;
+
 namespace MyGame;
 
 class Program
 {
 	static void Main(string[] args)
 	{
+		CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
 		var windowCreateInfo = new WindowCreateInfo
 		{
 			WindowWidth = 1920,

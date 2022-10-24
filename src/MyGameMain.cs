@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using MyGame.Components;
 using MyGame.Graphics;
+using MyGame.TWConsole;
 using MyGame.TWImGui;
 
 namespace MyGame;
@@ -26,6 +27,7 @@ public class MyGameMain : Game
     private bool _saveTexture;
 
     public readonly Renderer Renderer;
+    private readonly ConsoleScreen _consoleScreen;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -35,7 +37,13 @@ public class MyGameMain : Game
     {
         var sw = Stopwatch.StartNew();
 
+        Shared.Game = this;
+        Shared.MainWindow = MainWindow;
+        Shared.Console = new TWConsole.TWConsole();
+
         Renderer = new Renderer(this);
+
+        _consoleScreen = new ConsoleScreen(this);
 
         LoadLDtk();
 
@@ -117,6 +125,8 @@ public class MyGameMain : Game
 
         if (_imGuiScreen != null)
             _imGuiScreen.Update();
+
+        _consoleScreen.Update(ElapsedTime);
 
         if (IsAnyModifierKeyDown())
             return;
@@ -252,6 +262,8 @@ public class MyGameMain : Game
         {
             _imGuiScreen.Draw(Renderer);
         }
+
+        _consoleScreen.Draw(Renderer);
 
         Renderer.EndFrame();
 

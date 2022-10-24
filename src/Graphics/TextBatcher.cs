@@ -19,7 +19,7 @@ public class TextBatcher
         var fontPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
         _font = new Font(fontPath);
 
-        _fontPacker = new Packer(device, _font, 48, 512, 512);
+        _fontPacker = new Packer(device, _font, 18f, 512, 512);
         var fontRange = new FontRange()
         {
             FirstCodepoint = 0x20,

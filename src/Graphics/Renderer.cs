@@ -1,4 +1,5 @@
 ﻿using MoonWorks.Graphics.Font;
+using MyGame.TWConsole;
 
 namespace MyGame.Graphics;
 
@@ -14,7 +15,7 @@ public class Renderer
 
     private readonly MyGameMain _game;
     private readonly GraphicsDevice _device;
-    private readonly Texture _dummyTexture;
+    private readonly Texture _blankTextures;
     private readonly GraphicsPipeline[] _pipelines;
 
     public CommandBuffer? CommandBuffer { get; private set; }
@@ -41,7 +42,11 @@ public class Renderer
         TextBatcher = new TextBatcher(_device);
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
         _depthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        _dummyTexture = Texture.CreateTexture2D(_device, 2, 2, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+
+        _blankTextures = Texture.CreateTexture2D(_device, 1, 1, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        var command = game.GraphicsDevice.AcquireCommandBuffer();
+        command.SetTextureData(_blankTextures, new[] { Color.White });
+        game.GraphicsDevice.Submit(command);
 
         _fontPipeline = CreateGraphicsPipeline(_device, FontPipelineBlend);
 
@@ -100,6 +105,28 @@ public class Renderer
         return true;
     }
 
+    public void DrawRect(Rectangle rect, Color color, float depth = 0)
+    {
+        var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
+        SpriteBatch.AddSingle(new Sprite(_blankTextures), color, depth, scale, PointClamp);
+    }
+
+    public void DrawLine(Vector2 from, Vector2 to, Color color)
+    {
+        var offset = from - to;
+        var length = offset.Length();
+        var scale = Matrix3x2.CreateScale(length, 1f, new Vector2(0, 0.5f));
+        var rotationRad = MathF.AngleBetweenVectors(from, to);
+        var rotation = Matrix3x2.CreateRotation(rotationRad, new Vector2(0, 0.5f));
+        var translation = Matrix3x2.CreateTranslation(from);
+        SpriteBatch.AddSingle(new Sprite(_blankTextures), color, 0, scale * rotation * translation, PointClamp);
+    }
+
+    public void DrawLine(Point from, Point to, Color color)
+    {
+        DrawLine(from.ToVec2(), to.ToVec2(), color);
+    }
+
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)
     {
         var commandBuffer = CommandBuffer ?? throw new InvalidOperationException();
@@ -107,7 +134,7 @@ public class Renderer
     }
 
     public void DrawText(ReadOnlySpan<char> text, float x, float y, float depth, Color color,
-        HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Baseline)
+        HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
     {
         var commandBuffer = CommandBuffer ?? throw new InvalidOperationException();
         TextBatcher.Add(text.ToString(), x, y, depth, color, alignH, alignV);
@@ -152,6 +179,8 @@ public class Renderer
         var swap = Swap ?? throw new InvalidOperationException();
 
         command.EndRenderPass();
+        
+        TextBatcher.Start();
     }
 
     public void EndFrame()
@@ -259,5 +288,15 @@ public class Renderer
             device,
             myGraphicsPipelineCreateInfo
         );
+    }
+
+    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
+    {
+        DrawText(text, pos.X, pos.Y, depth, color);
+    }
+
+    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, Color color)
+    {
+        DrawText(text, pos.X, pos.Y, 0, color);
     }
 }
