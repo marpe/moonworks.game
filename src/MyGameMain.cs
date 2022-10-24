@@ -44,6 +44,10 @@ public class MyGameMain : Game
         Renderer = new Renderer(this);
 
         _consoleScreen = new ConsoleScreen(this);
+        Task.Run(() =>
+        {
+            Shared.Console.Initialize();
+        });
 
         LoadLDtk();
 

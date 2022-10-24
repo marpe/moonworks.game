@@ -4,6 +4,7 @@ public static class ContentPaths
 {
 		public static class Fonts
 		{
+			public const string ConsolaTtf = @"fonts\consola.ttf";
 			public const string Fa6Solid900Ttf = @"fonts\fa-6-solid-900.ttf";
 			public const string RobotoBoldTtf = @"fonts\Roboto-Bold.ttf";
 			public const string RobotoRegularTtf = @"fonts\Roboto-Regular.ttf";

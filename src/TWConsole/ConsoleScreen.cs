@@ -382,6 +382,7 @@ public class ConsoleScreen
     }
 
     private char[] tmpArr = new char[1];
+    private int _drawCalls;
 
     public static Color GetColor(int colorIndex, float alpha)
     {
@@ -414,6 +415,8 @@ public class ConsoleScreen
 
         var winSize = Shared.MainWindow.Size;
 
+        renderer.TextBatcher.Start(TextFont.ConsolasMono);
+
         backgroundRect.X = 0;
         backgroundRect.Y = (int)(winSize.Y * (TransitionPercentage - 1));
         backgroundRect.Width = winSize.X;
@@ -423,10 +426,6 @@ public class ConsoleScreen
             renderer.CommandBuffer ?? throw new InvalidOperationException(),
             renderer.Swap ?? throw new InvalidOperationException()
         );
-
-        // var previousViewport = GameCore.GraphicsDevice.Viewport;
-        // GameCore.GraphicsDevice.Viewport = new Viewport(backgroundRect);
-        // command.SetViewport(new Viewport(backgroundRect.X, backgroundRect.Y, backgroundRect.Width, backgroundRect.Height));
 
         renderer.DrawRect(backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
 
@@ -456,7 +455,8 @@ public class ConsoleScreen
             );
         }
 
-        var scrolledLinesStr = $"DisplaY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY})";
+        var scrolledLinesStr =
+            $"DrawCalls({_drawCalls}) DisplaY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY})";
         var scrollLinesPos =
             new Vector2(backgroundRect.Width - scrolledLinesStr.Length * CharSize.X - ConsoleSettings.HorizontalPadding,
                 0);
@@ -477,6 +477,8 @@ public class ConsoleScreen
 
         var numLinesToDraw = (int)(backgroundRect.Height / CharSize.Y);
 
+        _drawCalls = 0;
+
         for (var i = 0; i < numLinesToDraw; i++)
         {
             var lineIndex = TwConsole.ScreenBuffer.DisplayY - i;
@@ -488,10 +490,10 @@ public class ConsoleScreen
             for (var j = 0; j < TwConsole.ScreenBuffer.Width; j++)
             {
                 var (c, color) = TwConsole.ScreenBuffer.GetChar(j, lineIndex);
+                if (c < 0x20 || c > 0x7e)
+                    continue;
                 if (c == ' ')
                     continue;
-                else if (c == '\0')
-                    break;
                 var charColor = GetColor(color);
                 var position = displayPosition + new Vector2(CharSize.X * j, -CharSize.Y * i);
                 // var offset = Font.DrawText(batcher, c, position, charColor);
@@ -501,16 +503,16 @@ public class ConsoleScreen
                     position,
                     charColor
                 );
+                _drawCalls++;
             }
         }
 
         if (showInput)
             DrawInput(renderer, textArea, displayPosition);
 
-        // GameCore.GraphicsDevice.Viewport = previousViewport;
-
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         renderer.BeginRenderPass(viewProjection, false);
+        // command.SetViewport(new Viewport(backgroundRect.X, backgroundRect.Y, backgroundRect.Width, backgroundRect.Height));
         renderer.EndRenderPass();
     }
 

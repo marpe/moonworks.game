@@ -137,7 +137,7 @@ public class Renderer
         HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
     {
         var commandBuffer = CommandBuffer ?? throw new InvalidOperationException();
-        TextBatcher.Add(text.ToString(), x, y, depth, color, alignH, alignV);
+        TextBatcher.Add(text, x, y, depth, color, alignH, alignV);
     }
 
     public void BeginRenderPass(Matrix4x4 viewProjection, bool clear = true)
