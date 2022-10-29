@@ -10,9 +10,13 @@ public enum TextFont
 
 public class FontData
 {
+    public TextBatch Batch;
     public Packer Packer;
     public Font Font;
     public Texture Texture;
+    public TextFont Name;
+    public TextureSamplerBinding Binding;
+    public bool HasStarted;
 }
 
 public class TextBatcher
@@ -25,17 +29,13 @@ public class TextBatcher
         OversampleV = 0
     };
 
-    private TextBatch _textBatch;
     private uint _addCountSinceDraw = 0;
     public uint AddCountSinceDraw => _addCountSinceDraw;
 
     private readonly Dictionary<TextFont, FontData> _fonts = new();
-    private FontData? _currentFont = null;
 
     public TextBatcher(GraphicsDevice device)
     {
-        _textBatch = new TextBatch(device);
-
         var fonts = new[]
         {
             (TextFont.Roboto, ContentPaths.Fonts.RobotoRegularTtf),
@@ -54,6 +54,9 @@ public class TextBatcher
             {
                 Font = font,
                 Packer = fontPacker,
+                Name = key,
+                Batch = new TextBatch(device),
+                HasStarted = false,
             };
             _fonts.Add(key, textBatchFont);
         }
@@ -66,36 +69,58 @@ public class TextBatcher
             var (width, height) = (data.Packer.Texture.Width, data.Packer.Texture.Height);
             var fontTexture = Renderer.CreateTexture(device, width, height, pixels);
             _fonts[key].Texture = fontTexture;
+            _fonts[key].Binding = new TextureSamplerBinding(fontTexture, Renderer.PointClamp);
         }
     }
 
-    public void Start(TextFont fontType = TextFont.Roboto)
-    {
-        if (_currentFont == null || _currentFont != _fonts[fontType])
-            _currentFont = _fonts[fontType]; // TODO (marpe): start a subbatch
-        _textBatch.Start(_currentFont.Packer);
-    }
-
-    public void Add(ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
+    public void Add(TextFont fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
         VerticalAlignment alignV)
     {
         _addCountSinceDraw++;
-        _textBatch.Draw(text, x, y, depth, color, alignH, alignV);
+
+        var font = _fonts[fontType];
+        if (!font.HasStarted)
+        {
+            font.Batch.Start(font.Packer);
+            font.HasStarted = true;
+        }
+
+        font.Batch.Draw(text, x, y, depth, color, alignH, alignV);
     }
 
-    public void PushVertexData(CommandBuffer command)
+    public void PushVertexData(CommandBuffer commandBuffer)
     {
-        _textBatch.UploadBufferData(command);
+        foreach (var (key, font) in _fonts)
+        {
+            if (font.HasStarted)
+                font.Batch.UploadBufferData(commandBuffer);
+        }
     }
 
-    public void Draw(CommandBuffer command, Matrix4x4 viewProjection)
+    public void Draw(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
-        var vtxUniformOffset = command.PushVertexShaderUniforms(viewProjection);
-        command.BindVertexBuffers(_textBatch.VertexBuffer);
-        command.BindIndexBuffer(_textBatch.IndexBuffer, IndexElementSize.ThirtyTwo);
-        var texture = _currentFont?.Texture ?? throw new InvalidOperationException();
-        command.BindFragmentSamplers(new TextureSamplerBinding(texture, Renderer.PointClamp));
-        command.DrawIndexedPrimitives(0, 0, _textBatch.PrimitiveCount, vtxUniformOffset, 0);
+        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
+        var fragmentParamOffset = 0u;
+
+        foreach (var (key, font) in _fonts)
+        {
+            if (!font.HasStarted)
+                continue;
+
+            commandBuffer.BindVertexBuffers(font.Batch.VertexBuffer);
+            commandBuffer.BindIndexBuffer(font.Batch.IndexBuffer, IndexElementSize.ThirtyTwo);
+            commandBuffer.BindFragmentSamplers(font.Binding);
+            commandBuffer.DrawIndexedPrimitives(
+                0,
+                0,
+                font.Batch.PrimitiveCount,
+                vertexParamOffset,
+                fragmentParamOffset
+            );
+            
+            font.HasStarted = false;
+        }
+
         _addCountSinceDraw = 0;
     }
 }

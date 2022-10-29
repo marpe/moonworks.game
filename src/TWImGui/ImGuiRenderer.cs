@@ -69,7 +69,6 @@ public class ImGuiRenderer
     public ImGuiRenderer(Game game)
     {
         _game = game;
-        game.Exiting += Dispose;
 
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -332,7 +331,7 @@ public class ImGuiRenderer
         GC.SuppressFinalize(this);
     }
 
-    public virtual void Dispose(bool isDisposing)
+    protected virtual void Dispose(bool isDisposing)
     {
         if (IsDisposed)
             return;
@@ -370,7 +369,6 @@ public class ImGuiRenderer
             _pipeline.Dispose();
 
             Inputs.TextInput -= OnTextInput;
-            _game.Exiting -= Dispose;
         }
 
         IsDisposed = true;
@@ -643,7 +641,6 @@ public class ImGuiRenderer
 
                 if (window == _game.MainWindow)
                 {
-                    Dispose();
                     _game.Quit();
                 }
             }

@@ -49,9 +49,7 @@ public class ConsoleScreen
 
     public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
 
-    private float _transitionTimer = 0;
-
-    private float TransitionPercentage => MathF.Clamp01(_transitionTimer / ConsoleSettings.TransitionDuration);
+    private float TransitionPercentage;
 
     private InputField _inputField = new(1024, TWConsole.DEFAULT_WIDTH);
     private readonly MyGameMain _game;
@@ -65,7 +63,7 @@ public class ConsoleScreen
     public void Update(float deltaSeconds)
     {
         var inputState = _game.Inputs;
-        if (inputState.Keyboard.IsPressed(KeyCode.I))
+        if (inputState.Keyboard.IsPressed(KeyCode.Grave))
             IsHidden = !IsHidden;
 
         UpdateTransition(deltaSeconds);
@@ -91,25 +89,18 @@ public class ConsoleScreen
 
     private void UpdateTransition(float deltaSeconds)
     {
+        var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
         if (ScreenState == ScreenState.TransitionOn)
         {
-            _transitionTimer += deltaSeconds;
-
-            if (_transitionTimer >= ConsoleSettings.TransitionDuration)
-            {
-                _transitionTimer = ConsoleSettings.TransitionDuration;
+            TransitionPercentage = MathF.Clamp01(TransitionPercentage + deltaSeconds * speed);
+            if (TransitionPercentage >= 1.0f)
                 ScreenState = ScreenState.Active;
-            }
         }
         else if (ScreenState == ScreenState.TransitionOff)
         {
-            _transitionTimer -= deltaSeconds;
-
-            if (_transitionTimer <= 0)
-            {
-                _transitionTimer = 0;
+            TransitionPercentage = MathF.Clamp01(TransitionPercentage - deltaSeconds * speed);
+            if (TransitionPercentage <= 0)
                 ScreenState = ScreenState.Hidden;
-            }
         }
     }
 
@@ -415,16 +406,15 @@ public class ConsoleScreen
 
         var winSize = Shared.MainWindow.Size;
 
-        renderer.TextBatcher.Start(TextFont.ConsolasMono);
-
         backgroundRect.X = 0;
-        backgroundRect.Y = (int)(winSize.Y * (TransitionPercentage - 1));
+        var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
+        backgroundRect.Y = (int)(height * (TransitionPercentage - 1));
         backgroundRect.Width = winSize.X;
-        backgroundRect.Height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
+        backgroundRect.Height = height;
 
         var (command, swap) = (
             renderer.CommandBuffer ?? throw new InvalidOperationException(),
-            renderer.Swap ?? throw new InvalidOperationException()
+            renderer.SwapTexture ?? throw new InvalidOperationException()
         );
 
         renderer.DrawRect(backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
@@ -461,7 +451,7 @@ public class ConsoleScreen
             new Vector2(backgroundRect.Width - scrolledLinesStr.Length * CharSize.X - ConsoleSettings.HorizontalPadding,
                 0);
 
-        renderer.DrawText(scrolledLinesStr, scrollLinesPos, Color.Yellow);
+        renderer.DrawText(scrolledLinesStr, scrollLinesPos, Color.Yellow * TransitionPercentage);
 
         var displayPosition = new Vector2(
             ConsoleSettings.HorizontalPadding,

@@ -37,5 +37,7 @@ public static class ConsoleSettings
 	public static int ScrollSpeed = 3;
 
 	public static string ScrollIndicatorChar = "^";
+	
+	[CVar("con.speed", "Config transition duration in seconds")]
 	public static float TransitionDuration = 0.1f;
 }

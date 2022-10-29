@@ -7,6 +7,7 @@ public class TWConsole
 	public static event Action<StringBuilder>? OnCfgSave;
 	private const string kCvarsFilename = "cvars.cfg";
 	public readonly SortedDictionary<string, ConsoleCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);
+	public readonly SortedDictionary<string, ConsoleCommand> Aliases = new(StringComparer.InvariantCultureIgnoreCase);
 	public readonly Dictionary<string, CVar> CVars = new();
 	public readonly RingBuffer<string> CommandHistory = new(MAX_COMMAND_HISTORY_COUNT);
 	public readonly ConsoleScreenBuffer ScreenBuffer;
@@ -102,35 +103,21 @@ public class TWConsole
 
 	private void RegisterCVar(CVar cvar, CVarAttribute cvarAttribute)
 	{
-		var handler = new ConsoleCommand.ConsoleCommandHandler((console, cmd, args) =>
-		{
-			/*if (args.Length == 1 && cvar.VarType == typeof(bool))
-			{
-				cvar.SetValue(!cvar.GetValue<bool>());
-			}
-			else */
-			if (args.Length > 1)
-			{
-				try
-				{
-					cvar.SetValue(args[1]);
-				}
-				catch (Exception e)
-				{
-					Print($"Error: {e.Message}");
-				}
-			}
-
-			Print($"{cmd.Key} = \"{Colorize(cvar.VarType, cvar.GetValue())}^2\"");
-		});
-
 		var typeName = ConsoleUtils.GetDisplayName(cvar.VarType);
 		var defaultValue = ConsoleUtils.ConvertToString(cvar.DefaultValue);
 
 		RegisterCommand(
-			cvarAttribute.Name,
-			$"{cvarAttribute.Description} <^3{typeName}^0> ({Colorize(cvar.VarType, defaultValue)})",
-			handler
+			new ConsoleCommand(
+				cvarAttribute.Name,
+				$"{cvarAttribute.Description} <^3{typeName}^0> ({Colorize(cvar.VarType, defaultValue)})",
+				CVarHandler(cvar),
+				new ConsoleCommandArg[]
+				{
+					new(cvar.Key, true, cvar.DefaultValue, cvar.VarType)
+				},
+				Array.Empty<string>(),
+				true
+			)
 		);
 
 		CVars.Add(cvar.Key, cvar);
@@ -167,7 +154,7 @@ public class TWConsole
 	{
 		var parameters = method.GetParameters();
 
-		var defaults = new object?[parameters.Length];
+		var defaults = new ConsoleCommandArg[parameters.Length];
 
 		for (var i = 0; i < parameters.Length; i++)
 		{
@@ -175,45 +162,75 @@ public class TWConsole
 
 			if (!ConsoleUtils.CanParse(param.ParameterType))
 			{
-				throw new InvalidOperationException("Invalid parameter type " + param.ParameterType.Name);
+				throw new InvalidOperationException($"Invalid parameter type: {param.ParameterType.Name}");
 			}
 
-			if (param.HasDefaultValue)
-			{
-				defaults[i] = param.DefaultValue;
-			}
-			else if (param.ParameterType == typeof(string))
-			{
-				defaults[i] = string.Empty;
-			}
+			defaults[i] = new ConsoleCommandArg(param.Name, param.HasDefaultValue, param.DefaultValue, param.ParameterType);
 		}
 
-		RegisterCommand(new ConsoleCommand(attr.Command, attr.Description,
-			(console, cmd, args) =>
+		RegisterCommand(
+			new ConsoleCommand(
+				attr.Command,
+				attr.Description,
+				ConsoleCommandHandler(method),
+				defaults,
+				attr.Aliases,
+				false
+			)
+		);
+	}
+
+	private static ConsoleCommand.ConsoleCommandHandler CVarHandler(CVar cvar)
+	{
+		return (console, cmd, args) =>
+		{
+			/*if (args.Length == 1 && cvar.VarType == typeof(bool))
 			{
-				if (parameters.Length == 0)
+				cvar.SetValue(!cvar.GetValue<bool>());
+			}
+			else */
+			if (args.Length > 1)
+			{
+				try
 				{
-					method.Invoke(null, null);
+					cvar.SetValue(args[1]);
 				}
-				else
+				catch (Exception e)
 				{
-					var p = (object?[])defaults.Clone();
-					for (var i = 0; i < p.Length && i < args.Length - 1; i++)
+					console.Print($"Error: {e.Message}");
+				}
+			}
+
+			console.Print($"{cmd.Key} = \"{Colorize(cvar.VarType, cvar.GetValue())}\"");
+		};
+	}
+	
+	private static ConsoleCommand.ConsoleCommandHandler ConsoleCommandHandler(MethodBase method)
+	{
+		return (console, cmd, args) =>
+		{
+			try
+			{
+				object?[]? parameters = null;
+			
+				if(cmd.Arguments.Length > 0)
+				{
+					parameters = cmd.Arguments.Select(x => x.DefaultValue).ToArray();
+
+					for (var i = 0; i < parameters.Length && i < args.Length - 1; i++)
 					{
 						// args[0] will be the command
-						p[i] = ConsoleUtils.ParseArg(parameters[i].ParameterType, args[i + 1]);
-					}
-
-					try
-					{
-						method.Invoke(null, p);
-					}
-					catch (Exception e)
-					{
-						Print(e.ToString());
+						parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[i + 1]);
 					}
 				}
-			}));
+
+				method.Invoke(console, parameters);
+			}
+			catch (Exception e)
+			{
+				console.Print(e.ToString());
+			}
+		};
 	}
 
 	[ConsoleHandler("sysinfo", "Display system info")]
@@ -256,44 +273,27 @@ public class TWConsole
 		Print($"Current resolution: {size.X}x{size.Y}");
 	}
 
-	public ConsoleCommand RegisterCommand(string command, string description,
-		ConsoleCommand.ConsoleCommandHandler handler)
-	{
-		var consoleCommand = new ConsoleCommand(command, description, handler);
-		RegisterCommand(consoleCommand);
-		return consoleCommand;
-	}
-
-	public void RegisterCommand(ConsoleCommand command)
+	private void RegisterCommand(ConsoleCommand command)
 	{
 		Commands.Add(command.Key, command);
-	}
-
-	public void RegisterCommands(IEnumerable<ConsoleCommand> commands)
-	{
-		foreach (var command in commands)
+		foreach (var alias in command.Aliases)
 		{
-			RegisterCommand(command);
+			Aliases.Add(alias, command);
 		}
 	}
 
-	public void UnregisterCommand(string key)
+	private void UnregisterCommand(string key)
 	{
 		if (Commands.ContainsKey(key))
 		{
+			var command = Commands[key];
 			Commands.Remove(key);
+			foreach (var alias in command.Aliases)
+				Aliases.Remove(alias);
 		}
 	}
 
-	public void UnregisterCommands(IEnumerable<string> keys)
-	{
-		foreach (var key in keys)
-		{
-			UnregisterCommand(key);
-		}
-	}
-
-	[ConsoleHandler("con_colors", "Print colors")]
+	[ConsoleHandler("con.colors", "Print colors", new [] { "colors" })]
 	private void ColorsCommand()
 	{
 		var indices = Enumerable.Range(0, 10);
@@ -301,7 +301,7 @@ public class TWConsole
 		Print(string.Join("\n", strings));
 	}
 
-	[ConsoleHandler("con_clear", "Clear console")]
+	[ConsoleHandler("con.clear", "Clear console", new[] { "cls", "clear" })]
 	private void ClearCommand()
 	{
 		ScreenBuffer.Clear();
@@ -310,9 +310,12 @@ public class TWConsole
 	[ConsoleHandler("history", "Print command history")]
 	private void HistoryCommand()
 	{
-		var history = new List<string>(CommandHistory);
-		history.Reverse();
-		Print(string.Join("\n", history));
+		var sb = new StringBuilder();
+		for (var i = 0; i < CommandHistory.Count; i++)
+		{
+			sb.AppendLine(CommandHistory[i]);
+		}
+		Print(sb.ToString());
 	}
 
 	[ConsoleHandler("echo", "Prints input to console")]
@@ -321,16 +324,37 @@ public class TWConsole
 		Print(string.Join(" ", text));
 	}
 
-	[ConsoleHandler("help", "Lists available console commands")]
-	private void HelpCommand(string search = "")
+	private static string FormatCommand(ConsoleCommand cmd)
 	{
-		string FormatCommand(ConsoleCommand c)
+		var cmdArgs = string.Empty;
+		if (cmd.Arguments.Length > 0)
 		{
-			var cmdArgs = c.Arguments.Count > 0 ? " [" + string.Join(", ", c.Arguments) + "]" : string.Empty;
-			return $"^6{c.Key}{cmdArgs}^0: {c.Description}";
+			var formattedArgs = cmd.Arguments.Select(x =>
+			{
+				var str = x.Name + " (" + ConsoleUtils.GetDisplayName(x.Type);
+				if (x.HasDefaultValue)
+					str += ", " + ConsoleUtils.ConvertToString(x.DefaultValue);
+				str += ")";
+				return str;
+			});
+			var args = string.Join(", ", formattedArgs);
+			cmdArgs = $" ^1[{args}]^0";
 		}
 
-		StringBuilder sb = new();
+		var cmdPart = cmd.Key;
+		if (cmd.Aliases.Length > 0)
+		{
+			cmdPart += " ^5(" + string.Join(", ", cmd.Aliases) + ")^0";
+		}
+
+		return $"^6{cmdPart}{cmdArgs}^0: {cmd.Description}";
+	}
+
+	
+	[ConsoleHandler("help", "Lists available console commands and cvars")]
+	private void HelpCommand(string search = "")
+	{
+		var sb = new StringBuilder();
 		if (string.IsNullOrWhiteSpace(search))
 		{
 			sb.AppendLine("^8Available commands:");
@@ -359,6 +383,80 @@ public class TWConsole
 		Print(sb.ToString());
 	}
 
+	[ConsoleHandler("commands", "Lists available console commands")]
+	private void ListCommands(string search = "")
+	{
+		var sb = new StringBuilder();
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			sb.AppendLine("^8Available commands:");
+			var results = Commands.Where(c => !c.Value.IsCVar);
+			foreach (var (_, value) in Commands)
+			{
+				sb.AppendLine(FormatCommand(value));
+			}
+		}
+		else
+		{
+			var results = Commands.Where(c => c.Key.Contains(search) && !c.Value.IsCVar).Select(c => c.Value).ToList();
+			if (results.Count == 0)
+			{
+				sb.AppendLine($"^4Could not find any commands which contains {search}");
+			}
+			else
+			{
+				sb.AppendLine($"^8Found {results.Count} commands containing {search}:");
+				foreach (var c in results)
+				{
+					sb.AppendLine(FormatCommand(c));
+				}
+			}
+		}
+
+		Print(sb.ToString());
+	}
+
+	[ConsoleHandler("cvars", "List available cvars")]
+	private void CVarsCommand(string search = "")
+	{
+		var sb = new StringBuilder();
+		if (string.IsNullOrWhiteSpace(search))
+		{
+			var results = Commands.Where(c => c.Value.IsCVar).ToList();
+			if (results.Count == 0)
+			{
+				sb.AppendLine($"There are no cvars registered");
+			}
+			else
+			{
+				sb.AppendLine("^8Available cvars:");
+				foreach (var (_, value) in results)
+				{
+					sb.AppendLine(FormatCommand(value));
+				}
+			}
+		}
+		else
+		{
+			var results = Commands.Where(c => c.Key.Contains(search) && c.Value.IsCVar).Select(c => c.Value).ToList();
+			if (results.Count == 0)
+			{
+				sb.AppendLine($"^4Could not find any cvars which contains {search}");
+			}
+			else
+			{
+				sb.AppendLine($"^8Found {results.Count} cvars containing {search}:");
+				foreach (var c in results)
+				{
+					sb.AppendLine(FormatCommand(c));
+				}
+			}
+		}
+
+		Print(sb.ToString());
+	}
+	
+	
 	public void Print(ReadOnlySpan<char> text)
 	{
 		ScreenBuffer.AddLine(text);
@@ -392,13 +490,23 @@ public class TWConsole
 		{
 			Commands[commandPart].Handler.Invoke(this, Commands[commandPart], args);
 		}
+		else if (Aliases.ContainsKey(commandPart))
+		{
+			Aliases[commandPart].Handler.Invoke(this, Aliases[commandPart], args);
+		}
 		else
 		{
 			Print($"^4Command not found: {commandPart}");
 		}
 	}
 
-	[ConsoleHandler("cfg_save", "Save config file")]
+	[ConsoleHandler("quit", "Quit the game", new[] { "exit" })]
+	private void QuitCommand()
+	{
+		Shared.Game.Quit();
+	}
+
+	[ConsoleHandler("cfg.save", "Save config file")]
 	private void CfgSave(string filename = "cvars.cfg")
 	{
 		var sb = new StringBuilder();
@@ -435,6 +543,6 @@ public class TWConsole
 
 	public void SaveCVars()
 	{
-		Execute("cfg_save " + kCvarsFilename, false);
+		Execute("cfg.save " + kCvarsFilename, false);
 	}
 }

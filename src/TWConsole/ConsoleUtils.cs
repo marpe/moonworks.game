@@ -221,6 +221,12 @@ public static class ConsoleUtils
 
     public static string ConvertToString<T>(T value)
     {
+        if (value is null)
+            return "null";
+
+        if (value is string strValue)
+            return $"\"{strValue}\"";
+
         if (value is Color c)
         {
             var r = c.R / 255f;
@@ -231,9 +237,7 @@ public static class ConsoleUtils
         }
 
         if (value is Point p)
-        {
             return $"{p.X}, {p.Y}";
-        }
 
         return Convert.ToString(value, CultureInfo.InvariantCulture)?.ToLower() ?? string.Empty;
     }

@@ -110,8 +110,9 @@ public class ImGuiScreen
         var sprite = new Sprite(_lastRender);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
 
-        var swap = renderer.Swap ?? throw new InvalidOperationException();
-        renderer.BeginRenderPass(SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height),  false);
+        var swap = renderer.SwapTexture ?? throw new InvalidOperationException();
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        renderer.BeginRenderPass(viewProjection,  false);
         renderer.EndRenderPass();
     }
 
@@ -140,14 +141,14 @@ public class ImGuiScreen
 
             ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
             ImGui.Separator();
-            var spriteBatchBlendStateIndex = (int)_game.Renderer.SpriteBatch.BlendState;
+            var spriteBatchBlendStateIndex = (int)_game.Renderer.BlendState;
             if (ImGui.BeginCombo("SpriteBatchBlendState", _blendStateNames[spriteBatchBlendStateIndex]))
             {
                 for (var i = 0; i < _blendStateNames.Length; i++)
                 {
                     var isSelected = i == spriteBatchBlendStateIndex;
                     if (ImGui.Selectable(_blendStateNames[i], isSelected))
-                        _game.Renderer.SpriteBatch.BlendState = (BlendState)i;
+                        _game.Renderer.BlendState = (BlendState)i;
                     if (isSelected)
                         ImGui.SetItemDefaultFocus();
                 }
@@ -296,5 +297,10 @@ public class ImGuiScreen
 
             window.Draw();
         }
+    }
+
+    public void Destroy()
+    {
+        _imGuiRenderer.Dispose();
     }
 }

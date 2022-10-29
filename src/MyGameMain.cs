@@ -245,15 +245,16 @@ public class MyGameMain : Game
 
         var (cb, sp) = (
             Renderer.CommandBuffer ?? throw new InvalidOperationException(),
-            Renderer.Swap ?? throw new InvalidOperationException()
+            Renderer.SwapTexture ?? throw new InvalidOperationException()
         );
 
         if (_menuRenderer != null)
             Renderer.DrawSprite(_menuRenderer.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100), Color.White,
                 200f);
 
-        Renderer.DrawText("Hello hej!", 0, 0, 0, Color.White);
-        Renderer.DrawText("Oooga chacakka!", 100, 100, 0, Color.White);
+        Renderer.DrawText(TextFont.Roboto, "Hello hej!", Vector2.Zero, Color.White);
+        Renderer.DrawText("Oooga chacakka!", new Vector2(100, 100), 0, Color.White);
+        Renderer.DrawText(TextFont.Roboto, "Hello hej!2222222", new Vector2(150, 150), Color.White);
 
         // _spriteRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
 
@@ -304,5 +305,7 @@ public class MyGameMain : Game
 
     protected override void Destroy()
     {
+        _imGuiScreen?.Destroy();
+        Shared.Console.SaveCVars();
     }
 }

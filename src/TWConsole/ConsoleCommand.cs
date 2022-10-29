@@ -1,5 +1,21 @@
 ﻿namespace MyGame.TWConsole;
 
+public struct ConsoleCommandArg
+{
+    public string? Name;
+    public object? DefaultValue;
+    public bool HasDefaultValue;
+    public Type Type;
+
+    public ConsoleCommandArg(string? name, bool hasDefaultValue, object? defaultValue, Type type)
+    {
+        Name = name;
+        HasDefaultValue = hasDefaultValue;
+        DefaultValue = defaultValue;
+        Type = type;
+    }
+}
+
 public class ConsoleCommand : IComparable<ConsoleCommand>
 {
     public delegate void ConsoleCommandHandler(TWConsole console, ConsoleCommand cmd, string[] args);
@@ -7,19 +23,18 @@ public class ConsoleCommand : IComparable<ConsoleCommand>
     public ConsoleCommandHandler Handler;
     public string Description;
     public string Key;
-    public List<string> Arguments = new();
+    public string[] Aliases;
+    public ConsoleCommandArg[] Arguments;
+    public bool IsCVar;
 
-    public ConsoleCommand(string key, string description, ConsoleCommandHandler handler)
+    public ConsoleCommand(string key, string description, ConsoleCommandHandler handler, ConsoleCommandArg[] args, string[] aliases, bool isCVar)
     {
         Key = key;
         Handler = handler;
         Description = description;
-    }
-
-    public ConsoleCommand Arg(string argumentDescription)
-    {
-        Arguments.Add(argumentDescription);
-        return this;
+        Arguments = args;
+        Aliases = aliases;
+        IsCVar = isCVar;
     }
 
     public int CompareTo(ConsoleCommand? other)
