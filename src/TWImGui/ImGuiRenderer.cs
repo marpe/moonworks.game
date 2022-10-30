@@ -713,45 +713,9 @@ public class ImGuiRenderer
         _lastCursor = cursor;
     }
 
-    /*public static void CheckRequestClose([CallerLineNumber] int lineNumber = 0, [CallerFilePath] string caller = "")
-    {
-        var platformIO = ImGui.GetPlatformIO();
-        for (var i = 0; i < platformIO.Viewports.Size; i++)
-        {
-            var vp = platformIO.Viewports[i];
-            if (vp.PlatformRequestClose)
-            {
-                Logger.LogInfo($"{Path.GetFileName(caller)}:{lineNumber} Requested close: {i}");
-            }
-        }
-    }*/
-
     private void UpdateInput()
     {
         var io = ImGui.GetIO();
-
-        // SDL_CaptureMouse() let the OS know e.g. that our imgui drag outside the SDL window boundaries shouldn't e.g. trigger other operations outside
-        /*var captureMouse = SDL.SDL_bool.SDL_FALSE;
-        if (_game.Inputs.Mouse.AnyPressed && (IntPtr)ImGui.GetDragDropPayload().NativePtr == IntPtr.Zero)
-            captureMouse = SDL.SDL_bool.SDL_TRUE;
-        SDL.SDL_CaptureMouse(captureMouse);*/
-
-        /*var focusedWindow = SDL.SDL_GetKeyboardFocus();
-        var focusedViewport = ImGui.FindViewportByPlatformHandle(focusedWindow);
-        var isAppFocused = _game.MainWindow.Handle == focusedWindow || ((IntPtr)focusedViewport.NativePtr) != IntPtr.Zero;
-
-        if (isAppFocused && !_game.Inputs.Mouse.AnyPressed)
-        {
-            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
-            io.AddMousePosEvent((float)globalMouseX, (float)globalMouseY);
-        }*/
-
-        /*if ((io.BackendFlags & ImGuiBackendFlags.HasMouseHoveredViewport) != 0)
-        {
-            var mouseWindow = SDL.SDL_GetWindowFromID(bd->MouseWindowID);
-            var mouseViewport = ImGui.FindViewportByPlatformHandle(mouseWindow);
-            io.AddMouseViewportEvent(mouseViewport.ID);
-        }*/
 
         for (var i = 0; i < io.KeysDown.Count; i++)
         {

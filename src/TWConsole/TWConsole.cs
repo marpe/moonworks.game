@@ -88,28 +88,29 @@ public class TWConsole
 		RegisterCVar(cvar, cvarAttribute);
 	}
 
-	private static string Colorize(Type type, string? value)
+	private static string Colorize(object? value)
 	{
 		if (value == null)
 			return "^8null^0";
-		var formatString = value.ToLower() switch
-		{
-			"true" => "^7{0}^0",
-			"false" => "^4{0}^0",
-			_ => "^0{0}"
-		};
-		return string.Format(formatString, value);
-	}
+		
+		if (value is bool boolValue)
+			return boolValue ? "^7true" : "^4false";
 
+		if (value is string strValue)
+			return $"\"{strValue}\"";
+
+		return ConsoleUtils.ConvertToString(value);
+	}
+	
 	private void RegisterCVar(CVar cvar, CVarAttribute cvarAttribute)
 	{
 		var typeName = ConsoleUtils.GetDisplayName(cvar.VarType);
-		var defaultValue = ConsoleUtils.ConvertToString(cvar.DefaultValue);
+		var defaultValueStr = Colorize(cvar.DefaultValue);
 
 		RegisterCommand(
 			new ConsoleCommand(
 				cvarAttribute.Name,
-				$"{cvarAttribute.Description} <^3{typeName}^0> ({Colorize(cvar.VarType, defaultValue)})",
+				$"{cvarAttribute.Description} <^3{typeName}^0> ({defaultValueStr})",
 				CVarHandler(cvar),
 				new ConsoleCommandArg[]
 				{
@@ -197,11 +198,11 @@ public class TWConsole
 				}
 				catch (Exception e)
 				{
-					console.Print($"Error: {e.Message}");
+					console.Print($"^4Error: {e}");
 				}
 			}
 
-			console.Print($"{cmd.Key} = \"{Colorize(cvar.VarType, cvar.GetValue())}\"");
+			console.Print($"{cmd.Key} = {Colorize(cvar.GetValueRaw())}");
 		};
 	}
 	
@@ -211,24 +212,28 @@ public class TWConsole
 		{
 			try
 			{
-				object?[]? parameters = null;
-			
-				if(cmd.Arguments.Length > 0)
+				var numRequiredParams = cmd.Arguments.Count(x => !x.HasDefaultValue);
+				var numSuppliedParams = args.Length - 1;
+				
+				if (numRequiredParams > numSuppliedParams)
 				{
-					parameters = cmd.Arguments.Select(x => x.DefaultValue).ToArray();
+					console.Print($"Usage:\n{FormatCommand(cmd)}");
+					return;
+				}
+				
+				var parameters = cmd.Arguments.Select(x => x.DefaultValue).ToArray();
 
-					for (var i = 0; i < parameters.Length && i < args.Length - 1; i++)
-					{
-						// args[0] will be the command
-						parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[i + 1]);
-					}
+				for (var i = 0; i < parameters.Length && i < numSuppliedParams; i++)
+				{
+					// args[0] will be the command
+					parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[i + 1]);
 				}
 
 				method.Invoke(console, parameters);
 			}
 			catch (Exception e)
 			{
-				console.Print(e.ToString());
+				console.Print($"^4Error: {e}");
 			}
 		};
 	}
@@ -329,11 +334,12 @@ public class TWConsole
 		var cmdArgs = string.Empty;
 		if (cmd.Arguments.Length > 0)
 		{
+			// TODO (marpe): Clean up this horrible mess
 			var formattedArgs = cmd.Arguments.Select(x =>
 			{
-				var str = x.Name + " (" + ConsoleUtils.GetDisplayName(x.Type);
+				var str = x.Name + " (^3" + ConsoleUtils.GetDisplayName(x.Type) + "^1";
 				if (x.HasDefaultValue)
-					str += ", " + ConsoleUtils.ConvertToString(x.DefaultValue);
+					str += ", " + Colorize(x.DefaultValue);
 				str += ")";
 				return str;
 			});
@@ -512,14 +518,14 @@ public class TWConsole
 		var sb = new StringBuilder();
 		foreach (var (key, value) in CVars)
 		{
-			sb.AppendLine(key + " \"" + value.GetValue() + "\"");
+			sb.AppendLine($"{key} \"{value.GetStringValue()}\"");
 		}
 
 		OnCfgSave?.Invoke(sb);
 
 		File.WriteAllText(filename, sb.ToString());
 
-		Print("Saved config to " + filename);
+		Print($"Saved config to {filename}");
 	}
 
 	[ConsoleHandler("exec", "Loads a config file from disk")]

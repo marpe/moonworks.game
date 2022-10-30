@@ -225,7 +225,7 @@ public static class ConsoleUtils
             return "null";
 
         if (value is string strValue)
-            return $"\"{strValue}\"";
+            return strValue;
 
         if (value is Color c)
         {

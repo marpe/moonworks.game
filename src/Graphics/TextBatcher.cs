@@ -2,7 +2,7 @@
 
 namespace MyGame.Graphics;
 
-public enum TextFont
+public enum FontType
 {
     Roboto,
     ConsolasMono
@@ -14,7 +14,7 @@ public class FontData
     public Packer Packer;
     public Font Font;
     public Texture Texture;
-    public TextFont Name;
+    public FontType Name;
     public TextureSamplerBinding Binding;
     public bool HasStarted;
 }
@@ -32,14 +32,14 @@ public class TextBatcher
     private uint _addCountSinceDraw = 0;
     public uint AddCountSinceDraw => _addCountSinceDraw;
 
-    private readonly Dictionary<TextFont, FontData> _fonts = new();
+    private readonly Dictionary<FontType, FontData> _fonts = new();
 
     public TextBatcher(GraphicsDevice device)
     {
         var fonts = new[]
         {
-            (TextFont.Roboto, ContentPaths.Fonts.RobotoRegularTtf),
-            (TextFont.ConsolasMono, ContentPaths.Fonts.ConsolaTtf)
+            (FontType.Roboto, ContentPaths.Fonts.RobotoRegularTtf),
+            (FontType.ConsolasMono, ContentPaths.Fonts.ConsolaTtf)
         };
 
         var commandBuffer = device.AcquireCommandBuffer();
@@ -65,20 +65,20 @@ public class TextBatcher
 
         foreach (var (key, data) in _fonts)
         {
-            var pixels = Renderer.ConvertTextureFormat(device, data.Packer.Texture);
+            var pixels = TextureUtils.ConvertSingleChannelTextureToRGBA(device, data.Packer.Texture);
             var (width, height) = (data.Packer.Texture.Width, data.Packer.Texture.Height);
-            var fontTexture = Renderer.CreateTexture(device, width, height, pixels);
+            var fontTexture = TextureUtils.CreateTexture(device, width, height, pixels);
             _fonts[key].Texture = fontTexture;
             _fonts[key].Binding = new TextureSamplerBinding(fontTexture, Renderer.PointClamp);
         }
     }
 
-    public void Add(TextFont fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
+    public void Add(FontType fontTypeType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
         VerticalAlignment alignV)
     {
         _addCountSinceDraw++;
 
-        var font = _fonts[fontType];
+        var font = _fonts[fontTypeType];
         if (!font.HasStarted)
         {
             font.Batch.Start(font.Packer);

@@ -34,7 +34,7 @@ public class CVar
 		}
 	}
 
-	public string GetValue()
+	public string GetStringValue()
 	{
 		var value = GetValueRaw();
 		return ConsoleUtils.ConvertToString(value);

@@ -21,11 +21,15 @@ public class Renderer
 
     private readonly MyGameMain _game;
     private readonly GraphicsDevice _device;
-    private readonly Texture _blankTextures;
+    private readonly Texture _blankTexture;
+    private readonly Sprite _blankSprite;
     private readonly GraphicsPipeline[] _pipelines;
 
-    public CommandBuffer? CommandBuffer { get; private set; }
-    public Texture? SwapTexture { get; private set; }
+    private CommandBuffer? _commandBuffer;
+    public CommandBuffer CommandBuffer => _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+    private Texture? _swapTexture;
+    public Texture SwapTexture => _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
+    
     public ColorAttachmentBlendState FontPipelineBlend = ColorAttachmentBlendState.NonPremultiplied;
 
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
@@ -39,7 +43,7 @@ public class Renderer
         DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
         DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
     };
-
+    
     public Renderer(MyGameMain game)
     {
         _game = game;
@@ -49,10 +53,8 @@ public class Renderer
         TextBatcher = new TextBatcher(_device);
         _depthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
 
-        _blankTextures = Texture.CreateTexture2D(_device, 1, 1, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
-        var command = game.GraphicsDevice.AcquireCommandBuffer();
-        command.SetTextureData(_blankTextures, new[] { Color.White });
-        game.GraphicsDevice.Submit(command);
+        _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
+        _blankSprite = new Sprite(_blankTexture);
 
         _fontPipeline = CreateGraphicsPipeline(_device, FontPipelineBlend);
 
@@ -88,23 +90,16 @@ public class Renderer
 
     public bool BeginFrame()
     {
-        var command = _device.AcquireCommandBuffer();
-        CommandBuffer = command;
-        var swap = command.AcquireSwapchainTexture(_game.MainWindow);
-        SwapTexture = swap;
-        if (swap == null)
+        _commandBuffer = _device.AcquireCommandBuffer();
+        _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
+        if (_swapTexture == null)
         {
             Logger.LogError("Could not acquire swapchain texture");
             return false;
         }
 
         var windowSize = _game.MainWindow.Size;
-        if (windowSize.X != _depthTexture.Width || windowSize.Y != _depthTexture.Height)
-        {
-            _depthTexture.Dispose();
-            _depthTexture = Texture.CreateTexture2D(_device, (uint)windowSize.X, (uint)windowSize.Y,
-                TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        }
+        TextureUtils.EnsureTextureSize(ref _depthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
 
         return true;
     }
@@ -112,7 +107,7 @@ public class Renderer
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
-        SpriteBatch.Add(new Sprite(_blankTextures), color, depth, scale, PointClamp);
+        SpriteBatch.Add(new Sprite(_blankTexture), color, depth, scale, PointClamp);
     }
 
     public void DrawLine(Vector2 from, Vector2 to, Color color)
@@ -123,7 +118,7 @@ public class Renderer
         var rotationRad = MathF.AngleBetweenVectors(from, to);
         var rotation = Matrix3x2.CreateRotation(rotationRad, new Vector2(0, 0.5f));
         var translation = Matrix3x2.CreateTranslation(from);
-        SpriteBatch.Add(new Sprite(_blankTextures), color, 0, scale * rotation * translation, PointClamp);
+        SpriteBatch.Add(new Sprite(_blankTexture), color, 0, scale * rotation * translation, PointClamp);
     }
 
     public void DrawLine(Point from, Point to, Color color)
@@ -133,21 +128,36 @@ public class Renderer
 
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)
     {
-        var commandBuffer = CommandBuffer ?? throw new InvalidOperationException();
+        var commandBuffer = _commandBuffer ?? throw new InvalidOperationException();
         SpriteBatch.Add(sprite, color, depth, transform, PointClamp);
     }
 
-    public void DrawText(TextFont font, ReadOnlySpan<char> text, float x, float y, float depth, Color color,
+    public void DrawText(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color,
         HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
     {
-        var commandBuffer = CommandBuffer ?? throw new InvalidOperationException();
-        TextBatcher.Add(font, text, x, y, depth, color, alignH, alignV);
+        var commandBuffer = _commandBuffer ?? throw new InvalidOperationException();
+        TextBatcher.Add(fontType, text, x, y, depth, color, alignH, alignV);
+    }
+    
+    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
+    {
+        DrawText(FontType.ConsolasMono, text, pos.X, pos.Y, depth, color);
+    }
+
+    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, Color color)
+    {
+        DrawText(text, pos, 0, color);
+    }
+
+    public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 pos, Color color)
+    {
+        DrawText(fontType, text, pos.X, pos.Y, 0, color);
     }
 
     public void BeginRenderPass(Matrix4x4 viewProjection, bool clear = true)
     {
-        var command = CommandBuffer ?? throw new InvalidOperationException();
-        var swap = SwapTexture ?? throw new InvalidOperationException();
+        var command = _commandBuffer ?? throw new InvalidOperationException();
+        var swap = _swapTexture ?? throw new InvalidOperationException();
 
         var colorAttachmentInfo = clear ? new ColorAttachmentInfo(swap, Color.CornflowerBlue) : new ColorAttachmentInfo(swap, LoadOp.Load);
 
@@ -179,64 +189,18 @@ public class Renderer
 
     public void EndRenderPass()
     {
-        var command = CommandBuffer ?? throw new InvalidOperationException();
-        var swap = SwapTexture ?? throw new InvalidOperationException();
+        var command = _commandBuffer ?? throw new InvalidOperationException();
+        var swap = _swapTexture ?? throw new InvalidOperationException();
 
         command.EndRenderPass();
     }
 
     public void EndFrame()
     {
-        var command = CommandBuffer ?? throw new InvalidOperationException();
+        var command = _commandBuffer ?? throw new InvalidOperationException();
         _device.Submit(command);
-    }
-
-    public static byte[] ConvertTextureFormat(GraphicsDevice device, Texture texture)
-    {
-        var pixelSize = texture.Format switch
-        {
-            TextureFormat.R8 => 8u,
-            _ => 32u,
-        };
-        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
-        var commandBuffer = device.AcquireCommandBuffer();
-        commandBuffer.CopyTextureToBuffer(texture, buffer);
-        device.Submit(commandBuffer);
-        device.Wait();
-        var pixels = new byte[buffer.Size];
-        buffer.GetData(pixels, (uint)pixels.Length);
-        if (texture.Format == TextureFormat.R8)
-        {
-            var prevLength = pixels.Length;
-            Array.Resize(ref pixels, pixels.Length * 4);
-            for (var i = prevLength - 1; i >= 0; i--)
-            {
-                var p = pixels[i];
-                pixels[i] = 0;
-                pixels[i * 4] = 255;
-                pixels[i * 4 + 1] = 255;
-                pixels[i * 4 + 2] = 255;
-                pixels[i * 4 + 3] = p;
-            }
-        }
-
-        return pixels;
-    }
-
-    public static unsafe Texture CreateTexture(GraphicsDevice device, uint width, uint height, byte[] pixels)
-    {
-        var texture = Texture.CreateTexture2D(device, width, height,
-            TextureFormat.R8G8B8A8,
-            TextureUsageFlags.Sampler
-        );
-        var cmdBuffer = device.AcquireCommandBuffer();
-        fixed (byte* p = pixels)
-        {
-            cmdBuffer.SetTextureData(texture, (IntPtr)p, (uint)pixels.Length);
-            device.Submit(cmdBuffer);
-        }
-
-        return texture;
+        _commandBuffer = null;
+        _swapTexture = null;
     }
 
     public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
@@ -290,20 +254,5 @@ public class Renderer
             device,
             myGraphicsPipelineCreateInfo
         );
-    }
-
-    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
-    {
-        DrawText(TextFont.ConsolasMono, text, pos.X, pos.Y, depth, color);
-    }
-
-    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, Color color)
-    {
-        DrawText(text, pos, 0, color);
-    }
-
-    public void DrawText(TextFont font, ReadOnlySpan<char> text, Vector2 pos, Color color)
-    {
-        DrawText(font, text, pos.X, pos.Y, 0, color);
     }
 }

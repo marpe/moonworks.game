@@ -110,7 +110,7 @@ public class ImGuiScreen
         var sprite = new Sprite(_lastRender);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
 
-        var swap = renderer.SwapTexture ?? throw new InvalidOperationException();
+        var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         renderer.BeginRenderPass(viewProjection,  false);
         renderer.EndRenderPass();
@@ -129,10 +129,10 @@ public class ImGuiScreen
             ImGui.SliderFloat("MenuPadding", ref _mainMenuPaddingY, 0, 100f);
             ImGui.Separator();
             ImGui.TextUnformatted($"Nav: {ImGui.GetIO().NavActive}");
-            ImGui.TextUnformatted($"FrameCount: {_game.FrameCount}");
+            ImGui.TextUnformatted($"FrameCount: {_game.UpdateCount}");
             ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
             ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
-            ImGui.TextUnformatted($"RenderCount: {_game.RenderCount}");
+            ImGui.TextUnformatted($"RenderCount: {_game.DrawCount}");
             ImGui.TextUnformatted($"ImGuiDrawCount: {_imGuiDrawCount}");
             if (ImGui.SliderInt("UpdateFPS", ref _updateFps, 1, 120))
             {

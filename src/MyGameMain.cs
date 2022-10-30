@@ -10,14 +10,14 @@ public class MyGameMain : Game
 {
     public const string ContentRoot = "Content";
 
-    public ulong FrameCount { get; private set; }
-    public ulong RenderCount { get; private set; }
+    public ulong UpdateCount { get; private set; }
+    public ulong DrawCount { get; private set; }
     public float TotalElapsedTime { get; private set; }
 
     public float ElapsedTime { get; private set; }
 
     private Sprite? _spriteRenderer;
-    private Sprite? _menuRenderer;
+    private Sprite? _backgroundSprite;
     private readonly Camera _camera;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     private ImGuiScreen? _imGuiScreen;
@@ -83,7 +83,7 @@ public class MyGameMain : Game
             _spriteRenderer = new Sprite(asepriteTexture);
 
             var menu = LoadPngTexture(GraphicsDevice, Path.Combine(ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
-            _menuRenderer = new Sprite(menu);
+            _backgroundSprite = new Sprite(menu);
             Logger.LogInfo($"Loaded textures in {sw2.ElapsedMilliseconds} ms");
         });
     }
@@ -123,7 +123,7 @@ public class MyGameMain : Game
 
     protected override void Update(TimeSpan dt)
     {
-        FrameCount++;
+        UpdateCount++;
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
@@ -238,25 +238,18 @@ public class MyGameMain : Game
         if (MainWindow.IsMinimized)
             return;
 
-        RenderCount++;
+        DrawCount++;
 
         if (!Renderer.BeginFrame())
             return;
 
-        var (cb, sp) = (
-            Renderer.CommandBuffer ?? throw new InvalidOperationException(),
-            Renderer.SwapTexture ?? throw new InvalidOperationException()
-        );
-
-        if (_menuRenderer != null)
-            Renderer.DrawSprite(_menuRenderer.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100), Color.White,
+        if (_backgroundSprite != null)
+            Renderer.DrawSprite(_backgroundSprite.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100), Color.White,
                 200f);
 
-        Renderer.DrawText(TextFont.Roboto, "Hello hej!", Vector2.Zero, Color.White);
-        Renderer.DrawText("Oooga chacakka!", new Vector2(100, 100), 0, Color.White);
-        Renderer.DrawText(TextFont.Roboto, "Hello hej!2222222", new Vector2(150, 150), Color.White);
-
-        // _spriteRenderer?.Draw(commandBuffer, SpriteBatch, Matrix3x2.Identity, Color.White, 0);
+        Renderer.DrawText(FontType.Roboto, "Hello!", Vector2.Zero, Color.White);
+        Renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);
+        Renderer.DrawText(FontType.Roboto, "Hello again!", new Vector2(150, 150), Color.White);
 
         _camera.Size = MainWindow.Size;
         Renderer.BeginRenderPass(_camera.ViewProjectionMatrix);
@@ -264,27 +257,11 @@ public class MyGameMain : Game
         Renderer.EndRenderPass();
 
         if (_imGuiScreen != null && _drawImGui)
-        {
             _imGuiScreen.Draw(Renderer);
-        }
 
         _consoleScreen.Draw(Renderer);
 
         Renderer.EndFrame();
-
-        if (_saveTexture)
-        {
-            // SaveTextureToPng(GraphicsDevice, _fontTexture, "fontTexture.png");
-            // SaveTextureToPng(GraphicsDevice, Renderer.FontPacker.Texture, "fontPacker.png");
-            Logger.LogInfo("Not implemented...");
-            _saveTexture = false;
-        }
-    }
-
-    private static void SaveTextureToPng(GraphicsDevice device, Texture texture, string path)
-    {
-        var pixels = Renderer.ConvertTextureFormat(device, texture);
-        Texture.SavePNG(path, (int)texture.Width, (int)texture.Height, TextureFormat.R8G8B8A8, pixels);
     }
 
     private static Texture LoadAseprite(GraphicsDevice device, string path)

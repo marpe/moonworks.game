@@ -115,6 +115,9 @@ public class ConsoleScreen
     /// <param name="c"></param>
     private void HandleTextInput(char c)
     {
+        if (IsHidden)
+            return;
+        
         if (c == TextInputChars[0]) // Home
         {
             _inputField.SetCursor(0);
@@ -400,9 +403,7 @@ public class ConsoleScreen
     public void Draw(Renderer renderer)
     {
         if (ScreenState == ScreenState.Hidden)
-        {
             return;
-        }
 
         var winSize = Shared.MainWindow.Size;
 
@@ -411,11 +412,6 @@ public class ConsoleScreen
         backgroundRect.Y = (int)(height * (TransitionPercentage - 1));
         backgroundRect.Width = winSize.X;
         backgroundRect.Height = height;
-
-        var (command, swap) = (
-            renderer.CommandBuffer ?? throw new InvalidOperationException(),
-            renderer.SwapTexture ?? throw new InvalidOperationException()
-        );
 
         renderer.DrawRect(backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
 
@@ -500,7 +496,8 @@ public class ConsoleScreen
         if (showInput)
             DrawInput(renderer, textArea, displayPosition);
 
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        var swapTexture = renderer.SwapTexture;
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swapTexture.Width, swapTexture.Height);
         renderer.BeginRenderPass(viewProjection, false);
         // command.SetViewport(new Viewport(backgroundRect.X, backgroundRect.Y, backgroundRect.Width, backgroundRect.Height));
         renderer.EndRenderPass();
