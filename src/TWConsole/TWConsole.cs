@@ -274,7 +274,7 @@ public class TWConsole
 	[ConsoleHandler("res", "Print display resolution")]
 	private void PrintDisplayResolution()
 	{
-		var size = Shared.MainWindow.Size;
+		var size = Shared.Game.MainWindow.Size;
 		Print($"Current resolution: {size.X}x{size.Y}");
 	}
 
@@ -470,23 +470,20 @@ public class TWConsole
 
 	public void Execute(ReadOnlySpan<char> text, bool addToHistory = true)
 	{
-		if (text.Length == 0)
-			return;
-
-		if (addToHistory)
-		{
-			Print(text);
-		}
-
 		var trimmed = text.Trim();
 
 		if (addToHistory)
 		{
-			if (CommandHistory.Count == 0 || CommandHistory[0] != trimmed)
+			Print(trimmed);
+
+			if (trimmed.Length > 0 && (CommandHistory.Count == 0 || CommandHistory[0] != trimmed))
 			{
 				CommandHistory.Add(trimmed.ToString());
 			}
 		}
+
+		if (trimmed.Length == 0)
+			return;
 
 		var args = ConsoleUtils.SplitArgs(trimmed);
 

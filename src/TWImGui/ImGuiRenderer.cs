@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Text;
 using ImGuiNET;
 using MyGame.Graphics;
 using SDL2;
@@ -655,8 +654,6 @@ public class ImGuiRenderer
 
     private void OnTextInput(char c)
     {
-        if (c == '\t') return;
-
         ImGui.GetIO().AddInputCharacter(c);
     }
     

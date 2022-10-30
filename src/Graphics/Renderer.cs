@@ -1,5 +1,5 @@
 ﻿using MoonWorks.Graphics.Font;
-using MyGame.TWConsole;
+using MyGame.Utils;
 
 namespace MyGame.Graphics;
 

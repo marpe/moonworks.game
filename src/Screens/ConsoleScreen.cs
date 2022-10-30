@@ -12,7 +12,7 @@ public enum ScreenState
     Hidden,
 }
 
-public class ConsoleScreen
+public class ConsoleScreen : IGameScreen
 {
     public bool IsHidden
     {
@@ -25,17 +25,6 @@ public class ConsoleScreen
         ' ', '.', ',', '\\', '/', '_', '-', '+', '=', '"', '\'',
         '!', '?', '@', '#', '$', '%', '^', '&', '*', '(', ')',
         '[', ']', '>', '<', ':', ';'
-    };
-
-    private static readonly char[] TextInputChars = new[]
-    {
-        (char)2, // Home
-        (char)3, // End
-        (char)8, // Backspace
-        (char)9, // Tab
-        (char)13, // Enter
-        (char)127, // Delete
-        (char)22 // Ctrl+V (Paste)
     };
 
     private TWConsole TwConsole => Shared.Console;
@@ -57,13 +46,12 @@ public class ConsoleScreen
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
-        Inputs.TextInput += HandleTextInput;
     }
 
     public void Update(float deltaSeconds)
     {
-        var inputState = _game.Inputs;
-        if (inputState.Keyboard.IsPressed(KeyCode.Grave))
+        var inputState = _game.InputHandler;
+        if (inputState.IsKeyPressed(KeyCode.Grave))
             IsHidden = !IsHidden;
 
         UpdateTransition(deltaSeconds);
@@ -73,18 +61,18 @@ public class ConsoleScreen
 
         HandleKeyPressed(inputState);
 
-        if (inputState.Mouse.Wheel != 0)
+        if (inputState.MouseWheelDelta != 0)
         {
-            if (Math.Sign(inputState.Mouse.Wheel) < 0)
+            if (Math.Sign(inputState.MouseWheelDelta) < 0)
                 ScrollDown();
             else
                 ScrollUp();
         }
 
-        /*for (var i = 0; i < inputState.ExtTextInputChars.Count; i++)
+        foreach (var c in inputState.TextInput)
         {
-            HandleTextInput(inputState.ExtTextInputChars[i]);
-        }*/
+            HandleTextInput(c);
+        }
     }
 
     private void UpdateTransition(float deltaSeconds)
@@ -109,61 +97,28 @@ public class ConsoleScreen
         return AllowedSymbols.Contains(c);
     }
 
-    /// <summary>
-    /// https://github.com/FNA-XNA/FNA/wiki/5:-FNA-Extensions#textinputext
-    /// </summary>
-    /// <param name="c"></param>
     private void HandleTextInput(char c)
     {
-        if (IsHidden)
-            return;
-        
-        if (c == TextInputChars[0]) // Home
+        if (c == InputHandler.ControlV) // CTRL + V
         {
-            _inputField.SetCursor(0);
+            PasteFromClipboard();
         }
         else
         {
-            if (c == TextInputChars[1]) // End
+            var allowedChars = new Predicate<char>[]
             {
-                _inputField.SetCursor(_inputField.Length);
-            }
-            else if (c == TextInputChars[2]) // Backspace
-            {
-                _inputField.RemoveChar();
-            }
-            else if (c == TextInputChars[3]) // Tab
-            {
-            }
-            else if (c == TextInputChars[4]) // Enter
-            {
-                Execute();
-            }
-            else if (c == TextInputChars[5]) // Delete
-            {
-                _inputField.Delete();
-            }
-            else if (c == TextInputChars[6]) // CTRL + V
-            {
-                PasteFromClipboard();
-            }
-            else
-            {
-                var allowedChars = new Predicate<char>[]
-                {
-                    char.IsLetter,
-                    char.IsNumber,
-                    IsAllowedSymbol
-                };
+                char.IsLetter,
+                char.IsNumber,
+                IsAllowedSymbol
+            };
 
-                bool isAllowed = allowedChars.Any(predicate => predicate(c));
-                if (!isAllowed)
-                {
-                    return;
-                }
-
-                _inputField.AddChar(c);
+            bool isAllowed = allowedChars.Any(predicate => predicate(c));
+            if (!isAllowed)
+            {
+                return;
             }
+
+            _inputField.AddChar(c);
         }
     }
 
@@ -185,57 +140,51 @@ public class ConsoleScreen
         _inputField.ClearInput();
     }
 
-    private void HandleKeyPressed(Inputs inputState)
+    private KeyCode[] _pageUpAndDown = new[] { KeyCode.PageUp, KeyCode.PageDown };
+    private KeyCode[] _autoCompleteKeys = new[] { KeyCode.Tab, KeyCode.LeftShift };
+    private KeyCode[] _upAndDownArrows = new[] { KeyCode.Up, KeyCode.Down };
+
+    private void HandleKeyPressed(InputHandler input)
     {
-        var keyboard = inputState.Keyboard;
-        var anyKeyPressed = keyboard.AnyPressed;
-
-        var modifierKeyDown = keyboard.IsDown(KeyCode.LeftShift) ||
-                              keyboard.IsDown(KeyCode.RightShift) ||
-                              keyboard.IsDown(KeyCode.LeftControl) ||
-                              keyboard.IsDown(KeyCode.RightControl) ||
-                              keyboard.IsDown(KeyCode.LeftAlt) ||
-                              keyboard.IsDown(KeyCode.RightAlt);
-
-        if (anyKeyPressed && !modifierKeyDown)
+        if (input.IsAnyKeyPressed && !input.IsAnyModifierKeyDown())
         {
-            ReadOnlySpan<KeyCode> autocompleteKeys = stackalloc KeyCode[] { KeyCode.Tab, KeyCode.LeftShift };
-            if (!keyboard.IsAnyKeyDown(autocompleteKeys))
+            if (!input.IsAnyKeyDown(_autoCompleteKeys))
             {
                 EndAutocomplete();
             }
 
-            ReadOnlySpan<KeyCode> pgUpDown = stackalloc KeyCode[] { KeyCode.PageUp, KeyCode.PageDown };
-            if (!keyboard.IsAnyKeyDown(pgUpDown))
+            if (!input.IsAnyKeyDown(_pageUpAndDown))
             {
                 TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY;
             }
 
-            ReadOnlySpan<KeyCode> upDown = stackalloc KeyCode[] { KeyCode.Up, KeyCode.Down };
-            if (!keyboard.IsAnyKeyDown(upDown))
+            if (!input.IsAnyKeyDown(_upAndDownArrows))
             {
                 commandHistoryIndex = -1;
             }
         }
 
-        if (keyboard.IsPressed(KeyCode.Tab)) // TODO (marpe): Allow repeeating
+        if (input.IsKeyPressed(KeyCode.Tab, true))
         {
             if (autoCompleteIndex == -1) // new auto complete
             {
                 autoCompleteHits.Clear();
 
-                foreach (var key in TwConsole.Commands.Keys)
+                if (_inputField.Length > 0)
                 {
-                    for (var i = 0; i < _inputField.Length && i < key.Length; i++)
+                    foreach (var key in TwConsole.Commands.Keys)
                     {
-                        if (key[i] != _inputField.Buffer[i])
-                            break;
-                        if (i == _inputField.Length - 1)
-                            autoCompleteHits.Add(key);
+                        for (var i = 0; i < _inputField.Length && i < key.Length; i++)
+                        {
+                            if (key[i] != _inputField.Buffer[i])
+                                break;
+                            if (i == _inputField.Length - 1)
+                                autoCompleteHits.Add(key);
+                        }
                     }
-                }
 
-                TwConsole.Print($"{autoCompleteHits.Count} matches:\n{string.Join("\n", autoCompleteHits)}");
+                    TwConsole.Print($"{autoCompleteHits.Count} matches:\n{string.Join("\n", autoCompleteHits)}");
+                }
             }
 
             if (autoCompleteHits.Count == 0)
@@ -248,7 +197,7 @@ public class ConsoleScreen
             }
             else
             {
-                var direction = keyboard.IsDown(KeyCode.LeftShift) ? -1 : 1;
+                var direction = input.IsKeyDown(KeyCode.LeftShift) ? -1 : 1;
                 autoCompleteIndex += direction;
 
                 if (autoCompleteIndex < 0)
@@ -263,15 +212,15 @@ public class ConsoleScreen
                 _inputField.SetInput(autoCompleteHits[autoCompleteIndex]);
             }
         }
-        else if (keyboard.IsPressed(KeyCode.Left)) // TODO (marpe): Allow repeating
+        else if (input.IsKeyPressed(KeyCode.Left, true))
         {
             _inputField.CursorLeft();
         }
-        else if (keyboard.IsPressed(KeyCode.Right)) // TODO (marpe): Allow repeating
+        else if (input.IsKeyPressed(KeyCode.Right, true))
         {
             _inputField.CursorRight();
         }
-        else if (keyboard.IsPressed(KeyCode.Up)) // TODO (marpe): Allow repeating
+        else if (input.IsKeyPressed(KeyCode.Up, true))
         {
             commandHistoryIndex++;
             if (commandHistoryIndex > TwConsole.CommandHistory.Count - 1)
@@ -284,7 +233,7 @@ public class ConsoleScreen
                 _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - commandHistoryIndex]);
             }
         }
-        else if (keyboard.IsPressed(KeyCode.Down)) // TODO (marpe): Allow repeating
+        else if (input.IsKeyPressed(KeyCode.Down, true))
         {
             commandHistoryIndex--;
             if (commandHistoryIndex <= -1)
@@ -298,10 +247,9 @@ public class ConsoleScreen
                 _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - commandHistoryIndex]);
             }
         }
-        else if (keyboard.IsPressed(KeyCode.PageDown))
+        else if (input.IsKeyPressed(KeyCode.PageDown, true))
         {
-            if (keyboard.IsDown(KeyCode.LeftControl) ||
-                keyboard.IsDown(KeyCode.RightControl))
+            if (input.IsAnyKeyDown(InputHandler.ControlKeys))
             {
                 ScrollBottom();
             }
@@ -310,10 +258,9 @@ public class ConsoleScreen
                 ScrollDown();
             }
         }
-        else if (keyboard.IsPressed(KeyCode.PageUp))
+        else if (input.IsKeyPressed(KeyCode.PageUp, true))
         {
-            if (keyboard.IsDown(KeyCode.LeftControl) ||
-                keyboard.IsDown(KeyCode.RightControl))
+            if (input.IsAnyKeyDown(InputHandler.ControlKeys))
             {
                 ScrollTop();
             }
@@ -323,22 +270,45 @@ public class ConsoleScreen
             }
         }
 
-        if (keyboard.IsDown(KeyCode.LeftControl) ||
-            keyboard.IsDown(KeyCode.RightControl))
+        if (input.IsAnyKeyDown(InputHandler.ControlKeys))
         {
-            if (keyboard.IsPressed(KeyCode.C))
+            if (input.IsKeyPressed(KeyCode.C))
             {
                 _inputField.ClearInput();
             }
         }
 
-        ReadOnlySpan<KeyCode> shiftKeys = stackalloc KeyCode[] { KeyCode.LeftShift, KeyCode.RightShift };
-        if (keyboard.IsAnyKeyDown(shiftKeys))
+        if (input.IsAnyKeyDown(InputHandler.ShiftKeys))
         {
-            if (keyboard.IsPressed(KeyCode.Insert))
+            if (input.IsKeyPressed(KeyCode.Insert))
             {
                 PasteFromClipboard();
             }
+        }
+
+        if (input.IsKeyPressed(KeyCode.Backspace, true))
+        {
+            _inputField.RemoveChar();
+        }
+
+        if (input.IsKeyPressed(KeyCode.Return, true))
+        {
+            Execute();
+        }
+
+        if (input.IsKeyPressed(KeyCode.Delete, true))
+        {
+            _inputField.Delete();
+        }
+
+        if (input.IsKeyPressed(KeyCode.End, true))
+        {
+            _inputField.SetCursor(_inputField.Length);
+        }
+        
+        if (input.IsKeyPressed(KeyCode.Home, true))
+        {
+            _inputField.SetCursor(0);
         }
     }
 
@@ -405,7 +375,7 @@ public class ConsoleScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        var winSize = Shared.MainWindow.Size;
+        var winSize = _game.MainWindow.Size;
 
         backgroundRect.X = 0;
         var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
@@ -564,27 +534,5 @@ public class ConsoleScreen
                 caretColor
             );
         }
-    }
-}
-
-public static class PointExt
-{
-    public static Vector2 ToVec2(this Point p)
-    {
-        return new Vector2(p.X, p.Y);
-    }
-}
-
-public static class KeyboardExt
-{
-    public static bool IsAnyKeyDown(this Keyboard keyboard, ReadOnlySpan<KeyCode> codes)
-    {
-        for (var i = 0; i < codes.Length; i++)
-        {
-            if (keyboard.IsDown(codes[i]))
-                return true;
-        }
-
-        return false;
     }
 }

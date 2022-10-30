@@ -36,7 +36,7 @@ public class ConsoleScreenBuffer
 
     public (char c, byte color) GetChar(int x, int y)
     {
-        var i = (y % _height) * _width + x;
+        var i = (_height + y) % _height * _width + x;
         return Unpack(_buffer[i]);
     }
 
@@ -59,6 +59,7 @@ public class ConsoleScreenBuffer
 
         _cursorX = 0;
         _cursorY = 0;
+        _displayY = 0;
     }
 
     private void Linefeed()

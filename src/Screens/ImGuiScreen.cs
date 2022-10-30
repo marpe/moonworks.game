@@ -3,7 +3,7 @@ using MyGame.Graphics;
 
 namespace MyGame.TWImGui;
 
-public class ImGuiScreen
+public class ImGuiScreen : IGameScreen
 {
     internal SortedList<string, ImGuiWindow> Windows = new();
 
@@ -24,6 +24,7 @@ public class ImGuiScreen
     private readonly string[] _blendStateNames;
     private List<ImGuiMenu> _menuItems = new();
     private float _mainMenuPaddingY = 6f;
+    private bool IsHidden;
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -92,12 +93,19 @@ public class ImGuiScreen
         ImGui.End();
     }
 
-    public void Update()
+    public void Update(float deltaSeconds)
     {
+        if (_game.InputHandler.IsKeyPressed(KeyCode.F2))
+        {
+            IsHidden = !IsHidden;
+        }
     }
 
     public void Draw(Renderer renderer)
     {
+        if (IsHidden)
+            return;
+        
         if (_lastRender == null || _game.TotalElapsedTime - _lastRenderTime >= _updateRate)
         {
             _imGuiDrawCount++;

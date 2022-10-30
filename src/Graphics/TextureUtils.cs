@@ -68,4 +68,30 @@ public static class TextureUtils
         device.Submit(command);
         return texture;
     }
+    
+    public static Texture LoadPngTexture(GraphicsDevice device, string path)
+    {
+        if (!File.Exists(path))
+            throw new InvalidOperationException($"File not found: {path}");
+        var commandBuffer = device.AcquireCommandBuffer();
+        var texture = Texture.LoadPNG(device, commandBuffer, path);
+        device.Submit(commandBuffer);
+        return texture;
+    }
+    
+    public static Texture LoadAseprite(GraphicsDevice device, string path)
+    {
+        var aseprite = AsepriteFile.LoadAsepriteFile(path);
+        var (data, rects) = AsepriteToTextureAtlasConverter.GetTextureData(aseprite);
+        var texture = Texture.CreateTexture2D(
+            device,
+            aseprite.Header.Width * (uint)aseprite.Frames.Count,
+            aseprite.Header.Height,
+            TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler
+        );
+        var commandBuffer = device.AcquireCommandBuffer();
+        commandBuffer.SetTextureData(texture, data);
+        device.Submit(commandBuffer);
+        return texture;
+    }
 }
