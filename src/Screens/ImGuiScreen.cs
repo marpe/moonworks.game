@@ -1,7 +1,8 @@
 using ImGuiNET;
 using MyGame.Graphics;
+using MyGame.TWImGui;
 
-namespace MyGame.TWImGui;
+namespace MyGame.Screens;
 
 public class ImGuiScreen : IGameScreen
 {

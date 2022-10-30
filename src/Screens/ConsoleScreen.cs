@@ -1,8 +1,9 @@
 using MyGame.Graphics;
+using MyGame.TWConsole;
 using MyGame.Utils;
 using SDL2;
 
-namespace MyGame.TWConsole;
+namespace MyGame.Screens;
 
 public enum ScreenState
 {
@@ -19,6 +20,10 @@ public class ConsoleScreen : IGameScreen
         get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
         set => ScreenState = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
     }
+    
+    private KeyCode[] _pageUpAndDown = { KeyCode.PageUp, KeyCode.PageDown };
+    private KeyCode[] _autoCompleteKeys = { KeyCode.Tab, KeyCode.LeftShift };
+    private KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
 
     private static readonly HashSet<char> AllowedSymbols = new()
     {
@@ -27,7 +32,7 @@ public class ConsoleScreen : IGameScreen
         '[', ']', '>', '<', ':', ';'
     };
 
-    private TWConsole TwConsole => Shared.Console;
+    private TWConsole.TWConsole TwConsole => Shared.Console;
 
     private Rectangle backgroundRect;
     private readonly List<string> autoCompleteHits = new();
@@ -40,7 +45,7 @@ public class ConsoleScreen : IGameScreen
 
     private float TransitionPercentage;
 
-    private InputField _inputField = new(1024, TWConsole.BUFFER_WIDTH);
+    private InputField _inputField = new(1024, TWConsole.TWConsole.BUFFER_WIDTH);
     private readonly MyGameMain _game;
 
     public ConsoleScreen(MyGameMain game)
@@ -92,9 +97,11 @@ public class ConsoleScreen : IGameScreen
         }
     }
 
-    private static bool IsAllowedSymbol(char c)
+    private static bool IsAllowedCharacter(char c)
     {
-        return AllowedSymbols.Contains(c);
+        return char.IsLetter(c) ||
+               char.IsNumber(c) ||
+               AllowedSymbols.Contains(c);
     }
 
     private void HandleTextInput(char c)
@@ -105,18 +112,8 @@ public class ConsoleScreen : IGameScreen
         }
         else
         {
-            var allowedChars = new Predicate<char>[]
-            {
-                char.IsLetter,
-                char.IsNumber,
-                IsAllowedSymbol
-            };
-
-            bool isAllowed = allowedChars.Any(predicate => predicate(c));
-            if (!isAllowed)
-            {
+            if (!IsAllowedCharacter(c))
                 return;
-            }
 
             _inputField.AddChar(c);
         }
@@ -139,11 +136,7 @@ public class ConsoleScreen : IGameScreen
         EndAutocomplete();
         _inputField.ClearInput();
     }
-
-    private KeyCode[] _pageUpAndDown = new[] { KeyCode.PageUp, KeyCode.PageDown };
-    private KeyCode[] _autoCompleteKeys = new[] { KeyCode.Tab, KeyCode.LeftShift };
-    private KeyCode[] _upAndDownArrows = new[] { KeyCode.Up, KeyCode.Down };
-
+    
     private void HandleKeyPressed(InputHandler input)
     {
         if (input.IsAnyKeyPressed && !input.IsAnyModifierKeyDown())
@@ -326,7 +319,7 @@ public class ConsoleScreen : IGameScreen
     {
         TwConsole.ScreenBuffer.DisplayY += ConsoleSettings.ScrollSpeed;
     }
-    
+
     private void ScrollBottom()
     {
         TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY;

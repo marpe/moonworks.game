@@ -398,7 +398,7 @@ public class TWConsole
 		{
 			sb.AppendLine("^8Available commands:");
 			var results = Commands.Where(c => !c.Value.IsCVar);
-			foreach (var (_, value) in Commands)
+			foreach (var (_, value) in results)
 			{
 				sb.AppendLine(FormatCommand(value));
 			}

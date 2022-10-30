@@ -1,7 +1,7 @@
 ﻿using MyGame.Components;
 using MyGame.Graphics;
 
-namespace MyGame;
+namespace MyGame.Screens;
 
 public interface IGameScreen
 {
