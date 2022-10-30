@@ -47,7 +47,7 @@ public class TextBatcher
         {
             var fontPath = Path.Combine(MyGameMain.ContentRoot, path);
             var font = new Font(fontPath);
-            var fontPacker = new Packer(device, font, 18f, 512, 512);
+            var fontPacker = new Packer(device, font, 18f, 512, 512, 2u);
             fontPacker.PackFontRanges(FontRange);
             fontPacker.SetTextureData(commandBuffer);
             var textBatchFont = new FontData()

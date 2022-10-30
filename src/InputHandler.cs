@@ -2,10 +2,21 @@
 
 namespace MyGame;
 
-public struct RepeatableKey
+public class RepeatableKey
 {
     public float RepeatTimer;
     public bool WasRepeated;
+
+    public void Update(bool isHeld, float deltaSeconds)
+    {
+        WasRepeated = false;
+        RepeatTimer = isHeld ? RepeatTimer + deltaSeconds : 0;
+        if (RepeatTimer >= InputHandler.INITIAL_REPEAT_DELAY + InputHandler.REPEAT_DELAY)
+        {
+            WasRepeated = true;
+            RepeatTimer -= InputHandler.REPEAT_DELAY;
+        }
+    }
 }
 
 public class InputHandler
@@ -18,7 +29,7 @@ public class InputHandler
     /// <summary>
     /// Number of seconds a key can be held down before being repeated
     /// </summary>
-    public const float INITIAL_REPEAT_DELAY = 0.2f;
+    public const float INITIAL_REPEAT_DELAY = 0.5f;
 
     private readonly MyGameMain _game;
 
@@ -57,8 +68,6 @@ public class InputHandler
 
     public int MouseWheelDelta => _inputs.Mouse.Wheel;
 
-    public bool IsAnyKeyPressed => _inputs.Keyboard.AnyPressed;
-
     public List<char> TextInput = new();
 
     private Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
@@ -84,16 +93,7 @@ public class InputHandler
         foreach (var (keyCode, key) in _repeatableKeys)
         {
             var isHeld = _inputs.Keyboard.IsHeld(keyCode);
-            var tmpKey = key;
-            tmpKey.WasRepeated = false;
-            tmpKey.RepeatTimer = isHeld ? tmpKey.RepeatTimer + _game.ElapsedTime : 0;
-            if (tmpKey.RepeatTimer >= INITIAL_REPEAT_DELAY + REPEAT_DELAY)
-            {
-                tmpKey.WasRepeated = true;
-                tmpKey.RepeatTimer -= REPEAT_DELAY;
-            }
-
-            _repeatableKeys[keyCode] = tmpKey;
+            key.Update(isHeld, _game.ElapsedTime);
         }
     }
 
@@ -121,6 +121,26 @@ public class InputHandler
         return isPressed;
     }
 
+    public bool IsAnyKeyPressed(bool allowRepeating = false)
+    {
+        var isPressed = _inputs.Keyboard.AnyPressed;
+
+        if (allowRepeating)
+        {
+            foreach (var (keyCode, key) in _repeatableKeys)
+            {
+                isPressed |= key.WasRepeated;
+            }
+        }
+
+        return isPressed;
+    }
+    
+    public bool IsAnyKeyDown(ReadOnlySpan<KeyCode> keyCodes)
+    {
+        return _inputs.Keyboard.IsAnyKeyDown(keyCodes);
+    }
+
     public bool IsKeyDown(KeyCode key)
     {
         return _inputs.Keyboard.IsDown(key);
@@ -135,10 +155,5 @@ public class InputHandler
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsHeld,
             _ => throw new InvalidOperationException()
         };
-    }
-
-    public bool IsAnyKeyDown(ReadOnlySpan<KeyCode> keyCodes)
-    {
-        return _inputs.Keyboard.IsAnyKeyDown(keyCodes);
     }
 }

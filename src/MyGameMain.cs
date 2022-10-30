@@ -1,13 +1,13 @@
 using MyGame.Graphics;
 using MyGame.Screens;
-using MyGame.TWConsole;
-using MyGame.TWImGui;
+using SDL2;
 
 namespace MyGame;
 
 public class MyGameMain : Game
 {
     public const string ContentRoot = "Content";
+    private const int TARGET_TIMESTEP = 120;
 
     public ulong UpdateCount { get; private set; }
     public ulong DrawCount { get; private set; }
@@ -22,13 +22,21 @@ public class MyGameMain : Game
 
     public readonly InputHandler InputHandler;
 
+    private Stopwatch _stopwatch;
+
+    private double _nextFPSUpdate = 1.0;
+    private ulong _prevDrawCount;
+    private ulong _prevUpdateCount;
+    private double _updateFps;
+    private double _drawFps;
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
         bool debugMode
-    ) : base(windowCreateInfo, frameLimiterSettings, 60, debugMode)
+    ) : base(windowCreateInfo, frameLimiterSettings, 120, debugMode)
     {
-        var sw = Stopwatch.StartNew();
+        _stopwatch = Stopwatch.StartNew();
 
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
@@ -49,7 +57,7 @@ public class MyGameMain : Game
             _imGuiScreen = new ImGuiScreen(this);
         });
 
-        Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
+        Logger.LogInfo($"Game Loaded in {_stopwatch.ElapsedMilliseconds} ms");
     }
 
 
@@ -59,6 +67,16 @@ public class MyGameMain : Game
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
+        if (_stopwatch.Elapsed.TotalSeconds > _nextFPSUpdate)
+        {
+            _updateFps = UpdateCount - _prevUpdateCount;
+            _drawFps = DrawCount - _prevDrawCount;
+            _prevUpdateCount = UpdateCount;
+            _prevDrawCount = DrawCount;
+            _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 1.0;
+            SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {_updateFps:0.##}, Draw: {_drawFps:0.##}");
+        }
+ 
         InputHandler.BeginFrame();
         
         _imGuiScreen?.Update(ElapsedTime);

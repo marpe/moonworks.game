@@ -18,7 +18,7 @@ class Program
 		var frameLimiterSettings = new FrameLimiterSettings
 		{
 			Mode = FrameLimiterMode.Uncapped,
-			Cap = 60
+			Cap = 120
 		};
 		Logger.LogInfo = LogInfo;
 		Logger.LogWarn = LogWarn;

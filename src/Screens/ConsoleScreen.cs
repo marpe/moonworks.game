@@ -20,7 +20,7 @@ public class ConsoleScreen : IGameScreen
         get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
         set => ScreenState = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
     }
-    
+
     private KeyCode[] _pageUpAndDown = { KeyCode.PageUp, KeyCode.PageDown };
     private KeyCode[] _autoCompleteKeys = { KeyCode.Tab, KeyCode.LeftShift };
     private KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
@@ -38,6 +38,10 @@ public class ConsoleScreen : IGameScreen
     private readonly List<string> autoCompleteHits = new();
     private int autoCompleteIndex = -1;
     private int commandHistoryIndex = -1;
+    private char[] tmpArr = new char[1];
+    private int _drawCalls;
+    private float _caretBlinkTimer;
+
     private int LineHeight => (int)CharSize.Y;
     private Point CharSize = new(10, 18);
 
@@ -47,6 +51,9 @@ public class ConsoleScreen : IGameScreen
 
     private InputField _inputField = new(1024, TWConsole.TWConsole.BUFFER_WIDTH);
     private readonly MyGameMain _game;
+    
+    [CVar("con.debug", "Show console debug info")]
+    public static bool ShowDebug;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -63,6 +70,8 @@ public class ConsoleScreen : IGameScreen
 
         if (IsHidden)
             return;
+
+        _caretBlinkTimer += deltaSeconds;
 
         HandleKeyPressed(inputState);
 
@@ -117,6 +126,8 @@ public class ConsoleScreen : IGameScreen
 
             _inputField.AddChar(c);
         }
+
+        _caretBlinkTimer = 0;
     }
 
     private void PasteFromClipboard()
@@ -136,10 +147,15 @@ public class ConsoleScreen : IGameScreen
         EndAutocomplete();
         _inputField.ClearInput();
     }
-    
+
     private void HandleKeyPressed(InputHandler input)
     {
-        if (input.IsAnyKeyPressed && !input.IsAnyModifierKeyDown())
+        if (input.IsAnyKeyPressed(true))
+        {
+            _caretBlinkTimer = 0;
+        }
+
+        if (input.IsAnyKeyPressed() && !input.IsAnyModifierKeyDown())
         {
             if (!input.IsAnyKeyDown(_autoCompleteKeys))
             {
@@ -330,9 +346,6 @@ public class ConsoleScreen : IGameScreen
         autoCompleteIndex = -1;
     }
 
-    private char[] tmpArr = new char[1];
-    private int _drawCalls;
-
     public static Color GetColor(int colorIndex, float alpha)
     {
         var color = colorIndex switch
@@ -396,14 +409,6 @@ public class ConsoleScreen : IGameScreen
             );
         }
 
-        var scrolledLinesStr =
-            $"DrawCalls({_drawCalls}) DisplaY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY})";
-        var scrollLinesPos =
-            new Vector2(backgroundRect.Width - scrolledLinesStr.Length * CharSize.X - ConsoleSettings.HorizontalPadding,
-                0);
-
-        renderer.DrawText(scrolledLinesStr, scrollLinesPos, Color.Yellow * TransitionPercentage);
-
         var displayPosition = new Vector2(
             ConsoleSettings.HorizontalPadding,
             backgroundRect.Bottom - LineHeight
@@ -451,6 +456,21 @@ public class ConsoleScreen : IGameScreen
 
         if (showInput)
             DrawInput(renderer, textArea, displayPosition);
+
+
+        if (ShowDebug)
+        {
+            var scrolledLinesStr =
+                $"DrawCalls({_drawCalls}) DisplayY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY})";
+            var lineLength = scrolledLinesStr.Length * CharSize.X;
+            var scrollLinesPos = new Vector2(
+                backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
+                0
+            );
+
+            renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
+            renderer.DrawText(scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow * TransitionPercentage);
+        }
 
         var swapTexture = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swapTexture.Width, swapTexture.Height);
@@ -513,11 +533,13 @@ public class ConsoleScreen : IGameScreen
             );
 
             var color = GetColor(ConsoleSettings.CaretColor);
-            var caretColor = Color.Lerp(color, Color.Transparent, MathF.Sin(ConsoleSettings.CaretBlinkSpeed * _game.TotalElapsedTime));
+            var blinkDelay = 1.5f;
+            if (_caretBlinkTimer >= blinkDelay)
+                color = Color.Lerp(color, Color.Transparent, MathF.Sin(ConsoleSettings.CaretBlinkSpeed * (_caretBlinkTimer - blinkDelay)));
             renderer.DrawText(
                 ConsoleSettings.CaretChar,
                 caretPosition,
-                caretColor
+                color
             );
         }
     }

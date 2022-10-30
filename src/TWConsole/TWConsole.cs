@@ -549,4 +549,13 @@ public class TWConsole
 	{
 		Execute("cfg.save " + kCvarsFilename, false);
 	}
+
+
+	[ConsoleHandler("con.fill", "Fill console with crap")]
+	private void Fill()
+	{
+		Span<char> tmp = new char[ScreenBuffer.Width * ScreenBuffer.Height];
+		tmp.Fill('X');
+		ScreenBuffer.AddLine(tmp);
+	}
 }

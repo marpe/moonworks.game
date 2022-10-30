@@ -5,7 +5,7 @@ public static class ConsoleSettings
 	public static int HistoryColor = 0;
 	public static int InputColor = 0;
 	public static Color BackgroundColor = Color.Black;
-	public static int CaretColor = 7;
+	public static int CaretColor = 2;
 	public static int InputLineCharColor = 8;
 	public static int ActiveCommandHistoryColor = 6;
 	public static int AutocompleteSuggestionColor = 7;
