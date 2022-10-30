@@ -12,11 +12,12 @@ public class TWConsole
 	public readonly RingBuffer<string> CommandHistory = new(MAX_COMMAND_HISTORY_COUNT);
 	public readonly ConsoleScreenBuffer ScreenBuffer;
 	private const int MAX_COMMAND_HISTORY_COUNT = 48;
-	public const int DEFAULT_WIDTH = 186;
+	public const int BUFFER_WIDTH = 186;
+	public const int BUFFER_HEIGHT = 180;
 
 	public TWConsole()
 	{
-		ScreenBuffer = new ConsoleScreenBuffer(DEFAULT_WIDTH, 180);
+		ScreenBuffer = new ConsoleScreenBuffer(BUFFER_WIDTH, BUFFER_HEIGHT);
 	}
 
 	public void Initialize()

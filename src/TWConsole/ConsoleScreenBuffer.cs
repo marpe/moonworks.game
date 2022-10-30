@@ -10,7 +10,11 @@ public class ConsoleScreenBuffer
     public int DisplayY
     {
         get => _displayY;
-        set => _displayY = value;
+        set
+        {
+            var minValue = Math.Max(0, _cursorY - _height + 1); // show at least one line
+            _displayY = MathF.Clamp(value, minValue, _cursorY);
+        }
     }
 
     private int _cursorY = 0;
@@ -21,10 +25,6 @@ public class ConsoleScreenBuffer
 
     public int Height => _height;
     public int Width => _width;
-    public int TotalLength => _width * _height;
-
-    public int WrappedCursorY => _wrappedY;
-
     public int CursorY => _cursorY;
 
     public ConsoleScreenBuffer(int width, int height)
@@ -36,16 +36,17 @@ public class ConsoleScreenBuffer
 
     public (char c, byte color) GetChar(int x, int y)
     {
-        var i = (_height + y) % _height * _width + x;
+        var line = (_height + y) % _height;
+        var i = line * _width + x;
         return Unpack(_buffer[i]);
     }
 
-    public static short Pack(char c, byte color)
+    private static short Pack(char c, byte color)
     {
         return (short)((color << 8) | c);
     }
 
-    public static (char c, byte color) Unpack(short s)
+    private static (char c, byte color) Unpack(short s)
     {
         var color = (byte)((s >> 8) & 0xff);
         var c = (char)(s & 0xff);
@@ -64,10 +65,10 @@ public class ConsoleScreenBuffer
 
     private void Linefeed()
     {
-        if (_displayY == _cursorY)
-            _displayY++;
-
+        var shouldScrollDisplay = _displayY == _cursorY;
         _cursorY++;
+        if (shouldScrollDisplay)
+            _displayY = _cursorY;
         _cursorX = 0;
         ClearLine(_cursorY);
     }

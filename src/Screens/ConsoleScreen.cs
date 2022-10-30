@@ -40,7 +40,7 @@ public class ConsoleScreen : IGameScreen
 
     private float TransitionPercentage;
 
-    private InputField _inputField = new(1024, TWConsole.DEFAULT_WIDTH);
+    private InputField _inputField = new(1024, TWConsole.BUFFER_WIDTH);
     private readonly MyGameMain _game;
 
     public ConsoleScreen(MyGameMain game)
@@ -305,7 +305,7 @@ public class ConsoleScreen : IGameScreen
         {
             _inputField.SetCursor(_inputField.Length);
         }
-        
+
         if (input.IsKeyPressed(KeyCode.Home, true))
         {
             _inputField.SetCursor(0);
@@ -314,30 +314,22 @@ public class ConsoleScreen : IGameScreen
 
     private void ScrollTop()
     {
-        TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.Height;
-        if (TwConsole.ScreenBuffer.CursorY - TwConsole.ScreenBuffer.DisplayY >= TwConsole.ScreenBuffer.Height)
-            TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY - TwConsole.ScreenBuffer.Height + 1;
-    }
-
-    private void ScrollBottom()
-    {
-        TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY;
+        TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY - TwConsole.ScreenBuffer.Height;
     }
 
     private void ScrollUp()
     {
         TwConsole.ScreenBuffer.DisplayY -= ConsoleSettings.ScrollSpeed;
-
-        if (TwConsole.ScreenBuffer.CursorY - TwConsole.ScreenBuffer.DisplayY >= TwConsole.ScreenBuffer.Height)
-            TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY - TwConsole.ScreenBuffer.Height + 1;
     }
 
     private void ScrollDown()
     {
         TwConsole.ScreenBuffer.DisplayY += ConsoleSettings.ScrollSpeed;
-
-        if (TwConsole.ScreenBuffer.DisplayY > TwConsole.ScreenBuffer.CursorY)
-            TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY;
+    }
+    
+    private void ScrollBottom()
+    {
+        TwConsole.ScreenBuffer.DisplayY = TwConsole.ScreenBuffer.CursorY;
     }
 
     private void EndAutocomplete()
@@ -440,7 +432,8 @@ public class ConsoleScreen : IGameScreen
             var lineIndex = TwConsole.ScreenBuffer.DisplayY - i;
             if (lineIndex < 0)
                 break;
-            if (TwConsole.ScreenBuffer.CursorY - lineIndex >= TwConsole.ScreenBuffer.Height)
+            var numDrawnLines = TwConsole.ScreenBuffer.CursorY - lineIndex;
+            if (numDrawnLines >= TwConsole.ScreenBuffer.Height) // past scrollback wrap point
                 break;
 
             for (var j = 0; j < TwConsole.ScreenBuffer.Width; j++)
