@@ -2,7 +2,6 @@
 
 public static class TextureUtils
 {
-    
     public static void EnsureTextureSize(ref Texture texture, GraphicsDevice device, uint width, uint height)
     {
         if (width == texture.Width && height == texture.Height)
@@ -56,6 +55,31 @@ public static class TextureUtils
         }
 
         return texture;
+    }
+
+    public static Texture PremultiplyAlpha(GraphicsDevice device, Texture tex)
+    {
+        var commandBuffer = device.AcquireCommandBuffer();
+        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, tex.Width * tex.Height * 32);
+        commandBuffer.CopyTextureToBuffer(tex, buffer);
+        device.Submit(commandBuffer);
+        device.Wait();
+        
+        var pixels = new byte[buffer.Size];
+        buffer.GetData(pixels, (uint)pixels.Length);
+
+        for (var j = 0; j < pixels.Length; j += 4)
+        {
+            var alpha = pixels[j + 3];
+            if (alpha == 255)
+                continue;
+                
+            pixels[j + 0] = (byte)(pixels[j + 0] * alpha / 255f);
+            pixels[j + 1] = (byte)(pixels[j + 1] * alpha / 255f);
+            pixels[j + 2] = (byte)(pixels[j + 2] * alpha / 255f);
+        }
+
+        return CreateTexture(device, tex.Width, tex.Height, pixels);
     }
 
     public static Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)

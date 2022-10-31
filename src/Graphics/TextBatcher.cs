@@ -88,17 +88,21 @@ public class TextBatcher
         font.Batch.Draw(text, x, y, depth, color, alignH, alignV);
     }
 
-    public void PushVertexData(CommandBuffer commandBuffer)
+    public void Flush(CommandBuffer commandBuffer, GraphicsPipeline pipeline, Matrix4x4 viewProjection, DepthStencilAttachmentInfo depthStencilAttachmentInfo, ColorAttachmentInfo colorAttachmentInfo)
     {
+        if (AddCountSinceDraw == 0)
+            return;
+
         foreach (var (key, font) in _fonts)
         {
             if (font.HasStarted)
                 font.Batch.UploadBufferData(commandBuffer);
         }
-    }
+        
+        commandBuffer.BeginRenderPass(depthStencilAttachmentInfo, new ColorAttachmentInfo(colorAttachmentInfo.Texture, LoadOp.Load));
 
-    public void Draw(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
-    {
+        commandBuffer.BindGraphicsPipeline(pipeline);
+        
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
         var fragmentParamOffset = 0u;
 
@@ -120,6 +124,8 @@ public class TextBatcher
             
             font.HasStarted = false;
         }
+        
+        commandBuffer.EndRenderPass();
 
         _addCountSinceDraw = 0;
     }

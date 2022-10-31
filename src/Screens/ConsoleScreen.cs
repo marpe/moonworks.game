@@ -462,11 +462,16 @@ public class ConsoleScreen : IGameScreen
                 var position = displayPosition + new Vector2(CharSize.X * j, -CharSize.Y * i);
                 // var offset = Font.DrawText(batcher, c, position, charColor);
                 tmpArr[0] = c;
-                renderer.DrawText(
+                renderer.DrawBMText(
                     tmpArr,
                     position,
                     charColor
                 );
+                /*renderer.DrawText(
+                    tmpArr,
+                    position,
+                    charColor
+                );*/
                 _drawCalls++;
             }
         }

@@ -20,17 +20,17 @@ public struct Sprite
     }
     
     public Sprite(
-        TexturePage texturePage,
+        Texture texture,
         Rect sliceRect,
         Rect frameRect
     )
     {
-        TexturePage = texturePage;
+        TexturePage = new TexturePage(texture);
         SliceRect = sliceRect;
         FrameRect = frameRect;
         UV = new UV(
-            new Vector2((float)sliceRect.X / texturePage.Width, (float)sliceRect.Y / texturePage.Height),
-            new Vector2((float)sliceRect.W / texturePage.Width, (float)sliceRect.H / texturePage.Height)
+            new Vector2((float)sliceRect.X / TexturePage.Width, (float)sliceRect.Y / TexturePage.Height),
+            new Vector2((float)sliceRect.W / TexturePage.Width, (float)sliceRect.H / TexturePage.Height)
         );
     }
 }

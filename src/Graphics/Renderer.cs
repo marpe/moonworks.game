@@ -16,7 +16,6 @@ public class Renderer
         set => SpriteBatch.BlendState = value;
     }
 
-    private Texture _depthTexture;
     private GraphicsPipeline _fontPipeline;
 
     private readonly MyGameMain _game;
@@ -26,10 +25,15 @@ public class Renderer
     private readonly GraphicsPipeline[] _pipelines;
 
     private CommandBuffer? _commandBuffer;
-    public CommandBuffer CommandBuffer => _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+
+    public CommandBuffer CommandBuffer =>
+        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+
     private Texture? _swapTexture;
-    public Texture SwapTexture => _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
-    
+
+    public Texture SwapTexture =>
+        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
+
     public ColorAttachmentBlendState FontPipelineBlend = ColorAttachmentBlendState.NonPremultiplied;
 
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
@@ -44,8 +48,7 @@ public class Renderer
         DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
     };
 
-    private DepthStencilAttachmentInfo _depthStencilAttachmentInfo;
-    private ColorAttachmentInfo _colorAttachmentInfo;
+    private readonly BMFont _bmFont;
 
     public Renderer(MyGameMain game)
     {
@@ -54,21 +57,6 @@ public class Renderer
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
         SpriteBatch = new SpriteBatch(_device);
         TextBatcher = new TextBatcher(_device);
-        _depthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
-        {
-            DepthStencilClearValue = new DepthStencilValue(0, 0),
-            Texture = _depthTexture,
-            LoadOp = LoadOp.Clear,
-            StoreOp = StoreOp.Store,
-            StencilLoadOp = LoadOp.Clear,
-            StencilStoreOp = StoreOp.Store
-        };
-        _colorAttachmentInfo = new ColorAttachmentInfo()
-        {
-            ClearColor = Color.CornflowerBlue,
-            LoadOp = LoadOp.Clear,
-        };
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _blankSprite = new Sprite(_blankTexture);
@@ -92,6 +80,8 @@ public class Renderer
             };
             _pipelines[i] = CreateGraphicsPipeline(_device, blendState);
         }
+
+        _bmFont = new BMFont(game.GraphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Bmfonts.ConsolasFnt));
     }
 
     public void UpdateCustomBlendPipeline()
@@ -116,8 +106,8 @@ public class Renderer
         }
 
         var windowSize = _game.MainWindow.Size;
-        TextureUtils.EnsureTextureSize(ref _depthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
-        _depthStencilAttachmentInfo.Texture = _depthTexture;
+        TextureUtils.EnsureTextureSize(ref SpriteBatch.DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
+        SpriteBatch.DepthStencilAttachmentInfo.Texture = SpriteBatch.DepthTexture;
 
         return true;
     }
@@ -125,7 +115,7 @@ public class Renderer
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
-        SpriteBatch.Add(_blankSprite, color, depth, scale, PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
     }
 
     public void DrawLine(Vector2 from, Vector2 to, Color color)
@@ -136,7 +126,7 @@ public class Renderer
         var rotationRad = MathF.AngleBetweenVectors(from, to);
         var rotation = Matrix3x2.CreateRotation(rotationRad, new Vector2(0, 0.5f));
         var translation = Matrix3x2.CreateTranslation(from);
-        SpriteBatch.Add(_blankSprite, color, 0, scale * rotation * translation, PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, 0, scale * rotation * translation, PointClamp);
     }
 
     public void DrawLine(Point from, Point to, Color color)
@@ -146,7 +136,7 @@ public class Renderer
 
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)
     {
-        SpriteBatch.Add(sprite, color, depth, transform, PointClamp);
+        SpriteBatch.Draw(sprite, color, depth, transform, PointClamp);
     }
 
     public void DrawText(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color,
@@ -154,7 +144,7 @@ public class Renderer
     {
         TextBatcher.Add(fontType, text, x, y, depth, color, alignH, alignV);
     }
-    
+
     public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
     {
         DrawText(FontType.ConsolasMono, text, pos.X, pos.Y, depth, color);
@@ -170,39 +160,24 @@ public class Renderer
         DrawText(fontType, text, pos.X, pos.Y, 0, color);
     }
 
+    public void DrawBMText(ReadOnlySpan<char> text, Vector2 position, Color color)
+    {
+        BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, 0);
+    }
+
     public void BeginRenderPass(Matrix4x4 viewProjection, bool clear = true)
     {
         var commandBuffer = CommandBuffer;
-        
-        _colorAttachmentInfo.Texture = SwapTexture;
-        _colorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
-        
-        if (SpriteBatch.AddCountSinceDraw > 0)
-            SpriteBatch.PushVertexData(commandBuffer);
-        if (TextBatcher.AddCountSinceDraw > 0)
-            TextBatcher.PushVertexData(commandBuffer);
 
-        commandBuffer.BeginRenderPass(_depthStencilAttachmentInfo, _colorAttachmentInfo);
+        SpriteBatch.ColorAttachmentInfo.Texture = SwapTexture;
+        SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
-        // commandBuffer.SetViewport(new Viewport(0, 0, windowSize.X, windowSize.Y));
-        // commandBuffer.SetScissor(new Rect(0, 0, windowSize.X, windowSize.Y));
-
-        if (SpriteBatch.AddCountSinceDraw > 0)
-        {
-            commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState.AlphaBlend]);
-            SpriteBatch.Draw(commandBuffer, viewProjection);
-        }
-
-        if (TextBatcher.AddCountSinceDraw > 0)
-        {
-            commandBuffer.BindGraphicsPipeline(_fontPipeline);
-            TextBatcher.Draw(commandBuffer, viewProjection);
-        }
+        SpriteBatch.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection); 
+        TextBatcher.Flush(commandBuffer, _fontPipeline, viewProjection, SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
     }
 
     public void EndRenderPass()
     {
-        CommandBuffer.EndRenderPass();
     }
 
     public void EndFrame()

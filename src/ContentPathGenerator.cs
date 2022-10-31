@@ -1,7 +1,14 @@
+
 namespace MyGame;
 
 public static class ContentPaths
 {
+		public static class Bmfonts
+		{
+			public const string ConsolasFnt = @"bmfonts\consolas.fnt";
+			public const string Consolas_0Png = @"bmfonts\consolas_0.png";
+		}
+
 		public static class Fonts
 		{
 			public const string ConsolaTtf = @"fonts\consola.ttf";
