@@ -59,6 +59,15 @@ public class SpriteBatch
         };
     }
 
+    public void Unload()
+    {
+        _vertexBuffer.Dispose();
+        _indexBuffer.Dispose();
+        DepthTexture.Dispose();
+        DepthStencilAttachmentInfo.Texture.Dispose();
+        ColorAttachmentInfo.Texture.Dispose();
+    }
+
     public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler)
     {
         if (_numSprites == _spriteInfo.Length)

@@ -70,6 +70,11 @@ public class ConsoleScreen : IGameScreen
         _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
     }
 
+    public void Unload()
+    {
+        _renderTarget.Dispose();
+    }
+
     public void Update(float deltaSeconds)
     {
         var inputState = _game.InputHandler;

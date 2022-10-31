@@ -302,6 +302,7 @@ public class ImGuiScreen : IGameScreen
 
     public void Destroy()
     {
+        ImGui.SaveIniSettingsToDisk(ImGui.GetIO().IniFilename);
         _imGuiRenderer.Dispose();
     }
 }

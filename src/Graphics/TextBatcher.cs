@@ -83,6 +83,18 @@ public class TextBatcher
         }
     }
 
+    public void Unload()
+    {
+        foreach (var (key, fontData) in _fonts)
+        {
+            fontData.Batch.Dispose();
+            fontData.Packer.Dispose();
+            fontData.Font.Dispose();
+            fontData.Texture.Dispose();
+        }
+        _fonts.Clear();
+    }
+
     public void Add(FontType fontTypeType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
         VerticalAlignment alignV)
     {

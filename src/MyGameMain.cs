@@ -111,6 +111,13 @@ public class MyGameMain : Game
     protected override void Destroy()
     {
         _imGuiScreen?.Destroy();
+
+        _gameScreen.Unload();
+        
+        _consoleScreen.Unload();
+
+        Renderer.Unload();
+        
         Shared.Console.SaveCVars();
     }
 }

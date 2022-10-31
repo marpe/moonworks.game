@@ -22,7 +22,6 @@ public class BMFont : IDisposable
         var directoryName = Path.GetDirectoryName(filename);
         Textures = new Texture[Font.Pages.Length];
 
-        var commandBuffer = device.AcquireCommandBuffer();
         for (var i = 0; i < Textures.Length; i++)
         {
             var path = Path.Combine(directoryName ?? "", Font.Pages[i].Filename);

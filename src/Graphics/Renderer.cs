@@ -167,13 +167,13 @@ public class Renderer
         SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
         /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
-        
+
         SpriteBatch.UpdateBuffers(commandBuffer);
         TextBatcher.UpdateBuffers(commandBuffer);
-        
+
         commandBuffer.BeginRenderPass(SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState.AlphaBlend]);
-        SpriteBatch.Flush(commandBuffer, viewProjection); 
+        SpriteBatch.Flush(commandBuffer, viewProjection);
         TextBatcher.Flush(commandBuffer, viewProjection);
         commandBuffer.EndRenderPass();
     }
@@ -182,7 +182,22 @@ public class Renderer
     {
         _device.Submit(CommandBuffer);
         _commandBuffer = null;
+        _swapTexture?.Dispose();
         _swapTexture = null;
+        _bmFont.Dispose();
+    }
+
+    public void Unload()
+    {
+        for (var i = 0; i < _pipelines.Length; i++)
+        {
+            _pipelines[i].Dispose();
+        }
+        
+        _blankTexture.Dispose();
+        TextBatcher.Unload();
+        SpriteBatch.Unload();
+        PointClamp.Dispose();
     }
 
     public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)

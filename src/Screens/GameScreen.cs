@@ -57,6 +57,12 @@ public class GameScreen : IGameScreen
         });
     }
 
+    public void Unload()
+    {
+        _spriteRenderer?.Texture.Dispose();
+        _backgroundSprite?.Texture.Dispose();
+    }
+
     public void Update(float deltaSeconds)
     {
         var input = _game.InputHandler;
