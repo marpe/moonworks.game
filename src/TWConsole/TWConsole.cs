@@ -92,7 +92,7 @@ public class TWConsole
 	private static string Colorize(object? value)
 	{
 		if (value == null)
-			return "^8null^0";
+			return "^8null";
 		
 		if (value is bool boolValue)
 			return boolValue ? "^7true" : "^4false";
@@ -111,7 +111,7 @@ public class TWConsole
 		RegisterCommand(
 			new ConsoleCommand(
 				cvarAttribute.Name,
-				$"{cvarAttribute.Description} <^3{typeName}^0> ({defaultValueStr})",
+				$"{cvarAttribute.Description} <^3{typeName}^0> ({defaultValueStr}^0)",
 				CVarHandler(cvar),
 				new ConsoleCommandArg[]
 				{
@@ -127,16 +127,6 @@ public class TWConsole
 
 	private void ProcessConsoleHandlerAttributes()
 	{
-		var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
-		foreach (var mi in GetType().GetMethods(bindingFlags))
-		{
-			var attrs = mi.GetCustomAttributes<ConsoleHandlerAttribute>(false);
-			foreach (var attr in attrs)
-			{
-				ProcessHandlerMethod(mi, attr);
-			}
-		}
-
 		var asm = Assembly.GetEntryAssembly()!;
 
 		foreach (var type in asm.DefinedTypes)
@@ -340,7 +330,7 @@ public class TWConsole
 			{
 				var str = x.Name + " (^3" + ConsoleUtils.GetDisplayName(x.Type) + "^1";
 				if (x.HasDefaultValue)
-					str += ", " + Colorize(x.DefaultValue);
+					str += ", " + Colorize(x.DefaultValue) + "^1";
 				str += ")";
 				return str;
 			});
@@ -549,9 +539,8 @@ public class TWConsole
 	{
 		Execute("cfg.save " + kCvarsFilename, false);
 	}
-
-
-	[ConsoleHandler("con.fill", "Fill console with crap")]
+	
+	[ConsoleHandler("con.fill", "Fill console with crap (for debugging console rendering)")]
 	private void Fill()
 	{
 		Span<char> tmp = new char[ScreenBuffer.Width * ScreenBuffer.Height];

@@ -29,7 +29,7 @@ public static class ConsoleSettings
 	public static float CaretBlinkSpeed = 5f;
 	public static string CaretChar = "_";
 	public static string InputLineChar = "> ";
-	public static float HorizontalPadding = 30;
+	public static int HorizontalPadding = 30;
 
 	[CVar("con.height", "Sets console height [0-1]")]
 	public static float RelativeConsoleHeight = 1f;

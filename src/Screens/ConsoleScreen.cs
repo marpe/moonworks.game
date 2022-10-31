@@ -42,8 +42,7 @@ public class ConsoleScreen : IGameScreen
     private int _drawCalls;
     private float _caretBlinkTimer;
 
-    private int LineHeight => (int)CharSize.Y;
-    private Point CharSize = new(10, 18);
+    public static readonly Point CharSize = new(10, 18);
 
     public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
 
@@ -71,6 +70,8 @@ public class ConsoleScreen : IGameScreen
         if (IsHidden)
             return;
 
+        CheckResize();
+        
         _caretBlinkTimer += deltaSeconds;
 
         HandleKeyPressed(inputState);
@@ -86,6 +87,21 @@ public class ConsoleScreen : IGameScreen
         foreach (var c in inputState.TextInput)
         {
             HandleTextInput(c);
+        }
+    }
+
+    private void CheckResize()
+    {
+        var windowSize = _game.MainWindow.Size;
+        var availWidthInPixels = windowSize.X - ConsoleSettings.HorizontalPadding * 2f;
+        var minWidth = 60;
+        var width = Math.Max((int)(availWidthInPixels / CharSize.X), minWidth);
+        if (TwConsole.ScreenBuffer.Width != width)
+        {
+            var height = (TwConsole.ScreenBuffer.Height * TwConsole.ScreenBuffer.Width) / width; // windowSize.Y / charSize.Y;
+            TwConsole.ScreenBuffer.Resize(width, height);
+            _inputField.SetMaxWidth(width);
+            TwConsole.Print($"Console size set to: {width}, {height}");
         }
     }
 
@@ -411,7 +427,7 @@ public class ConsoleScreen : IGameScreen
 
         var displayPosition = new Vector2(
             ConsoleSettings.HorizontalPadding,
-            backgroundRect.Bottom - LineHeight
+            backgroundRect.Bottom - CharSize.Y
         );
 
         var showInput = !hasScrolled;
@@ -425,6 +441,7 @@ public class ConsoleScreen : IGameScreen
 
         _drawCalls = 0;
 
+        var sw = Stopwatch.StartNew();
         for (var i = 0; i < numLinesToDraw; i++)
         {
             var lineIndex = TwConsole.ScreenBuffer.DisplayY - i;
@@ -436,7 +453,7 @@ public class ConsoleScreen : IGameScreen
 
             for (var j = 0; j < TwConsole.ScreenBuffer.Width; j++)
             {
-                var (c, color) = TwConsole.ScreenBuffer.GetChar(j, lineIndex);
+                TwConsole.ScreenBuffer.GetChar(j, lineIndex, out var c, out var color);
                 if (c < 0x20 || c > 0x7e)
                     continue;
                 if (c == ' ')
@@ -454,6 +471,8 @@ public class ConsoleScreen : IGameScreen
             }
         }
 
+        var elapsedMs = sw.ElapsedMilliseconds;
+        
         if (showInput)
             DrawInput(renderer, textArea, displayPosition);
 
@@ -461,7 +480,7 @@ public class ConsoleScreen : IGameScreen
         if (ShowDebug)
         {
             var scrolledLinesStr =
-                $"DrawCalls({_drawCalls}) DisplayY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY})";
+                $"DrawCalls({_drawCalls}) DisplayY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY}) Elapsed({elapsedMs}ms)";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
                 backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,

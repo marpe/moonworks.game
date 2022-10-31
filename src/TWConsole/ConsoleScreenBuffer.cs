@@ -20,8 +20,8 @@ public class ConsoleScreenBuffer
     private int _cursorY = 0;
     private int _cursorX = 0;
 
-    private readonly int _height;
-    private readonly int _width;
+    private int _height;
+    private int _width;
 
     public int Height => _height;
     public int Width => _width;
@@ -34,11 +34,11 @@ public class ConsoleScreenBuffer
         _buffer = new short[width * height];
     }
 
-    public (char c, byte color) GetChar(int x, int y)
+    public void GetChar(int x, int y, out char c, out byte color)
     {
         var line = (_height + y) % _height;
         var i = line * _width + x;
-        return Unpack(_buffer[i]);
+        Unpack(_buffer[i], out c, out color);
     }
 
     private static short Pack(char c, byte color)
@@ -46,11 +46,10 @@ public class ConsoleScreenBuffer
         return (short)((color << 8) | c);
     }
 
-    private static (char c, byte color) Unpack(short s)
+    private static void Unpack(short s, out char c, out byte color)
     {
-        var color = (byte)((s >> 8) & 0xff);
-        var c = (char)(s & 0xff);
-        return (c, color);
+        color = (byte)((s >> 8) & 0xff);
+        c = (char)(s & 0xff);
     }
 
     public void Clear()
@@ -100,5 +99,28 @@ public class ConsoleScreenBuffer
         }
 
         Linefeed();
+    }
+
+    public void Resize(int width, int height)
+    {
+        var (oldWidth, oldHeight) = (_width, _height);
+        _width = width;
+        _height = height;
+
+        var newBuffer = new short[width * height];
+
+        var numLines = _height < oldHeight ? _height : oldHeight;
+        var numChars = _width < oldWidth ? _width : oldWidth;
+        for (var y = 0; y < numLines; y++)
+        {
+            for (var x = 0; x < numChars ; x++)
+            {
+                newBuffer[(height - 1 - y) * width + x] = _buffer[(_cursorY - y + oldHeight) % oldHeight * oldWidth + x];
+            }
+        }
+
+        _buffer = newBuffer;
+        _cursorY = _height - 1;
+        _displayY = _cursorY;
     }
 }
