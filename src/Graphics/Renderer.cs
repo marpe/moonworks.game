@@ -155,9 +155,14 @@ public class Renderer
 
     public void FlushBatches(Matrix4x4 viewProjection, bool clear = true)
     {
+        FlushBatches(SwapTexture, viewProjection, clear);
+    }
+
+    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, bool clear = true)
+    {
         var commandBuffer = CommandBuffer;
 
-        SpriteBatch.ColorAttachmentInfo.Texture = SwapTexture;
+        SpriteBatch.ColorAttachmentInfo.Texture = renderTarget;
         SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
         SpriteBatch.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection); 

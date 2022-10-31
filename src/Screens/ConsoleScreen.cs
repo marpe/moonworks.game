@@ -57,9 +57,17 @@ public class ConsoleScreen : IGameScreen
     [CVar("con.bmfont", "Use BMFont to render console")]
     public static bool UseBMFont;
 
+    private Texture _renderTarget;
+
+    private float _lastRenderTime;
+    private float _updateRate = 1 / 120f;
+
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
+        
+        var windowSize = game.MainWindow.Size;
+        _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
     }
 
     public void Update(float deltaSeconds)
@@ -397,8 +405,25 @@ public class ConsoleScreen : IGameScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        var winSize = _game.MainWindow.Size;
+        if (_game.TotalElapsedTime - _lastRenderTime >= _updateRate)
+        {
+            DrawInternal(renderer);
+            _lastRenderTime = _game.TotalElapsedTime;
+        }
+        
+        var sprite = new Sprite(_renderTarget);
+        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * TransitionPercentage, 0);
 
+        var swap = renderer.SwapTexture;
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        renderer.FlushBatches(viewProjection, false);
+    }
+
+    private void DrawInternal(Renderer renderer)
+    {
+        var winSize = _game.MainWindow.Size;
+        TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)winSize.X, (uint)winSize.Y);
+        
         backgroundRect.X = 0;
         var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
         backgroundRect.Y = (int)(height * (TransitionPercentage - 1));
@@ -487,12 +512,15 @@ public class ConsoleScreen : IGameScreen
             );
 
             renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
-            DrawText(renderer, scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow * TransitionPercentage);
+            DrawText(renderer, scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow);
         }
-
-        var swapTexture = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swapTexture.Width, swapTexture.Height);
-        renderer.FlushBatches(viewProjection, false);
+        
+        // flush to render target
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
+        var prevClearColor = renderer.SpriteBatch.ColorAttachmentInfo.ClearColor; 
+        renderer.SpriteBatch.ColorAttachmentInfo.ClearColor = Color.Transparent;
+        renderer.FlushBatches(_renderTarget, viewProjection);
+        renderer.SpriteBatch.ColorAttachmentInfo.ClearColor = prevClearColor;
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)
