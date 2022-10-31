@@ -168,8 +168,14 @@ public class Renderer
 
         /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
         
-        SpriteBatch.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection); 
-        TextBatcher.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection, SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
+        SpriteBatch.UpdateBuffers(commandBuffer);
+        TextBatcher.UpdateBuffers(commandBuffer);
+        
+        commandBuffer.BeginRenderPass(SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
+        commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState.AlphaBlend]);
+        SpriteBatch.Flush(commandBuffer, viewProjection); 
+        TextBatcher.Flush(commandBuffer, viewProjection);
+        commandBuffer.EndRenderPass();
     }
 
     public void EndFrame()

@@ -11,13 +11,15 @@ public enum FontType
 
 public class FontData
 {
+    public FontType Name;
+    
     public TextBatch Batch;
     public Packer Packer;
     public Font Font;
     public Texture Texture;
-    public FontType Name;
     public TextureSamplerBinding Binding;
     public bool HasStarted;
+    
     public Vertex[] Vertices = Array.Empty<Vertex>();
     public uint[] Indices = Array.Empty<uint>();
 }
@@ -152,30 +154,19 @@ public class TextBatcher
         _addCountSinceDraw = 0;
     }
 
-    public void Flush(CommandBuffer commandBuffer, GraphicsPipeline pipeline, Matrix4x4 viewProjection,
-        DepthStencilAttachmentInfo depthStencilAttachmentInfo, ColorAttachmentInfo colorAttachmentInfo)
+    public void UpdateBuffers(CommandBuffer commandBuffer)
     {
-        if (_addCountSinceDraw == 0)
-            return;
-
         foreach (var (key, font) in _fonts)
         {
             if (font.HasStarted)
                 font.Batch.UploadBufferData(commandBuffer);
         }
-
-        var depthAttachInfo = new DepthStencilAttachmentInfo(
-            depthStencilAttachmentInfo.Texture,
-            depthStencilAttachmentInfo.DepthStencilClearValue,
-            LoadOp.Load,
-            StoreOp.Store,
-            LoadOp.Load,
-            StoreOp.Store
-        );
-        var colorAttachInfo = new ColorAttachmentInfo(colorAttachmentInfo.Texture, LoadOp.Load);
-        commandBuffer.BeginRenderPass(depthAttachInfo, colorAttachInfo);
-
-        commandBuffer.BindGraphicsPipeline(pipeline);
+    }
+    
+    public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
+    {
+        if (_addCountSinceDraw == 0)
+            return;
 
         DrawCalls = 0;
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
@@ -200,9 +191,6 @@ public class TextBatcher
             font.HasStarted = false;
             DrawCalls++;
         }
-
-        commandBuffer.EndRenderPass();
-
         _addCountSinceDraw = 0;
     }
 }

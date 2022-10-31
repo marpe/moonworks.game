@@ -164,18 +164,15 @@ public class SpriteBatch
         return view * projection;
     }
 
-    public void Flush(CommandBuffer commandBuffer, GraphicsPipeline pipeline, Matrix4x4 viewProjection)
+    public void UpdateBuffers(CommandBuffer commandBuffer)
+    {
+        commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
+        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
+    }
+
+    public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
         DrawCalls = 0;
-
-        var batchSize = _numSprites;
-
-        commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, batchSize * 6);
-        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, batchSize * 4);
-
-        commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
-
-        commandBuffer.BindGraphicsPipeline(pipeline);
 
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 
@@ -184,7 +181,7 @@ public class SpriteBatch
 
         var currSprite = _spriteInfo[0];
         var offset = 0;
-        for (var i = 1; i < batchSize; i += 1)
+        for (var i = 1; i < _numSprites; i += 1)
         {
             var spriteInfo = _spriteInfo[i];
 
@@ -208,13 +205,12 @@ public class SpriteBatch
         commandBuffer.DrawIndexedPrimitives(
             (uint)(offset * 4),
             0u,
-            (uint)((batchSize - offset) * 2),
+            (uint)((_numSprites - offset) * 2),
             vertexParamOffset,
             0u
         );
         DrawCalls++;
 
-        commandBuffer.EndRenderPass();
         _numSprites = 0;
     }
 
