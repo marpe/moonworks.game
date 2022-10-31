@@ -160,9 +160,9 @@ public class Renderer
         DrawText(fontType, text, pos.X, pos.Y, 0, color);
     }
 
-    public void DrawBMText(ReadOnlySpan<char> text, Vector2 position, Color color)
+    public void DrawBMText(ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
-        BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, 0);
+        BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
     }
 
     public void BeginRenderPass(Matrix4x4 viewProjection, bool clear = true)

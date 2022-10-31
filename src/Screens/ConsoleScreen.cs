@@ -54,6 +54,9 @@ public class ConsoleScreen : IGameScreen
     [CVar("con.debug", "Show console debug info")]
     public static bool ShowDebug;
 
+    [CVar("con.bmfont", "Use BMFont to render console")]
+    public static bool UseBMFont;
+
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
@@ -416,13 +419,12 @@ public class ConsoleScreen : IGameScreen
         {
             var bottomRight = new Vector2(backgroundRect.Width, backgroundRect.Height);
             var scrollIndicatorPosition = bottomRight - new Vector2(CharSize.Y, ConsoleSettings.HorizontalPadding);
+            var color = GetColor(ConsoleSettings.ScrollIndicatorColor);
 
-            renderer.DrawText(
-                ConsoleSettings.ScrollIndicatorChar,
-                scrollIndicatorPosition,
-                0,
-                GetColor(ConsoleSettings.ScrollIndicatorColor)
-            );
+            if(UseBMFont)
+                renderer.DrawBMText(ConsoleSettings.ScrollIndicatorChar, scrollIndicatorPosition, 0, color);
+            else
+                renderer.DrawText(ConsoleSettings.ScrollIndicatorChar, scrollIndicatorPosition, 0, color);
         }
 
         var displayPosition = new Vector2(
@@ -460,18 +462,11 @@ public class ConsoleScreen : IGameScreen
                     continue;
                 var charColor = GetColor(color);
                 var position = displayPosition + new Vector2(CharSize.X * j, -CharSize.Y * i);
-                // var offset = Font.DrawText(batcher, c, position, charColor);
                 tmpArr[0] = c;
-                renderer.DrawBMText(
-                    tmpArr,
-                    position,
-                    charColor
-                );
-                /*renderer.DrawText(
-                    tmpArr,
-                    position,
-                    charColor
-                );*/
+                if(UseBMFont)
+                    renderer.DrawBMText(tmpArr, position, 0, charColor);
+                else
+                    renderer.DrawText(tmpArr, position, charColor);
                 _drawCalls++;
             }
         }
@@ -493,7 +488,10 @@ public class ConsoleScreen : IGameScreen
             );
 
             renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
-            renderer.DrawText(scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow * TransitionPercentage);
+            if(UseBMFont)
+                renderer.DrawBMText(tmpArr, scrollLinesPos, -2f, Color.Yellow * TransitionPercentage);
+            else
+                renderer.DrawText(scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow * TransitionPercentage);
         }
 
         var swapTexture = renderer.SwapTexture;
@@ -521,11 +519,12 @@ public class ConsoleScreen : IGameScreen
 
         if (0 <= inputLineIndicatorPosition.Y && inputLineIndicatorPosition.Y <= backgroundRect.Bottom)
         {
-            renderer.DrawText(
-                ConsoleSettings.InputLineChar,
-                inputLineIndicatorPosition,
-                GetColor(ConsoleSettings.InputLineCharColor)
-            );
+            var color = GetColor(ConsoleSettings.InputLineCharColor);
+            
+            if(UseBMFont)
+                renderer.DrawBMText(ConsoleSettings.InputLineChar, inputLineIndicatorPosition, 0, color);
+            else
+                renderer.DrawText(ConsoleSettings.InputLineChar, inputLineIndicatorPosition, color);
         }
 
         if (0 <= displayPosition.Y && displayPosition.Y <= backgroundRect.Bottom)
@@ -543,11 +542,11 @@ public class ConsoleScreen : IGameScreen
                 var y = i / _inputField.MaxWidth;
 
                 tmpArr[0] = _inputField.Buffer[i];
-                renderer.DrawText(
-                    tmpArr,
-                    inputPosition + new Vector2(x, y) * CharSize.ToVec2(),
-                    inputColor
-                );
+
+                if(UseBMFont)
+                    renderer.DrawBMText(tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), 0, inputColor);
+                else
+                    renderer.DrawText(tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), inputColor);
             }
 
             // Draw caret
@@ -560,11 +559,11 @@ public class ConsoleScreen : IGameScreen
             var blinkDelay = 1.5f;
             if (_caretBlinkTimer >= blinkDelay)
                 color = Color.Lerp(color, Color.Transparent, MathF.Sin(ConsoleSettings.CaretBlinkSpeed * (_caretBlinkTimer - blinkDelay)));
-            renderer.DrawText(
-                ConsoleSettings.CaretChar,
-                caretPosition,
-                color
-            );
+            
+            if(UseBMFont)
+                renderer.DrawBMText(ConsoleSettings.CaretChar, caretPosition, 0, color);
+            else
+                renderer.DrawText(ConsoleSettings.CaretChar, caretPosition, color);
         }
     }
 }
