@@ -1,18 +1,6 @@
-﻿using MyGame.Utils;
-using Buffer = MoonWorks.Graphics.Buffer;
+﻿using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame.Graphics;
-
-public enum BlendState
-{
-    Additive,
-    AlphaBlend,
-    NonPremultiplied,
-    Opaque,
-    None,
-    Disable,
-    Custom
-}
 
 public class SpriteBatch
 {
@@ -25,11 +13,6 @@ public class SpriteBatch
     private TextureSamplerBinding[] _spriteInfo;
     private uint _numSprites = 0;
     private readonly GraphicsDevice _device;
-    public BlendState BlendState = BlendState.AlphaBlend;
-
-    public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
-    public ColorAttachmentInfo ColorAttachmentInfo;
-    public Texture DepthTexture;
     public uint DrawCalls { get; private set; }
 
     public SpriteBatch(GraphicsDevice device)
@@ -41,31 +24,12 @@ public class SpriteBatch
         _vertexBuffer = Buffer.Create<Position3DTextureColorVertex>(device, BufferUsageFlags.Vertex, (uint)_vertices.Length);
         _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
         _indexBuffer = Buffer.Create<uint>(device, BufferUsageFlags.Index, (uint)_indices.Length);
-
-        DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
-        {
-            DepthStencilClearValue = new DepthStencilValue(0, 0),
-            Texture = DepthTexture,
-            LoadOp = LoadOp.Clear,
-            StoreOp = StoreOp.Store,
-            StencilLoadOp = LoadOp.Clear,
-            StencilStoreOp = StoreOp.Store
-        };
-        ColorAttachmentInfo = new ColorAttachmentInfo()
-        {
-            ClearColor = Color.CornflowerBlue,
-            LoadOp = LoadOp.Clear,
-        };
     }
 
     public void Unload()
     {
         _vertexBuffer.Dispose();
         _indexBuffer.Dispose();
-        DepthTexture.Dispose();
-        DepthStencilAttachmentInfo.Texture.Dispose();
-        ColorAttachmentInfo.Texture.Dispose();
     }
 
     public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler)

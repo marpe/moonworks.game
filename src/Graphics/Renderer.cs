@@ -3,6 +3,17 @@ using MyGame.Utils;
 
 namespace MyGame.Graphics;
 
+public enum BlendState
+{
+    Additive,
+    AlphaBlend,
+    NonPremultiplied,
+    Opaque,
+    None,
+    Disable,
+    Custom
+}
+
 public class Renderer
 {
     public static Sampler PointClamp = null!;
@@ -10,12 +21,12 @@ public class Renderer
     public readonly SpriteBatch SpriteBatch;
     public readonly TextBatcher TextBatcher;
 
-    public BlendState BlendState
-    {
-        get => SpriteBatch.BlendState;
-        set => SpriteBatch.BlendState = value;
-    }
-
+    public BlendState BlendState = BlendState.AlphaBlend;
+    
+    public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
+    public ColorAttachmentInfo ColorAttachmentInfo;
+    public Texture DepthTexture;
+    
     private readonly MyGameMain _game;
     private readonly GraphicsDevice _device;
     private readonly Texture _blankTexture;
@@ -76,6 +87,22 @@ public class Renderer
         }
 
         _bmFont = new BMFont(game.GraphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Bmfonts.ConsolasFnt));
+        
+        DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
+        DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
+        {
+            DepthStencilClearValue = new DepthStencilValue(0, 0),
+            Texture = DepthTexture,
+            LoadOp = LoadOp.Clear,
+            StoreOp = StoreOp.Store,
+            StencilLoadOp = LoadOp.Clear,
+            StencilStoreOp = StoreOp.Store
+        };
+        ColorAttachmentInfo = new ColorAttachmentInfo()
+        {
+            ClearColor = Color.CornflowerBlue,
+            LoadOp = LoadOp.Clear,
+        };
     }
 
     public void UpdateCustomBlendPipeline()
@@ -94,8 +121,8 @@ public class Renderer
         }
 
         var windowSize = _game.MainWindow.Size;
-        TextureUtils.EnsureTextureSize(ref SpriteBatch.DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
-        SpriteBatch.DepthStencilAttachmentInfo.Texture = SpriteBatch.DepthTexture;
+        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
+        DepthStencilAttachmentInfo.Texture = DepthTexture;
 
         return true;
     }
@@ -162,17 +189,17 @@ public class Renderer
     {
         var commandBuffer = CommandBuffer;
 
-        SpriteBatch.ColorAttachmentInfo.Texture = renderTarget;
-        SpriteBatch.ColorAttachmentInfo.ClearColor = clearColor;
-        SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
+        ColorAttachmentInfo.Texture = renderTarget;
+        ColorAttachmentInfo.ClearColor = clearColor;
+        ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
         /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
 
         SpriteBatch.UpdateBuffers(commandBuffer);
         TextBatcher.UpdateBuffers(commandBuffer);
 
-        commandBuffer.BeginRenderPass(SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
-        commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState.AlphaBlend]);
+        commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
+        commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
         SpriteBatch.Flush(commandBuffer, viewProjection);
         TextBatcher.Flush(commandBuffer, viewProjection);
         commandBuffer.EndRenderPass();
@@ -199,6 +226,10 @@ public class Renderer
         TextBatcher.Unload();
         SpriteBatch.Unload();
         PointClamp.Dispose();
+        
+        DepthTexture.Dispose();
+        DepthStencilAttachmentInfo.Texture.Dispose();
+        ColorAttachmentInfo.Texture.Dispose();
     }
 
     public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
