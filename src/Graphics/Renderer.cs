@@ -184,16 +184,17 @@ public class Renderer
         _commandBuffer = null;
         _swapTexture?.Dispose();
         _swapTexture = null;
-        _bmFont.Dispose();
     }
 
     public void Unload()
     {
+        _bmFont.Dispose();
+
         for (var i = 0; i < _pipelines.Length; i++)
         {
             _pipelines[i].Dispose();
         }
-        
+
         _blankTexture.Dispose();
         TextBatcher.Unload();
         SpriteBatch.Unload();

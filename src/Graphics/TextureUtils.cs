@@ -1,4 +1,6 @@
-﻿namespace MyGame.Graphics;
+﻿using System.Runtime.InteropServices;
+
+namespace MyGame.Graphics;
 
 public static class TextureUtils
 {
@@ -11,12 +13,12 @@ public static class TextureUtils
         texture = Texture.CreateTexture2D(device, width, height, texture.Format, texture.UsageFlags);
     }
 
-    public static byte[] ConvertSingleChannelTextureToRGBA(GraphicsDevice device, Texture texture)
+    public static Span<byte> ConvertSingleChannelTextureToRGBA(GraphicsDevice device, Texture texture)
     {
         if (texture.Format != TextureFormat.R8)
             throw new InvalidOperationException("Expected texture format to be R8");
 
-        var pixelSize = 8u;
+        var pixelSize = (uint)Marshal.SizeOf<Color>();
         var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
@@ -41,36 +43,42 @@ public static class TextureUtils
         return pixels;
     }
 
-    public static unsafe Texture CreateTexture(GraphicsDevice device, uint width, uint height, byte[] pixels)
+    public static unsafe Texture CreateTexture(GraphicsDevice device, uint width, uint height, Span<byte> pixels)
     {
         var texture = Texture.CreateTexture2D(device, width, height,
             TextureFormat.R8G8B8A8,
             TextureUsageFlags.Sampler
         );
-        var cmdBuffer = device.AcquireCommandBuffer();
+        
         fixed (byte* p = pixels)
         {
-            cmdBuffer.SetTextureData(texture, (IntPtr)p, (uint)pixels.Length);
-            device.Submit(cmdBuffer);
+            var commandBuffer = device.AcquireCommandBuffer();
+            commandBuffer.SetTextureData(texture, (IntPtr)p, (uint)pixels.Length);
+            device.Submit(commandBuffer);
+            device.Wait();
         }
 
         return texture;
     }
 
-    public static Texture PremultiplyAlpha(GraphicsDevice device, Texture tex)
+    public static Texture PremultiplyAlpha(GraphicsDevice device, Texture texture)
     {
+        var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
+        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * bytesPerPixel);
+        
         var commandBuffer = device.AcquireCommandBuffer();
-        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, tex.Width * tex.Height * 32);
-        commandBuffer.CopyTextureToBuffer(tex, buffer);
+        commandBuffer.CopyTextureToBuffer(texture, buffer);
         device.Submit(commandBuffer);
         device.Wait();
         
         var pixels = new byte[buffer.Size];
         buffer.GetData(pixels, (uint)pixels.Length);
-        
+
         PremultiplyAlpha(pixels);
         
-        return CreateTexture(device, tex.Width, tex.Height, pixels);
+        var newTexture = CreateTexture(device, texture.Width, texture.Height, pixels);
+
+        return newTexture;
     }
 
     public static void PremultiplyAlpha(Span<byte> pixels)
@@ -80,21 +88,25 @@ public static class TextureUtils
             var alpha = pixels[j + 3];
             if (alpha == 255)
                 continue;
-                
-            pixels[j + 0] = (byte)(pixels[j + 0] * alpha / 255f);
-            pixels[j + 1] = (byte)(pixels[j + 1] * alpha / 255f);
-            pixels[j + 2] = (byte)(pixels[j + 2] * alpha / 255f);
+            var a = (alpha / 255f);
+            pixels[j + 0] = (byte)(pixels[j + 0] * a);
+            pixels[j + 1] = (byte)(pixels[j + 1] * a);
+            pixels[j + 2] = (byte)(pixels[j + 2] * a);
         }
     }
 
-    public static Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)
+    public static unsafe Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)
     {
         var texture = Texture.CreateTexture2D(device, 1, 1, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
-        var command = device.AcquireCommandBuffer();
         Span<Color> data = new Color[width * height];
         data.Fill(color);
-        command.SetTextureData(texture, data.ToArray());
-        device.Submit(command);
+        fixed (Color* dataPtr = data)
+        {
+            var command = device.AcquireCommandBuffer();
+            var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
+            command.SetTextureData(texture, (IntPtr)dataPtr, width * height * bytesPerPixel);
+            device.Submit(command);    
+        }
         return texture;
     }
     
@@ -105,6 +117,7 @@ public static class TextureUtils
         var commandBuffer = device.AcquireCommandBuffer();
         var texture = Texture.LoadPNG(device, commandBuffer, path);
         device.Submit(commandBuffer);
+        device.Wait();
         return texture;
     }
     

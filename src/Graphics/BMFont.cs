@@ -21,7 +21,7 @@ public class BMFont : IDisposable
         Font = BitmapFont.LoadXml(reader);
         var directoryName = Path.GetDirectoryName(filename);
         Textures = new Texture[Font.Pages.Length];
-
+        
         for (var i = 0; i < Textures.Length; i++)
         {
             var path = Path.Combine(directoryName ?? "", Font.Pages[i].Filename);

@@ -70,6 +70,9 @@ public class SpriteBatch
 
     public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler)
     {
+        if (sprite.Texture.IsDisposed)
+            throw new ObjectDisposedException(nameof(sprite.Texture));
+        
         if (_numSprites == _spriteInfo.Length)
         {
             var maxNumSprites = (int)(_numSprites + 2048);
