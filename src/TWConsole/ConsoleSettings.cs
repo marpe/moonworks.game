@@ -40,4 +40,13 @@ public static class ConsoleSettings
 
     [CVar("con.speed", "Config transition duration in seconds")]
     public static float TransitionDuration = 0.1f;
+    
+    [CVar("con.debug", "Show console debug info")]
+    public static bool ShowDebug;
+
+    [CVar("con.bmfont", "Use BMFont to render console")]
+    public static bool UseBMFont;
+    
+    [CVar("con.render_rate", "Controls the console render rate (fps)")]
+    public static float RenderRatePerSecond = 120f;
 }

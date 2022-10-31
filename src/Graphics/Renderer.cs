@@ -56,6 +56,7 @@ public class Renderer
     };
 
     private readonly BMFont _bmFont;
+    public Color DefaultClearColor = Color.CornflowerBlue;
 
     public Renderer(MyGameMain game)
     {
@@ -180,18 +181,13 @@ public class Renderer
         BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
     }
 
-    public void FlushBatches(Matrix4x4 viewProjection, Color clearColor, bool clear = true)
-    {
-        FlushBatches(SwapTexture, viewProjection, clearColor, clear);
-    }
-
-    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color clearColor, bool clear = true)
+    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
 
         ColorAttachmentInfo.Texture = renderTarget;
-        ColorAttachmentInfo.ClearColor = clearColor;
-        ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
+        ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
+        ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
 
         /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
 

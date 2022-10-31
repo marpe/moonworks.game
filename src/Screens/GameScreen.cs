@@ -151,6 +151,6 @@ public class GameScreen
         renderer.DrawText(FontType.Roboto, "Hello again!", new Vector2(150, 150), Color.White);
 
         _camera.Size = _game.MainWindow.Size;
-        renderer.FlushBatches(_camera.ViewProjectionMatrix, Color.CornflowerBlue);
+        renderer.FlushBatches(renderer.SwapTexture, _camera.ViewProjectionMatrix, renderer.DefaultClearColor);
     }
 }

@@ -34,11 +34,11 @@ public class ConsoleScreen
 
     private TWConsole.TWConsole TwConsole => Shared.Console;
 
-    private Rectangle backgroundRect;
-    private readonly List<string> autoCompleteHits = new();
-    private int autoCompleteIndex = -1;
-    private int commandHistoryIndex = -1;
-    private char[] tmpArr = new char[1];
+    private Rectangle _backgroundRect;
+    private readonly List<string> _autoCompleteHits = new();
+    private int _autoCompleteIndex = -1;
+    private int _commandHistoryIndex = -1;
+    private char[] _tmpArr = new char[1];
     private int _charsDrawn;
     private float _caretBlinkTimer;
 
@@ -46,21 +46,14 @@ public class ConsoleScreen
 
     public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
 
-    private float TransitionPercentage;
+    private float _transitionPercentage;
 
     private InputField _inputField = new(1024, TWConsole.TWConsole.BUFFER_WIDTH);
     private readonly MyGameMain _game;
-    
-    [CVar("con.debug", "Show console debug info")]
-    public static bool ShowDebug;
-
-    [CVar("con.bmfont", "Use BMFont to render console")]
-    public static bool UseBMFont;
 
     private Texture _renderTarget;
 
     private float _lastRenderTime;
-    private float _updateRate = 1 / 120f;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -126,14 +119,14 @@ public class ConsoleScreen
         var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
         if (ScreenState == ScreenState.TransitionOn)
         {
-            TransitionPercentage = MathF.Clamp01(TransitionPercentage + deltaSeconds * speed);
-            if (TransitionPercentage >= 1.0f)
+            _transitionPercentage = MathF.Clamp01(_transitionPercentage + deltaSeconds * speed);
+            if (_transitionPercentage >= 1.0f)
                 ScreenState = ScreenState.Active;
         }
         else if (ScreenState == ScreenState.TransitionOff)
         {
-            TransitionPercentage = MathF.Clamp01(TransitionPercentage - deltaSeconds * speed);
-            if (TransitionPercentage <= 0)
+            _transitionPercentage = MathF.Clamp01(_transitionPercentage - deltaSeconds * speed);
+            if (_transitionPercentage <= 0)
                 ScreenState = ScreenState.Hidden;
         }
     }
@@ -175,7 +168,7 @@ public class ConsoleScreen
     {
         var trimmedInput = _inputField.GetBuffer();
         TwConsole.Execute(trimmedInput);
-        commandHistoryIndex = -1;
+        _commandHistoryIndex = -1;
         EndAutocomplete();
         _inputField.ClearInput();
     }
@@ -201,15 +194,15 @@ public class ConsoleScreen
 
             if (!input.IsAnyKeyDown(_upAndDownArrows))
             {
-                commandHistoryIndex = -1;
+                _commandHistoryIndex = -1;
             }
         }
 
         if (input.IsKeyPressed(KeyCode.Tab, true))
         {
-            if (autoCompleteIndex == -1) // new auto complete
+            if (_autoCompleteIndex == -1) // new auto complete
             {
-                autoCompleteHits.Clear();
+                _autoCompleteHits.Clear();
 
                 if (_inputField.Length > 0)
                 {
@@ -220,37 +213,37 @@ public class ConsoleScreen
                             if (key[i] != _inputField.Buffer[i])
                                 break;
                             if (i == _inputField.Length - 1)
-                                autoCompleteHits.Add(key);
+                                _autoCompleteHits.Add(key);
                         }
                     }
 
-                    TwConsole.Print($"{autoCompleteHits.Count} matches:\n{string.Join("\n", autoCompleteHits)}");
+                    TwConsole.Print($"{_autoCompleteHits.Count} matches:\n{string.Join("\n", _autoCompleteHits)}");
                 }
             }
 
-            if (autoCompleteHits.Count == 0)
+            if (_autoCompleteHits.Count == 0)
             {
                 EndAutocomplete();
             }
-            else if (autoCompleteHits.Count == 1)
+            else if (_autoCompleteHits.Count == 1)
             {
-                _inputField.SetInput(autoCompleteHits[0]);
+                _inputField.SetInput(_autoCompleteHits[0]);
             }
             else
             {
                 var direction = input.IsKeyDown(KeyCode.LeftShift) ? -1 : 1;
-                autoCompleteIndex += direction;
+                _autoCompleteIndex += direction;
 
-                if (autoCompleteIndex < 0)
+                if (_autoCompleteIndex < 0)
                 {
-                    autoCompleteIndex = autoCompleteHits.Count - 1;
+                    _autoCompleteIndex = _autoCompleteHits.Count - 1;
                 }
-                else if (autoCompleteIndex >= autoCompleteHits.Count)
+                else if (_autoCompleteIndex >= _autoCompleteHits.Count)
                 {
-                    autoCompleteIndex = 0;
+                    _autoCompleteIndex = 0;
                 }
 
-                _inputField.SetInput(autoCompleteHits[autoCompleteIndex]);
+                _inputField.SetInput(_autoCompleteHits[_autoCompleteIndex]);
             }
         }
         else if (input.IsKeyPressed(KeyCode.Left, true))
@@ -263,29 +256,29 @@ public class ConsoleScreen
         }
         else if (input.IsKeyPressed(KeyCode.Up, true))
         {
-            commandHistoryIndex++;
-            if (commandHistoryIndex > TwConsole.CommandHistory.Count - 1)
+            _commandHistoryIndex++;
+            if (_commandHistoryIndex > TwConsole.CommandHistory.Count - 1)
             {
-                commandHistoryIndex = TwConsole.CommandHistory.Count - 1;
+                _commandHistoryIndex = TwConsole.CommandHistory.Count - 1;
             }
 
-            if (commandHistoryIndex != -1)
+            if (_commandHistoryIndex != -1)
             {
-                _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - commandHistoryIndex]);
+                _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - _commandHistoryIndex]);
             }
         }
         else if (input.IsKeyPressed(KeyCode.Down, true))
         {
-            commandHistoryIndex--;
-            if (commandHistoryIndex <= -1)
+            _commandHistoryIndex--;
+            if (_commandHistoryIndex <= -1)
             {
-                commandHistoryIndex = -1;
+                _commandHistoryIndex = -1;
                 _inputField.ClearInput();
             }
 
-            if (commandHistoryIndex != -1)
+            if (_commandHistoryIndex != -1)
             {
-                _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - commandHistoryIndex]);
+                _inputField.SetInput(TwConsole.CommandHistory[TwConsole.CommandHistory.Count - 1 - _commandHistoryIndex]);
             }
         }
         else if (input.IsKeyPressed(KeyCode.PageDown, true))
@@ -375,7 +368,7 @@ public class ConsoleScreen
 
     private void EndAutocomplete()
     {
-        autoCompleteIndex = -1;
+        _autoCompleteIndex = -1;
     }
     
     private Color GetColor(int colorIndex)
@@ -399,7 +392,7 @@ public class ConsoleScreen
 
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
-        if(UseBMFont)
+        if(ConsoleSettings.UseBMFont)
             renderer.DrawBMText(text, position, depth, color);
         else
             renderer.DrawText(text, position, depth, color);
@@ -410,18 +403,19 @@ public class ConsoleScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        if (_game.TotalElapsedTime - _lastRenderTime >= _updateRate)
+        var _frameTime = 1.0f / ConsoleSettings.RenderRatePerSecond;
+        if (_game.TotalElapsedTime - _lastRenderTime >= _frameTime)
         {
             DrawInternal(renderer);
             _lastRenderTime = _game.TotalElapsedTime;
         }
         
         var sprite = new Sprite(_renderTarget);
-        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * TransitionPercentage, 0);
+        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(viewProjection, Color.CornflowerBlue, false);
+        renderer.FlushBatches(swap, viewProjection);
     }
 
     private void DrawInternal(Renderer renderer)
@@ -429,20 +423,20 @@ public class ConsoleScreen
         var winSize = _game.MainWindow.Size;
         TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)winSize.X, (uint)winSize.Y);
         
-        backgroundRect.X = 0;
+        _backgroundRect.X = 0;
         var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
-        backgroundRect.Y = (int)(height * (TransitionPercentage - 1));
-        backgroundRect.Width = winSize.X;
-        backgroundRect.Height = height;
+        _backgroundRect.Y = (int)(height * (_transitionPercentage - 1));
+        _backgroundRect.Width = winSize.X;
+        _backgroundRect.Height = height;
 
-        renderer.DrawRect(backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
+        renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
 
         // draw line start and end
         var textArea = new Rectangle(
             (int)ConsoleSettings.HorizontalPadding,
-            backgroundRect.Top,
+            _backgroundRect.Top,
             (int)CharSize.X * TwConsole.ScreenBuffer.Width,
-            backgroundRect.Height
+            _backgroundRect.Height
         );
 
         var marginColor = Color.Orange * 0.5f;
@@ -452,7 +446,7 @@ public class ConsoleScreen
         var hasScrolled = TwConsole.ScreenBuffer.DisplayY != TwConsole.ScreenBuffer.CursorY;
         if (hasScrolled)
         {
-            var bottomRight = new Vector2(backgroundRect.Width, backgroundRect.Height);
+            var bottomRight = new Vector2(_backgroundRect.Width, _backgroundRect.Height);
             var scrollIndicatorPosition = bottomRight - new Vector2(CharSize.Y, ConsoleSettings.HorizontalPadding);
             var color = GetColor(ConsoleSettings.ScrollIndicatorColor);
             DrawText(renderer, ConsoleSettings.ScrollIndicatorChar, scrollIndicatorPosition, 0, color);
@@ -460,7 +454,7 @@ public class ConsoleScreen
 
         var displayPosition = new Vector2(
             ConsoleSettings.HorizontalPadding,
-            backgroundRect.Bottom - CharSize.Y
+            _backgroundRect.Bottom - CharSize.Y
         );
 
         var showInput = !hasScrolled;
@@ -470,7 +464,7 @@ public class ConsoleScreen
         // Draw history
         var historyPosition = new Vector2(displayPosition.X, displayPosition.Y);
 
-        var numLinesToDraw = (int)(backgroundRect.Height / CharSize.Y);
+        var numLinesToDraw = (int)(_backgroundRect.Height / CharSize.Y);
 
         _charsDrawn = 0;
 
@@ -493,8 +487,8 @@ public class ConsoleScreen
                     continue;
                 var charColor = GetColor(color);
                 var position = displayPosition + new Vector2(CharSize.X * j, -CharSize.Y * i);
-                tmpArr[0] = c;
-                DrawText(renderer, tmpArr, position, 0, charColor);
+                _tmpArr[0] = c;
+                DrawText(renderer, _tmpArr, position, 0, charColor);
                 _charsDrawn++;
             }
         }
@@ -505,14 +499,14 @@ public class ConsoleScreen
             DrawInput(renderer, textArea, displayPosition);
 
 
-        if (ShowDebug)
+        if (ConsoleSettings.ShowDebug)
         {
-            var drawCalls = UseBMFont ? renderer.SpriteBatch.DrawCalls : renderer.TextBatcher.DrawCalls;
+            var drawCalls = ConsoleSettings.UseBMFont ? renderer.SpriteBatch.DrawCalls : renderer.TextBatcher.DrawCalls;
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) DrawCalls({drawCalls}) DisplayY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY}) Elapsed({elapsedMs}ms)";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
-                backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
+                _backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
                 0
             );
 
@@ -541,18 +535,18 @@ public class ConsoleScreen
         // Draw input line indicator
         var inputLineIndicatorPosition = displayPosition - Vector2.UnitX * CharSize.X;
 
-        if (0 <= inputLineIndicatorPosition.Y && inputLineIndicatorPosition.Y <= backgroundRect.Bottom)
+        if (0 <= inputLineIndicatorPosition.Y && inputLineIndicatorPosition.Y <= _backgroundRect.Bottom)
         {
             var color = GetColor(ConsoleSettings.InputLineCharColor);
             DrawText(renderer, ConsoleSettings.InputLineChar, inputLineIndicatorPosition, 0, color);
         }
 
-        if (0 <= displayPosition.Y && displayPosition.Y <= backgroundRect.Bottom)
+        if (0 <= displayPosition.Y && displayPosition.Y <= _backgroundRect.Bottom)
         {
             var inputColor = GetColor(ConsoleSettings.InputColor);
-            if (autoCompleteIndex != -1)
+            if (_autoCompleteIndex != -1)
                 inputColor = GetColor(ConsoleSettings.AutocompleteSuggestionColor);
-            else if (commandHistoryIndex != -1)
+            else if (_commandHistoryIndex != -1)
                 inputColor = GetColor(ConsoleSettings.ActiveCommandHistoryColor);
 
             var inputPosition = displayPosition;
@@ -561,8 +555,8 @@ public class ConsoleScreen
                 var x = i % _inputField.MaxWidth;
                 var y = i / _inputField.MaxWidth;
 
-                tmpArr[0] = _inputField.Buffer[i];
-                DrawText(renderer, tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), 0, inputColor);
+                _tmpArr[0] = _inputField.Buffer[i];
+                DrawText(renderer, _tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), 0, inputColor);
             }
 
             // Draw caret
