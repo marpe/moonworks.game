@@ -495,9 +495,7 @@ public class ConsoleScreen : IGameScreen
 
         var swapTexture = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swapTexture.Width, swapTexture.Height);
-        renderer.BeginRenderPass(viewProjection, false);
-        // command.SetViewport(new Viewport(backgroundRect.X, backgroundRect.Y, backgroundRect.Width, backgroundRect.Height));
-        renderer.EndRenderPass();
+        renderer.FlushBatches(viewProjection, false);
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)

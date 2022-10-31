@@ -67,7 +67,14 @@ public static class TextureUtils
         
         var pixels = new byte[buffer.Size];
         buffer.GetData(pixels, (uint)pixels.Length);
+        
+        PremultiplyAlpha(pixels);
+        
+        return CreateTexture(device, tex.Width, tex.Height, pixels);
+    }
 
+    public static void PremultiplyAlpha(Span<byte> pixels)
+    {
         for (var j = 0; j < pixels.Length; j += 4)
         {
             var alpha = pixels[j + 3];
@@ -78,8 +85,6 @@ public static class TextureUtils
             pixels[j + 1] = (byte)(pixels[j + 1] * alpha / 255f);
             pixels[j + 2] = (byte)(pixels[j + 2] * alpha / 255f);
         }
-
-        return CreateTexture(device, tex.Width, tex.Height, pixels);
     }
 
     public static Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)

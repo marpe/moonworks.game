@@ -68,6 +68,7 @@ public class TextBatcher
         foreach (var (key, data) in _fonts)
         {
             var pixels = TextureUtils.ConvertSingleChannelTextureToRGBA(device, data.Packer.Texture);
+            TextureUtils.PremultiplyAlpha(pixels);
             var (width, height) = (data.Packer.Texture.Width, data.Packer.Texture.Height);
             var fontTexture = TextureUtils.CreateTexture(device, width, height, pixels);
             _fonts[key].Texture = fontTexture;

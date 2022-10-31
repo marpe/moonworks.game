@@ -121,8 +121,7 @@ public class ImGuiScreen : IGameScreen
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.BeginRenderPass(viewProjection,  false);
-        renderer.EndRenderPass();
+        renderer.FlushBatches(viewProjection,  false);
     }
 
     private void DrawTestWindow(ImGuiWindow window)
@@ -168,13 +167,6 @@ public class ImGuiScreen : IGameScreen
             if (BlendStateEditor.Draw("SpriteBatch", ref _game.Renderer.CustomBlendState))
             {
                 _game.Renderer.UpdateCustomBlendPipeline();
-            }
-
-            ImGui.Separator();
-
-            if (BlendStateEditor.Draw("FontPipe", ref _game.Renderer.FontPipelineBlend))
-            {
-                _game.Renderer.RecreateFontPipeline();
             }
 
             ImGui.Separator();

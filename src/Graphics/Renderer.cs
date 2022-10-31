@@ -16,8 +16,6 @@ public class Renderer
         set => SpriteBatch.BlendState = value;
     }
 
-    private GraphicsPipeline _fontPipeline;
-
     private readonly MyGameMain _game;
     private readonly GraphicsDevice _device;
     private readonly Texture _blankTexture;
@@ -33,8 +31,6 @@ public class Renderer
 
     public Texture SwapTexture =>
         _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
-
-    public ColorAttachmentBlendState FontPipelineBlend = ColorAttachmentBlendState.NonPremultiplied;
 
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
     {
@@ -61,8 +57,6 @@ public class Renderer
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _blankSprite = new Sprite(_blankTexture);
 
-        _fontPipeline = CreateGraphicsPipeline(_device, FontPipelineBlend);
-
         var blendStates = Enum.GetValues<BlendState>();
         _pipelines = new GraphicsPipeline[blendStates.Length];
         for (var i = 0; i < blendStates.Length; i++)
@@ -87,12 +81,6 @@ public class Renderer
     public void UpdateCustomBlendPipeline()
     {
         _pipelines[(int)BlendState.Custom] = CreateGraphicsPipeline(_device, CustomBlendState);
-    }
-
-    public void RecreateFontPipeline()
-    {
-        _fontPipeline.Dispose();
-        _fontPipeline = CreateGraphicsPipeline(_device, FontPipelineBlend);
     }
 
     public bool BeginFrame()
@@ -165,7 +153,7 @@ public class Renderer
         BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
     }
 
-    public void BeginRenderPass(Matrix4x4 viewProjection, bool clear = true)
+    public void FlushBatches(Matrix4x4 viewProjection, bool clear = true)
     {
         var commandBuffer = CommandBuffer;
 
@@ -173,11 +161,7 @@ public class Renderer
         SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
         SpriteBatch.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection); 
-        TextBatcher.Flush(commandBuffer, _fontPipeline, viewProjection, SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
-    }
-
-    public void EndRenderPass()
-    {
+        TextBatcher.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection, SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
     }
 
     public void EndFrame()
