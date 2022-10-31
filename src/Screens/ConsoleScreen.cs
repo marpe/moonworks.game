@@ -13,7 +13,7 @@ public enum ScreenState
     Hidden,
 }
 
-public class ConsoleScreen : IGameScreen
+public class ConsoleScreen
 {
     public bool IsHidden
     {

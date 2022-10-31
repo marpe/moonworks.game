@@ -3,13 +3,7 @@ using MyGame.Graphics;
 
 namespace MyGame.Screens;
 
-public interface IGameScreen
-{
-    void Update(float deltaSeconds);
-    void Draw(Renderer renderer);
-}
-
-public class GameScreen : IGameScreen
+public class GameScreen
 {
     private Sprite? _spriteRenderer;
     private Sprite? _backgroundSprite;
@@ -63,28 +57,18 @@ public class GameScreen : IGameScreen
         _backgroundSprite?.Texture.Dispose();
     }
 
-    public void Update(float deltaSeconds)
+    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
         var input = _game.InputHandler;
-        if (input.IsAnyModifierKeyDown())
-            return;
 
-        if (input.IsKeyPressed(KeyCode.F1))
+        if (allowKeyboardInput && input.IsKeyPressed(KeyCode.F1))
         {
             _camera.Use3D = !_camera.Use3D;
         }
 
         if (_camera.Use3D)
         {
-            if (input.IsKeyPressed(KeyCode.Home))
-            {
-                _cameraRotation = new Vector2(0, MathHelper.Pi);
-                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
-                _camera.Rotation3D = rotation;
-                _camera.Position3D = new Vector3(0, 0, -1000);
-            }
-
-            if (input.IsMouseButtonHeld(MouseButtonCode.Right))
+            if (allowMouseInput && input.IsMouseButtonHeld(MouseButtonCode.Right))
             {
                 var rotationSpeed = 0.1f;
                 _cameraRotation += new Vector2(input.MouseDelta.X, -input.MouseDelta.Y) * rotationSpeed * deltaSeconds;
@@ -92,51 +76,65 @@ public class GameScreen : IGameScreen
                 _camera.Rotation3D = rotation;
             }
 
-            var camera3DSpeed = 750f;
-            var moveDelta = camera3DSpeed * deltaSeconds;
-            if (input.IsKeyDown(KeyCode.W))
+            if (allowKeyboardInput)
             {
-                _camera.Position3D += Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * moveDelta;
-            }
+                if (input.IsKeyPressed(KeyCode.Home))
+                {
+                    _cameraRotation = new Vector2(0, MathHelper.Pi);
+                    var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+                    _camera.Rotation3D = rotation;
+                    _camera.Position3D = new Vector3(0, 0, -1000);
+                }
 
-            if (input.IsKeyDown(KeyCode.S))
-            {
-                _camera.Position3D -= Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * moveDelta;
-            }
+                var camera3DSpeed = 750f;
+                var moveDelta = camera3DSpeed * deltaSeconds;
+                if (input.IsKeyDown(KeyCode.W))
+                {
+                    _camera.Position3D += Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * moveDelta;
+                }
 
-            if (input.IsKeyDown(KeyCode.A))
-            {
-                _camera.Position3D += Vector3.Transform(Vector3.Left, _camera.Rotation3D) * moveDelta;
-            }
+                if (input.IsKeyDown(KeyCode.S))
+                {
+                    _camera.Position3D -= Vector3.Transform(Vector3.Forward, _camera.Rotation3D) * moveDelta;
+                }
 
-            if (input.IsKeyDown(KeyCode.D))
-            {
-                _camera.Position3D += Vector3.Transform(Vector3.Right, _camera.Rotation3D) * moveDelta;
+                if (input.IsKeyDown(KeyCode.A))
+                {
+                    _camera.Position3D += Vector3.Transform(Vector3.Left, _camera.Rotation3D) * moveDelta;
+                }
+
+                if (input.IsKeyDown(KeyCode.D))
+                {
+                    _camera.Position3D += Vector3.Transform(Vector3.Right, _camera.Rotation3D) * moveDelta;
+                }
             }
         }
         else
         {
-            var cameraSpeed = 500f;
-            var moveDelta = cameraSpeed * deltaSeconds;
-
-            if (input.IsKeyDown(KeyCode.W))
+            if (allowKeyboardInput)
             {
-                _camera.Position.Y -= moveDelta;
-            }
+                var cameraSpeed = 500f;
+                var moveDelta = cameraSpeed * deltaSeconds;
 
-            if (input.IsKeyDown(KeyCode.S))
-            {
-                _camera.Position.Y += moveDelta;
-            }
+                if (input.IsKeyDown(KeyCode.W))
+                {
+                    _camera.Position.Y -= moveDelta;
+                }
 
-            if (input.IsKeyDown(KeyCode.A))
-            {
-                _camera.Position.X -= moveDelta;
-            }
+                if (input.IsKeyDown(KeyCode.S))
+                {
+                    _camera.Position.Y += moveDelta;
+                }
 
-            if (input.IsKeyDown(KeyCode.D))
-            {
-                _camera.Position.X += moveDelta;
+                if (input.IsKeyDown(KeyCode.A))
+                {
+                    _camera.Position.X -= moveDelta;
+                }
+
+                if (input.IsKeyDown(KeyCode.D))
+                {
+                    _camera.Position.X += moveDelta;
+                }
             }
         }
     }

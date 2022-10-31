@@ -19,6 +19,52 @@ public class RepeatableKey
     }
 }
 
+public struct InputState
+{
+    public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
+    public bool[] KeyboardState = new bool[232];
+    public bool[] MouseState = new bool[3];
+    public Vector2 GlobalMousePosition = DefaultMousePosition;
+    public int MouseWheelDelta = 0;
+    public char[] TextInput = Array.Empty<char>();
+    public int NumTextInputChars = 0;
+
+    public InputState()
+    {
+    }
+
+    public static void Clear(ref InputState inputState)
+    {
+        inputState.KeyboardState.AsSpan().Fill(false);
+        inputState.MouseState.AsSpan().Fill(false);
+        inputState.GlobalMousePosition = DefaultMousePosition;
+        inputState.MouseWheelDelta = 0;
+        inputState.TextInput.AsSpan().Fill('\0');
+        inputState.NumTextInputChars = 0;
+    }
+    
+    public static bool IsKeyDown(in InputState inpuState, KeyCode keyCode)
+    {
+        return inpuState.KeyboardState[(int)keyCode];
+    }
+
+    public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
+    {
+        for (var i = 0; i < keyCodes.Length; i++)
+        {
+            if (inputState.KeyboardState[(int)keyCodes[i]])
+                return true;
+        }
+
+        return false;
+    }
+
+    public static bool IsMouseButtonDown(in InputState inputState, MouseButtonCode mouseButton)
+    {
+        return inputState.MouseState[(int)mouseButton];
+    }
+}
+
 public class InputHandler
 {
     /// <summary>
@@ -135,7 +181,7 @@ public class InputHandler
 
         return isPressed;
     }
-    
+
     public bool IsAnyKeyDown(ReadOnlySpan<KeyCode> keyCodes)
     {
         return _inputs.Keyboard.IsAnyKeyDown(keyCodes);
@@ -144,6 +190,17 @@ public class InputHandler
     public bool IsKeyDown(KeyCode key)
     {
         return _inputs.Keyboard.IsDown(key);
+    }
+
+    public bool IsMouseButtonDown(MouseButtonCode mouseButton)
+    {
+        return mouseButton switch
+        {
+            MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsDown,
+            MouseButtonCode.Right => _inputs.Mouse.RightButton.IsDown,
+            MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsDown,
+            _ => throw new InvalidOperationException()
+        };
     }
 
     public bool IsMouseButtonHeld(MouseButtonCode mouseButton)

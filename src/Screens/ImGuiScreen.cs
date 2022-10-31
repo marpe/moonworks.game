@@ -1,31 +1,28 @@
 using ImGuiNET;
 using MyGame.Graphics;
 using MyGame.TWImGui;
+using SDL2;
 
 namespace MyGame.Screens;
 
-public class ImGuiScreen : IGameScreen
+public class ImGuiScreen
 {
     internal SortedList<string, ImGuiWindow> Windows = new();
-
-    public ImGuiWindow GetWindow(string windowName) => Windows[windowName];
-
-    public Vector2 MousePositionInWorld;
-    public Vector2 MousePosition;
 
     private readonly ImGuiRenderer _imGuiRenderer;
     private MyGameMain _game;
     private float _alpha = 1.0f;
     private readonly Sampler _sampler;
     private ulong _imGuiDrawCount;
-    private Texture? _lastRender;
     private int _updateFps = 60;
     private float _updateRate = 1 / 60f;
-    private float _lastRenderTime;
+    private float _lastUpdateTime;
     private readonly string[] _blendStateNames;
     private List<ImGuiMenu> _menuItems = new();
     private float _mainMenuPaddingY = 6f;
-    private bool IsHidden;
+    private bool _doRender;
+    private InputState _inputState = new();
+    public bool IsHidden { get; private set; }
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -94,29 +91,75 @@ public class ImGuiScreen : IGameScreen
         ImGui.End();
     }
 
-    public void Update(float deltaSeconds)
+    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
-        if (_game.InputHandler.IsKeyPressed(KeyCode.F2))
+        if (_game.TotalElapsedTime - _lastUpdateTime < _updateRate)
+            return;
+        
+        _lastUpdateTime = _game.TotalElapsedTime;
+
+        var inputHandler = _game.InputHandler;
+
+        if (inputHandler.IsKeyPressed(KeyCode.F2))
         {
             IsHidden = !IsHidden;
         }
+
+        if (IsHidden)
+            allowKeyboardInput = allowMouseInput = false;
+
+        // TODO (marpe): Accumulate input events until next draw?
+        InputState.Clear(ref _inputState);
+
+        if (allowKeyboardInput)
+        {
+            Array.Resize(ref _inputState.TextInput, inputHandler.TextInput.Count);
+            _inputState.NumTextInputChars = inputHandler.TextInput.Count;
+            for (var i = 0; i < _inputState.NumTextInputChars; i++)
+            {
+                _inputState.TextInput[i] = inputHandler.TextInput[i];
+            }
+
+            for (var i = 0; i < _inputState.KeyboardState.Length; i++)
+            {
+                if (Enum.IsDefined((KeyCode)i))
+                    _inputState.KeyboardState[i] = inputHandler.IsKeyDown((KeyCode)i);
+            }
+        }
+
+        if (allowMouseInput)
+        {
+            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
+            _inputState.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
+            _inputState.MouseWheelDelta = inputHandler.MouseWheelDelta;
+            for (var i = 0; i < 3; i++)
+            {
+                _inputState.MouseState[i] = inputHandler.IsMouseButtonDown((MouseButtonCode)i);
+            }
+        }
+
+        _imGuiRenderer.Update(deltaSeconds, _inputState);
+        _doRender = true;
     }
 
     public void Draw(Renderer renderer)
     {
         if (IsHidden)
             return;
-        
-        if (_lastRender == null || _game.TotalElapsedTime - _lastRenderTime >= _updateRate)
+
+        if (_doRender)
         {
             _imGuiDrawCount++;
-            _imGuiRenderer.Begin((float)_game.Timestep.TotalSeconds);
+            _imGuiRenderer.Begin();
             DrawInternal();
-            _lastRender = _imGuiRenderer.End();
-            _lastRenderTime = _game.TotalElapsedTime;
+            _imGuiRenderer.End();
+            _doRender = false;
         }
 
-        var sprite = new Sprite(_lastRender);
+        if (_imGuiDrawCount == 0)
+            return;
+
+        var sprite = new Sprite(_imGuiRenderer.RenderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
 
         var swap = renderer.SwapTexture;
@@ -284,6 +327,25 @@ public class ImGuiScreen : IGameScreen
         var drawList = ImGui.GetBackgroundDrawList();
 
         DrawWindows();
+
+        if (!_game.ConsoleScreen.IsHidden)
+        {
+            /*
+            var isModalOpen = true;
+            ImGui.SetNextWindowViewport(ImGui.GetMainViewport().ID);
+            ImGui.OpenPopup("InputBlocker");
+            var flags = ImGuiWindowFlags.NoInputs |
+                        ImGuiWindowFlags.NoDecoration |
+                        ImGuiWindowFlags.AlwaysAutoResize |
+                        ImGuiWindowFlags.NoSavedSettings |
+                        ImGuiWindowFlags.NoBackground;
+            if (ImGui.BeginPopupModal("InputBlocker", ref isModalOpen, flags))
+            {
+                ImGui.Text("This modal is for blocking input...");
+                ImGui.EndPopup();
+            }
+            */
+        }
     }
 
     private void DrawWindows()

@@ -42,8 +42,6 @@ public class ImGuiRenderer
 
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
 
-    private bool _frameBegun;
-
     private int _textureIdCounter;
     private IntPtr? _fontAtlasTextureId;
 
@@ -58,14 +56,17 @@ public class ImGuiRenderer
     private readonly Dictionary<ImGuiMouseCursor, IntPtr> _mouseCursors = new();
     private ImGuiMouseCursor _lastCursor = ImGuiMouseCursor.None;
 
-    private readonly Game _game;
+    private readonly MyGameMain _game;
     private readonly Sampler _sampler;
     private GraphicsPipeline _pipeline;
 
     private Texture _renderTarget;
+
+    public Texture RenderTarget => _renderTarget;
+
     public ColorAttachmentBlendState BlendState { get; private set; }
 
-    public ImGuiRenderer(Game game)
+    public ImGuiRenderer(MyGameMain game)
     {
         _game = game;
 
@@ -108,9 +109,7 @@ public class ImGuiRenderer
         var windowSize = game.MainWindow.Size;
         _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
-
-        Inputs.TextInput += OnTextInput;
-
+        
         BuildFontAtlas();
 
         SetupMultiViewport(_game.MainWindow);
@@ -323,7 +322,7 @@ public class ImGuiRenderer
     #endregion
 
     #region Dispose
-    
+
     public void Dispose()
     {
         Dispose(true);
@@ -366,8 +365,6 @@ public class ImGuiRenderer
             _indexBuffer?.Dispose();
             _sampler.Dispose();
             _pipeline.Dispose();
-
-            Inputs.TextInput -= OnTextInput;
         }
 
         IsDisposed = true;
@@ -376,52 +373,25 @@ public class ImGuiRenderer
     #endregion
 
     #region Rendering
-    
-    public void Begin(float deltaTimeInSeconds)
+
+    public void Begin()
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        if (_frameBegun)
-            throw new InvalidOperationException("Begin was called twice");
-
-        _frameBegun = true;
-
-        var io = ImGui.GetIO();
-        var mainWindowSize = _game.MainWindow.Size;
-        io.DisplaySize = new Num.Vector2(
-            mainWindowSize.X / _scaleFactor.X,
-            mainWindowSize.Y / _scaleFactor.Y
-        );
-        io.DisplayFramebufferScale = _scaleFactor;
-
-        io.DeltaTime = deltaTimeInSeconds;
-        UpdateInput();
-        UpdateMouseCursor();
-        UpdateMonitors();
         ImGui.NewFrame();
     }
 
-    public Texture End()
+    public void End()
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        if (!_frameBegun)
-            throw new InvalidOperationException("Begin has not been called");
-
-        _frameBegun = false;
         ImGui.Render();
 
         var windowSize = _game.MainWindow.Size;
         // SDL.SDL_Vulkan_GetDrawableSize(_game.MainWindow.Handle, out var width, out var height);
-
-        if (windowSize.X != _renderTarget.Width || windowSize.Y != _renderTarget.Height)
-        {
-            _renderTarget.Dispose();
-            _renderTarget = Texture.CreateTexture2D(_game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
-                TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
-        }
+        TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
 
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
         Render(commandBuffer, _renderTarget, ImGui.GetDrawData());
@@ -453,8 +423,6 @@ public class ImGuiRenderer
                 _game.GraphicsDevice.Submit(windowCommandBuffer);
             }
         }
-
-        return _renderTarget;
     }
 
     private void Render(CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawDataPtr drawData)
@@ -604,9 +572,28 @@ public class ImGuiRenderer
     }
 
     #endregion
-    
+
     #region Update
     
+    public void Update(float deltaTimeInSeconds, in InputState inputState)
+    {
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(ImGuiRenderer));
+
+        var io = ImGui.GetIO();
+        var mainWindowSize = _game.MainWindow.Size;
+        io.DisplaySize = new Num.Vector2(
+            mainWindowSize.X / _scaleFactor.X,
+            mainWindowSize.Y / _scaleFactor.Y
+        );
+        io.DisplayFramebufferScale = _scaleFactor;
+
+        io.DeltaTime = deltaTimeInSeconds;
+        UpdateInput(inputState);
+        UpdateMouseCursor();
+        UpdateMonitors();
+    }
+
     private bool HandleWindowEvent(Window window, SDL.SDL_Event evt)
     {
         switch (evt.window.windowEvent)
@@ -652,11 +639,6 @@ public class ImGuiRenderer
         return true;
     }
 
-    private void OnTextInput(char c)
-    {
-        ImGui.GetIO().AddInputCharacter(c);
-    }
-    
     private unsafe void UpdateMonitors()
     {
         var platformIO = ImGui.GetPlatformIO();
@@ -710,7 +692,7 @@ public class ImGuiRenderer
         _lastCursor = cursor;
     }
 
-    private void UpdateInput()
+    private void UpdateInput(in InputState input)
     {
         var io = ImGui.GetIO();
 
@@ -718,40 +700,41 @@ public class ImGuiRenderer
         {
             if (!Enum.IsDefined((KeyCode)i))
                 continue;
-            io.KeysDown[i] = _game.Inputs.Keyboard.IsDown((KeyCode)i);
+            io.KeysDown[i] = InputState.IsKeyDown(input, (KeyCode)i);
         }
 
-        io.KeyShift = _game.Inputs.Keyboard.IsDown(KeyCode.LeftShift) ||
-                      _game.Inputs.Keyboard.IsDown(KeyCode.RightShift);
-        io.KeyCtrl = _game.Inputs.Keyboard.IsDown(KeyCode.LeftControl) ||
-                     _game.Inputs.Keyboard.IsDown(KeyCode.RightControl);
-        io.KeyAlt = _game.Inputs.Keyboard.IsDown(KeyCode.LeftAlt) ||
-                    _game.Inputs.Keyboard.IsDown(KeyCode.RightAlt);
-        io.KeySuper = _game.Inputs.Keyboard.IsDown(KeyCode.LeftMeta) ||
-                      _game.Inputs.Keyboard.IsDown(KeyCode.RightMeta);
+        io.KeyShift = InputState.IsAnyKeyDown(input, InputHandler.ShiftKeys);
+        io.KeyCtrl = InputState.IsAnyKeyDown(input, InputHandler.ControlKeys);
+        io.KeyAlt = InputState.IsAnyKeyDown(input, InputHandler.AltKeys);
+        io.KeySuper = InputState.IsAnyKeyDown(input, InputHandler.MetaKeys);
 
-        SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
-        io.MousePos = new Num.Vector2(globalMouseX, globalMouseY);
+        io.MousePos = new Num.Vector2(input.GlobalMousePosition.X, input.GlobalMousePosition.Y);
         // io.MousePos = new Num.Vector2(_game.Inputs.Mouse.X, _game.Inputs.Mouse.Y);
 
-        io.MouseDown[0] = _game.Inputs.Mouse.LeftButton.IsDown;
-        io.MouseDown[1] = _game.Inputs.Mouse.RightButton.IsDown;
-        io.MouseDown[2] = _game.Inputs.Mouse.MiddleButton.IsDown;
+        io.MouseDown[0] = InputState.IsMouseButtonDown(input, MouseButtonCode.Left);
+        io.MouseDown[1] = InputState.IsMouseButtonDown(input, MouseButtonCode.Right);
+        io.MouseDown[2] = InputState.IsMouseButtonDown(input, MouseButtonCode.Middle);
 
-        io.MouseWheel = _game.Inputs.Mouse.Wheel;
+        io.MouseWheel = input.MouseWheelDelta;
+
+        for (var i = 0; i < input.NumTextInputChars; i++)
+        {
+            var c = input.TextInput[i];
+            io.AddInputCharacter(c);
+        }
     }
 
     #endregion
-    
+
     #region Getters/Setters
-    
+
     public void SetBlendState(ColorAttachmentBlendState blendState)
     {
         _pipeline.Dispose();
         BlendState = blendState;
         _pipeline = SetupPipeline(_game.GraphicsDevice, blendState);
     }
-    
+
     public ImFontPtr GetFont(ImGuiFont font)
     {
         if (IsDisposed)
@@ -759,7 +742,7 @@ public class ImGuiRenderer
 
         return _fonts[font];
     }
-    
+
     public IntPtr BindTexture(Texture texture)
     {
         if (IsDisposed)
@@ -779,7 +762,7 @@ public class ImGuiRenderer
 
         _textures.Remove(textureId);
     }
-    
+
     #endregion
 
     #region PlatformWindowCallbacks

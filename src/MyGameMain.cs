@@ -1,3 +1,4 @@
+using ImGuiNET;
 using MyGame.Graphics;
 using MyGame.Screens;
 using SDL2;
@@ -16,6 +17,8 @@ public class MyGameMain : Game
 
     private ImGuiScreen? _imGuiScreen;
     private readonly ConsoleScreen _consoleScreen;
+    public ConsoleScreen ConsoleScreen => _consoleScreen;
+    
     private readonly GameScreen _gameScreen;
 
     public readonly Renderer Renderer;
@@ -79,11 +82,25 @@ public class MyGameMain : Game
  
         InputHandler.BeginFrame();
         
-        _imGuiScreen?.Update(ElapsedTime);
-
         _consoleScreen.Update(ElapsedTime);
+
+        var allowKeyboardInput = _consoleScreen.IsHidden;
+        var allowMouseInput = _consoleScreen.IsHidden;
         
-        _gameScreen.Update(ElapsedTime);
+        if (_imGuiScreen != null)
+        {
+            _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+            if (!_imGuiScreen.IsHidden)
+            {
+                var io = ImGui.GetIO();
+                if (io.WantCaptureKeyboard)
+                    allowKeyboardInput = false;
+                if (io.WantCaptureMouse)
+                    allowMouseInput = false;
+            }
+        }
+
+        _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
 
         InputHandler.EndFrame();
     }
