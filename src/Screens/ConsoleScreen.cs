@@ -59,15 +59,31 @@ public class ConsoleScreen
     private ulong _drawCountPerSecond;
     private double _nextFPSUpdate;
     private ulong _prevDrawCount;
+    private readonly Color[] _colors;
 
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
-        
+
         var windowSize = game.MainWindow.Size;
-        _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         _stopwatch = Stopwatch.StartNew();
+
+        _colors = new Color[]
+        {
+            ConsoleSettings.Color0,
+            ConsoleSettings.Color1,
+            ConsoleSettings.Color2,
+            ConsoleSettings.Color3,
+            ConsoleSettings.Color4,
+            ConsoleSettings.Color5,
+            ConsoleSettings.Color6,
+            ConsoleSettings.Color7,
+            ConsoleSettings.Color8,
+            ConsoleSettings.Color9,
+        };
     }
 
     public void Unload()
@@ -87,7 +103,7 @@ public class ConsoleScreen
             return;
 
         CheckResize();
-        
+
         _caretBlinkTimer += deltaSeconds;
 
         HandleKeyPressed(inputState);
@@ -377,34 +393,20 @@ public class ConsoleScreen
     {
         _autoCompleteIndex = -1;
     }
-    
+
     private Color GetColor(int colorIndex)
     {
-        var color = colorIndex switch
-        {
-            0 => ConsoleSettings.Color0,
-            1 => ConsoleSettings.Color1,
-            2 => ConsoleSettings.Color2,
-            3 => ConsoleSettings.Color3,
-            4 => ConsoleSettings.Color4,
-            5 => ConsoleSettings.Color5,
-            6 => ConsoleSettings.Color6,
-            7 => ConsoleSettings.Color7,
-            8 => ConsoleSettings.Color8,
-            9 => ConsoleSettings.Color9,
-            _ => Color.White
-        };
-        return color;
+        return _colors[colorIndex];
     }
 
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
-        if(ConsoleSettings.UseBMFont)
+        if (ConsoleSettings.UseBMFont)
             renderer.DrawBMText(text, position, depth, color);
         else
             renderer.DrawText(text, position, depth, color);
     }
-    
+
     public void Draw(Renderer renderer)
     {
         if (ScreenState == ScreenState.Hidden)
@@ -423,7 +425,7 @@ public class ConsoleScreen
             _prevDrawCount = DrawCount;
             _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 5.0;
         }
-        
+
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
 
@@ -436,7 +438,7 @@ public class ConsoleScreen
     {
         var winSize = _game.MainWindow.Size;
         TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)winSize.X, (uint)winSize.Y);
-        
+
         _backgroundRect.X = 0;
         var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
         _backgroundRect.Y = (int)(height * (_transitionPercentage - 1));
@@ -508,7 +510,7 @@ public class ConsoleScreen
         }
 
         var elapsedMs = sw.ElapsedMilliseconds;
-        
+
         if (showInput)
             DrawInput(renderer, textArea, displayPosition);
 
@@ -518,7 +520,7 @@ public class ConsoleScreen
             var drawCalls = ConsoleSettings.UseBMFont ? renderer.SpriteBatch.DrawCalls : renderer.TextBatcher.DrawCalls;
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) " +
-                $"DrawCalls({drawCalls}) "  +
+                $"DrawCalls({drawCalls}) " +
                 $"DisplayY({TwConsole.ScreenBuffer.DisplayY}) " +
                 $"CursorY({TwConsole.ScreenBuffer.CursorY}) " +
                 $"Elapsed({elapsedMs}ms) " +
@@ -532,7 +534,7 @@ public class ConsoleScreen
             renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
             DrawText(renderer, scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow);
         }
-        
+
         // flush to render target
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
         renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
