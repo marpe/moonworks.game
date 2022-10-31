@@ -10,8 +10,8 @@ public struct Kerning : IEquatable<Kerning>
 	/// </summary>
 	public int Amount;
 
-	public readonly char FirstCharacter;
-	public readonly char SecondCharacter;
+	public char FirstCharacter;
+	public char SecondCharacter;
 
 	public Kerning(char firstCharacter, char secondCharacter, int amount)
 	{

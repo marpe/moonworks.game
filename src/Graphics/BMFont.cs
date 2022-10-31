@@ -5,6 +5,7 @@ namespace MyGame.Graphics;
 public class BMFont : IDisposable
 {
     private static Sprite _tempSprite = new();
+    private static Kerning _tempKerning = new();
     private static Matrix3x2 _tempMatrix = Matrix3x2.Identity;
 
     public bool IsDisposed { get; private set; }
@@ -123,10 +124,12 @@ public class BMFont : IDisposable
         mat.M32 = yPosition;
     }
 
-    public int GetKerning(char previous, char current)
+    private int GetKerning(char previous, char current)
     {
-        var key = new Kerning(previous, current, 0);
-        if (!Font.Kernings.TryGetValue(key, out var result))
+        _tempKerning.FirstCharacter = previous;
+        _tempKerning.SecondCharacter = current;
+        _tempKerning.Amount = 0;
+        if (!Font.Kernings.TryGetValue(_tempKerning, out var result))
             return 0;
         return result;
     }

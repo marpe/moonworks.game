@@ -20,14 +20,24 @@ public struct Sprite
 
     public static void GenerateUVs(ref UV uv, in Texture texture, in Rectangle srcRect)
     {
-        var position = new Vector2((float)srcRect.X / texture.Width, (float)srcRect.Y / texture.Height);
-        var dimensions = new Vector2((float)srcRect.Width / texture.Width, (float)srcRect.Height / texture.Height);
+        var posX = (float)srcRect.X / texture.Width;
+        var posY = (float)srcRect.Y / texture.Height;
+
+        var dimX = (float)srcRect.Width / texture.Width;
+        var dimY = (float)srcRect.Height / texture.Height;
+
+        uv.Position.X = posX;
+        uv.Position.Y = posY;
         
-        uv.Position = position;
-        uv.Dimensions = dimensions;
-        uv.TopLeft = uv.Position;
-        uv.TopRight = uv.Position + new Vector2(uv.Dimensions.X, 0);
-        uv.BottomLeft = uv.Position + new Vector2(0, uv.Dimensions.Y);
-        uv.BottomRight = uv.Position + new Vector2(uv.Dimensions.X, uv.Dimensions.Y);
+        uv.Dimensions.X = dimX;
+        uv.Dimensions.Y = dimY;
+        
+        uv.TopLeft.X = uv.TopRight.X = uv.BottomLeft.X = uv.BottomRight.X = uv.Position.X;
+        uv.TopLeft.Y = uv.TopRight.Y = uv.BottomLeft.Y = uv.BottomRight.Y = uv.Position.Y;
+
+        uv.TopRight.X += uv.Dimensions.X;
+        uv.BottomLeft.Y += uv.Dimensions.Y;
+        uv.BottomRight.X += uv.Dimensions.X;
+        uv.BottomRight.Y += uv.Dimensions.Y;
     }
 }

@@ -34,6 +34,7 @@ public class ConsoleScreenBuffer
         _buffer = new short[width * height];
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetChar(int x, int y, out char c, out byte color)
     {
         var line = (_height + y) % _height;
@@ -41,11 +42,13 @@ public class ConsoleScreenBuffer
         Unpack(_buffer[i], out c, out color);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static short Pack(char c, byte color)
     {
         return (short)((color << 8) | c);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void Unpack(short s, out char c, out byte color)
     {
         color = (byte)((s >> 8) & 0xff);
