@@ -540,11 +540,16 @@ public class TWConsole
 		Execute("cfg.save " + kCvarsFilename, false);
 	}
 	
-	[ConsoleHandler("con.fill", "Fill console with crap (for debugging console rendering)")]
+	[ConsoleHandler("con.fill", "Fill console with data (for debugging console rendering)")]
 	private void Fill()
 	{
 		Span<char> tmp = new char[ScreenBuffer.Width * ScreenBuffer.Height];
 		tmp.Fill('X');
+		for (var i = 0; i < tmp.Length - 1; i += Random.Shared.Next(2, 10))
+		{
+			tmp[i] = '^';
+			tmp[i + 1] = (char)('0' + Random.Shared.Next(0, 10));
+		}
 		ScreenBuffer.AddLine(tmp);
 	}
 }

@@ -70,7 +70,7 @@ public class MyGameMain : Game
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
-        if (_stopwatch.Elapsed.TotalSeconds > _nextFPSUpdate)
+        if (_stopwatch.Elapsed.TotalSeconds >= _nextFPSUpdate)
         {
             _updateFps = UpdateCount - _prevUpdateCount;
             _drawFps = DrawCount - _prevDrawCount;

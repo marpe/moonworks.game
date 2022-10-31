@@ -53,7 +53,12 @@ public class ConsoleScreen
 
     private Texture _renderTarget;
 
-    private float _lastRenderTime;
+    private Stopwatch _stopwatch;
+    private ulong DrawCount;
+    private double _nextRenderTime = 0;
+    private ulong _drawCountPerSecond;
+    private double _nextFPSUpdate;
+    private ulong _prevDrawCount;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -61,6 +66,8 @@ public class ConsoleScreen
         
         var windowSize = game.MainWindow.Size;
         _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+
+        _stopwatch = Stopwatch.StartNew();
     }
 
     public void Unload()
@@ -403,11 +410,18 @@ public class ConsoleScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        var _frameTime = 1.0f / ConsoleSettings.RenderRatePerSecond;
-        if (_game.TotalElapsedTime - _lastRenderTime >= _frameTime)
+        if (_stopwatch.Elapsed.TotalSeconds > _nextRenderTime)
         {
+            DrawCount++;
             DrawInternal(renderer);
-            _lastRenderTime = _game.TotalElapsedTime;
+            _nextRenderTime = _stopwatch.Elapsed.TotalSeconds + 1.0 / ConsoleSettings.RenderRatePerSecond;
+        }
+
+        if (_stopwatch.Elapsed.TotalSeconds > _nextFPSUpdate)
+        {
+            _drawCountPerSecond = (ulong)((DrawCount - _prevDrawCount) / 5.0);
+            _prevDrawCount = DrawCount;
+            _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 5.0;
         }
         
         var sprite = new Sprite(_renderTarget);
@@ -503,7 +517,12 @@ public class ConsoleScreen
         {
             var drawCalls = ConsoleSettings.UseBMFont ? renderer.SpriteBatch.DrawCalls : renderer.TextBatcher.DrawCalls;
             var scrolledLinesStr =
-                $"CharsDrawn({_charsDrawn}) DrawCalls({drawCalls}) DisplayY({TwConsole.ScreenBuffer.DisplayY}) CursorY({TwConsole.ScreenBuffer.CursorY}) Elapsed({elapsedMs}ms)";
+                $"CharsDrawn({_charsDrawn}) " +
+                $"DrawCalls({drawCalls}) "  +
+                $"DisplayY({TwConsole.ScreenBuffer.DisplayY}) " +
+                $"CursorY({TwConsole.ScreenBuffer.CursorY}) " +
+                $"Elapsed({elapsedMs}ms) " +
+                $"FPS({_drawCountPerSecond}) ";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
                 _backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
