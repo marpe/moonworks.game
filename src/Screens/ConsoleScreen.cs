@@ -416,7 +416,7 @@ public class ConsoleScreen : IGameScreen
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(viewProjection, false);
+        renderer.FlushBatches(viewProjection, Color.CornflowerBlue, false);
     }
 
     private void DrawInternal(Renderer renderer)
@@ -517,10 +517,7 @@ public class ConsoleScreen : IGameScreen
         
         // flush to render target
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
-        var prevClearColor = renderer.SpriteBatch.ColorAttachmentInfo.ClearColor; 
-        renderer.SpriteBatch.ColorAttachmentInfo.ClearColor = Color.Transparent;
-        renderer.FlushBatches(_renderTarget, viewProjection);
-        renderer.SpriteBatch.ColorAttachmentInfo.ClearColor = prevClearColor;
+        renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)

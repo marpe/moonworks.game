@@ -121,7 +121,7 @@ public class ImGuiScreen : IGameScreen
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(viewProjection, false);
+        renderer.FlushBatches(viewProjection, Color.CornflowerBlue, false);
     }
 
     private void DrawTestWindow(ImGuiWindow window)

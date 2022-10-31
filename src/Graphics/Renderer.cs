@@ -153,18 +153,21 @@ public class Renderer
         BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
     }
 
-    public void FlushBatches(Matrix4x4 viewProjection, bool clear = true)
+    public void FlushBatches(Matrix4x4 viewProjection, Color clearColor, bool clear = true)
     {
-        FlushBatches(SwapTexture, viewProjection, clear);
+        FlushBatches(SwapTexture, viewProjection, clearColor, clear);
     }
 
-    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, bool clear = true)
+    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color clearColor, bool clear = true)
     {
         var commandBuffer = CommandBuffer;
 
         SpriteBatch.ColorAttachmentInfo.Texture = renderTarget;
+        SpriteBatch.ColorAttachmentInfo.ClearColor = clearColor;
         SpriteBatch.ColorAttachmentInfo.LoadOp = clear ? LoadOp.Clear : LoadOp.Load;
 
+        /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
+        
         SpriteBatch.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection); 
         TextBatcher.Flush(commandBuffer, _pipelines[(int)BlendState.AlphaBlend], viewProjection, SpriteBatch.DepthStencilAttachmentInfo, SpriteBatch.ColorAttachmentInfo);
     }

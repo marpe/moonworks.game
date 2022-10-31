@@ -147,6 +147,6 @@ public class GameScreen : IGameScreen
         renderer.DrawText(FontType.Roboto, "Hello again!", new Vector2(150, 150), Color.White);
 
         _camera.Size = _game.MainWindow.Size;
-        renderer.FlushBatches(_camera.ViewProjectionMatrix);
+        renderer.FlushBatches(_camera.ViewProjectionMatrix, Color.CornflowerBlue);
     }
 }
