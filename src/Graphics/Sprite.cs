@@ -2,35 +2,32 @@
 
 public struct Sprite
 {
-    public TexturePage TexturePage { get; }
-    public Texture Texture => TexturePage.Texture;
-    public Rect SliceRect { get; } // the pixel slice on the texture page
-    public Rect FrameRect { get; } // offset and original width to reproduce the transparency
-    public UV UV { get; }
+    public Texture Texture;
+    public Rectangle SrcRect;
+    public UV UV;
 
-    public Sprite(Texture texture)
+    public Sprite(Texture texture) : this(texture, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height))
     {
-        TexturePage = new TexturePage(texture);
-        SliceRect = new Rect(0, 0, (int)texture.Width, (int)texture.Height);
-        FrameRect = SliceRect;
-        UV = new UV(
-            new Vector2((float)SliceRect.X / TexturePage.Width, (float)SliceRect.Y / TexturePage.Height),
-            new Vector2((float)SliceRect.W / TexturePage.Width, (float)SliceRect.H / TexturePage.Height)
-        );
     }
     
-    public Sprite(
-        Texture texture,
-        Rect sliceRect,
-        Rect frameRect
-    )
+    public Sprite(Texture texture, Rectangle srcRect)
     {
-        TexturePage = new TexturePage(texture);
-        SliceRect = sliceRect;
-        FrameRect = frameRect;
-        UV = new UV(
-            new Vector2((float)sliceRect.X / TexturePage.Width, (float)sliceRect.Y / TexturePage.Height),
-            new Vector2((float)sliceRect.W / TexturePage.Width, (float)sliceRect.H / TexturePage.Height)
-        );
+        Texture = texture;
+        SrcRect = srcRect;
+        UV = new UV();
+        GenerateUVs(ref UV, texture, srcRect);
+    }
+
+    public static void GenerateUVs(ref UV uv, in Texture texture, in Rectangle srcRect)
+    {
+        var position = new Vector2((float)srcRect.X / texture.Width, (float)srcRect.Y / texture.Height);
+        var dimensions = new Vector2((float)srcRect.Width / texture.Width, (float)srcRect.Height / texture.Height);
+        
+        uv.Position = position;
+        uv.Dimensions = dimensions;
+        uv.TopLeft = uv.Position;
+        uv.TopRight = uv.Position + new Vector2(uv.Dimensions.X, 0);
+        uv.BottomLeft = uv.Position + new Vector2(0, uv.Dimensions.Y);
+        uv.BottomRight = uv.Position + new Vector2(uv.Dimensions.X, uv.Dimensions.Y);
     }
 }

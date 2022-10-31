@@ -4,6 +4,9 @@ namespace MyGame.Graphics;
 
 public class BMFont : IDisposable
 {
+    private static Sprite _tempSprite = new();
+    private static Matrix3x2 _tempMatrix = Matrix3x2.Identity;
+
     public bool IsDisposed { get; private set; }
 
     public BitmapFont Font;
@@ -17,7 +20,7 @@ public class BMFont : IDisposable
         Font = BitmapFont.LoadXml(reader);
         var directoryName = Path.GetDirectoryName(filename);
         Textures = new Texture[Font.Pages.Length];
-        
+
         var commandBuffer = device.AcquireCommandBuffer();
         for (var i = 0; i < Textures.Length; i++)
         {
@@ -55,12 +58,12 @@ public class BMFont : IDisposable
         Vector2 origin, Vector2 scale, float depth)
     {
         var font = bmFont.Font;
-        
-        var o = Matrix3x2.CreateTranslation(-origin.X, -origin.Y);
+
+        /*var o = Matrix3x2.CreateTranslation(-origin.X, -origin.Y);
         var s = Matrix3x2.CreateScale(scale.X, scale.Y);
         var r = Matrix3x2.CreateRotation(rotation);
         var t = Matrix3x2.CreateTranslation(position.X, position.Y);
-        var transformationMatrix = o * s * r * t; // o * t * r * s;
+        var transformationMatrix = o * s * r * t; // o * t * r * s;*/
 
         var previousCharacter = ' ';
         Character? currentChar = null;
@@ -86,17 +89,17 @@ public class BMFont : IDisposable
 
             currentChar = font.Characters.ContainsKey(c) ? font.Characters[c] : font.DefaultCharacter;
 
-            var currentTransform = Matrix3x2.CreateTranslation(
-                offset.X + currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
-                offset.Y + currentChar.Offset.Y
+            SetTranslationMatrix(
+                ref _tempMatrix,
+                position.X + offset.X + currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
+                position.Y + offset.Y + currentChar.Offset.Y
             );
 
-            var texture = bmFont.Textures[currentChar.TexturePage];
-            var sliceRect = new Rect(currentChar.Bounds.X, currentChar.Bounds.Y, currentChar.Bounds.Width, currentChar.Bounds.Height);
-            var frameRect = new Rect((int)texture.Width, (int)texture.Height);
-            var sprite = new Sprite(texture, sliceRect, frameRect);
+            _tempSprite.Texture = bmFont.Textures[currentChar.TexturePage];
+            _tempSprite.SrcRect = currentChar.Bounds;
+            Sprite.GenerateUVs(ref _tempSprite.UV, _tempSprite.Texture, _tempSprite.SrcRect);
 
-            renderer.DrawSprite(sprite, currentTransform * transformationMatrix, color, depth);
+            renderer.DrawSprite(_tempSprite, _tempMatrix /** transformationMatrix*/, color, depth);
 
             previousCharacter = c;
         }
@@ -107,6 +110,17 @@ public class BMFont : IDisposable
         }
 
         return offset;
+    }
+
+    private static void SetTranslationMatrix(ref Matrix3x2 mat, float xPosition, float yPosition)
+    {
+        mat.M11 = 1.0f;
+        mat.M12 = 0.0f;
+        mat.M21 = 0.0f;
+        mat.M22 = 1.0f;
+
+        mat.M31 = xPosition;
+        mat.M32 = yPosition;
     }
 
     public int GetKerning(char previous, char current)
@@ -143,7 +157,7 @@ public class BMFont : IDisposable
         {
             if (text[i] == '\r')
                 continue;
-            
+
             if (text[i] == '\n')
             {
                 Linefeed();

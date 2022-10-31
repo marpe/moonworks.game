@@ -364,8 +364,8 @@ public class ConsoleScreen : IGameScreen
     {
         autoCompleteIndex = -1;
     }
-
-    public static Color GetColor(int colorIndex, float alpha)
+    
+    private Color GetColor(int colorIndex)
     {
         var color = colorIndex switch
         {
@@ -381,11 +381,8 @@ public class ConsoleScreen : IGameScreen
             9 => ConsoleSettings.Color9,
             _ => Color.White
         };
-
-        return color * alpha;
+        return color;
     }
-
-    private Color GetColor(int colorIndex) => GetColor(colorIndex, TransitionPercentage);
 
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {

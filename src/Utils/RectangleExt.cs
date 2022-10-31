@@ -13,6 +13,11 @@ public static class RectangleExt
         return new Point(rect.X, rect.Y + rect.Height);
     }
     
+    public static Vector2 BottomLeftVec(this Rectangle rect)
+    {
+        return new Vector2(rect.X, rect.Y + rect.Height);
+    }
+    
     public static Point TopRight(this Rectangle rect)
     {
         return new Point(rect.X + rect.Width, rect.Y);

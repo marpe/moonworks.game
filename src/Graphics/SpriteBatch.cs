@@ -1,4 +1,5 @@
-﻿using Buffer = MoonWorks.Graphics.Buffer;
+﻿using MyGame.Utils;
+using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame.Graphics;
 
@@ -66,12 +67,12 @@ public class SpriteBatch
             Logger.LogInfo($"Max number of sprites reached, resizing buffers ({_numSprites} -> {maxNumSprites})");
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
-            
+
             _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
-            
+
             _vertexBuffer.Dispose();
             _vertexBuffer = Buffer.Create<Position3DTextureColorVertex>(_device, BufferUsageFlags.Vertex, (uint)_vertices.Length);
-            
+
             _indexBuffer.Dispose();
             _indexBuffer = Buffer.Create<uint>(_device, BufferUsageFlags.Index, (uint)_indices.Length);
         }
@@ -81,28 +82,69 @@ public class SpriteBatch
 
         var vertexCount = _numSprites * 4;
 
-        var offset = new Vector2(sprite.FrameRect.X, sprite.FrameRect.Y);
+        var offset = Vector2.Zero;
 
-        _vertices[vertexCount].Position = new Vector3(Vector2.Transform(Vector2.Zero - offset, transform), depth);
+        var topLeft = Vector2.Zero;
+        var bottomLeft = new Vector2(0, sprite.SrcRect.Height);
+        var topRight = new Vector2(sprite.SrcRect.Width, 0);
+        var bottomRight = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);
+
+        SubtractVector(ref topLeft, ref offset);
+        SubtractVector(ref bottomLeft, ref offset);
+        SubtractVector(ref topRight, ref offset);
+        SubtractVector(ref bottomRight, ref offset);
+
+        TransformVector(ref topLeft, ref transform);
+        TransformVector(ref bottomLeft, ref transform);
+        TransformVector(ref topRight, ref transform);
+        TransformVector(ref bottomRight, ref transform);
+        
+        /*topLeft = Vector2.Transform(topLeft, transform);
+        bottomLeft = Vector2.Transform(bottomLeft, transform);
+        topRight = Vector2.Transform(topRight, transform);
+        bottomRight = Vector2.Transform(bottomRight, transform);*/
+
+        SetVector(ref _vertices[vertexCount].Position, ref topLeft, depth);
+        // _vertices[vertexCount].Position = new Vector3(topLeft, depth);
         _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
         _vertices[vertexCount].Color = color;
-
-        _vertices[vertexCount + 1].Position =
-            new Vector3(Vector2.Transform(new Vector2(0, sprite.SliceRect.H) - offset, transform), depth);
+        
+        SetVector(ref _vertices[vertexCount + 1].Position, ref bottomLeft, depth);
+        // _vertices[vertexCount + 1].Position = new Vector3(bottomLeft, depth);
         _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
         _vertices[vertexCount + 1].Color = color;
 
-        _vertices[vertexCount + 2].Position =
-            new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, 0) - offset, transform), depth);
+        SetVector(ref _vertices[vertexCount + 2].Position, ref topRight, depth);
+        // _vertices[vertexCount + 2].Position = new Vector3(topRight, depth);
         _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
         _vertices[vertexCount + 2].Color = color;
 
-        _vertices[vertexCount + 3].Position =
-            new Vector3(Vector2.Transform(new Vector2(sprite.SliceRect.W, sprite.SliceRect.H) - offset, transform), depth);
+        SetVector(ref _vertices[vertexCount + 3].Position, ref bottomRight, depth);
+        // _vertices[vertexCount + 3].Position = new Vector3(bottomRight, depth);
         _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
         _vertices[vertexCount + 3].Color = color;
 
         _numSprites += 1;
+    }
+
+    /// Subtract b from a, modifying a
+    private static void SubtractVector(ref Vector2 a, ref Vector2 b)
+    {
+        a.X -= b.X;
+        a.Y -= b.Y;
+    }
+    
+    private static void TransformVector(ref Vector2 vec, ref Matrix3x2 matrix)
+    {
+        vec.X = (vec.X * matrix.M11) + (vec.Y * matrix.M21) + matrix.M31;
+        vec.Y = (vec.X * matrix.M12) + (vec.Y * matrix.M22) + matrix.M32;
+    }
+    
+    private static void SetVector(ref Vector3 dest, ref Vector2 src, float z)
+    {
+        dest.X = src.X;
+        dest.Y = src.Y;
+        dest.Z = z;
     }
 
     public static Matrix4x4 GetViewProjection(int x, int y, uint width, uint height)
@@ -128,7 +170,7 @@ public class SpriteBatch
         DrawCalls = 0;
 
         var batchSize = _numSprites;
-        
+
         commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, batchSize * 6);
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, batchSize * 4);
 
@@ -189,6 +231,7 @@ public class SpriteBatch
             result[i + 4] = j + 1;
             result[i + 5] = j + 3;
         }
+
         return result;
     }
 
