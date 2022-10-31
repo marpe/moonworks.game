@@ -21,6 +21,8 @@ public class FontData
 
 public class TextBatcher
 {
+    public uint DrawCalls { get; private set; }
+
     public FontRange FontRange = new()
     {
         FirstCodepoint = 0x20,
@@ -98,11 +100,21 @@ public class TextBatcher
             if (font.HasStarted)
                 font.Batch.UploadBufferData(commandBuffer);
         }
-        
-        commandBuffer.BeginRenderPass(depthStencilAttachmentInfo, new ColorAttachmentInfo(colorAttachmentInfo.Texture, LoadOp.Load));
+
+        var depthAttachInfo = new DepthStencilAttachmentInfo(
+            depthStencilAttachmentInfo.Texture,
+            depthStencilAttachmentInfo.DepthStencilClearValue,
+            LoadOp.Load,
+            StoreOp.Store,
+            LoadOp.Load,
+            StoreOp.Store
+        );
+        var colorAttachInfo = new ColorAttachmentInfo(colorAttachmentInfo.Texture, LoadOp.Load);
+        commandBuffer.BeginRenderPass(depthAttachInfo, colorAttachInfo);
 
         commandBuffer.BindGraphicsPipeline(pipeline);
-        
+
+        DrawCalls = 0;
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
         var fragmentParamOffset = 0u;
 
@@ -123,6 +135,7 @@ public class TextBatcher
             );
             
             font.HasStarted = false;
+            DrawCalls++;
         }
         
         commandBuffer.EndRenderPass();

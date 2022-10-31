@@ -64,7 +64,7 @@ public class BMFont : IDisposable
 
         var previousCharacter = ' ';
         Character? currentChar = null;
-        var offset = position - origin;
+        var offset = Vector2.Zero;
 
         for (var i = 0; i < text.Length; ++i)
         {
@@ -75,7 +75,7 @@ public class BMFont : IDisposable
 
             if (c == '\n')
             {
-                offset.X = position.X - origin.X;
+                offset.X = 0;
                 offset.Y += font.LineHeight;
                 currentChar = null;
                 continue;
@@ -87,8 +87,8 @@ public class BMFont : IDisposable
             currentChar = font.Characters.ContainsKey(c) ? font.Characters[c] : font.DefaultCharacter;
 
             var currentTransform = Matrix3x2.CreateTranslation(
-                currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
-                currentChar.Offset.Y
+                offset.X + currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
+                offset.Y + currentChar.Offset.Y
             );
 
             var texture = bmFont.Textures[currentChar.TexturePage];
@@ -96,7 +96,7 @@ public class BMFont : IDisposable
             var frameRect = new Rect((int)texture.Width, (int)texture.Height);
             var sprite = new Sprite(texture, sliceRect, frameRect);
 
-            renderer.DrawSprite(sprite, transformationMatrix * currentTransform, color, depth);
+            renderer.DrawSprite(sprite, currentTransform * transformationMatrix, color, depth);
 
             previousCharacter = c;
         }

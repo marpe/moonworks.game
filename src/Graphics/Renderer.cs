@@ -7,8 +7,8 @@ public class Renderer
 {
     public static Sampler PointClamp = null!;
 
-    private readonly SpriteBatch SpriteBatch;
-    private readonly TextBatcher TextBatcher;
+    public readonly SpriteBatch SpriteBatch;
+    public readonly TextBatcher TextBatcher;
 
     public BlendState BlendState
     {
