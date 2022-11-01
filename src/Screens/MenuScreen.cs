@@ -54,7 +54,7 @@ public class MenuScreen
     {
         if (!IsHidden)
         {
-            renderer.DrawRect(new Rectangle(0, 0, (int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height), Color.Black * 0.5f);
+            renderer.DrawRect(new Rectangle(0, 0, (int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height), Color.Black * 0.5f, 0f);
 
             var center = new Vector2(renderer.SwapTexture.Width * 0.5f, renderer.SwapTexture.Height * 0.5f);
             var position = center;
@@ -68,6 +68,10 @@ public class MenuScreen
                 position.Y += lineHeight;
             }
         }
+        
+        /*var swap = renderer.SwapTexture;
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        renderer.FlushBatches(swap, viewProjection);*/
     }
 
     public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)

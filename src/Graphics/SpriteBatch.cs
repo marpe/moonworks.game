@@ -125,7 +125,7 @@ public class SpriteBatch
     public static Matrix4x4 GetViewProjection(int x, int y, uint width, uint height)
     {
         var view = Matrix4x4.CreateLookAt(
-            new Vector3(x, y, 1),
+            new Vector3(x, y, 1000),
             new Vector3(x, y, 0),
             Vector3.Up
         );
