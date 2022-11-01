@@ -35,13 +35,14 @@ public class Renderer
 
     private CommandBuffer? _commandBuffer;
 
-    public CommandBuffer CommandBuffer =>
-        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+    public CommandBuffer CommandBuffer => _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+
+    private Texture? _prevSwapTexture;
+    public Texture PrevSwapTexture => _prevSwapTexture ?? throw new InvalidOperationException("PrevSwapTexture is null");
 
     private Texture? _swapTexture;
 
-    public Texture SwapTexture =>
-        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
+    public Texture SwapTexture => _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
 
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
     {
@@ -205,6 +206,7 @@ public class Renderer
     {
         _device.Submit(CommandBuffer);
         _commandBuffer = null;
+        _prevSwapTexture = _swapTexture;
         _swapTexture = null;
     }
 
@@ -217,6 +219,7 @@ public class Renderer
             _pipelines[i].Dispose();
         }
 
+        _prevSwapTexture?.Dispose();
         _blankTexture.Dispose();
         TextBatcher.Unload();
         SpriteBatch.Unload();

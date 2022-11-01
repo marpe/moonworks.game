@@ -18,7 +18,7 @@ public class MyGameMain : Game
     private ImGuiScreen? _imGuiScreen;
     private readonly ConsoleScreen _consoleScreen;
     public ConsoleScreen ConsoleScreen => _consoleScreen;
-    
+
     private readonly GameScreen _gameScreen;
 
     public readonly Renderer Renderer;
@@ -44,23 +44,17 @@ public class MyGameMain : Game
 
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
-        Task.Run(() =>
-        {
-            Shared.Console.Initialize();
-        });
+        Task.Run(() => { Shared.Console.Initialize(); });
 
         LoadingScreen = new LoadingScreen(this);
         InputHandler = new InputHandler(this);
-        
+
         Renderer = new Renderer(this);
 
         _gameScreen = new GameScreen(this);
         _consoleScreen = new ConsoleScreen(this);
 
-        Task.Run(() =>
-        {
-            _imGuiScreen = new ImGuiScreen(this);
-        });
+        Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
 
         Logger.LogInfo($"Game Loaded in {_stopwatch.ElapsedMilliseconds} ms");
     }
@@ -81,30 +75,37 @@ public class MyGameMain : Game
             _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 1.0;
             SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {_updateFps:0.##}, Draw: {_drawFps:0.##}");
         }
- 
-        InputHandler.BeginFrame();
- 
-        LoadingScreen.Update(ElapsedTime);
-        
-        _consoleScreen.Update(ElapsedTime);
 
-        var allowKeyboardInput = _consoleScreen.IsHidden;
-        var allowMouseInput = _consoleScreen.IsHidden;
-        
-        if (_imGuiScreen != null)
+        InputHandler.BeginFrame();
+
+        LoadingScreen.Update(ElapsedTime);
+
+        var doUpdate = LoadingScreen.State != TransitionState.TransitionOn &&
+                        LoadingScreen.State != TransitionState.Active;
+
+        if (doUpdate)
         {
-            _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
-            if (!_imGuiScreen.IsHidden)
+            _consoleScreen.Update(ElapsedTime);
+
+            var allowKeyboardInput = _consoleScreen.IsHidden;
+            var allowMouseInput = _consoleScreen.IsHidden;
+
+            if (_imGuiScreen != null)
             {
-                var io = ImGui.GetIO();
-                if (io.WantCaptureKeyboard)
-                    allowKeyboardInput = false;
-                if (io.WantCaptureMouse)
-                    allowMouseInput = false;
+                _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+                if (!_imGuiScreen.IsHidden)
+                {
+                    var io = ImGui.GetIO();
+                    if (io.WantCaptureKeyboard)
+                        allowKeyboardInput = false;
+                    if (io.WantCaptureMouse)
+                        allowMouseInput = false;
+                }
             }
+
+            _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
         }
 
-        _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
 
         InputHandler.EndFrame();
     }
@@ -127,7 +128,7 @@ public class MyGameMain : Game
         _consoleScreen.Draw(Renderer);
 
         LoadingScreen.Draw(Renderer);
-        
+
         Renderer.EndFrame();
     }
 
@@ -136,11 +137,11 @@ public class MyGameMain : Game
         _imGuiScreen?.Destroy();
 
         _gameScreen.Unload();
-        
+
         _consoleScreen.Unload();
 
         Renderer.Unload();
-        
+
         Shared.Console.SaveCVars();
     }
 }
