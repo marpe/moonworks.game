@@ -26,6 +26,7 @@ public class MyGameMain : Game
     public readonly InputHandler InputHandler;
 
     private Stopwatch _stopwatch;
+    public readonly LoadingScreen LoadingScreen;
 
     private double _nextFPSUpdate = 1.0;
     private ulong _prevDrawCount;
@@ -48,6 +49,7 @@ public class MyGameMain : Game
             Shared.Console.Initialize();
         });
 
+        LoadingScreen = new LoadingScreen(this);
         InputHandler = new InputHandler(this);
         
         Renderer = new Renderer(this);
@@ -81,6 +83,8 @@ public class MyGameMain : Game
         }
  
         InputHandler.BeginFrame();
+ 
+        LoadingScreen.Update(ElapsedTime);
         
         _consoleScreen.Update(ElapsedTime);
 
@@ -122,6 +126,8 @@ public class MyGameMain : Game
 
         _consoleScreen.Draw(Renderer);
 
+        LoadingScreen.Draw(Renderer);
+        
         Renderer.EndFrame();
     }
 

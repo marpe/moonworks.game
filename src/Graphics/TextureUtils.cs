@@ -29,7 +29,7 @@ public static class TextureUtils
 
         var prevLength = pixels.Length;
         Array.Resize(ref pixels, pixels.Length * 4);
-        
+
         for (var i = prevLength - 1; i >= 0; i--)
         {
             var p = pixels[i];
@@ -49,7 +49,7 @@ public static class TextureUtils
             TextureFormat.R8G8B8A8,
             TextureUsageFlags.Sampler
         );
-        
+
         fixed (byte* p = pixels)
         {
             var commandBuffer = device.AcquireCommandBuffer();
@@ -65,17 +65,17 @@ public static class TextureUtils
     {
         var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
         var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * bytesPerPixel);
-        
+
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
         device.Submit(commandBuffer);
         device.Wait();
-        
+
         var pixels = new byte[buffer.Size];
         buffer.GetData(pixels, (uint)pixels.Length);
 
         PremultiplyAlpha(pixels);
-        
+
         var newTexture = CreateTexture(device, texture.Width, texture.Height, pixels);
 
         return newTexture;
@@ -105,11 +105,12 @@ public static class TextureUtils
             var command = device.AcquireCommandBuffer();
             var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
             command.SetTextureData(texture, (IntPtr)dataPtr, width * height * bytesPerPixel);
-            device.Submit(command);    
+            device.Submit(command);
         }
+
         return texture;
     }
-    
+
     public static Texture LoadPngTexture(GraphicsDevice device, string path)
     {
         if (!File.Exists(path))
@@ -120,7 +121,7 @@ public static class TextureUtils
         device.Wait();
         return texture;
     }
-    
+
     public static Texture LoadAseprite(GraphicsDevice device, string path)
     {
         var aseprite = AsepriteFile.LoadAsepriteFile(path);
@@ -135,5 +136,18 @@ public static class TextureUtils
         commandBuffer.SetTextureData(texture, data);
         device.Submit(commandBuffer);
         return texture;
+    }
+
+    public static Texture CreateTexture(GraphicsDevice device, Texture toCopy)
+    {
+        return Texture.CreateTexture2D(
+            device,
+            toCopy.Width,
+            toCopy.Height,
+            toCopy.Format,
+            toCopy.UsageFlags | TextureUsageFlags.Sampler,
+            toCopy.SampleCount,
+            toCopy.LevelCount
+        );
     }
 }

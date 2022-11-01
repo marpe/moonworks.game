@@ -205,7 +205,6 @@ public class Renderer
     {
         _device.Submit(CommandBuffer);
         _commandBuffer = null;
-        _swapTexture?.Dispose();
         _swapTexture = null;
     }
 
