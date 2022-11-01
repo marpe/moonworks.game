@@ -93,17 +93,17 @@ public class ImGuiScreen
 
     public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
-        if (_game.TotalElapsedTime - _lastUpdateTime < _updateRate)
-            return;
-        
-        _lastUpdateTime = _game.TotalElapsedTime;
-
         var inputHandler = _game.InputHandler;
 
         if (inputHandler.IsKeyPressed(KeyCode.F2))
         {
             IsHidden = !IsHidden;
         }
+
+        if (_game.TotalElapsedTime - _lastUpdateTime < _updateRate)
+            return;
+        
+        _lastUpdateTime = _game.TotalElapsedTime;
 
         if (IsHidden)
             allowKeyboardInput = allowMouseInput = false;
