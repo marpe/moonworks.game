@@ -191,18 +191,13 @@ public class Renderer
         ColorAttachmentInfo.Texture = renderTarget;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
         ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
-        // DepthStencilAttachmentInfo.LoadOp = ColorAttachmentInfo.LoadOp;
-        // DepthStencilAttachmentInfo.StencilLoadOp = ColorAttachmentInfo.LoadOp;
 
-        /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
-
+        TextBatcher.FlushToSpriteBatch(SpriteBatch);
         SpriteBatch.UpdateBuffers(commandBuffer);
-        TextBatcher.UpdateBuffers(commandBuffer);
 
         commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
         SpriteBatch.Flush(commandBuffer, viewProjection);
-        TextBatcher.Flush(commandBuffer, viewProjection);
         commandBuffer.EndRenderPass();
     }
 

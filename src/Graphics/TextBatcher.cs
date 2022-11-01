@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using MoonWorks.Graphics.Font;
+using WellspringCS;
 
 namespace MyGame.Graphics;
 
@@ -12,16 +13,13 @@ public enum FontType
 public class FontData
 {
     public FontType Name;
-    
+
     public TextBatch Batch;
     public Packer Packer;
     public Font Font;
     public Texture Texture;
     public TextureSamplerBinding Binding;
     public bool HasStarted;
-    
-    public Vertex[] Vertices = Array.Empty<Vertex>();
-    public uint[] Indices = Array.Empty<uint>();
 }
 
 public class TextBatcher
@@ -92,6 +90,7 @@ public class TextBatcher
             fontData.Font.Dispose();
             fontData.Texture.Dispose();
         }
+
         _fonts.Clear();
     }
 
@@ -115,51 +114,44 @@ public class TextBatcher
         if (_addCountSinceDraw == 0)
             return;
 
-        var commandBuffer = _device.AcquireCommandBuffer();
-
         foreach (var (key, font) in _fonts)
         {
             if (!font.HasStarted)
                 continue;
 
-            font.Batch.UploadBufferData(commandBuffer);
-        }
-
-        _device.Submit(commandBuffer);
-        _device.Wait();
-
-        foreach (var (key, font) in _fonts)
-        {
-            if (!font.HasStarted)
-                continue;
-
-            var sizeInBytes = Marshal.SizeOf<Vertex>();
-            var numVertices = (int)(font.Batch.PrimitiveCount * 2);
-            if (font.Vertices.Length < numVertices)
-                Array.Resize(ref font.Vertices, numVertices);
-            font.Batch.VertexBuffer.GetData(font.Vertices, (uint)(sizeInBytes * numVertices));
-
-            var sprite = new Sprite(font.Texture);
-            var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
-
-            for (var i = 0; i < numVertices; i += 4)
+            Wellspring.Wellspring_GetBufferData(
+                font.Batch.Handle,
+                out uint vertexCount,
+                out IntPtr vertexDataPointer,
+                out uint vertexDataLengthInBytes,
+                out IntPtr indexDataPointer,
+                out uint indexDataLengthInBytes
+            );
+            
+            unsafe
             {
-                var topLeftVert = font.Vertices[i];
-                var bottomRightVert = font.Vertices[i + 3];
-                var transform = Matrix3x2.CreateTranslation(new Vector2(topLeftVert.Position.X, topLeftVert.Position.Y));
-                var srcPos = topLeftVert.TexCoord * fontTextureSize;
-                var srcDim = (bottomRightVert.TexCoord - topLeftVert.TexCoord) * fontTextureSize;
-                var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);
-                sprite.SrcRect = srcRect;
-                Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, sprite.SrcRect);
-                var color = topLeftVert.Color;
-                spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform, Renderer.PointClamp);
+                var vertices = (Vertex*)vertexDataPointer.ToPointer();
+                var sizeOfVert = Marshal.SizeOf<Vertex>();
+                var numVerts = vertexDataLengthInBytes / sizeOfVert;
+                
+                var sprite = new Sprite(font.Texture);
+                var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
+                
+                for (var i = 0; i < numVerts; i += 4)
+                {
+                    var topLeftVert = vertices[i];
+                    var bottomRightVert = vertices[i + 3];
+                    var transform = Matrix3x2.CreateTranslation(new Vector2(topLeftVert.Position.X, topLeftVert.Position.Y));
+                    var srcPos = topLeftVert.TexCoord * fontTextureSize;
+                    var srcDim = (bottomRightVert.TexCoord - topLeftVert.TexCoord) * fontTextureSize;
+                    var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);
+                    sprite.SrcRect = srcRect;
+                    Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, sprite.SrcRect);
+                    var color = topLeftVert.Color;
+                    spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform, Renderer.PointClamp);
+                }
             }
 
-            /*var numIndices = (int)(font.Batch.PrimitiveCount * 3);
-            if (font.Indices.Length < numIndices)
-                Array.Resize(ref font.Indices, numIndices);
-            font.Batch.IndexBuffer.GetData(font.Indices, (uint)(numIndices * sizeof(uint)));*/
             font.HasStarted = false;
         }
 
@@ -174,7 +166,7 @@ public class TextBatcher
                 font.Batch.UploadBufferData(commandBuffer);
         }
     }
-    
+
     public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
         if (_addCountSinceDraw == 0)
@@ -203,6 +195,7 @@ public class TextBatcher
             font.HasStarted = false;
             DrawCalls++;
         }
+
         _addCountSinceDraw = 0;
     }
 }
