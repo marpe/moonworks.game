@@ -517,10 +517,9 @@ public class ConsoleScreen
 
         if (ConsoleSettings.ShowDebug)
         {
-            var drawCalls = ConsoleSettings.UseBMFont ? renderer.SpriteBatch.DrawCalls : renderer.TextBatcher.DrawCalls;
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) " +
-                $"DrawCalls({drawCalls}) " +
+                $"DrawCalls({renderer.SpriteBatch.DrawCalls}) " +
                 $"DisplayY({TwConsole.ScreenBuffer.DisplayY}) " +
                 $"CursorY({TwConsole.ScreenBuffer.CursorY}) " +
                 $"Elapsed({elapsedMs}ms) " +
