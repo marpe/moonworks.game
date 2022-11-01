@@ -24,8 +24,6 @@ public class FontData
 
 public class TextBatcher
 {
-    public uint DrawCalls { get; private set; }
-
     public FontRange FontRange = new()
     {
         FirstCodepoint = 0x20,
@@ -134,7 +132,8 @@ public class TextBatcher
                 var sizeOfVert = Marshal.SizeOf<Vertex>();
                 var numVerts = vertexDataLengthInBytes / sizeOfVert;
                 
-                var sprite = new Sprite(font.Texture);
+                var sprite = new Sprite();
+                sprite.Texture = font.Texture;
                 var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
                 
                 for (var i = 0; i < numVerts; i += 4)
@@ -154,48 +153,7 @@ public class TextBatcher
 
             font.HasStarted = false;
         }
-
-        _addCountSinceDraw = 0;
-    }
-
-    public void UpdateBuffers(CommandBuffer commandBuffer)
-    {
-        foreach (var (key, font) in _fonts)
-        {
-            if (font.HasStarted)
-                font.Batch.UploadBufferData(commandBuffer);
-        }
-    }
-
-    public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
-    {
-        if (_addCountSinceDraw == 0)
-            return;
-
-        DrawCalls = 0;
-        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
-        var fragmentParamOffset = 0u;
-
-        foreach (var (key, font) in _fonts)
-        {
-            if (!font.HasStarted)
-                continue;
-
-            commandBuffer.BindVertexBuffers(font.Batch.VertexBuffer);
-            commandBuffer.BindIndexBuffer(font.Batch.IndexBuffer, IndexElementSize.ThirtyTwo);
-            commandBuffer.BindFragmentSamplers(font.Binding);
-            commandBuffer.DrawIndexedPrimitives(
-                0,
-                0,
-                font.Batch.PrimitiveCount,
-                vertexParamOffset,
-                fragmentParamOffset
-            );
-
-            font.HasStarted = false;
-            DrawCalls++;
-        }
-
+        
         _addCountSinceDraw = 0;
     }
 }
