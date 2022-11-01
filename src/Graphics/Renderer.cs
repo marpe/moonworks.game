@@ -22,11 +22,11 @@ public class Renderer
     public readonly TextBatcher TextBatcher;
 
     public BlendState BlendState = BlendState.AlphaBlend;
-    
+
     public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
     public ColorAttachmentInfo ColorAttachmentInfo;
     public Texture DepthTexture;
-    
+
     private readonly MyGameMain _game;
     private readonly GraphicsDevice _device;
     private readonly Texture _blankTexture;
@@ -35,14 +35,16 @@ public class Renderer
 
     private CommandBuffer? _commandBuffer;
 
-    public CommandBuffer CommandBuffer => _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+    public CommandBuffer CommandBuffer =>
+        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
 
     private Texture? _prevSwapTexture;
     public Texture PrevSwapTexture => _prevSwapTexture ?? throw new InvalidOperationException("PrevSwapTexture is null");
 
     private Texture? _swapTexture;
 
-    public Texture SwapTexture => _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
+    public Texture SwapTexture =>
+        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
 
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
     {
@@ -89,7 +91,7 @@ public class Renderer
         }
 
         _bmFont = new BMFont(game.GraphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Bmfonts.ConsolasFnt));
-        
+
         DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
         DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
@@ -189,6 +191,8 @@ public class Renderer
         ColorAttachmentInfo.Texture = renderTarget;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
         ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
+        // DepthStencilAttachmentInfo.LoadOp = ColorAttachmentInfo.LoadOp;
+        // DepthStencilAttachmentInfo.StencilLoadOp = ColorAttachmentInfo.LoadOp;
 
         /*TextBatcher.FlushToSpriteBatch(SpriteBatch);*/
 
@@ -224,7 +228,7 @@ public class Renderer
         TextBatcher.Unload();
         SpriteBatch.Unload();
         PointClamp.Dispose();
-        
+
         DepthTexture.Dispose();
         DepthStencilAttachmentInfo.Texture.Dispose();
         ColorAttachmentInfo.Texture.Dispose();

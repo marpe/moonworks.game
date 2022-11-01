@@ -20,6 +20,7 @@ public class MyGameMain : Game
     public ConsoleScreen ConsoleScreen => _consoleScreen;
 
     private readonly GameScreen _gameScreen;
+    private readonly MenuScreen _menuScreen;
 
     public readonly Renderer Renderer;
 
@@ -52,6 +53,7 @@ public class MyGameMain : Game
         Renderer = new Renderer(this);
 
         _gameScreen = new GameScreen(this);
+        _menuScreen = new MenuScreen(this);
         _consoleScreen = new ConsoleScreen(this);
 
         Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
@@ -102,6 +104,14 @@ public class MyGameMain : Game
                         allowMouseInput = false;
                 }
             }
+            
+            _menuScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+
+            if (!_menuScreen.IsHidden)
+            {
+                allowKeyboardInput = false;
+                allowMouseInput = false;
+            }
 
             _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
         }
@@ -122,6 +132,8 @@ public class MyGameMain : Game
             return;
 
         _gameScreen.Draw(Renderer);
+        
+        _menuScreen.Draw(Renderer);
 
         _imGuiScreen?.Draw(Renderer);
 

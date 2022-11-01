@@ -150,7 +150,12 @@ public class GameScreen
         renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);
         renderer.DrawText(FontType.Roboto, "Hello again!", new Vector2(150, 150), Color.White);
 
+        renderer.DrawBMText("BMFONT TEST", new Vector2(200, 0), 0, Color.White);
+        
         _camera.Size = _game.MainWindow.Size;
+        
+        renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
+        renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
         renderer.FlushBatches(renderer.SwapTexture, _camera.ViewProjectionMatrix, renderer.DefaultClearColor);
     }
 }

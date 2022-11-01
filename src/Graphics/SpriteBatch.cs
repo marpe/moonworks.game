@@ -36,7 +36,7 @@ public class SpriteBatch
     {
         if (sprite.Texture.IsDisposed)
             throw new ObjectDisposedException(nameof(sprite.Texture));
-        
+
         if (_numSprites == _spriteInfo.Length)
         {
             var maxNumSprites = (int)(_numSprites + 2048);
@@ -73,7 +73,7 @@ public class SpriteBatch
         TransformVector(ref bottomLeft, transform);
         TransformVector(ref topRight, transform);
         TransformVector(ref bottomRight, transform);
-        
+
         /*topLeft = Vector2.Transform(topLeft, transform);
         bottomLeft = Vector2.Transform(bottomLeft, transform);
         topRight = Vector2.Transform(topRight, transform);
@@ -83,7 +83,7 @@ public class SpriteBatch
         // _vertices[vertexCount].Position = new Vector3(topLeft, depth);
         _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
         _vertices[vertexCount].Color = color;
-        
+
         SetVector(ref _vertices[vertexCount + 1].Position, bottomLeft, depth);
         // _vertices[vertexCount + 1].Position = new Vector3(bottomLeft, depth);
         _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
@@ -108,13 +108,13 @@ public class SpriteBatch
         a.X -= b.X;
         a.Y -= b.Y;
     }
-    
+
     private static void TransformVector(ref Vector2 vec, in Matrix3x2 matrix)
     {
         vec.X = (vec.X * matrix.M11) + (vec.Y * matrix.M21) + matrix.M31;
         vec.Y = (vec.X * matrix.M12) + (vec.Y * matrix.M22) + matrix.M32;
     }
-    
+
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
     {
         dest.X = src.X;
@@ -142,6 +142,8 @@ public class SpriteBatch
 
     public void UpdateBuffers(CommandBuffer commandBuffer)
     {
+        if (_numSprites == 0)
+            return;
         commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
     }
@@ -149,6 +151,9 @@ public class SpriteBatch
     public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
         DrawCalls = 0;
+
+        if (_numSprites == 0)
+            return;
 
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 
