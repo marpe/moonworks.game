@@ -16,15 +16,32 @@ public class Camera
         }
     }
 
+    private float _zoom = 1.0f;
+    public float Zoom
+    {
+        get => _zoom;
+        set
+        {
+            _zoom = MathF.Clamp(value, 0.001f, 10f);
+        }
+    }
+    
     public Vector2 Position;
 
     public Vector3 Position3D = new(0, 0, -1000);
 
-    public Matrix4x4 View => Matrix4x4.CreateLookAt(
-        new Vector3(Position.X, Position.Y, 1000),
-        new Vector3(Position.X, Position.Y, 0),
-        Vector3.Up
-    );
+    public Matrix4x4 View
+    {
+        get
+        {
+            var view = Matrix4x4.CreateLookAt(
+                new Vector3(Position.X, Position.Y, 1000),
+                new Vector3(Position.X, Position.Y, 0),
+                Vector3.Up
+            );
+            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) * Matrix4x4.CreateTranslation(Width * 0.5f, Height * 0.5f, 0);
+        }
+    }
 
     public Matrix4x4 View3D
     {

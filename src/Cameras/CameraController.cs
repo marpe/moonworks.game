@@ -77,6 +77,22 @@ public class CameraController
                 var cameraSpeed = 500f;
                 var moveDelta = cameraSpeed * deltaSeconds;
 
+                if (input.IsKeyPressed(KeyCode.Home))
+                {
+                    _camera.Zoom = 1.0f;
+                    _camera.Position = Vector2.Zero;
+                }
+                
+                if (input.IsKeyDown(KeyCode.PageUp))
+                {
+                    _camera.Zoom += 0.025f * _camera.Zoom;
+                }
+               
+                if (input.IsKeyDown(KeyCode.PageDown))
+                {
+                    _camera.Zoom -= 0.025f * _camera.Zoom;
+                }
+                
                 if (input.IsKeyDown(KeyCode.W))
                 {
                     _camera.Position.Y -= moveDelta;
