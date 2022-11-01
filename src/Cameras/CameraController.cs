@@ -72,6 +72,14 @@ public class CameraController
         }
         else
         {
+            if (allowMouseInput)
+            {
+                if (input.MouseWheelDelta != 0)
+                {
+                    _camera.Zoom += 0.1f * _camera.Zoom * input.MouseWheelDelta;
+                }
+            }
+
             if (allowKeyboardInput)
             {
                 var cameraSpeed = 500f;
