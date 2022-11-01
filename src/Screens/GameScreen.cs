@@ -67,9 +67,14 @@ public class GameScreen
     public void Draw(Renderer renderer)
     {
         if (_backgroundSprite != null)
+        {
             renderer.DrawSprite(_backgroundSprite.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100),
                 Color.White,
                 200f);
+            renderer.DrawSprite(_backgroundSprite.Value, Matrix3x2.CreateScale(1f, 1f) * Matrix3x2.CreateTranslation(-200, -100),
+                Color.White,
+                180f);
+        }
 
         renderer.DrawText(FontType.Roboto, "Hello!", Vector2.Zero, Color.White);
         renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);

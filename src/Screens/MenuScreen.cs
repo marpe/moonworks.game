@@ -66,8 +66,6 @@ public class MenuScreen
         }
 
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderer.SwapTexture.Width, renderer.SwapTexture.Height);
-        renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
-        renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
         renderer.FlushBatches(renderer.SwapTexture, viewProjection);
     }
 
