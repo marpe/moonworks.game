@@ -30,8 +30,11 @@ public class MenuScreen
         _menuItems = new(new[]
         {
             new MenuItem("Play", OnPlay),
+            new MenuItem("Options", () => {}),
             new MenuItem("Quit", OnQuit),
         });
+
+        _selectedIndex = 0;
     }
 
 
@@ -78,16 +81,17 @@ public class MenuScreen
             {
                 IsHidden = !IsHidden;
             }
-            if (input.IsKeyPressed(KeyCode.Down))
+
+            if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
             {
                 _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
             }
-            else if (input.IsKeyPressed(KeyCode.Up))
+            else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
             {
-                _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;;
+                _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
             }
 
-            if (input.IsKeyPressed(KeyCode.Return))
+            if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
             {
                 if (_selectedIndex != -1)
                 {

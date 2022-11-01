@@ -92,6 +92,14 @@ public class MyGameMain : Game
             var allowKeyboardInput = _consoleScreen.IsHidden;
             var allowMouseInput = _consoleScreen.IsHidden;
 
+            _menuScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+
+            if (!_menuScreen.IsHidden)
+            {
+                allowKeyboardInput = false;
+                allowMouseInput = false;
+            }
+            
             if (_imGuiScreen != null)
             {
                 _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
@@ -103,14 +111,6 @@ public class MyGameMain : Game
                     if (io.WantCaptureMouse)
                         allowMouseInput = false;
                 }
-            }
-            
-            _menuScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
-
-            if (!_menuScreen.IsHidden)
-            {
-                allowKeyboardInput = false;
-                allowMouseInput = false;
             }
 
             _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
@@ -133,9 +133,9 @@ public class MyGameMain : Game
 
         _gameScreen.Draw(Renderer);
         
-        _menuScreen.Draw(Renderer);
-
         _imGuiScreen?.Draw(Renderer);
+        
+        _menuScreen.Draw(Renderer);
 
         _consoleScreen.Draw(Renderer);
 
