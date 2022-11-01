@@ -166,7 +166,7 @@ public class Renderer
 
     public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
     {
-        DrawText(FontType.ConsolasMono, text, pos.X, pos.Y, depth, color);
+        DrawText(FontType.ConsolasMonoMedium, text, pos.X, pos.Y, depth, color);
     }
 
     public void DrawText(ReadOnlySpan<char> text, Vector2 pos, Color color)

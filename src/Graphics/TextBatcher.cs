@@ -2,12 +2,16 @@
 using MoonWorks.Graphics.Font;
 using WellspringCS;
 
+using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
+using AlignV = WellspringCS.Wellspring.VerticalAlignment;
+
 namespace MyGame.Graphics;
 
 public enum FontType
 {
-    Roboto,
-    ConsolasMono
+    RobotoMedium,
+    RobotoLarge,
+    ConsolasMonoMedium,
 }
 
 public class FontData
@@ -18,12 +22,13 @@ public class FontData
     public Packer Packer;
     public Font Font;
     public Texture Texture;
-    public TextureSamplerBinding Binding;
     public bool HasStarted;
 }
 
 public class TextBatcher
 {
+    private byte[] _stringBytes;
+
     public FontRange FontRange = new()
     {
         FirstCodepoint = 0x20,
@@ -41,18 +46,21 @@ public class TextBatcher
     {
         _device = device;
 
+        _stringBytes = new byte[128];
+        
         var fonts = new[]
         {
-            (FontType.Roboto, ContentPaths.Fonts.RobotoRegularTtf),
-            (FontType.ConsolasMono, ContentPaths.Fonts.ConsolaTtf)
+            (FontType.RobotoMedium, 18f, ContentPaths.Fonts.RobotoRegularTtf),
+            (FontType.RobotoLarge, 48f, ContentPaths.Fonts.RobotoRegularTtf),
+            (FontType.ConsolasMonoMedium, 18f, ContentPaths.Fonts.ConsolaTtf)
         };
 
         var commandBuffer = device.AcquireCommandBuffer();
-        foreach (var (key, path) in fonts)
+        foreach (var (key, size, path) in fonts)
         {
             var fontPath = Path.Combine(MyGameMain.ContentRoot, path);
             var font = new Font(fontPath);
-            var fontPacker = new Packer(device, font, 18f, 512, 512, 2u);
+            var fontPacker = new Packer(device, font, size, 512, 512, 2u);
             fontPacker.PackFontRanges(FontRange);
             fontPacker.SetTextureData(commandBuffer);
             var textBatchFont = new FontData()
@@ -75,7 +83,6 @@ public class TextBatcher
             var (width, height) = (data.Packer.Texture.Width, data.Packer.Texture.Height);
             var fontTexture = TextureUtils.CreateTexture(device, width, height, pixels);
             _fonts[key].Texture = fontTexture;
-            _fonts[key].Binding = new TextureSamplerBinding(fontTexture, Renderer.PointClamp);
         }
     }
 
@@ -92,12 +99,12 @@ public class TextBatcher
         _fonts.Clear();
     }
 
-    public void Add(FontType fontTypeType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
+    public void Add(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
         VerticalAlignment alignV)
     {
         _addCountSinceDraw++;
 
-        var font = _fonts[fontTypeType];
+        var font = _fonts[fontType];
         if (!font.HasStarted)
         {
             font.Batch.Start(font.Packer);
@@ -105,6 +112,27 @@ public class TextBatcher
         }
 
         font.Batch.Draw(text, x, y, depth, color, alignH, alignV);
+    }
+
+    public unsafe Vector2 MeasureString(FontType fontType, ReadOnlySpan<char> text, float x = 0, float y = 0, AlignH alignH = AlignH.Left, AlignV alignV = AlignV.Top)
+    {
+        var font = _fonts[fontType];
+        
+        var byteCount = Encoding.UTF8.GetByteCount(text);
+
+        if (_stringBytes.Length < byteCount)
+        {
+            Array.Resize(ref _stringBytes, byteCount);
+        }
+        
+        Span<byte> byteSpan = _stringBytes.AsSpan();
+        Encoding.UTF8.GetBytes(text, byteSpan);
+
+        fixed (byte* bytes = byteSpan)
+        {
+            Wellspring.Wellspring_TextBounds(font.Packer.Handle, x, y, alignH, alignV, (IntPtr)bytes, (uint)byteCount, out var rect);
+            return new Vector2(rect.W, rect.H);
+        }
     }
 
     public void FlushToSpriteBatch(SpriteBatch spriteBatch)
@@ -125,17 +153,17 @@ public class TextBatcher
                 out IntPtr indexDataPointer,
                 out uint indexDataLengthInBytes
             );
-            
+
             unsafe
             {
                 var vertices = (Vertex*)vertexDataPointer.ToPointer();
                 var sizeOfVert = Marshal.SizeOf<Vertex>();
                 var numVerts = vertexDataLengthInBytes / sizeOfVert;
-                
+
                 var sprite = new Sprite();
                 sprite.Texture = font.Texture;
                 var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
-                
+
                 for (var i = 0; i < numVerts; i += 4)
                 {
                     var topLeftVert = vertices[i];
@@ -153,7 +181,7 @@ public class TextBatcher
 
             font.HasStarted = false;
         }
-        
+
         _addCountSinceDraw = 0;
     }
 }

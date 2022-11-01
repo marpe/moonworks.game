@@ -1,4 +1,6 @@
-﻿using MyGame.Graphics;
+﻿using System.Threading;
+using MoonWorks.Graphics.Font;
+using MyGame.Graphics;
 
 namespace MyGame.Screens;
 
@@ -29,8 +31,9 @@ public class MenuScreen
 
         _menuItems = new(new[]
         {
-            new MenuItem("Play", OnPlay),
-            new MenuItem("Options", () => {}),
+            new MenuItem("Resume", () => { IsHidden = !IsHidden; }),
+            new MenuItem("New Game", OnPlay),
+            new MenuItem("Options", () => { }),
             new MenuItem("Quit", OnQuit),
         });
 
@@ -55,12 +58,13 @@ public class MenuScreen
 
             var center = new Vector2(renderer.SwapTexture.Width * 0.5f, renderer.SwapTexture.Height * 0.5f);
             var position = center;
-            var lineHeight = 30;
+            var lineHeight = 50;
 
             for (var i = 0; i < _menuItems.Count; i++)
             {
                 var color = _selectedIndex == i ? Color.Red : Color.White;
-                renderer.DrawText(_menuItems[i].Text, position, 0, color);
+                renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position.X, position.Y, 0, color, HorizontalAlignment.Center,
+                    VerticalAlignment.Middle);
                 position.Y += lineHeight;
             }
         }
@@ -77,7 +81,11 @@ public class MenuScreen
         {
             if (input.IsKeyPressed(KeyCode.Escape))
             {
-                IsHidden = !IsHidden;
+                _game.LoadingScreen.StartLoad(() =>
+                {
+                    IsHidden = !IsHidden;
+                    Thread.Sleep(300);
+                });
             }
 
             if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))

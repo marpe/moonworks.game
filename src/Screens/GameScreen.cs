@@ -76,9 +76,9 @@ public class GameScreen
                 180f);
         }
 
-        renderer.DrawText(FontType.Roboto, "Hello!", Vector2.Zero, Color.White);
+        renderer.DrawText(FontType.RobotoMedium, "Hello!", Vector2.Zero, Color.White);
         renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);
-        renderer.DrawText(FontType.Roboto, "Hello again!", new Vector2(150, 150), Color.White);
+        renderer.DrawText(FontType.RobotoMedium, "Hello again!", new Vector2(150, 150), Color.White);
 
         renderer.DrawBMText("BMFONT TEST", new Vector2(200, 0), 0, Color.White);
         

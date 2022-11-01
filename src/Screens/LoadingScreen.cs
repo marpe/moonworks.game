@@ -17,15 +17,15 @@ public class LoadingScreen
     private TransitionState _state = TransitionState.Hidden;
     public TransitionState State => _state;
     private TransitionState _prevState = TransitionState.Hidden;
-    
+
     private readonly Sprite _backgroundSprite;
     private readonly Sprite _blankSprite;
-    
+
     private MyGameMain _game;
 
     private Texture? _copyRender;
     private bool _shouldCopyRender;
-    
+
     private Action? _callback;
 
     private float _progress = 0;
@@ -51,14 +51,14 @@ public class LoadingScreen
         _blankSprite = new Sprite(blankTexture);
     }
 
-    private void StartLoad(Action loadMethod)
+    public void StartLoad(Action loadMethod)
     {
         if (_state != TransitionState.Hidden)
         {
             Logger.LogError("Loading is already in progress");
             return;
         }
-        
+
         _shouldCopyRender = true;
         _state = TransitionState.TransitionOn;
         _callback = loadMethod;
@@ -70,8 +70,9 @@ public class LoadingScreen
         {
             // Logger.LogInfo($"State: {_state}");
         }
+
         _prevState = _state;
-        
+
         if (_state == TransitionState.TransitionOn)
         {
             _progress += 5f * deltaSeconds;
@@ -80,7 +81,7 @@ public class LoadingScreen
             {
                 _progress = 1.0f;
                 _state = TransitionState.Active;
-                
+
                 Task.Run(() =>
                 {
                     _callback?.Invoke();
@@ -95,7 +96,7 @@ public class LoadingScreen
             {
                 _progress = 0;
                 _state = TransitionState.Hidden;
-                
+
                 _copyRender = null;
                 _callback = null;
             }
@@ -129,7 +130,11 @@ public class LoadingScreen
         var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
         var windowSize = _game.MainWindow.Size;
-        renderer.DrawText(FontType.Roboto, loadingSpan, new Vector2(windowSize.X * 0.5f, windowSize.Y * 0.5f), Color.White * _progress);
+        // var center = new Vector2(windowSize.X * 0.5f, windowSize.Y * 0.5f);
+
+        var textSize = renderer.TextBatcher.MeasureString(FontType.RobotoMedium, loadingStr);
+        var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
+        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, Color.White * _progress);
 
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, (uint)windowSize.X, (uint)windowSize.Y);
         renderer.FlushBatches(renderer.SwapTexture, viewProjection);
