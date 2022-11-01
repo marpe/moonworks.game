@@ -229,11 +229,8 @@ public class Renderer
         ColorAttachmentInfo.Texture.Dispose();
     }
 
-    public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
+    public static VertexInputState GetVertexInputState()
     {
-        var spriteVertexShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
-        var spriteFragmentShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
-
         var myVertexBindings = new VertexBinding[]
         {
             VertexBinding.Create<Position3DTextureColorVertex>()
@@ -246,11 +243,17 @@ public class Renderer
             VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
         };
 
-        var myVertexInputState = new VertexInputState
+        return new VertexInputState
         {
             VertexBindings = myVertexBindings,
             VertexAttributes = myVertexAttributes
         };
+    }
+
+    public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
+    {
+        var spriteVertexShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
+        var spriteFragmentShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
 
         var myDepthStencilState = new DepthStencilState
         {
@@ -261,6 +264,9 @@ public class Renderer
             StencilTestEnable = false
         };
 
+        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0);
+        var fragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1);
+        
         var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
@@ -268,12 +274,12 @@ public class Renderer
                 new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
             DepthStencilState = myDepthStencilState,
-            VertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0),
-            FragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1),
+            VertexShaderInfo = vertexShaderInfo,
+            FragmentShaderInfo = fragmentShaderInfo,
             MultisampleState = MultisampleState.None,
             RasterizerState = RasterizerState.CCW_CullNone,
             PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = myVertexInputState,
+            VertexInputState = GetVertexInputState(),
         };
 
         return new GraphicsPipeline(

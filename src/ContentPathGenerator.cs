@@ -25,6 +25,14 @@ public static class ContentPaths
 
 		public static class Shaders
 		{
+			public static class DiamondTransition
+			{
+				public const string Diamond_transitionFrag = @"Shaders\DiamondTransition\diamond_transition.frag";
+				public const string Diamond_transitionFragSpv = @"Shaders\DiamondTransition\diamond_transition.frag.spv";
+				public const string Diamond_transitionVert = @"Shaders\DiamondTransition\diamond_transition.vert";
+				public const string Diamond_transitionVertSpv = @"Shaders\DiamondTransition\diamond_transition.vert.spv";
+			}
+
 			public static class Imgui
 			{
 				public const string SpriteFrag = @"Shaders\imgui\sprite.frag";
