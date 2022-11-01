@@ -20,13 +20,13 @@ public class Camera
 
     public Vector3 Position3D = new(0, 0, -1000);
 
-    private Matrix4x4 View => Matrix4x4.CreateLookAt(
+    public Matrix4x4 View => Matrix4x4.CreateLookAt(
         new Vector3(Position.X, Position.Y, 1000),
         new Vector3(Position.X, Position.Y, 0),
         Vector3.Up
     );
 
-    private Matrix4x4 View3D
+    public Matrix4x4 View3D
     {
         get
         {
@@ -65,8 +65,7 @@ public class Camera
             );
         }
     }
-
-    public bool Use3D;
     
-    public Matrix4x4 ViewProjectionMatrix => Use3D ? View3D * Projection3D : View * Projection;
+    public Matrix4x4 ViewProjection3D => View3D * Projection3D;
+    public Matrix4x4 ViewProjection => View * Projection;
 }

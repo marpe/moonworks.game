@@ -4,21 +4,30 @@ public class CameraController
 {
     private Components.Camera _camera;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
+    public bool Use3D;
+    private float _lerpT = 0;
+    public Matrix4x4 ViewProjection;
+    private float _lerpSpeed = 1f;
 
     public CameraController(Components.Camera camera)
     {
         _camera = camera;
+        ViewProjection = _camera.ViewProjection;
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
     }
 
     public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
     {
+        _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
+
+        ViewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+        
         if (allowKeyboardInput && input.IsKeyPressed(KeyCode.F1))
         {
-            _camera.Use3D = !_camera.Use3D;
+            Use3D = !Use3D;
         }
 
-        if (_camera.Use3D)
+        if (Use3D)
         {
             if (allowMouseInput && input.IsMouseButtonHeld(MouseButtonCode.Right))
             {
