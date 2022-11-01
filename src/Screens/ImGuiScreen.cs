@@ -161,10 +161,6 @@ public class ImGuiScreen
 
         var sprite = new Sprite(_imGuiRenderer.RenderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
-
-        var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(swap, viewProjection);
     }
 
     private void DrawTestWindow(ImGuiWindow window)

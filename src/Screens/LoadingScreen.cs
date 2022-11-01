@@ -135,8 +135,5 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.MeasureString(FontType.RobotoMedium, loadingStr);
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, Color.White * _progress);
-
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, (uint)windowSize.X, (uint)windowSize.Y);
-        renderer.FlushBatches(renderer.SwapTexture, viewProjection);
     }
 }

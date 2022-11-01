@@ -68,9 +68,6 @@ public class MenuScreen
                 position.Y += lineHeight;
             }
         }
-
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderer.SwapTexture.Width, renderer.SwapTexture.Height);
-        renderer.FlushBatches(renderer.SwapTexture, viewProjection);
     }
 
     public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)

@@ -428,10 +428,6 @@ public class ConsoleScreen
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
-
-        var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(swap, viewProjection);
     }
 
     private void DrawInternal(Renderer renderer)
