@@ -184,6 +184,13 @@ public class Renderer
         BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
     }
 
+    public void FlushBatches()
+    {
+        var swap = SwapTexture;
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        FlushBatches(swap, viewProjection);
+    }
+    
     public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;

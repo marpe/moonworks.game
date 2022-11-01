@@ -159,7 +159,7 @@ public class LoadingScreen
         if (_shouldCopyRender)
         {
             Logger.LogInfo($"Copying render...");
-            renderer.FlushBatches(swap, viewProjection);
+            renderer.FlushBatches();
             _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderer.SwapTexture);
             renderer.CommandBuffer.CopyTextureToTexture(renderer.SwapTexture, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
@@ -179,7 +179,7 @@ public class LoadingScreen
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, Color.White * _progress);
 
-        renderer.FlushBatches(swap, viewProjection);
+        renderer.FlushBatches();
 
         var commandBuffer = renderer.CommandBuffer;
         renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black, 1f);

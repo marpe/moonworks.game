@@ -67,6 +67,10 @@ public class MenuScreen
                     VerticalAlignment.Middle);
                 position.Y += lineHeight;
             }
+            
+            // TODO (marpe): Flush text batcher to sprite batch here, otherwise if console screen isnt being redrawn,
+            // these text draw calls will be submitted after prev console render has been drawn 
+            renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
         }
         
         /*var swap = renderer.SwapTexture;

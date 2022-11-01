@@ -415,7 +415,13 @@ public class ConsoleScreen
         if (_stopwatch.Elapsed.TotalSeconds > _nextRenderTime)
         {
             DrawCount++;
+            renderer.FlushBatches(); // flush so that draw calls doesn't spill into console renderTarget
+            
             DrawInternal(renderer);
+
+            var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
+            renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
+            
             _nextRenderTime = _stopwatch.Elapsed.TotalSeconds + 1.0 / ConsoleSettings.RenderRatePerSecond;
         }
 
@@ -533,10 +539,6 @@ public class ConsoleScreen
             renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
             DrawText(renderer, scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow);
         }
-
-        // flush to render target
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
-        renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)
