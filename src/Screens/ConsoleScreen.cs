@@ -470,7 +470,7 @@ public class ConsoleScreen
         {
             var bottomRight = new Vector2(_backgroundRect.Width, _backgroundRect.Height);
             var scrollIndicatorPosition = bottomRight - new Vector2(CharSize.Y, ConsoleSettings.HorizontalPadding);
-            var color = GetColor(ConsoleSettings.ScrollIndicatorColor);
+            var color = ConsoleSettings.ScrollIndicatorColor;
             DrawText(renderer, ConsoleSettings.ScrollIndicatorChar, scrollIndicatorPosition, 0, color);
         }
 
