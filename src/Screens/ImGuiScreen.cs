@@ -22,7 +22,7 @@ public class ImGuiScreen
     private float _mainMenuPaddingY = 6f;
     private bool _doRender;
     private InputState _inputState = new();
-    public bool IsHidden { get; private set; }
+    public bool IsHidden { get; private set; } = true;
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -102,7 +102,7 @@ public class ImGuiScreen
 
         if (_game.TotalElapsedTime - _lastUpdateTime < _updateRate)
             return;
-        
+
         _lastUpdateTime = _game.TotalElapsedTime;
 
         if (IsHidden)
@@ -161,7 +161,7 @@ public class ImGuiScreen
 
         var sprite = new Sprite(_imGuiRenderer.RenderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
-        
+
         /*var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         renderer.FlushBatches(swap, viewProjection);*/

@@ -121,13 +121,22 @@ public class GameScreen
             var sw2 = Stopwatch.StartNew();
             var ldtkPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Ldtk.MapLdtk);
             var jsonString = File.ReadAllText(ldtkPath);
-
+            var loadTime = sw2.ElapsedMilliseconds; sw2.Restart();
             var ldtkJson = LdtkJson.FromJson(jsonString);
+            var parseTime = sw2.ElapsedMilliseconds; sw2.Restart();
             var textures = LoadTextures(_game.GraphicsDevice, ldtkPath, ldtkJson.Defs.Tilesets);
+            var textureLoadTime = sw2.ElapsedMilliseconds; sw2.Restart(); 
 
             _ldtkProject = new LdtkProject(ldtkJson, textures);
 
-            Logger.LogInfo($"Loaded LDtk in {sw2.ElapsedMilliseconds} ms");
+            _camera.Position = new Vector2(
+                _ldtkProject.LdtkJson.Levels[0].PxWid * 0.5f,
+                _ldtkProject.LdtkJson.Levels[0].PxHei * 0.5f
+            );
+            
+            _camera.Zoom = 2.0f;
+            Logger.LogInfo($"LDtk Load: {loadTime} ms, Parse: {parseTime} ms, Textures: {textureLoadTime} ms");
+
         });
     }
 

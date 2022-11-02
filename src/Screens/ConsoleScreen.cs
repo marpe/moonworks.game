@@ -551,7 +551,7 @@ public class ConsoleScreen
                 textArea.Width,
                 CharSize.Y + _inputField.Height * CharSize.Y
             ),
-            Color.White * 0.1f
+            ConsoleSettings.InputBackgroundColor
         );
 
         // Draw input line indicator
@@ -559,17 +559,16 @@ public class ConsoleScreen
 
         if (0 <= inputLineIndicatorPosition.Y && inputLineIndicatorPosition.Y <= _backgroundRect.Bottom)
         {
-            var color = GetColor(ConsoleSettings.InputLineCharColor);
-            DrawText(renderer, ConsoleSettings.InputLineChar, inputLineIndicatorPosition, 0, color);
+            DrawText(renderer, ConsoleSettings.InputLineChar, inputLineIndicatorPosition, 0, ConsoleSettings.InputLineCharColor);
         }
 
         if (0 <= displayPosition.Y && displayPosition.Y <= _backgroundRect.Bottom)
         {
-            var inputColor = GetColor(ConsoleSettings.InputColor);
+            var inputColor = ConsoleSettings.InputTextColor;
             if (_autoCompleteIndex != -1)
-                inputColor = GetColor(ConsoleSettings.AutocompleteSuggestionColor);
+                inputColor = ConsoleSettings.AutocompleteSuggestionColor;
             else if (_commandHistoryIndex != -1)
-                inputColor = GetColor(ConsoleSettings.ActiveCommandHistoryColor);
+                inputColor = ConsoleSettings.ActiveCommandHistoryColor;
 
             var inputPosition = displayPosition;
             for (var i = 0; i < _inputField.Length; i++)
@@ -587,7 +586,7 @@ public class ConsoleScreen
                 displayPosition.Y + _inputField.CursorY * CharSize.Y
             );
 
-            var color = GetColor(ConsoleSettings.CaretColor);
+            var color = ConsoleSettings.CaretColor;
             var blinkDelay = 1.5f;
             if (_caretBlinkTimer >= blinkDelay)
                 color = Color.Lerp(color, Color.Transparent, MathF.Sin(ConsoleSettings.CaretBlinkSpeed * (_caretBlinkTimer - blinkDelay)));

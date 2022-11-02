@@ -17,7 +17,7 @@ public class MenuItem
 
 public class MenuScreen
 {
-    public bool IsHidden { get; private set; }
+    public bool IsHidden { get; private set; } = true;
 
     private MyGameMain _game;
 
