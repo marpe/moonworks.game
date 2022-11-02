@@ -83,7 +83,7 @@ public class MyGameMain : Game
         LoadingScreen.Update(ElapsedTime);
 
         var doUpdate = LoadingScreen.State != TransitionState.TransitionOn &&
-                        LoadingScreen.State != TransitionState.Active;
+                       LoadingScreen.State != TransitionState.Active;
 
         if (doUpdate)
         {
@@ -99,7 +99,7 @@ public class MyGameMain : Game
                 allowKeyboardInput = false;
                 allowMouseInput = false;
             }
-            
+
             if (_imGuiScreen != null)
             {
                 _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
@@ -113,7 +113,8 @@ public class MyGameMain : Game
                 }
             }
 
-            _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+            if (_menuScreen.IsHidden)
+                _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
         }
 
 
@@ -132,19 +133,19 @@ public class MyGameMain : Game
             return;
 
         _gameScreen.Draw(Renderer);
-        
+
         _imGuiScreen?.Draw(Renderer);
-        
+
         _menuScreen.Draw(Renderer);
 
         _consoleScreen.Draw(Renderer);
 
         LoadingScreen.Draw(Renderer);
-        
+
         var swap = Renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         Renderer.FlushBatches(swap, viewProjection);
-        
+
         Renderer.EndFrame();
     }
 
