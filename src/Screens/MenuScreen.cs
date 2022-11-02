@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using MoonWorks.Graphics.Font;
+﻿using MoonWorks.Graphics.Font;
 using MyGame.Graphics;
 
 namespace MyGame.Screens;

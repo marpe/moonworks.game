@@ -12,74 +12,6 @@ public enum TransitionState
     Hidden,
 }
 
-public class DiamondTransition
-{
-    public struct Uniforms
-    {
-        public float Progress;
-        public float DiamondPixelSize;
-    }
-
-    public readonly GraphicsPipeline Pipeline;
-    public Uniforms Uniform = new() { Progress = 0, DiamondPixelSize = 36 };
-
-    public DiamondTransition(GraphicsDevice device)
-    {
-        var vertexShader = new ShaderModule(device,
-            Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.DiamondTransition.Diamond_transitionVertSpv));
-        var fragmentShader = new ShaderModule(device,
-            Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.DiamondTransition.Diamond_transitionFragSpv));
-
-        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create<Uniforms>(fragmentShader, "main", 1);
-
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false
-        };
-
-        var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
-        {
-            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
-            ),
-            DepthStencilState = myDepthStencilState,
-            VertexShaderInfo = vertexShaderInfo,
-            FragmentShaderInfo = fragmentShaderInfo,
-            MultisampleState = MultisampleState.None,
-            RasterizerState = RasterizerState.CCW_CullNone,
-            PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = Renderer.GetVertexInputState(),
-        };
-
-        Pipeline = new GraphicsPipeline(
-            device,
-            myGraphicsPipelineCreateInfo
-        );
-    }
-
-    public void Draw(Renderer renderer, float progress)
-    {
-        var commandBuffer = renderer.CommandBuffer;
-        var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black, 1f);
-        commandBuffer.BeginRenderPass(
-            new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
-            new ColorAttachmentInfo(swap, LoadOp.Load));
-        commandBuffer.BindGraphicsPipeline(Pipeline);
-        Uniform.Progress = progress;
-        commandBuffer.PushFragmentShaderUniforms(Uniform);
-        renderer.SpriteBatch.Flush(commandBuffer, viewProjection);
-        commandBuffer.EndRenderPass();
-    }
-}
-
 public class LoadingScreen
 {
     private TransitionState _state = TransitionState.Hidden;
@@ -96,7 +28,8 @@ public class LoadingScreen
     private Action? _callback;
 
     private float _progress = 0;
-    private readonly DiamondTransition _diamondTransition;
+    private SceneTransition _sceneTransition = new FadeToBlack();
+    private SceneTransition _diamondTransition;
     private float _transitionSpeed = 2.0f;
 
     [ConsoleHandler("load", "Load a level")]
@@ -119,6 +52,7 @@ public class LoadingScreen
         _backgroundSprite = new Sprite(backgroundTexture);
         _blankSprite = new Sprite(blankTexture);
         _diamondTransition = new DiamondTransition(game.GraphicsDevice);
+        _sceneTransition = _diamondTransition;
     }
 
     public void StartLoad(Action loadMethod)
@@ -189,7 +123,7 @@ public class LoadingScreen
         }
 
         renderer.FlushBatches();
-        _diamondTransition.Draw(renderer, _progress);
+        _sceneTransition.Draw(renderer, _progress);
 
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;
