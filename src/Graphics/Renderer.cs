@@ -137,20 +137,20 @@ public class Renderer
         SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
     }
 
-    public void DrawLine(Vector2 from, Vector2 to, Color color)
+    public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness)
     {
-        var offset = from - to;
-        var length = offset.Length();
-        var scale = Matrix3x2.CreateScale(length, 1f, new Vector2(0, 0.5f));
-        var rotationRad = MathF.AngleBetweenVectors(from, to);
-        var rotation = Matrix3x2.CreateRotation(rotationRad, new Vector2(0, 0.5f));
+        var length = (from - to).Length();
+        var origin = Matrix3x2.CreateTranslation(0, -0.5f);
+        var scale = Matrix3x2.CreateScale(length, thickness);
+        var rotation = Matrix3x2.CreateRotation(MathF.AngleBetweenVectors(from, to));
         var translation = Matrix3x2.CreateTranslation(from);
-        SpriteBatch.Draw(_blankSprite, color, 0, scale * rotation * translation, PointClamp);
+        var tAll = origin * scale * rotation * translation;
+        SpriteBatch.Draw(_blankSprite, color, 0, tAll, PointClamp);
     }
 
-    public void DrawLine(Point from, Point to, Color color)
+    public void DrawLine(Point from, Point to, Color color, float thickness)
     {
-        DrawLine(from.ToVec2(), to.ToVec2(), color);
+        DrawLine(from.ToVec2(), to.ToVec2(), color, thickness);
     }
 
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)

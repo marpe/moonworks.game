@@ -462,8 +462,8 @@ public class ConsoleScreen
         );
 
         var marginColor = Color.Orange * 0.5f;
-        renderer.DrawLine(textArea.Min(), textArea.BottomLeft(), marginColor);
-        renderer.DrawLine(textArea.TopRight(), textArea.Max(), marginColor);
+        renderer.DrawLine(textArea.Min(), textArea.BottomLeft(), marginColor, 1f);
+        renderer.DrawLine(textArea.TopRight(), textArea.Max(), marginColor, 1f);
 
         var hasScrolled = TwConsole.ScreenBuffer.DisplayY != TwConsole.ScreenBuffer.CursorY;
         if (hasScrolled)

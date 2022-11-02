@@ -1,17 +1,107 @@
 ﻿using MyGame.Cameras;
 using MyGame.Components;
 using MyGame.Graphics;
+using MyGame.Utils;
 
 namespace MyGame.Screens;
 
+public class LdtkProject
+{
+    public Dictionary<long, Texture> Textures;
+    public LdtkJson LdtkJson;
+
+    public LdtkProject(LdtkJson ldtkJson, Dictionary<long, Texture> textures)
+    {
+        LdtkJson = ldtkJson;
+        Textures = textures;
+    }
+
+    private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
+    {
+        var x = MathF.FastFloorToInt(worldPosition.X / gridSize);
+        var y = MathF.FastFloorToInt(worldPosition.Y / gridSize);
+        return new Point((int)MathF.Clamp(x, 0, width - 1), (int)MathF.Clamp(y, 0, height - 1));
+    }
+
+    public void Draw(Renderer renderer)
+    {
+        var level = LdtkJson.Levels[0];
+        var levelPosition = new Vector2(level.WorldX, level.WorldY);
+
+        var cameraBounds = new Rectangle(0, 0, 1920, 1080);
+
+        for (var iLvl = level.LayerInstances.Length - 1; iLvl >= 0; iLvl--)
+        {
+            var layer = level.LayerInstances[iLvl];
+            if (!layer.TilesetDefUid.HasValue)
+                continue;
+
+            var texture = Textures[layer.TilesetDefUid.Value];
+
+            var layerWidth = layer.CWid;
+            var layerHeight = layer.CHei;
+
+            var min = WorldToTilePosition(cameraBounds.MinVec() - levelPosition, (int)layer.GridSize, layerWidth, layerHeight);
+            var max = WorldToTilePosition(cameraBounds.MaxVec() - levelPosition, (int)layer.GridSize, layerWidth, layerHeight);
+
+            for (var i = 0; i < layer.GridTiles.Length; i++)
+            {
+                var tile = layer.GridTiles[i];
+                RenderTile(renderer, tile, layer, levelPosition, texture);
+            }
+
+            for (var i = 0; i < layer.AutoLayerTiles.Length; i++)
+            {
+                var tile = layer.AutoLayerTiles[i];
+                RenderTile(renderer, tile, layer, levelPosition, texture);
+            }
+
+            /*for (var x = min.X; x <= max.X; x++)
+            {
+                for (var y = min.Y; y <= max.Y; y++)
+                {
+                    // var tile = layer.Tiles[x, y];
+                    // if (tile == null)
+                        // continue;
+                    // RenderTile(batcher, tile, layer.LayerInstance, levelPosition, texture);
+                }
+            }*/
+        }
+    }
+
+    private static void RenderTile(Renderer renderer, TileInstance tile, LayerInstance layer, Vector2 levelPosition, Texture texture)
+    {
+        var tilePosition = new Vector2(tile.Px[0], tile.Px[1]);
+        var srcRect = new Rectangle((int)tile.Src[0], (int)tile.Src[1], (int)layer.GridSize, (int)layer.GridSize);
+        var destRect = new Rectangle(
+            (int)(levelPosition.X + tilePosition.X),
+            (int)(levelPosition.Y + tilePosition.Y),
+            (int)layer.GridSize,
+            (int)layer.GridSize
+        );
+        var sprite = new Sprite(texture, srcRect);
+        var transform = Matrix3x2.CreateTranslation(destRect.X, destRect.Y);
+        renderer.DrawSprite(sprite, transform, Color.White, 0);
+    }
+
+    public void Dispose()
+    {
+        foreach (var (key, texture) in Textures)
+        {
+            texture.Dispose();
+        }
+
+        Textures.Clear();
+    }
+}
+
 public class GameScreen
 {
-    private Sprite? _spriteRenderer;
-    private Sprite? _backgroundSprite;
     private Camera _camera;
     private MyGameMain _game;
     private GraphicsDevice _device;
     private CameraController _cameraController;
+    private LdtkProject? _ldtkProject;
 
     public GameScreen(MyGameMain game)
     {
@@ -19,25 +109,9 @@ public class GameScreen
         _device = _game.GraphicsDevice;
 
         LoadLDtk();
-        LoadTextures();
 
         _camera = new Camera();
         _cameraController = new CameraController(_camera);
-    }
-
-    private void LoadTextures()
-    {
-        Task.Run(() =>
-        {
-            var sw2 = Stopwatch.StartNew();
-            var asepritePath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Ldtk.Tileset1Aseprite);
-            var asepriteTexture = TextureUtils.LoadAseprite(_device, asepritePath);
-            _spriteRenderer = new Sprite(asepriteTexture);
-
-            var menu = TextureUtils.LoadPngTexture(_device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
-            _backgroundSprite = new Sprite(menu);
-            Logger.LogInfo($"Loaded textures in {sw2.ElapsedMilliseconds} ms");
-        });
     }
 
     private void LoadLDtk()
@@ -47,15 +121,47 @@ public class GameScreen
             var sw2 = Stopwatch.StartNew();
             var ldtkPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Ldtk.MapLdtk);
             var jsonString = File.ReadAllText(ldtkPath);
+
             var ldtkJson = LdtkJson.FromJson(jsonString);
+            var textures = LoadTextures(_game.GraphicsDevice, ldtkPath, ldtkJson.Defs.Tilesets);
+
+            _ldtkProject = new LdtkProject(ldtkJson, textures);
+
             Logger.LogInfo($"Loaded LDtk in {sw2.ElapsedMilliseconds} ms");
         });
     }
 
+
+    private static Dictionary<long, Texture> LoadTextures(GraphicsDevice device, string ldtkPath, TilesetDefinition[] tilesets)
+    {
+        var textures = new Dictionary<long, Texture>();
+
+        var commandBuffer = device.AcquireCommandBuffer();
+        foreach (var tilesetDef in tilesets)
+        {
+            if (string.IsNullOrWhiteSpace(tilesetDef.RelPath))
+                continue;
+            var tilesetPath = Path.Combine(Path.GetDirectoryName(ldtkPath) ?? "", tilesetDef.RelPath);
+            if (tilesetPath.EndsWith(".aseprite"))
+            {
+                var asepriteTexture = TextureUtils.LoadAseprite(device, tilesetPath);
+                textures.Add(tilesetDef.Uid, asepriteTexture);
+            }
+            else
+            {
+                var texture = Texture.LoadPNG(device, commandBuffer, tilesetPath);
+                textures.Add(tilesetDef.Uid, texture);
+            }
+        }
+
+        device.Submit(commandBuffer);
+
+        return textures;
+    }
+
     public void Unload()
     {
-        _spriteRenderer?.Texture.Dispose();
-        _backgroundSprite?.Texture.Dispose();
+        _ldtkProject?.Dispose();
     }
 
     public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
@@ -66,16 +172,25 @@ public class GameScreen
 
     public void Draw(Renderer renderer)
     {
-        if (_backgroundSprite != null)
-        {
-            renderer.DrawSprite(_backgroundSprite.Value, Matrix3x2.CreateScale(3f, 3f) * Matrix3x2.CreateTranslation(-200, -100),
-                Color.White,
-                200f);
-            renderer.DrawSprite(_backgroundSprite.Value, Matrix3x2.CreateScale(1f, 1f) * Matrix3x2.CreateTranslation(-200, -100),
-                Color.White,
-                180f);
-        }
+        _ldtkProject?.Draw(renderer);
 
+        if (_ldtkProject != null)
+        {
+            var width = _ldtkProject.LdtkJson.Levels[0].PxWid;
+            var height = _ldtkProject.LdtkJson.Levels[0].PxHei;
+            ReadOnlySpan<Vector2> points = stackalloc Vector2[]
+            {
+                Vector2.Zero,
+                new(width, 0),
+                new(width, height),
+                new(0, height)
+            };
+            for (var i = 0; i < 4; i++)
+            {
+                renderer.DrawLine(points[i], points[(i + 1) % 4], Color.Red, 1f);
+            }
+        }
+        
         renderer.DrawText(FontType.RobotoMedium, "Hello!", Vector2.Zero, Color.White);
         renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);
         renderer.DrawText(FontType.RobotoMedium, "Hello again!", new Vector2(150, 150), Color.White);

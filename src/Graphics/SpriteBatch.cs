@@ -69,33 +69,24 @@ public class SpriteBatch
         SubtractVector(ref topRight, ref offset);
         SubtractVector(ref bottomRight, ref offset);*/
 
-        TransformVector(ref topLeft, transform);
-        TransformVector(ref bottomLeft, transform);
-        TransformVector(ref topRight, transform);
-        TransformVector(ref bottomRight, transform);
-
-        /*topLeft = Vector2.Transform(topLeft, transform);
-        bottomLeft = Vector2.Transform(bottomLeft, transform);
-        topRight = Vector2.Transform(topRight, transform);
-        bottomRight = Vector2.Transform(bottomRight, transform);*/
+        Vector2.Transform(ref topLeft, ref transform, out topLeft);
+        Vector2.Transform(ref bottomLeft, ref transform, out bottomLeft);
+        Vector2.Transform(ref topRight, ref transform, out topRight);
+        Vector2.Transform(ref bottomRight, ref transform, out bottomRight);
 
         SetVector(ref _vertices[vertexCount].Position, topLeft, depth);
-        // _vertices[vertexCount].Position = new Vector3(topLeft, depth);
         _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
         _vertices[vertexCount].Color = color;
 
         SetVector(ref _vertices[vertexCount + 1].Position, bottomLeft, depth);
-        // _vertices[vertexCount + 1].Position = new Vector3(bottomLeft, depth);
         _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
         _vertices[vertexCount + 1].Color = color;
 
         SetVector(ref _vertices[vertexCount + 2].Position, topRight, depth);
-        // _vertices[vertexCount + 2].Position = new Vector3(topRight, depth);
         _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
         _vertices[vertexCount + 2].Color = color;
 
         SetVector(ref _vertices[vertexCount + 3].Position, bottomRight, depth);
-        // _vertices[vertexCount + 3].Position = new Vector3(bottomRight, depth);
         _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
         _vertices[vertexCount + 3].Color = color;
 
@@ -107,12 +98,6 @@ public class SpriteBatch
     {
         a.X -= b.X;
         a.Y -= b.Y;
-    }
-
-    private static void TransformVector(ref Vector2 vec, in Matrix3x2 matrix)
-    {
-        vec.X = (vec.X * matrix.M11) + (vec.Y * matrix.M21) + matrix.M31;
-        vec.Y = (vec.X * matrix.M12) + (vec.Y * matrix.M22) + matrix.M32;
     }
 
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
