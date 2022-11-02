@@ -178,24 +178,8 @@ public class GameScreen
         {
             var width = _ldtkProject.LdtkJson.Levels[0].PxWid;
             var height = _ldtkProject.LdtkJson.Levels[0].PxHei;
-            ReadOnlySpan<Vector2> points = stackalloc Vector2[]
-            {
-                Vector2.Zero,
-                new(width, 0),
-                new(width, height),
-                new(0, height)
-            };
-            for (var i = 0; i < 4; i++)
-            {
-                renderer.DrawLine(points[i], points[(i + 1) % 4], Color.Red, 1f);
-            }
+            DrawRect(renderer, Vector2.Zero, new Vector2(width, height), Color.Magenta, 1.0f);
         }
-        
-        renderer.DrawText(FontType.RobotoMedium, "Hello!", Vector2.Zero, Color.White);
-        renderer.DrawText("In default font", new Vector2(100, 100), 0, Color.White);
-        renderer.DrawText(FontType.RobotoMedium, "Hello again!", new Vector2(150, 150), Color.White);
-
-        renderer.DrawBMText("BMFONT TEST", new Vector2(200, 0), 0, Color.White);
 
         _camera.Size = _game.MainWindow.Size;
 
@@ -203,5 +187,20 @@ public class GameScreen
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
         renderer.FlushBatches(renderer.SwapTexture, _cameraController.ViewProjection, renderer.DefaultClearColor);
+    }
+
+    private static void DrawRect(Renderer renderer, Vector2 min, Vector2 max, Color color, float thickness)
+    {
+        ReadOnlySpan<Vector2> points = stackalloc Vector2[]
+        {
+            min,
+            new(max.X, min.Y),
+            max,
+            new(min.X, max.Y)
+        };
+        for (var i = 0; i < 4; i++)
+        {
+            renderer.DrawLine(points[i], points[(i + 1) % 4], color, thickness);
+        }
     }
 }

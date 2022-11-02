@@ -90,20 +90,23 @@ public class MenuScreen
                 // _game.LoadingScreen.StartLoad(() => { });
             }
 
-            if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
+            if (!IsHidden)
             {
-                _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
-            }
-            else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
-            {
-                _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
-            }
-
-            if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
-            {
-                if (_selectedIndex != -1)
+                if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
                 {
-                    _menuItems[_selectedIndex].Callback.Invoke();
+                    _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
+                }
+                else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
+                {
+                    _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
+                }
+
+                if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
+                {
+                    if (_selectedIndex != -1)
+                    {
+                        _menuItems[_selectedIndex].Callback.Invoke();
+                    }
                 }
             }
         }
