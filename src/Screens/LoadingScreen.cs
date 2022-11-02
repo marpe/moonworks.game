@@ -14,13 +14,14 @@ public enum TransitionState
 
 public class DiamondTransition
 {
-    public readonly GraphicsPipeline Pipeline;
-
     public struct Uniforms
     {
         public float Progress;
         public float DiamondPixelSize;
     }
+    
+    public readonly GraphicsPipeline Pipeline;
+    public Uniforms Uniform = new() { Progress = 0, DiamondPixelSize = 36 };
 
     public DiamondTransition(GraphicsDevice device)
     {
@@ -61,6 +62,22 @@ public class DiamondTransition
             myGraphicsPipelineCreateInfo
         );
     }
+
+    public void Draw(Renderer renderer, float progress)
+    {
+        var commandBuffer = renderer.CommandBuffer;
+        var swap = renderer.SwapTexture;
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black, 1f);
+        commandBuffer.BeginRenderPass(
+            new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
+            new ColorAttachmentInfo(swap, LoadOp.Load));
+        commandBuffer.BindGraphicsPipeline(Pipeline);
+        Uniform.Progress = progress;
+        commandBuffer.PushFragmentShaderUniforms(Uniform);
+        renderer.SpriteBatch.Flush(commandBuffer, viewProjection);
+        commandBuffer.EndRenderPass();
+    }
 }
 
 public class LoadingScreen
@@ -80,6 +97,7 @@ public class LoadingScreen
 
     private float _progress = 0;
     private readonly DiamondTransition _diamondTransition;
+    private float _transitionSpeed = 2.0f;
 
     [ConsoleHandler("load", "Load a level")]
     public static void TestLoad()
@@ -120,7 +138,7 @@ public class LoadingScreen
     {
         if (_state == TransitionState.TransitionOn)
         {
-            _progress += 1f * deltaSeconds;
+            _progress += _transitionSpeed * deltaSeconds;
 
             if (_progress >= 1.0f)
             {
@@ -136,7 +154,7 @@ public class LoadingScreen
         }
         else if (_state == TransitionState.TransitionOff)
         {
-            _progress -= 1f * deltaSeconds;
+            _progress -= _transitionSpeed * deltaSeconds;
             if (_progress <= 0)
             {
                 _progress = 0;
@@ -169,7 +187,10 @@ public class LoadingScreen
         {
             renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
         }
-
+        
+        renderer.FlushBatches();
+        _diamondTransition.Draw(renderer, _progress);
+        
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
@@ -178,21 +199,5 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.MeasureString(FontType.RobotoMedium, loadingStr);
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, Color.White * _progress);
-
-        renderer.FlushBatches();
-
-        var commandBuffer = renderer.CommandBuffer;
-        renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black, 1f);
-        commandBuffer.BeginRenderPass(
-            new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
-            new ColorAttachmentInfo(swap, LoadOp.Load));
-        commandBuffer.BindGraphicsPipeline(_diamondTransition.Pipeline);
-        commandBuffer.PushFragmentShaderUniforms(new DiamondTransition.Uniforms()
-        {
-            DiamondPixelSize = 32f,
-            Progress = _progress
-        });
-        renderer.SpriteBatch.Flush(commandBuffer, viewProjection);
-        commandBuffer.EndRenderPass();
     }
 }

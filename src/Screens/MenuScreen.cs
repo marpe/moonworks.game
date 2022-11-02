@@ -89,7 +89,6 @@ public class MenuScreen
                 _game.LoadingScreen.StartLoad(() =>
                 {
                     IsHidden = !IsHidden;
-                    Thread.Sleep(300);
                 });
             }
 
