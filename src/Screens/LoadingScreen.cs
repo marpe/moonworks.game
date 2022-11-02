@@ -19,7 +19,7 @@ public class DiamondTransition
         public float Progress;
         public float DiamondPixelSize;
     }
-    
+
     public readonly GraphicsPipeline Pipeline;
     public Uniforms Uniform = new() { Progress = 0, DiamondPixelSize = 36 };
 
@@ -168,12 +168,12 @@ public class LoadingScreen
 
     public void Draw(Renderer renderer)
     {
-        // if (_state == TransitionState.Hidden)
-        // return;
+        if (_state == TransitionState.Hidden)
+            return;
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        
+
         if (_shouldCopyRender)
         {
             Logger.LogInfo($"Copying render...");
@@ -187,10 +187,10 @@ public class LoadingScreen
         {
             renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
         }
-        
+
         renderer.FlushBatches();
         _diamondTransition.Draw(renderer, _progress);
-        
+
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
