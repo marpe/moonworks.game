@@ -53,7 +53,8 @@ public class MenuScreen
     {
         if (!IsHidden)
         {
-            renderer.DrawRect(new Rectangle(0, 0, (int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height), Color.Black * 0.5f, 0f);
+            renderer.DrawRect(new Rectangle(0, 0, (int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height), Color.Black * 0.5f,
+                0f);
 
             var center = new Vector2(renderer.SwapTexture.Width * 0.5f, renderer.SwapTexture.Height * 0.5f);
             var position = center;
@@ -66,12 +67,12 @@ public class MenuScreen
                     VerticalAlignment.Middle);
                 position.Y += lineHeight;
             }
-            
+
             // TODO (marpe): Flush text batcher to sprite batch here, otherwise if console screen isnt being redrawn,
             // these text draw calls will be submitted after prev console render has been drawn 
             renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
         }
-        
+
         /*var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         renderer.FlushBatches(swap, viewProjection);*/
@@ -85,10 +86,8 @@ public class MenuScreen
         {
             if (input.IsKeyPressed(KeyCode.Escape))
             {
-                _game.LoadingScreen.StartLoad(() =>
-                {
-                    IsHidden = !IsHidden;
-                });
+                IsHidden = !IsHidden;
+                // _game.LoadingScreen.StartLoad(() => { });
             }
 
             if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
