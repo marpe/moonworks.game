@@ -1,0 +1,1 @@
+bmfont64.exe -c config.bmfc -o consolas.fnt
