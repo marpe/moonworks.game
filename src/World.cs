@@ -39,6 +39,7 @@ public class World
 
     private List<Enemy> _enemies;
     private Player _player;
+    private float _totalTime;
 
     public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -116,6 +117,7 @@ public class World
 
     public void Update(float deltaSeconds)
     {
+        _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = (uint)(_player.TotalTime * 10) % 2;
     }
@@ -148,15 +150,29 @@ public class World
 
         // DrawDebug(renderer, _player);
 
-        var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
-        var xform = Matrix3x2.CreateTranslation(_player.Position.X, _player.Position.Y);
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+        {
+            var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
+            var xform = Matrix3x2.CreateTranslation(_player.Position.X, _player.Position.Y);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+        }
 
         for (var i = 0; i < _enemies.Count; i++)
         {
             var entity = _enemies[i];
-            DrawDebug(renderer, entity);
+
+            var offset = entity.Type switch
+            {
+                EnemyType.Slug => 5,
+                EnemyType.BlueBee => 3,
+                EnemyType.YellowBee or _ => 1,
+            };
+            
+            var frameIndex = (int)(_totalTime * 10) % 2;
+            var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
+            var xform = Matrix3x2.CreateTranslation(entity.Position.X, entity.Position.Y);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+            // DrawDebug(renderer, entity);
         }
     }
 
