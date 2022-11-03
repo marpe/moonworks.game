@@ -355,7 +355,9 @@ public class ImGuiScreen
 
     public void Destroy()
     {
-        ImGui.SaveIniSettingsToDisk(ImGui.GetIO().IniFilename);
+        var fileName = ImGui.GetIO().IniFilename;
+        ImGui.SaveIniSettingsToDisk(fileName);
+        Logger.LogInfo($"Saved ImGui Settings to {fileName}");
         _imGuiRenderer.Dispose();
     }
 }

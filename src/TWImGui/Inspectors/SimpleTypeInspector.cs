@@ -149,8 +149,11 @@ public class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Rectangle))
         {
             ImGui.PushID(2);
-            if (ImGui.CollapsingHeader(_name, ImGuiTreeNodeFlags.DefaultOpen))
+
+            if (IsReadOnly) { ImGui.EndDisabled(); }
+            if (ImGuiExt.BeginCollapsingHeader(_name, Color.Transparent))
             {
+                if (IsReadOnly) { ImGui.BeginDisabled(); }
                 var value = GetValue<Rectangle>();
 
                 var position = value.Location.ToNumerics();
@@ -168,7 +171,10 @@ public class SimpleTypeInspector : Inspector
                     value.Height = (int)size.Y;
                     SetValue(value);
                 }
+                if (IsReadOnly) { ImGui.EndDisabled(); }
+                ImGuiExt.EndCollapsingHeader();
             }
+            if (IsReadOnly) { ImGui.BeginDisabled(); }
 
             ImGui.PopID();
         }
