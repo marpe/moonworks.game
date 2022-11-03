@@ -43,6 +43,10 @@ public static class LDtkGenerator
         TextGenerator.WriteLine($"public partial class Entity");
         TextGenerator.StartBlock();
 
+        TextGenerator.WriteLine($"public Guid Iid;");
+        TextGenerator.WriteLine($"public Point Position;");
+        TextGenerator.WriteLine($"public Point Size;");
+        
         // type map start
         TextGenerator.WriteLine($"public static Dictionary<EntityType, Type> TypeMap = new()");
         TextGenerator.StartBlock();
@@ -53,8 +57,8 @@ public static class LDtkGenerator
             TextGenerator.WriteLine($"{{ EntityType.{entity.Identifier}, typeof({entity.Identifier}) }},");
         }
 
-        TextGenerator.EndBlock();
-        TextGenerator.WriteLine(";");
+        TextGenerator.EndBlock("};");
+        TextGenerator.WriteLine();
         // type map end
         TextGenerator.EndBlock();
         TextGenerator.WriteLine();

@@ -16,7 +16,7 @@ public class World
 
     public Point WorldSize;
 
-    private List<Entity> _entites = new();
+    private List<Entity> _entities = new();
     private static JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     public World(LdtkJson ldtk, Dictionary<long, Texture> tilesetTextures)
@@ -51,13 +51,8 @@ public class World
                 WorldSize.Y = max.Y;
         }
 
-        var executingAssembly = Assembly.GetExecutingAssembly();
-        var entityTypes = new Dictionary<string, Type>();
-        
         foreach (var entityDef in LdtkRaw.Defs.Entities)
         {
-            var entityType = executingAssembly.DefinedTypes.First(t => t.Name == entityDef.Identifier);
-            entityTypes.Add(entityDef.Identifier, entityType);
         }
 
         foreach (var layer in level.LayerInstances)
@@ -67,16 +62,21 @@ public class World
 
             foreach (var entityInstance in layer.EntityInstances)
             {
-                var entityType = entityTypes[entityInstance.Identifier];
-                var entity = (Entity)(Activator.CreateInstance(entityType) ?? throw new InvalidOperationException());
-                _entites.Add(entity);
+                var parsedType = Enum.Parse<EntityType>(entityInstance.Identifier);
+                var type = Entity.TypeMap[parsedType];
+                var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
                 ParseFields(entity, entityInstance);
+                _entities.Add(entity);
             }
         }
     }
 
     private static void ParseFields(Entity entity, EntityInstance entityInstance)
     {
+        entity.Iid = Guid.Parse(entityInstance.Iid);
+        entity.Position = new Point((int)entityInstance.Px[0], (int)entityInstance.Px[1]);
+        entity.Size = new Point((int)entityInstance.Width, (int)entityInstance.Height);
+        
         foreach (var field in entityInstance.FieldInstances)
         {
             var fieldValue = (JToken)field.Value;
@@ -107,6 +107,12 @@ public class World
 
             if (Debug)
                 renderer.DrawRect(level.Position, level.Position + level.Size, Color.Red, 1.0f);
+        }
+
+        for (var i = 0; i < _entities.Count; i++)
+        {
+            var entity = _entities[i];
+            renderer.DrawRect(new Rectangle(entity.Position.X, entity.Position.Y, entity.Size.X, entity.Size.Y), Color.Black);
         }
 
         if (Debug)

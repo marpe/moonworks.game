@@ -27,10 +27,10 @@ public static class TextGenerator
         _indent++;
     }
 
-    public static void EndBlock()
+    public static void EndBlock(string endStr = "}")
     {
         _indent--;
-        WriteLine("}");
+        WriteLine(endStr);
     }
 
     public static string AsString()
