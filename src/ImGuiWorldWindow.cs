@@ -1,10 +1,12 @@
 ﻿using ImGuiNET;
 using MyGame.TWImGui;
+using MyGame.TWImGui.Inspectors;
 
 namespace MyGame;
 
 public class ImGuiWorldWindow : ImGuiWindow
 {
+    private GroupInspector? _playerInspector;
     public const string WindowTitle = "World";
 
     public ImGuiWorldWindow() : base(WindowTitle)
@@ -29,22 +31,12 @@ public class ImGuiWorldWindow : ImGuiWindow
 
         ImGui.Separator();
 
-        ImGui.InputFloat("JumpSpeed", ref world.Player.JumpSpeed);
-        ImGui.InputFloat("Speed", ref world.Player.Speed);
-        ImGui.InputFloat("Gravity", ref world.Gravity);
-        var isGrounded = world.IsGrounded(world.Player, world.Player.Velocity);
-        ImGui.Checkbox("IsGrounded", ref isGrounded);
-        var cell = world.GetGridCoords(world.Player);
-        var gridSize = world.GridSize;
-        var positionInCell = new Vector2(
-            (world.Player.Position.X % gridSize) / gridSize,
-            (world.Player.Position.Y % gridSize) / gridSize
-        );
-        var cellNum = new Num.Vector2(cell.X, cell.Y);
-        ImGui.InputFloat2("Cell", ref cellNum);
-        var cellRel = new Num.Vector2(positionInCell.X, positionInCell.Y);
-        var velocity = new Num.Vector2(world.Player.Velocity.X, world.Player.Velocity.Y);
-        ImGui.InputFloat2("Velocity", ref velocity);
+        if (_playerInspector == null)
+        {
+            _playerInspector = InspectorExt.GetInspectorForTarget(world.Player);
+        }
+        _playerInspector.Draw();
+
         ImGui.End();
     }
 }
