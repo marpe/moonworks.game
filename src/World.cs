@@ -12,6 +12,7 @@ public class Bounds
 {
     public Vector2 Min;
     public Vector2 Size;
+    public Vector2 Max => Min + Size;
 
     public Bounds(float x, float y, float w, float h)
     {
@@ -28,7 +29,8 @@ public class Bounds
 public partial class Entity
 {
     public Vector2 SpritePosition;
-    public Bounds Bounds => new Bounds(Position.X, Position.Y, Size.X, Size.Y);
+    public Vector2 Origin => Pivot * Size;
+    public Bounds Bounds => new Bounds(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
 }
 
 public partial class Player : Entity
@@ -43,12 +45,22 @@ public partial class Player : Entity
 
     public uint FrameIndex;
     public float TotalTime;
-    public float Speed = 64f;
+    public float Speed = 1024f;
     public Vector2 Velocity;
+}
+
+public class DebugDraw
+{
+    public Rectangle Rectangle;
+    public Color Color;
+    public ulong UpdateCountAtDraw;
+    public string? Text;
 }
 
 public class World
 {
+    public const float KillThreshold = 0.0005f;
+
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
@@ -62,7 +74,9 @@ public class World
     private List<Enemy> _enemies;
     private Player _player;
     private float _totalTime;
-    private float _gravity = 100f;
+    private float _gravity = 512f;
+
+    private List<DebugDraw> _debugDrawCalls = new();
 
     public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -119,7 +133,8 @@ public class World
 
                 entity.EntityType = parsedType;
                 entity.Iid = Guid.Parse(entityInstance.Iid);
-                entity.Position = level.Position + entityInstance.Position - entityInstance.PivotP * entityInstance.Size;
+                entity.Pivot = entityInstance.PivotVec;
+                entity.Position = level.Position + entityInstance.Position;
                 entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor[1..]);
 
@@ -142,7 +157,10 @@ public class World
     {
         _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
-        _player.FrameIndex = (uint)(_player.TotalTime * 10) % 2;
+        _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
+
+        if (input.IsKeyPressed(KeyCode.PageDown))
+            _player.Position = new Vector2(100, 50);
 
         var movementX = 0;
         if (input.IsKeyDown(KeyCode.Right))
@@ -156,10 +174,27 @@ public class World
 
 
         var dx = _player.Velocity.X * deltaSeconds;
+        var playerGrid = SnapToGrid(_player);
+        var playerGridCell = GetGridCoords(_player);
+        var playerGridRel = (_player.Position + new Vector2(dx, 0) - playerGrid) / LdtkRaw.DefaultGridSize;
+        _debugDrawCalls.Add(new DebugDraw()
+        {
+            UpdateCountAtDraw = Shared.Game.UpdateCount,
+            Rectangle = new Rectangle((int)playerGrid.X, (int)playerGrid.Y, 0, 0),
+            Text = playerGridRel.ToString(),
+            Color = Color.Black
+        });
         if (dx != 0)
         {
-            if (HasCollision(_player.Position.X + dx, _player.Position.Y))
+            if (playerGridRel.X > 0.8f && HasCollision((playerGridCell.X + 1) * LdtkRaw.DefaultGridSize, playerGridCell.Y * LdtkRaw.DefaultGridSize))
             {
+                _player.Position.X = (playerGridCell.X + 0.8f) * LdtkRaw.DefaultGridSize;
+                _player.Velocity.X = 0;
+            }
+            
+            if (playerGridRel.X < 0.2f && HasCollision((playerGridCell.X - 1) * LdtkRaw.DefaultGridSize, playerGridCell.Y * LdtkRaw.DefaultGridSize))
+            {
+                _player.Position.X = (playerGridCell.X + 0.2f) * LdtkRaw.DefaultGridSize;
                 _player.Velocity.X = 0;
             }
         }
@@ -167,29 +202,85 @@ public class World
         var dy = _player.Velocity.Y * deltaSeconds;
         if (dy != 0)
         {
-            if (HasCollision(_player.Position.X, _player.Position.Y + dy))
+            var gridPos = SnapToGrid(_player, new Vector2(0, dy));
+            if (HasCollision(gridPos.X, gridPos.Y))
             {
                 _player.Velocity.Y = 0;
+                _player.Position.Y = ((int)(_player.Position.Y / LdtkRaw.DefaultGridSize)) * LdtkRaw.DefaultGridSize;
             }
         }
 
         _player.Position += _player.Velocity * deltaSeconds;
 
-        _player.Velocity.X *= 0.95f;
-        _player.Velocity.Y *= 0.95f;
+        _player.Velocity.X *= 0.84f;
+        if (MathF.IsNearZero(_player.Velocity.X, KillThreshold))
+            _player.Velocity.X = 0;
+        _player.Velocity.Y *= 0.94f;
+        if (MathF.IsNearZero(_player.Velocity.Y, KillThreshold))
+            _player.Velocity.Y = 0;
 
-        var isGrounded = _player.Velocity.Y == 0 && HasCollision(_player.Position.X, _player.Position.Y + 1);
+
+        var snapped = SnapToGrid(_player, new Vector2(0, 1));
+        var isGrounded = _player.Velocity.Y == 0 && HasCollision(snapped.X, snapped.Y);
         if (!isGrounded)
             _player.Velocity.Y += _gravity * deltaSeconds;
     }
 
-    public bool HasCollision(float x, float y)
+    private Point GetGridCoords(Entity entity, Vector2? deltaMove = null)
     {
-        return x < 0 || x >= 370 || y < 0 || y >= 300;
+        var p = entity.Position + (deltaMove ?? Vector2.Zero);
+        return GetGridCoords(p, entity.Pivot, (int)LdtkRaw.DefaultGridSize);
+    }
+
+    private Point SnapToGrid(Entity entity, Vector2? deltaMove = null)
+    {
+        var gridCoords = GetGridCoords(entity, deltaMove);
+        var gridSize = (int)LdtkRaw.DefaultGridSize;
+        return new Point(gridCoords.X * gridSize, gridCoords.Y * gridSize);
+    }
+
+    private static Point GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
+    {
+        var (x, y) = (position.X, position.Y);
+        var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);
+        var gridX = (int)((x + adjustX) / gridSize);
+        var gridY = (int)((y + adjustY) / gridSize);
+        return new Point(gridX, gridY);
+    }
+
+    private bool HasCollision(float x, float y)
+    {
+        var isMultiWorld = LdtkRaw.Worlds.Length > 0;
+        var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+        var hasTile = false;
+        foreach (var level in levels)
+        {
+            var levelMin = level.Position;
+            var levelMax = level.Position + level.Size;
+
+            if (x < levelMin.X || y < levelMin.Y ||
+                x >= levelMax.X || y >= levelMax.Y)
+                continue;
+
+            foreach (var layer in level.LayerInstances)
+            {
+                if (layer.Identifier != "Tiles")
+                    continue;
+                if (layer.Type != "IntGrid")
+                    continue;
+                var gridCoords = new Point((int)((x - levelMin.X) / layer.GridSize), (int)((y - levelMin.Y) / layer.GridSize));
+                var value = layer.IntGridCsv[gridCoords.Y * layer.CWid + gridCoords.X];
+                if (value == 5 || value == 6)
+                    hasTile = true;
+            }
+        }
+
+        return hasTile;
     }
 
     public void Draw(Renderer renderer, Camera camera)
     {
+        camera.Position = _player.Position;
         var cameraBounds = camera.Bounds;
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
@@ -198,7 +289,7 @@ public class World
         for (var levelIndex = 0; levelIndex < levels.Length; levelIndex++)
         {
             var level = levels[levelIndex];
-            var color = ColorExt.FromHex(level.BgColor[1..]);
+            var color = ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
             renderer.DrawRect(level.Bounds, color);
 
             for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
@@ -208,7 +299,9 @@ public class World
             }
 
             if (Debug)
+            {
                 renderer.DrawRect(level.Position, level.Position + level.Size, Color.Red, 1.0f);
+            }
         }
 
         if (Debug)
@@ -219,8 +312,9 @@ public class World
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         {
             var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
-            var xform = Matrix3x2.CreateTranslation(_player.Position.X, _player.Position.Y);
+            var xform = Matrix3x2.CreateTranslation(_player.Position.X - _player.Origin.X, _player.Position.Y - _player.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+            DrawDebug(renderer, _player);
         }
 
         for (var i = 0; i < _enemies.Count; i++)
@@ -236,9 +330,27 @@ public class World
 
             var frameIndex = (int)(_totalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-            var xform = Matrix3x2.CreateTranslation(entity.Position.X, entity.Position.Y);
+            var xform = Matrix3x2.CreateTranslation(entity.Position.X - entity.Origin.X, entity.Position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
-            // DrawDebug(renderer, entity);
+            DrawDebug(renderer, entity);
+        }
+
+        for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
+        {
+            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
+                _debugDrawCalls.RemoveAt(i);
+        }
+
+        foreach (var debugDrawCall in _debugDrawCalls)
+        {
+            if (debugDrawCall.Text != null)
+            {
+                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min(), debugDrawCall.Color);
+            }
+            else
+            {
+                renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
+            }
         }
     }
 
@@ -252,17 +364,34 @@ public class World
         var layerWidth = layer.CWid;
         var layerHeight = layer.CHei;
 
-        var min = cameraBounds
+        var boundsMin = cameraBounds
             .MinVec(); // WorldToTilePosition(cameraBounds.MinVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
-        var max = cameraBounds
+        var boundsMax = cameraBounds
             .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
+
+        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles")
+        {
+            for (var i = 0; i < layer.IntGridCsv.Length; i++)
+            {
+                var value = layer.IntGridCsv[i];
+                if (value is 5 or 6)
+                {
+                    var gridSize = layer.GridSize;
+                    var gridY = (int)(i / layer.CWid);
+                    var gridX = (int)(i % layer.CWid);
+                    var min = level.Position + layer.TotalOffset + new Vector2(gridX, gridY) * gridSize;
+                    var max = min + new Vector2(gridSize, gridSize);
+                    renderer.DrawRect(min, max, Color.Red, 1.0f);
+                }
+            }
+        }
 
         for (var i = 0; i < layer.GridTiles.Length; i++)
         {
             var tile = layer.GridTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X < min.X || tilePos.Y < min.Y ||
-                tilePos.X > max.X || tilePos.Y > max.Y)
+            if (tilePos.X < boundsMin.X || tilePos.Y < boundsMin.Y ||
+                tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
                 continue;
             RenderTile(renderer, tilePos, tile, layer, texture);
         }
@@ -271,8 +400,8 @@ public class World
         {
             var tile = layer.AutoLayerTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X < min.X || tilePos.Y < min.Y ||
-                tilePos.X > max.X || tilePos.Y > max.Y)
+            if (tilePos.X < boundsMin.X || tilePos.Y < boundsMin.Y ||
+                tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
                 continue;
             RenderTile(renderer, tilePos, tile, layer, texture);
         }
@@ -307,9 +436,15 @@ public class World
         TilesetTextures.Clear();
     }
 
-    public static void DrawDebug(Renderer renderer, Entity e)
+    public void DrawDebug(Renderer renderer, Entity e)
     {
-        renderer.DrawRect(e.Bounds, e.SmartColor);
+        var min = e.Bounds.Min;
+        var max = e.Bounds.Max;
+        renderer.DrawRect(min, max, e.SmartColor, 1.0f);
+        renderer.DrawRect(new Rectangle((int)e.Position.X, (int)e.Position.Y, 1, 1), Color.Magenta, 0);
+        var snappedToGrid = SnapToGrid(e);
+        renderer.DrawRect(new Rectangle(snappedToGrid.X - 1, snappedToGrid.Y, 3, 1), Color.Red, 0);
+        renderer.DrawRect(new Rectangle(snappedToGrid.X, snappedToGrid.Y - 1, 1, 3), Color.Red, 0);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)

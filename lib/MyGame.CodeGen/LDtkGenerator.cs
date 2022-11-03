@@ -47,6 +47,7 @@ public static class LDtkGenerator
         TextGenerator.WriteLine($"public Guid Iid;");
         TextGenerator.WriteLine($"public Vector2 Position;");
         TextGenerator.WriteLine($"public Vector2 Size;");
+        TextGenerator.WriteLine($"public Vector2 Pivot;");
         TextGenerator.WriteLine($"public Color SmartColor;");
         
         // type map start

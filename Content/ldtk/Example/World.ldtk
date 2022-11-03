@@ -803,7 +803,7 @@
 			"limitScope": "PerLevel",
 			"limitBehavior": "MoveLastOne",
 			"pivotX": 0.5,
-			"pivotY": 0.5,
+			"pivotY": 1,
 			"fieldDefs": [
 				{
 					"identifier": "Wander",
@@ -943,11 +943,11 @@
 			"tileRenderMode": "FitInside",
 			"tileRect": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
 			"nineSliceBorders": [],
-			"maxCount": 1,
+			"maxCount": 2,
 			"limitScope": "PerWorld",
 			"limitBehavior": "PreventAdding",
 			"pivotX": 0.5,
-			"pivotY": 0.5,
+			"pivotY": 1,
 			"fieldDefs": []
 		},
 		{
@@ -1332,7 +1332,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [11,9],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#FF0000",
@@ -1359,7 +1359,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [4,7],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#18FF00",
@@ -1386,7 +1386,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [15,6],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#003BFF",
@@ -1695,7 +1695,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [14,11],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#A65050",
@@ -1722,7 +1722,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [20,11],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#A65050",
@@ -1749,7 +1749,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [27,9],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#A65050",
@@ -1796,8 +1796,8 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [4,8],
-							"__pivot": [0.5,0.5],
+							"__grid": [3,8],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
@@ -1805,13 +1805,13 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 120,
-							"px": [75,128],
+							"px": [59,144],
 							"fieldInstances": []
 						},
 						{
 							"__identifier": "Enemy",
 							"__grid": [25,10],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#0007E9",
@@ -1897,7 +1897,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [15,11],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#A65050",
@@ -1918,7 +1918,7 @@
 						{
 							"__identifier": "Enemy",
 							"__grid": [19,11],
-							"__pivot": [0.5,0.5],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
 							"__smartColor": "#A65050",
@@ -1935,6 +1935,20 @@
 								}] },
 								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
 							]
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [2,7],
+							"__pivot": [0.5,1],
+							"__tags": [],
+							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
+							"__smartColor": "#94D9B3",
+							"iid": "50a23cd0-5110-11ed-9fac-7f65404dffb7",
+							"width": 16,
+							"height": 16,
+							"defUid": 120,
+							"px": [40,127],
+							"fieldInstances": []
 						}
 					]
 				},

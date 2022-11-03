@@ -20,6 +20,8 @@ public class MyGameMain : Game
     public ConsoleScreen ConsoleScreen => _consoleScreen;
 
     private readonly GameScreen _gameScreen;
+    public GameScreen GameScreen => _gameScreen;
+    
     private readonly MenuScreen _menuScreen;
 
     public readonly Renderer Renderer;

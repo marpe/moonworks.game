@@ -42,6 +42,7 @@ public partial class Entity
     public Guid Iid;
     public Vector2 Position;
     public Vector2 Size;
+    public Vector2 Pivot;
     public Color SmartColor;
     public static Dictionary<EntityType, Type> TypeMap = new()
     {

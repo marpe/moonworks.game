@@ -1,6 +1,7 @@
 ﻿using MyGame.Cameras;
 using MyGame.Generated;
 using MyGame.Graphics;
+using MyGame.TWConsole;
 
 namespace MyGame.Screens;
 
@@ -23,6 +24,12 @@ public class GameScreen
         _cameraController = new CameraController(_camera);
     }
 
+    [ConsoleHandler("restart")]
+    public static void Restart()
+    {
+        Shared.Game.GameScreen.LoadWorld();
+    }
+
     private void LoadWorld()
     {
         Task.Run(() =>
@@ -30,7 +37,7 @@ public class GameScreen
             _world = new World(_game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
 
             _camera.Position = ((Vector2)_world.WorldSize) * 0.5f;
-            _camera.Zoom = 2.0f;
+            _camera.Zoom = 4.0f;
         });
     }
     

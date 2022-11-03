@@ -395,9 +395,9 @@ public static class MathF
 	public static float RepeatRange(float value, float range) => (value % range + range) % range;
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNearZero(float value)
+	public static bool IsNearZero(float value, float tolerance = Epsilon)
 	{
-		return Approx(value, 0);
+		return Approx(value, 0, tolerance);
 	}
 
 	/// <summary>
