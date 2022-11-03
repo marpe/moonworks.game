@@ -29,6 +29,8 @@ public class ImGuiWorldWindow : ImGuiWindow
             return;
         }
 
+        ImGuiExt.DrawCheckbox("Debug", ref World.Debug);
+        
         ImGui.Separator();
 
         if (_playerInspector == null)

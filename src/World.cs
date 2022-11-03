@@ -75,7 +75,7 @@ public class World
     private List<Enemy> _enemies;
     private Player _player;
     public Player Player => _player;
-    
+
     private float _totalTime;
     public float Gravity = 512f;
 
@@ -175,7 +175,7 @@ public class World
         if (input.IsKeyDown(KeyCode.Left) ||
             input.IsKeyDown(KeyCode.A))
             movementX += -1;
-        
+
         var movementY = 0;
         if (IsGrounded(_player, _player.Velocity) && input.IsKeyPressed(KeyCode.Space))
             movementY -= 1;
@@ -189,7 +189,7 @@ public class World
         _player.Position += _player.Velocity * deltaSeconds;
 
         Break(ref _player.Velocity);
-        
+
         if (!IsGrounded(_player, _player.Velocity))
             _player.Velocity.Y += Gravity * deltaSeconds;
     }
@@ -335,7 +335,8 @@ public class World
             var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
             var xform = Matrix3x2.CreateTranslation(_player.Position.X - _player.Origin.X, _player.Position.Y - _player.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
-            DrawDebug(renderer, _player);
+            if (Debug)
+                DrawDebug(renderer, _player);
         }
 
         for (var i = 0; i < _enemies.Count; i++)
@@ -353,7 +354,8 @@ public class World
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var xform = Matrix3x2.CreateTranslation(entity.Position.X - entity.Origin.X, entity.Position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
-            DrawDebug(renderer, entity);
+            if (Debug)
+                DrawDebug(renderer, entity);
         }
 
         for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
@@ -390,7 +392,7 @@ public class World
         var boundsMax = cameraBounds
             .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
 
-        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles")
+        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles" && Debug)
         {
             for (var i = 0; i < layer.IntGridCsv.Length; i++)
             {
