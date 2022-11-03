@@ -1,4 +1,5 @@
-﻿using MyGame.Graphics;
+﻿using MyGame.Generated;
+using MyGame.Graphics;
 
 namespace MyGame.Screens;
 
@@ -29,10 +30,8 @@ public class DiamondTransition : SceneTransition
 
     public DiamondTransition(GraphicsDevice device)
     {
-        var vertexShader = new ShaderModule(device,
-            Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.DiamondTransition.Diamond_transitionVertSpv));
-        var fragmentShader = new ShaderModule(device,
-            Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.DiamondTransition.Diamond_transitionFragSpv));
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_spv);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_spv);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<Uniforms>(fragmentShader, "main", 1);

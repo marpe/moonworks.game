@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoonWorks", "lib\MoonWorks\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LDtk", "lib\ldtk\LDtk.csproj", "{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGame.CodeGen", "lib\MyGame.CodeGen\MyGame.CodeGen.csproj", "{7FBB88AF-8E26-41F6-A9E7-87903C057C9D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -20,9 +22,13 @@ Global
 		{66CF57F9-43CA-4C9F-B599-D10283947316}.Release|x64.Build.0 = Release|x64
 		{66CF57F9-43CA-4C9F-B599-D10283947316}.Debug|x64.ActiveCfg = Debug|x64
 		{66CF57F9-43CA-4C9F-B599-D10283947316}.Debug|x64.Build.0 = Debug|x64
-		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Release|x64.ActiveCfg = Release|Any CPU
-		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Release|x64.Build.0 = Release|Any CPU
-		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Debug|x64.Build.0 = Debug|Any CPU
+		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Debug|x64.ActiveCfg = Debug|x64
+		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Debug|x64.Build.0 = Debug|x64
+		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Release|x64.ActiveCfg = Release|x64
+		{5E0203E3-B5E6-4EF1-B62F-73C794AFD3B1}.Release|x64.Build.0 = Release|x64
+		{7FBB88AF-8E26-41F6-A9E7-87903C057C9D}.Debug|x64.ActiveCfg = Debug|x64
+		{7FBB88AF-8E26-41F6-A9E7-87903C057C9D}.Debug|x64.Build.0 = Debug|x64
+		{7FBB88AF-8E26-41F6-A9E7-87903C057C9D}.Release|x64.ActiveCfg = Release|x64
+		{7FBB88AF-8E26-41F6-A9E7-87903C057C9D}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 EndGlobal

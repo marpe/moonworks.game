@@ -1,4 +1,5 @@
 ﻿using MoonWorks.Graphics.Font;
+using MyGame.Generated;
 using MyGame.Utils;
 
 namespace MyGame.Graphics;
@@ -90,7 +91,7 @@ public class Renderer
             _pipelines[i] = CreateGraphicsPipeline(_device, blendState);
         }
 
-        _bmFont = new BMFont(game.GraphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Bmfonts.ConsolasFnt));
+        _bmFont = new BMFont(game.GraphicsDevice, ContentPaths.bmfonts.consolas_fnt);
 
         DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
         DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
@@ -147,10 +148,20 @@ public class Renderer
         var tAll = origin * scale * rotation * translation;
         SpriteBatch.Draw(_blankSprite, color, 0, tAll, PointClamp);
     }
-
-    public void DrawLine(Point from, Point to, Color color, float thickness)
+    
+    public void DrawRect(Vector2 min, Vector2 max, Color color, float thickness)
     {
-        DrawLine(from.ToVec2(), to.ToVec2(), color, thickness);
+        ReadOnlySpan<Vector2> points = stackalloc Vector2[]
+        {
+            min,
+            new(max.X, min.Y),
+            max,
+            new(min.X, max.Y)
+        };
+        for (var i = 0; i < 4; i++)
+        {
+            DrawLine(points[i], points[(i + 1) % 4], color, thickness);
+        }
     }
 
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)
@@ -259,8 +270,8 @@ public class Renderer
 
     public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var spriteVertexShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Sg2_spriteVertSpv));
-        var spriteFragmentShader = new ShaderModule(device, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.SpriteFragSpv));
+        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.sg2_sprite_vert_spv);
+        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.sprite_frag_spv);
 
         var myDepthStencilState = new DepthStencilState
         {

@@ -1,0 +1,60 @@
+namespace MyGame.Generated;
+
+public static class ContentPaths
+{
+    public static class bmfonts
+    {
+        public const string config_bmfc = @"Content\bmfonts\config.bmfc";
+        public const string consolas_fnt = @"Content\bmfonts\consolas.fnt";
+        public const string consolas_0_png = @"Content\bmfonts\consolas_0.png";
+    }
+
+    public static class fonts
+    {
+        public const string consola_ttf = @"Content\fonts\consola.ttf";
+        public const string fa_6_solid_900_ttf = @"Content\fonts\fa-6-solid-900.ttf";
+        public const string Roboto_Bold_ttf = @"Content\fonts\Roboto-Bold.ttf";
+        public const string Roboto_Regular_ttf = @"Content\fonts\Roboto-Regular.ttf";
+    }
+
+    public static class ldtk
+    {
+        public static class Example
+        {
+            public const string Characters_png = @"Content\ldtk\Example\Characters.png";
+            public const string Tilemap_png = @"Content\ldtk\Example\Tilemap.png";
+            public const string World_ldtk = @"Content\ldtk\Example\World.ldtk";
+        }
+
+        public const string map_ldtk = @"Content\ldtk\map.ldtk";
+        public const string tileset1_aseprite = @"Content\ldtk\tileset1.aseprite";
+    }
+
+    public static class @object
+    {
+    }
+
+    public static class Shaders
+    {
+        public static class DiamondTransition
+        {
+            public const string diamond_transition_frag_spv = @"Content\Shaders\DiamondTransition\diamond_transition.frag.spv";
+            public const string diamond_transition_vert_spv = @"Content\Shaders\DiamondTransition\diamond_transition.vert.spv";
+        }
+
+        public static class imgui
+        {
+            public const string sprite_frag_spv = @"Content\Shaders\imgui\sprite.frag.spv";
+            public const string sprite_vert_spv = @"Content\Shaders\imgui\sprite.vert.spv";
+        }
+
+        public const string sg2_sprite_vert_spv = @"Content\Shaders\sg2_sprite.vert.spv";
+        public const string sprite_frag_spv = @"Content\Shaders\sprite.frag.spv";
+        public const string sprite_vert_spv = @"Content\Shaders\sprite.vert.spv";
+    }
+
+    public static class Textures
+    {
+        public const string menu_background_png = @"Content\Textures\menu-background.png";
+    }
+}

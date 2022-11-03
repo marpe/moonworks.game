@@ -51,6 +51,7 @@ public class MyGameMain : Game
         InputHandler = new InputHandler(this);
 
         Renderer = new Renderer(this);
+        Renderer.DefaultClearColor = Color.Black;
 
         _gameScreen = new GameScreen(this);
         _menuScreen = new MenuScreen(this);

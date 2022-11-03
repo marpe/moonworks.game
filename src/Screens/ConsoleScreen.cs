@@ -577,7 +577,7 @@ public class ConsoleScreen
                 var y = i / _inputField.MaxWidth;
 
                 _tmpArr[0] = _inputField.Buffer[i];
-                DrawText(renderer, _tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), 0, inputColor);
+                DrawText(renderer, _tmpArr, inputPosition + new Vector2(x, y) * CharSize, 0, inputColor);
             }
 
             // Draw caret

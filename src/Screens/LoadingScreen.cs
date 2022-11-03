@@ -1,4 +1,5 @@
 ﻿using System.Threading;
+using MyGame.Generated;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 
@@ -46,8 +47,7 @@ public class LoadingScreen
         var asepriteTexture = TextureUtils.LoadAseprite(game.GraphicsDevice, asepritePath);
         var backgroundSprite = new Sprite(asepriteTexture);*/
 
-        var backgroundTexture = TextureUtils.LoadPngTexture(game.GraphicsDevice,
-            Path.Combine(MyGameMain.ContentRoot, ContentPaths.Textures.MenuBackgroundPng));
+        var backgroundTexture = TextureUtils.LoadPngTexture(game.GraphicsDevice, ContentPaths.Textures.menu_background_png);
         var blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _backgroundSprite = new Sprite(backgroundTexture);
         _blankSprite = new Sprite(blankTexture);

@@ -1,1 +1,0 @@
-TextTransform.exe "ContentPathGenerator.tt" -out "src/ContentPathGenerator.cs"

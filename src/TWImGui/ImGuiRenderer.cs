@@ -1,5 +1,8 @@
+#pragma warning disable CS8618
+
 using System.Runtime.InteropServices;
 using ImGuiNET;
+using MyGame.Generated;
 using MyGame.Graphics;
 using SDL2;
 
@@ -184,9 +187,9 @@ public class ImGuiRenderer
 
     private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(graphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Imgui.SpriteVertSpv));
+        var vertexShader = new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_vert_spv);
         var fragmentShader =
-            new ShaderModule(graphicsDevice, Path.Combine(MyGameMain.ContentRoot, ContentPaths.Shaders.Imgui.SpriteFragSpv));
+            new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_frag_spv);
 
         var myVertexBindings = new VertexBinding[]
         {
@@ -250,8 +253,8 @@ public class ImGuiRenderer
             return fontPtr;
         }
 
-        var fontPath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoRegularTtf);
-        var fontPathBold = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Fonts.RobotoBoldTtf);
+        var fontPath = ContentPaths.fonts.Roboto_Regular_ttf;
+        var fontPathBold = ContentPaths.fonts.Roboto_Bold_ttf;
 
         foreach (var font in _fonts)
         {

@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using MoonWorks.Graphics.Font;
+using MyGame.Generated;
 using WellspringCS;
 
 using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
@@ -21,8 +22,16 @@ public class FontData
     public TextBatch Batch;
     public Packer Packer;
     public Font Font;
-    public Texture Texture;
+    public Texture? Texture;
     public bool HasStarted;
+
+    public FontData(FontType name, TextBatch batch, Packer packer, Font font)
+    {
+        Name = name;
+        Batch = batch;
+        Packer = packer;
+        Font = font;
+    }
 }
 
 public class TextBatcher
@@ -50,27 +59,19 @@ public class TextBatcher
         
         var fonts = new[]
         {
-            (FontType.RobotoMedium, 18f, ContentPaths.Fonts.RobotoRegularTtf),
-            (FontType.RobotoLarge, 48f, ContentPaths.Fonts.RobotoRegularTtf),
-            (FontType.ConsolasMonoMedium, 18f, ContentPaths.Fonts.ConsolaTtf)
+            (FontType.RobotoMedium, 18f, ContentPaths.fonts.Roboto_Regular_ttf),
+            (FontType.RobotoLarge, 48f, ContentPaths.fonts.Roboto_Regular_ttf),
+            (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf)
         };
 
         var commandBuffer = device.AcquireCommandBuffer();
         foreach (var (key, size, path) in fonts)
         {
-            var fontPath = Path.Combine(MyGameMain.ContentRoot, path);
-            var font = new Font(fontPath);
+            var font = new Font(path);
             var fontPacker = new Packer(device, font, size, 512, 512, 2u);
             fontPacker.PackFontRanges(FontRange);
             fontPacker.SetTextureData(commandBuffer);
-            var textBatchFont = new FontData()
-            {
-                Font = font,
-                Packer = fontPacker,
-                Name = key,
-                Batch = new TextBatch(device),
-                HasStarted = false,
-            };
+            var textBatchFont = new FontData(key, new TextBatch(device), fontPacker, font);
             _fonts.Add(key, textBatchFont);
         }
 
@@ -93,7 +94,7 @@ public class TextBatcher
             fontData.Batch.Dispose();
             fontData.Packer.Dispose();
             fontData.Font.Dispose();
-            fontData.Texture.Dispose();
+            fontData.Texture?.Dispose();
         }
 
         _fonts.Clear();
@@ -161,7 +162,7 @@ public class TextBatcher
                 var numVerts = vertexDataLengthInBytes / sizeOfVert;
 
                 var sprite = new Sprite();
-                sprite.Texture = font.Texture;
+                sprite.Texture = font.Texture ?? throw new InvalidOperationException();
                 var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
 
                 for (var i = 0; i < numVerts; i += 4)
