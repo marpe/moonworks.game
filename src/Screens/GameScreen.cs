@@ -13,6 +13,8 @@ public class GameScreen
     private CameraController _cameraController;
     private World? _world;
 
+    public World? World => _world;
+    
     public GameScreen(MyGameMain game)
     {
         _game = game;

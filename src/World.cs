@@ -45,8 +45,9 @@ public partial class Player : Entity
 
     public uint FrameIndex;
     public float TotalTime;
-    public float Speed = 1024f;
+    public float Speed = 20f;
     public Vector2 Velocity;
+    public float JumpSpeed = -500f;
 }
 
 public class DebugDraw
@@ -73,10 +74,14 @@ public class World
 
     private List<Enemy> _enemies;
     private Player _player;
+    public Player Player => _player;
+    
     private float _totalTime;
-    private float _gravity = 512f;
+    public float Gravity = 512f;
 
     private List<DebugDraw> _debugDrawCalls = new();
+
+    public long GridSize => LdtkRaw.DefaultGridSize;
 
     public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -159,77 +164,93 @@ public class World
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
 
-        if (input.IsKeyPressed(KeyCode.PageDown))
+        if (input.IsKeyPressed(KeyCode.Insert))
             _player.Position = new Vector2(100, 50);
 
         var movementX = 0;
-        if (input.IsKeyDown(KeyCode.Right))
+        if (input.IsKeyDown(KeyCode.Right) ||
+            input.IsKeyDown(KeyCode.D))
             movementX += 1;
 
-        if (input.IsKeyDown(KeyCode.Left))
+        if (input.IsKeyDown(KeyCode.Left) ||
+            input.IsKeyDown(KeyCode.A))
             movementX += -1;
+        
+        var movementY = 0;
+        if (IsGrounded(_player, _player.Velocity) && input.IsKeyPressed(KeyCode.Space))
+            movementY -= 1;
 
         if (movementX != 0)
-            _player.Velocity.X += movementX * deltaSeconds * _player.Speed;
+            _player.Velocity.X += movementX * _player.Speed;
+        if (movementY < 0)
+            _player.Velocity.Y = _player.JumpSpeed;
 
-        var dx = (_player.Velocity.X * deltaSeconds) / LdtkRaw.DefaultGridSize;
-        var playerGridCell = GetGridCoords(_player);
-        var playerGridRel = new Vector2(
-            (_player.Position.X % LdtkRaw.DefaultGridSize) / LdtkRaw.DefaultGridSize,
-            (_player.Position.Y % LdtkRaw.DefaultGridSize) / LdtkRaw.DefaultGridSize
-        );
-        var playerGridRelX = playerGridRel.X + dx;
-        _debugDrawCalls.Add(new DebugDraw()
-        {
-            UpdateCountAtDraw = Shared.Game.UpdateCount,
-            Rectangle = new Rectangle((int)_player.Position.X, (int)_player.Position.Y, 0, 0),
-            Text = playerGridRel.ToString(),
-            Color = Color.Black
-        });
-
-        if (playerGridRelX > 0.8f && HasCollision(playerGridCell.X + 1, playerGridCell.Y))
-        {
-            _player.Position.X = (playerGridCell.X + 0.8f - MathF.Epsilon) * LdtkRaw.DefaultGridSize;
-            _player.Velocity.X = 0;
-        }
-
-        if (playerGridRelX < 0.2f && HasCollision(playerGridCell.X - 1, playerGridCell.Y))
-        {
-            _player.Position.X = (playerGridCell.X + 0.2f + MathF.Epsilon) * LdtkRaw.DefaultGridSize;
-            _player.Velocity.X = 0;
-        }
-
-        var dy = (_player.Velocity.Y * deltaSeconds) / LdtkRaw.DefaultGridSize;
-        var playerGridRelY = playerGridRel.Y + dy;
-
-        if (playerGridRelY > 1.0f && HasCollision(playerGridCell.X, playerGridCell.Y + 1))
-        {
-            _player.Velocity.Y = 0;
-            _player.Position.Y = (playerGridCell.Y + 1.0f) * LdtkRaw.DefaultGridSize;
-        }
-
+        HandleCollisions(_player, ref _player.Velocity, deltaSeconds);
         _player.Position += _player.Velocity * deltaSeconds;
 
-        _player.Velocity.X *= 0.84f;
-        if (MathF.IsNearZero(_player.Velocity.X, KillThreshold))
-            _player.Velocity.X = 0;
-        _player.Velocity.Y *= 0.94f;
-        if (MathF.IsNearZero(_player.Velocity.Y, KillThreshold))
-            _player.Velocity.Y = 0;
-
-        playerGridCell = GetGridCoords(_player);
-        var isGrounded = _player.Velocity.Y == 0 && HasCollision(playerGridCell.X, playerGridCell.Y + 1);
-        if (!isGrounded)
-            _player.Velocity.Y += _gravity * deltaSeconds;
+        Break(ref _player.Velocity);
+        
+        if (!IsGrounded(_player, _player.Velocity))
+            _player.Velocity.Y += Gravity * deltaSeconds;
     }
 
-    private Point GetGridCoords(Entity entity, Vector2? deltaMove = null)
+    public bool IsGrounded(Entity entity, Vector2 velocity)
+    {
+        var cell = GetGridCoords(entity);
+        return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
+    }
+
+    private static void Break(ref Vector2 velocity)
+    {
+        velocity.X *= 0.84f;
+        if (MathF.IsNearZero(velocity.X, KillThreshold))
+            velocity.X = 0;
+        velocity.Y *= 0.94f;
+        if (MathF.IsNearZero(velocity.Y, KillThreshold))
+            velocity.Y = 0;
+    }
+
+    private void HandleCollisions(Entity entity, ref Vector2 velocity, float deltaSeconds)
+    {
+        var deltaMove = (velocity * deltaSeconds) / GridSize;
+        var cell = GetGridCoords(entity);
+        var positionInCell = new Vector2(
+            (entity.Position.X % GridSize) / GridSize,
+            (entity.Position.Y % GridSize) / GridSize
+        );
+        var resultCellPos = positionInCell + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
+        if (resultCellPos.X > 0.8f && HasCollision(cell.X + 1, cell.Y))
+        {
+            entity.Position.X = (cell.X + 0.8f - MathF.Epsilon) * GridSize;
+            velocity.X = 0;
+        }
+
+        if (resultCellPos.X < 0.2f && HasCollision(cell.X - 1, cell.Y))
+        {
+            entity.Position.X = (cell.X + 0.2f + MathF.Epsilon) * GridSize;
+            velocity.X = 0;
+        }
+
+        if (resultCellPos.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
+        {
+            entity.Position.Y = (cell.Y + 1.0f) * GridSize;
+            velocity.Y = 0;
+        }
+
+        if (velocity.Y < 0 && resultCellPos.Y < 0.2f && HasCollision(cell.X, cell.Y - 1))
+        {
+            entity.Position.Y = (cell.Y + 1.2f) * GridSize;
+            velocity.Y = 0;
+        }
+    }
+
+    public Point GetGridCoords(Entity entity, Vector2? deltaMove = null)
     {
         var p = entity.Position + (deltaMove ?? Vector2.Zero);
         return GetGridCoords(p, entity.Pivot, (int)LdtkRaw.DefaultGridSize);
     }
 
-    private static Point GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
+    public static Point GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
     {
         var (x, y) = (position.X, position.Y);
         var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);

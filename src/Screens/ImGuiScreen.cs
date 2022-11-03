@@ -54,23 +54,14 @@ public class ImGuiScreen
 
     private void AddDefaultWindows()
     {
-        var windows = new[]
+        var windows = new ImGuiWindow[]
         {
             new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F1"
             },
-            new ImGuiCallbackWindow("TestWindow", DrawTestWindow)
-            {
-                IsOpen = true,
-                KeyboardShortcut = "^F2"
-            },
-            new ImGuiCallbackWindow("TestWindow2", DrawTestWindow2)
-            {
-                IsOpen = true,
-                KeyboardShortcut = "^F3"
-            }
+            new ImGuiWorldWindow()
         };
         foreach (var window in windows)
         {
