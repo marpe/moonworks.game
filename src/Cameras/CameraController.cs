@@ -13,17 +13,17 @@ public class CameraController
     private float _lerpSpeed = 1f;
 
     [CVar("noclio", "Toggle camera controls")]
-    public bool IsMouseAndKeyboardControlEnabled;
+    public static bool IsMouseAndKeyboardControlEnabled;
 
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
-    public bool ClampToLevelBounds;
+    public static bool ClampToLevelBounds;
 
     private GameScreen _parent;
 
     private Entity? _trackingEntity;
 
     private Vector3 _velocity = Vector3.Zero;
-    private float _trackingSpeed = 10f;
+    private float _trackingSpeed = 5f;
     private Vector2 _targetOffset = Vector2.Zero;
 
     public Vector2 _deadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
@@ -99,8 +99,8 @@ public class CameraController
 
         _camera.Position += new Vector2(_velocity.X, _velocity.Y) * deltaSeconds;
 
-        _velocity.X *= MathF.Pow(frictX, deltaSeconds);
-        _velocity.Y *= MathF.Pow(frictY, deltaSeconds);
+        _velocity.X *= frictX > 0 ? MathF.Pow(frictX, deltaSeconds) : 0.95f;
+        _velocity.Y *= frictY > 0 ? MathF.Pow(frictY, deltaSeconds) : 0.95f;
 
         // Bounds clamping
         if (ClampToLevelBounds)

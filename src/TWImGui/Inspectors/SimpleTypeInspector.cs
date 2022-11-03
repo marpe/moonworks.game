@@ -153,19 +153,19 @@ public class SimpleTypeInspector : Inspector
             {
                 var value = GetValue<Rectangle>();
 
-                var size = new Num.Vector2(value.X, value.Y);
-                if (ImGuiExt.DrawXy("Size", ref size, "Width", "Height"))
-                {
-                    value.Width = (int)size.X;
-                    value.Height = (int)size.Y;
-                    SetValue(value);
-                }
-
                 var position = value.Location.ToNumerics();
                 if (ImGuiExt.DrawXy("Position", ref position, "X", "Y", 1f, 0f, 0f, "%.6g"))
                 {
                     value.X = (int)position.X;
                     value.Y = (int)position.Y;
+                    SetValue(value);
+                }
+                
+                var size = new Num.Vector2(value.Width, value.Height);
+                if (ImGuiExt.DrawXy("Size", ref size, "Width", "Height"))
+                {
+                    value.Width = (int)size.X;
+                    value.Height = (int)size.Y;
                     SetValue(value);
                 }
             }

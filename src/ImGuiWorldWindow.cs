@@ -7,6 +7,8 @@ namespace MyGame;
 public class ImGuiWorldWindow : ImGuiWindow
 {
     private GroupInspector? _playerInspector;
+    private GroupInspector? _cameraConInspector;
+    private GroupInspector? _cameraInspector;
     public const string WindowTitle = "World";
 
     public ImGuiWorldWindow() : base(WindowTitle)
@@ -30,15 +32,24 @@ public class ImGuiWorldWindow : ImGuiWindow
         }
 
         ImGuiExt.DrawCheckbox("Debug", ref World.Debug);
-        
+
         ImGui.Separator();
 
-        if (_playerInspector == null)
-        {
-            _playerInspector = InspectorExt.GetInspectorForTarget(world.Player);
-        }
+        ImGui.PushID("Player");
+        _playerInspector ??= InspectorExt.GetInspectorForTarget(world.Player);
         _playerInspector.Draw();
+        ImGui.PopID();
 
+        ImGui.PushID("CameraCon");
+        _cameraConInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.CameraController);
+        _cameraConInspector.Draw();
+        ImGui.PopID();
+
+        ImGui.PushID("Camera");
+        _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
+        _cameraInspector.Draw();
+        ImGui.PopID();
+        
         ImGui.End();
     }
 }

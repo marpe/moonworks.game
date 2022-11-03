@@ -7,6 +7,8 @@ namespace MyGame.Screens;
 public class GameScreen
 {
     private Camera _camera;
+    public Camera Camera => _camera;
+    
     private MyGameMain _game;
     private GraphicsDevice _device;
     private CameraController _cameraController;
@@ -64,7 +66,6 @@ public class GameScreen
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        _camera.Size = _game.MainWindow.Size;
         renderer.FlushBatches(renderer.SwapTexture, _cameraController.ViewProjection, renderer.DefaultClearColor);
     }
 

@@ -305,7 +305,6 @@ public class World
 
     public void Draw(Renderer renderer, Camera camera)
     {
-        camera.Position = _player.Position;
         var cameraBounds = camera.Bounds;
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
@@ -379,6 +378,9 @@ public class World
                 renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
             }
         }
+
+        var (boundsMin, boundsMax) = (cameraBounds.Min(), cameraBounds.Max());
+        renderer.DrawRect(boundsMin, boundsMax, Color.Red, 1f);
     }
 
     private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, Rectangle cameraBounds)

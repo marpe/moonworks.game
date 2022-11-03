@@ -2,19 +2,12 @@
 
 public class Camera
 {
-    public int Width = 1280;
+    public static Vector2 Viewport => Shared.Game.MainWindow.Size;
+    public static Vector2 Scale = Vector2.One;
+    public int Width => MathF.CeilToInt(Viewport.X / Scale.X / Zoom);
+    public int Height => MathF.CeilToInt(Viewport.Y / Scale.Y / Zoom);
 
-    public int Height = 720;
-
-    public Point Size
-    {
-        get => new(Width, Height);
-        set
-        {
-            Width = value.X;
-            Height = value.Y;
-        }
-    }
+    public Point Size => new(Width, Height);
 
     public Rectangle Bounds => new Rectangle((int)Position.X - Width / 2, (int)Position.Y - Height / 2, Width, Height);
     
@@ -41,7 +34,8 @@ public class Camera
                 new Vector3(Position.X, Position.Y, 0),
                 Vector3.Up
             );
-            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) * Matrix4x4.CreateTranslation(Width * 0.5f, Height * 0.5f, 0);
+            var viewport = Viewport;
+            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) * Matrix4x4.CreateTranslation(Viewport.X * 0.5f, Viewport.Y * 0.5f, 0);
         }
     }
 
@@ -60,22 +54,30 @@ public class Camera
     
     public Quaternion Rotation3D = Quaternion.Identity;
 
-    public Matrix4x4 Projection => Matrix4x4.CreateOrthographicOffCenter(
-        0,
-        Width,
-        Height,
-        0,
-        0.0001f,
-        4000f
-    );
+    public Matrix4x4 Projection
+    {
+        get
+        {
+            var viewport = Viewport;
+            return Matrix4x4.CreateOrthographicOffCenter(
+                0,
+                viewport.X,
+                viewport.Y,
+                0,
+                0.0001f,
+                4000f
+            );
+        }
+    }
 
     public Matrix4x4 Projection3D
     {
         get
         {
-            var targetHeight = Height; // / zoom
+            var viewport = Viewport;
+            var targetHeight = viewport.Y; // / zoom
             var fov = 60 * MathF.Deg2Rad; // (float)Math.Atan(targetHeight / (2f * Position3D.Z)) * 2f;
-            var aspectRatio = Height != 0 ? Width / (float)Height : 0;
+            var aspectRatio = viewport.Y != 0 ? viewport.X / (float)viewport.Y : 0;
             return Matrix4x4.CreatePerspectiveFieldOfView(
                 fov,
                 aspectRatio,
