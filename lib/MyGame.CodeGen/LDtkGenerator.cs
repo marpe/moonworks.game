@@ -43,6 +43,7 @@ public static class LDtkGenerator
         TextGenerator.WriteLine($"public partial class Entity");
         TextGenerator.StartBlock();
 
+        TextGenerator.WriteLine($"public EntityType EntityType;");
         TextGenerator.WriteLine($"public Guid Iid;");
         TextGenerator.WriteLine($"public Point Position;");
         TextGenerator.WriteLine($"public Point Size;");

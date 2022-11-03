@@ -1,10 +1,29 @@
-﻿using MyGame.Graphics;
+﻿using MyGame.Generated;
+using MyGame.Graphics;
 using MyGame.TWConsole;
 using MyGame.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MyGame;
+
+public partial class Entity
+{
+}
+
+public partial class Player : Entity
+{
+    public enum PlayerState
+    {
+        Idle,
+        Locomote,
+    }
+
+    public PlayerState State = PlayerState.Idle;
+
+    public uint FrameIndex;
+    public float TotalTime;
+}
 
 public class World
 {
@@ -13,48 +32,56 @@ public class World
 
     private LdtkJson LdtkRaw;
     private Dictionary<long, Texture> TilesetTextures;
-
+    private Dictionary<string, Texture> Textures = new();
     public Point WorldSize;
 
-    private List<Entity> _entities = new();
     private static JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
-    public World(LdtkJson ldtk, Dictionary<long, Texture> tilesetTextures)
+    private List<Enemy> _enemies;
+    private Player _player;
+
+    public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
-        LdtkRaw = ldtk;
-        TilesetTextures = tilesetTextures;
-    }
-
-    private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
-    {
-        var x = MathF.FastFloorToInt(worldPosition.X / gridSize);
-        var y = MathF.FastFloorToInt(worldPosition.Y / gridSize);
-        return new Point((int)MathF.Clamp(x, 0, width - 1), (int)MathF.Clamp(y, 0, height - 1));
-    }
-
-    public void Initialize()
-    {
-        var isMultiWorld = LdtkRaw.Worlds.Length > 0;
-
-        var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-
-        var level = levels[0];
-
-        WorldSize = Point.Zero;
-
-        for (var i = 0; i < levels.Length; i++)
-        {
-            var max = levels[i].Position + levels[i].Size;
-            if (WorldSize.X < max.X)
-                WorldSize.X = max.X;
-            if (WorldSize.Y < max.Y)
-                WorldSize.Y = max.Y;
-        }
+        var jsonString = File.ReadAllText(ldtkPath.ToString());
+        LdtkRaw = LdtkJson.FromJson(jsonString);
+        TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
+        WorldSize = GetWorldSize(LdtkRaw);
 
         foreach (var entityDef in LdtkRaw.Defs.Entities)
         {
         }
 
+        var allEntities = new List<Entity>();
+        var isMultiWorld = LdtkRaw.Worlds.Length > 0;
+        var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+        foreach (var level in levels)
+        {
+            var entities = LoadEntitiesInLevel(level);
+            allEntities.AddRange(entities);
+        }
+
+        var textures = new[] { ContentPaths.ldtk.Example.Characters_png };
+        foreach (var texturePath in textures)
+        {
+            if (texturePath.EndsWith(".aseprite"))
+            {
+                var texture = TextureUtils.LoadAseprite(device, texturePath);
+                Textures.Add(texturePath, texture);
+            }
+            else
+            {
+                var texture = TextureUtils.LoadPngTexture(device, texturePath);
+                Textures.Add(texturePath, texture);
+            }
+        }
+
+        _player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
+        _enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
+    }
+
+    private static List<Entity> LoadEntitiesInLevel(Level level)
+    {
+        var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)
         {
             if (layer.Type != "Entities")
@@ -65,25 +92,32 @@ public class World
                 var parsedType = Enum.Parse<EntityType>(entityInstance.Identifier);
                 var type = Entity.TypeMap[parsedType];
                 var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
-                ParseFields(entity, entityInstance);
-                _entities.Add(entity);
+
+                entity.EntityType = parsedType;
+                entity.Iid = Guid.Parse(entityInstance.Iid);
+                entity.Position = level.Position + entityInstance.Position - entityInstance.PivotP * entityInstance.Size;
+                entity.Size = new Point((int)entityInstance.Width, (int)entityInstance.Height);
+                entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor[1..]);
+
+                foreach (var field in entityInstance.FieldInstances)
+                {
+                    var fieldValue = (JToken)field.Value;
+                    var fieldInfo = entity.GetType().GetField(field.Identifier) ?? throw new InvalidOperationException();
+                    var deserializedValue = fieldValue?.ToObject(fieldInfo.FieldType, _jsonSerializer);
+                    fieldInfo.SetValue(entity, deserializedValue);
+                }
+
+                entities.Add(entity);
             }
         }
+
+        return entities;
     }
 
-    private static void ParseFields(Entity entity, EntityInstance entityInstance)
+    public void Update(float deltaSeconds)
     {
-        entity.Iid = Guid.Parse(entityInstance.Iid);
-        entity.Position = new Point((int)entityInstance.Px[0], (int)entityInstance.Px[1]);
-        entity.Size = new Point((int)entityInstance.Width, (int)entityInstance.Height);
-        
-        foreach (var field in entityInstance.FieldInstances)
-        {
-            var fieldValue = (JToken)field.Value;
-            var fieldInfo = entity.GetType().GetField(field.Identifier) ?? throw new InvalidOperationException();
-            var deserializedValue = fieldValue?.ToObject(fieldInfo.FieldType, _jsonSerializer);
-            fieldInfo.SetValue(entity, deserializedValue);
-        }
+        _player.TotalTime += deltaSeconds;
+        _player.FrameIndex = (uint)(_player.TotalTime * 10) % 2;
     }
 
     public void Draw(Renderer renderer)
@@ -109,14 +143,21 @@ public class World
                 renderer.DrawRect(level.Position, level.Position + level.Size, Color.Red, 1.0f);
         }
 
-        for (var i = 0; i < _entities.Count; i++)
-        {
-            var entity = _entities[i];
-            renderer.DrawRect(new Rectangle(entity.Position.X, entity.Position.Y, entity.Size.X, entity.Size.Y), Color.Black);
-        }
-
         if (Debug)
             renderer.DrawRect(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
+
+        // DrawDebug(renderer, _player);
+
+        var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
+        var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
+        var xform = Matrix3x2.CreateTranslation(_player.Position.X, _player.Position.Y);
+        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var entity = _enemies[i];
+            DrawDebug(renderer, entity);
+        }
     }
 
     private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, Rectangle cameraBounds)
@@ -182,5 +223,61 @@ public class World
         }
 
         TilesetTextures.Clear();
+    }
+
+    public static void DrawDebug(Renderer renderer, Entity e)
+    {
+        renderer.DrawRect(new Rectangle(e.Position.X, e.Position.Y, e.Size.X, e.Size.Y), e.SmartColor);
+    }
+
+    private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
+    {
+        var x = MathF.FastFloorToInt(worldPosition.X / gridSize);
+        var y = MathF.FastFloorToInt(worldPosition.Y / gridSize);
+        return new Point((int)MathF.Clamp(x, 0, width - 1), (int)MathF.Clamp(y, 0, height - 1));
+    }
+
+    private static Point GetWorldSize(LdtkJson ldtk)
+    {
+        var isMultiWorld = ldtk.Worlds.Length > 0;
+        var levels = isMultiWorld ? ldtk.Worlds[0].Levels : ldtk.Levels;
+
+        var worldSize = Point.Zero;
+
+        for (var i = 0; i < levels.Length; i++)
+        {
+            var max = levels[i].Position + levels[i].Size;
+            if (worldSize.X < max.X) worldSize.X = max.X;
+            if (worldSize.Y < max.Y) worldSize.Y = max.Y;
+        }
+
+        return worldSize;
+    }
+
+    private static Dictionary<long, Texture> LoadTilesets(GraphicsDevice device, ReadOnlySpan<char> ldtkPath, TilesetDefinition[] tilesets)
+    {
+        var textures = new Dictionary<long, Texture>();
+
+        var commandBuffer = device.AcquireCommandBuffer();
+        foreach (var tilesetDef in tilesets)
+        {
+            if (string.IsNullOrWhiteSpace(tilesetDef.RelPath))
+                continue;
+            var tilesetPath = Path.Combine(Path.GetDirectoryName(ldtkPath).ToString(), tilesetDef.RelPath);
+            if (tilesetPath.EndsWith(".aseprite"))
+            {
+                var asepriteTexture = TextureUtils.LoadAseprite(device, tilesetPath);
+                textures.Add(tilesetDef.Uid, asepriteTexture);
+            }
+            else
+            {
+                var texture = Texture.LoadPNG(device, commandBuffer, tilesetPath);
+                textures.Add(tilesetDef.Uid, texture);
+            }
+        }
+
+        device.Submit(commandBuffer);
+
+        return textures;
     }
 }

@@ -38,9 +38,12 @@ public enum EntityType
 
 public partial class Entity
 {
+    public EntityType EntityType;
     public Guid Iid;
     public Point Position;
     public Point Size;
+    public Color SmartColor;
+    
     public static Dictionary<EntityType, Type> TypeMap = new()
     {
         { EntityType.Enemy, typeof(Enemy) },
