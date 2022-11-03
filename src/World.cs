@@ -173,41 +173,41 @@ public class World
             _player.Velocity.X += movementX * deltaSeconds * _player.Speed;
 
 
-        var dx = _player.Velocity.X * deltaSeconds;
-        var playerGrid = SnapToGrid(_player);
+        var dx = (_player.Velocity.X * deltaSeconds) / LdtkRaw.DefaultGridSize;
         var playerGridCell = GetGridCoords(_player);
-        var playerGridRel = (_player.Position + new Vector2(dx, 0) - playerGrid) / LdtkRaw.DefaultGridSize;
+        var playerGridRel = new Vector2(
+            (_player.Position.X % LdtkRaw.DefaultGridSize) / LdtkRaw.DefaultGridSize,
+            (_player.Position.Y % LdtkRaw.DefaultGridSize) / LdtkRaw.DefaultGridSize
+        );
+        var playerGridRelX = playerGridRel.X + dx;
         _debugDrawCalls.Add(new DebugDraw()
         {
             UpdateCountAtDraw = Shared.Game.UpdateCount,
-            Rectangle = new Rectangle((int)playerGrid.X, (int)playerGrid.Y, 0, 0),
+            Rectangle = new Rectangle((int)_player.Position.X, (int)_player.Position.Y, 0, 0),
             Text = playerGridRel.ToString(),
             Color = Color.Black
         });
-        if (dx != 0)
+
+        if (playerGridRelX > 0.8f && HasCollision(playerGridCell.X + 1, playerGridCell.Y))
         {
-            if (playerGridRel.X > 0.8f && HasCollision((playerGridCell.X + 1) * LdtkRaw.DefaultGridSize, playerGridCell.Y * LdtkRaw.DefaultGridSize))
-            {
-                _player.Position.X = (playerGridCell.X + 0.8f) * LdtkRaw.DefaultGridSize;
-                _player.Velocity.X = 0;
-            }
-            
-            if (playerGridRel.X < 0.2f && HasCollision((playerGridCell.X - 1) * LdtkRaw.DefaultGridSize, playerGridCell.Y * LdtkRaw.DefaultGridSize))
-            {
-                _player.Position.X = (playerGridCell.X + 0.2f) * LdtkRaw.DefaultGridSize;
-                _player.Velocity.X = 0;
-            }
+            _player.Position.X = (playerGridCell.X + 0.8f) * LdtkRaw.DefaultGridSize;
+            _player.Velocity.X = 0;
         }
 
-        var dy = _player.Velocity.Y * deltaSeconds;
-        if (dy != 0)
+        if (playerGridRelX < 0.2f && HasCollision(playerGridCell.X - 1, playerGridCell.Y))
         {
-            var gridPos = SnapToGrid(_player, new Vector2(0, dy));
-            if (HasCollision(gridPos.X, gridPos.Y))
-            {
-                _player.Velocity.Y = 0;
-                _player.Position.Y = ((int)(_player.Position.Y / LdtkRaw.DefaultGridSize)) * LdtkRaw.DefaultGridSize;
-            }
+            _player.Position.X = (playerGridCell.X + 0.2f) * LdtkRaw.DefaultGridSize;
+            _player.Velocity.X = 0;
+        }
+
+        var dy = (_player.Velocity.Y * deltaSeconds) / LdtkRaw.DefaultGridSize;
+        var playerGridRelY = playerGridRel.Y + dy;
+
+        var gridPos = SnapToGrid(_player, new Vector2(0, dy));
+        if (playerGridRelY > 1.0f && HasCollision(playerGridCell.X, playerGridCell.Y + 1))
+        {
+            _player.Velocity.Y = 0;
+            _player.Position.Y = (playerGridCell.Y + 1.0f) * LdtkRaw.DefaultGridSize;
         }
 
         _player.Position += _player.Velocity * deltaSeconds;
@@ -220,8 +220,8 @@ public class World
             _player.Velocity.Y = 0;
 
 
-        var snapped = SnapToGrid(_player, new Vector2(0, 1));
-        var isGrounded = _player.Velocity.Y == 0 && HasCollision(snapped.X, snapped.Y);
+        playerGridCell = GetGridCoords(_player);
+        var isGrounded = _player.Velocity.Y == 0 && HasCollision(playerGridCell.X, playerGridCell.Y + 1);
         if (!isGrounded)
             _player.Velocity.Y += _gravity * deltaSeconds;
     }
@@ -248,34 +248,44 @@ public class World
         return new Point(gridX, gridY);
     }
 
-    private bool HasCollision(float x, float y)
+    private bool HasCollision(int x, int y)
     {
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-        var hasTile = false;
+
+        LayerDefinition GetLayerDefinition(long layerDefUid)
+        {
+            for (var i = 0; i < LdtkRaw.Defs.Layers.Length; i++)
+            {
+                if (LdtkRaw.Defs.Layers[i].Uid == layerDefUid)
+                    return LdtkRaw.Defs.Layers[i];
+            }
+
+            throw new InvalidOperationException();
+        }
+
         foreach (var level in levels)
         {
-            var levelMin = level.Position;
-            var levelMax = level.Position + level.Size;
-
-            if (x < levelMin.X || y < levelMin.Y ||
-                x >= levelMax.X || y >= levelMax.Y)
-                continue;
-
             foreach (var layer in level.LayerInstances)
             {
                 if (layer.Identifier != "Tiles")
                     continue;
                 if (layer.Type != "IntGrid")
                     continue;
-                var gridCoords = new Point((int)((x - levelMin.X) / layer.GridSize), (int)((y - levelMin.Y) / layer.GridSize));
+                var layerDef = GetLayerDefinition(layer.LayerDefUid);
+                var levelMin = level.Position / (int)layerDef.GridSize;
+                var levelMax = levelMin + level.Size / (int)layerDef.GridSize;
+                if (x < levelMin.X || y < levelMin.Y ||
+                    x >= levelMax.X || y >= levelMax.Y)
+                    continue;
+                var gridCoords = new Point(x - levelMin.X, y - levelMin.Y);
                 var value = layer.IntGridCsv[gridCoords.Y * layer.CWid + gridCoords.X];
                 if (value == 5 || value == 6)
-                    hasTile = true;
+                    return true;
             }
         }
 
-        return hasTile;
+        return false;
     }
 
     public void Draw(Renderer renderer, Camera camera)
