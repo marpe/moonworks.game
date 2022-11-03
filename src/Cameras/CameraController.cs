@@ -2,14 +2,14 @@
 
 public class CameraController
 {
-    private Components.Camera _camera;
+    private Camera _camera;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     public bool Use3D;
     private float _lerpT = 0;
     public Matrix4x4 ViewProjection;
     private float _lerpSpeed = 1f;
 
-    public CameraController(Components.Camera camera)
+    public CameraController(Camera camera)
     {
         _camera = camera;
         ViewProjection = _camera.ViewProjection;

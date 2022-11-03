@@ -1,4 +1,4 @@
-﻿namespace MyGame.Components;
+﻿namespace MyGame.Cameras;
 
 public class Camera
 {

@@ -1,5 +1,4 @@
 ﻿using MyGame.Cameras;
-using MyGame.Components;
 using MyGame.Generated;
 using MyGame.Graphics;
 
