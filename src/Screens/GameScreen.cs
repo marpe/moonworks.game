@@ -44,7 +44,7 @@ public class GameScreen
         var input = _game.InputHandler;
         _cameraController.Update(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
 
-        _world?.Update(deltaSeconds);
+        _world?.Update(deltaSeconds, input);
     }
 
     public void Draw(Renderer renderer)

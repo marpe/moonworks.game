@@ -8,8 +8,27 @@ using Newtonsoft.Json.Linq;
 
 namespace MyGame;
 
+public class Bounds
+{
+    public Vector2 Min;
+    public Vector2 Size;
+
+    public Bounds(float x, float y, float w, float h)
+    {
+        Min = new Vector2(x, y);
+        Size = new Vector2(w, h);
+    }
+
+    public static implicit operator Rectangle(Bounds b)
+    {
+        return new Rectangle((int)b.Min.X, (int)b.Min.Y, (int)b.Size.X, (int)b.Size.Y);
+    }
+}
+
 public partial class Entity
 {
+    public Vector2 SpritePosition;
+    public Bounds Bounds => new Bounds(Position.X, Position.Y, Size.X, Size.Y);
 }
 
 public partial class Player : Entity
@@ -24,6 +43,8 @@ public partial class Player : Entity
 
     public uint FrameIndex;
     public float TotalTime;
+    public float Speed = 64f;
+    public Vector2 Velocity;
 }
 
 public class World
@@ -41,6 +62,7 @@ public class World
     private List<Enemy> _enemies;
     private Player _player;
     private float _totalTime;
+    private float _gravity = 100f;
 
     public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -98,7 +120,7 @@ public class World
                 entity.EntityType = parsedType;
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Position = level.Position + entityInstance.Position - entityInstance.PivotP * entityInstance.Size;
-                entity.Size = new Point((int)entityInstance.Width, (int)entityInstance.Height);
+                entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor[1..]);
 
                 foreach (var field in entityInstance.FieldInstances)
@@ -116,11 +138,54 @@ public class World
         return entities;
     }
 
-    public void Update(float deltaSeconds)
+    public void Update(float deltaSeconds, InputHandler input)
     {
         _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = (uint)(_player.TotalTime * 10) % 2;
+
+        var movementX = 0;
+        if (input.IsKeyDown(KeyCode.Right))
+            movementX += 1;
+
+        if (input.IsKeyDown(KeyCode.Left))
+            movementX += -1;
+
+        if (movementX != 0)
+            _player.Velocity.X += movementX * deltaSeconds * _player.Speed;
+
+
+        var dx = _player.Velocity.X * deltaSeconds;
+        if (dx != 0)
+        {
+            if (HasCollision(_player.Position.X + dx, _player.Position.Y))
+            {
+                _player.Velocity.X = 0;
+            }
+        }
+
+        var dy = _player.Velocity.Y * deltaSeconds;
+        if (dy != 0)
+        {
+            if (HasCollision(_player.Position.X, _player.Position.Y + dy))
+            {
+                _player.Velocity.Y = 0;
+            }
+        }
+
+        _player.Position += _player.Velocity * deltaSeconds;
+
+        _player.Velocity.X *= 0.95f;
+        _player.Velocity.Y *= 0.95f;
+
+        var isGrounded = _player.Velocity.Y == 0 && HasCollision(_player.Position.X, _player.Position.Y + 1);
+        if (!isGrounded)
+            _player.Velocity.Y += _gravity * deltaSeconds;
+    }
+
+    public bool HasCollision(float x, float y)
+    {
+        return x < 0 || x >= 370 || y < 0 || y >= 300;
     }
 
     public void Draw(Renderer renderer, Camera camera)
@@ -168,7 +233,7 @@ public class World
                 EnemyType.BlueBee => 3,
                 EnemyType.YellowBee or _ => 1,
             };
-            
+
             var frameIndex = (int)(_totalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var xform = Matrix3x2.CreateTranslation(entity.Position.X, entity.Position.Y);
@@ -244,7 +309,7 @@ public class World
 
     public static void DrawDebug(Renderer renderer, Entity e)
     {
-        renderer.DrawRect(new Rectangle(e.Position.X, e.Position.Y, e.Size.X, e.Size.Y), e.SmartColor);
+        renderer.DrawRect(e.Bounds, e.SmartColor);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)

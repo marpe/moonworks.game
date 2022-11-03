@@ -455,9 +455,9 @@ public class ConsoleScreen
 
         // draw line start and end
         var textArea = new Rectangle(
-            (int)ConsoleSettings.HorizontalPadding,
+            ConsoleSettings.HorizontalPadding,
             _backgroundRect.Top,
-            (int)CharSize.X * TwConsole.ScreenBuffer.Width,
+            CharSize.X * TwConsole.ScreenBuffer.Width,
             _backgroundRect.Height
         );
 
@@ -486,7 +486,7 @@ public class ConsoleScreen
         // Draw history
         var historyPosition = new Vector2(displayPosition.X, displayPosition.Y);
 
-        var numLinesToDraw = (int)(_backgroundRect.Height / CharSize.Y);
+        var numLinesToDraw = _backgroundRect.Height / CharSize.Y;
 
         _charsDrawn = 0;
 

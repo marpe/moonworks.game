@@ -592,7 +592,7 @@ public class AsepriteFile
 
 		private uint[] ReadRGBA(Span<byte> colors) // [Red, Green, Blue, Alpha]
 		{
-			var size = (int)Width * (int)Height;
+			var size = Width * Height;
 			var pixels = new uint[size];
 
 			for (int i = 0; i < size; i++)
@@ -612,7 +612,7 @@ public class AsepriteFile
 
 		private uint[] ReadGrayscale(Span<byte> colors) // [Value, Alpha]
 		{
-			var size = (int)Width * (int)Height;
+			var size = Width * Height;
 			var pixels = new uint[size];
 
 			for (int i = 0; i < size; i++)
@@ -626,7 +626,7 @@ public class AsepriteFile
 
 		private uint[] ReadIndexed(Span<byte> colors) // [Index]
 		{
-			var size = (int)Width * (int)Height;
+			var size = Width * Height;
 			var pixels = new uint[size];
 
 			for (int i = 0; i < size; i++)

@@ -45,8 +45,9 @@ public static class LDtkGenerator
 
         TextGenerator.WriteLine($"public EntityType EntityType;");
         TextGenerator.WriteLine($"public Guid Iid;");
-        TextGenerator.WriteLine($"public Point Position;");
-        TextGenerator.WriteLine($"public Point Size;");
+        TextGenerator.WriteLine($"public Vector2 Position;");
+        TextGenerator.WriteLine($"public Vector2 Size;");
+        TextGenerator.WriteLine($"public Color SmartColor;");
         
         // type map start
         TextGenerator.WriteLine($"public static Dictionary<EntityType, Type> TypeMap = new()");
