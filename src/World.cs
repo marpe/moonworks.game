@@ -1,4 +1,5 @@
-﻿using MyGame.Generated;
+﻿using MyGame.Cameras;
+using MyGame.Generated;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 using MyGame.Utils;
@@ -122,9 +123,9 @@ public class World
         _player.FrameIndex = (uint)(_player.TotalTime * 10) % 2;
     }
 
-    public void Draw(Renderer renderer)
+    public void Draw(Renderer renderer, Camera camera)
     {
-        var cameraBounds = new Rectangle(0, 0, 1920, 1080);
+        var cameraBounds = camera.Bounds;
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;

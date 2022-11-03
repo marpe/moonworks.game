@@ -49,7 +49,7 @@ public class GameScreen
 
     public void Draw(Renderer renderer)
     {
-        _world?.Draw(renderer);
+        _world?.Draw(renderer, _camera);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;

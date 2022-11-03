@@ -16,6 +16,8 @@ public class Camera
         }
     }
 
+    public Rectangle Bounds => new Rectangle((int)Position.X - Width / 2, (int)Position.Y - Height / 2, Width, Height);
+    
     private float _zoom = 1.0f;
     public float Zoom
     {
