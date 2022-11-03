@@ -172,7 +172,6 @@ public class World
         if (movementX != 0)
             _player.Velocity.X += movementX * deltaSeconds * _player.Speed;
 
-
         var dx = (_player.Velocity.X * deltaSeconds) / LdtkRaw.DefaultGridSize;
         var playerGridCell = GetGridCoords(_player);
         var playerGridRel = new Vector2(
@@ -190,20 +189,19 @@ public class World
 
         if (playerGridRelX > 0.8f && HasCollision(playerGridCell.X + 1, playerGridCell.Y))
         {
-            _player.Position.X = (playerGridCell.X + 0.8f) * LdtkRaw.DefaultGridSize;
+            _player.Position.X = (playerGridCell.X + 0.8f - MathF.Epsilon) * LdtkRaw.DefaultGridSize;
             _player.Velocity.X = 0;
         }
 
         if (playerGridRelX < 0.2f && HasCollision(playerGridCell.X - 1, playerGridCell.Y))
         {
-            _player.Position.X = (playerGridCell.X + 0.2f) * LdtkRaw.DefaultGridSize;
+            _player.Position.X = (playerGridCell.X + 0.2f + MathF.Epsilon) * LdtkRaw.DefaultGridSize;
             _player.Velocity.X = 0;
         }
 
         var dy = (_player.Velocity.Y * deltaSeconds) / LdtkRaw.DefaultGridSize;
         var playerGridRelY = playerGridRel.Y + dy;
 
-        var gridPos = SnapToGrid(_player, new Vector2(0, dy));
         if (playerGridRelY > 1.0f && HasCollision(playerGridCell.X, playerGridCell.Y + 1))
         {
             _player.Velocity.Y = 0;
@@ -219,7 +217,6 @@ public class World
         if (MathF.IsNearZero(_player.Velocity.Y, KillThreshold))
             _player.Velocity.Y = 0;
 
-
         playerGridCell = GetGridCoords(_player);
         var isGrounded = _player.Velocity.Y == 0 && HasCollision(playerGridCell.X, playerGridCell.Y + 1);
         if (!isGrounded)
@@ -230,13 +227,6 @@ public class World
     {
         var p = entity.Position + (deltaMove ?? Vector2.Zero);
         return GetGridCoords(p, entity.Pivot, (int)LdtkRaw.DefaultGridSize);
-    }
-
-    private Point SnapToGrid(Entity entity, Vector2? deltaMove = null)
-    {
-        var gridCoords = GetGridCoords(entity, deltaMove);
-        var gridSize = (int)LdtkRaw.DefaultGridSize;
-        return new Point(gridCoords.X * gridSize, gridCoords.Y * gridSize);
     }
 
     private static Point GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
@@ -452,7 +442,7 @@ public class World
         var max = e.Bounds.Max;
         renderer.DrawRect(min, max, e.SmartColor, 1.0f);
         renderer.DrawRect(new Rectangle((int)e.Position.X, (int)e.Position.Y, 1, 1), Color.Magenta, 0);
-        var snappedToGrid = SnapToGrid(e);
+        var snappedToGrid = GetGridCoords(_player) * (int)LdtkRaw.DefaultGridSize;
         renderer.DrawRect(new Rectangle(snappedToGrid.X - 1, snappedToGrid.Y, 3, 1), Color.Red, 0);
         renderer.DrawRect(new Rectangle(snappedToGrid.X, snappedToGrid.Y - 1, 1, 3), Color.Red, 0);
     }
