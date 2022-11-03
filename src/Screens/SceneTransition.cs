@@ -1,5 +1,4 @@
-﻿using MyGame.Generated;
-using MyGame.Graphics;
+﻿using MyGame.Graphics;
 
 namespace MyGame.Screens;
 

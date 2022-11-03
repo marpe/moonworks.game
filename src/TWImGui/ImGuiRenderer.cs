@@ -2,7 +2,6 @@
 
 using System.Runtime.InteropServices;
 using ImGuiNET;
-using MyGame.Generated;
 using MyGame.Graphics;
 using SDL2;
 

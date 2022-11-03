@@ -1,4 +1,7 @@
-﻿namespace MyGame.Cameras;
+﻿using MyGame.Screens;
+using MyGame.TWConsole;
+
+namespace MyGame.Cameras;
 
 public class CameraController
 {
@@ -9,8 +12,27 @@ public class CameraController
     public Matrix4x4 ViewProjection;
     private float _lerpSpeed = 1f;
 
-    public CameraController(Camera camera)
+    [CVar("noclio", "Toggle camera controls")]
+    public bool IsMouseAndKeyboardControlEnabled;
+
+    [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
+    public bool ClampToLevelBounds;
+
+    private GameScreen _parent;
+
+    private Entity? _trackingEntity;
+
+    private Vector3 _velocity = Vector3.Zero;
+    private float _trackingSpeed = 10f;
+    private Vector2 _targetOffset = Vector2.Zero;
+
+    public Vector2 _deadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
+    private float _baseFriction = 0.89f;
+    private float _brakeDistNearBounds = 0.1f;
+
+    public CameraController(GameScreen parent, Camera camera)
     {
+        _parent = parent;
         _camera = camera;
         ViewProjection = _camera.ViewProjection;
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
@@ -20,8 +42,87 @@ public class CameraController
     {
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
+        if (_trackingEntity != null)
+        {
+            var trackSpeed = new Vector2(0.015f * _trackingSpeed * _camera.Zoom, 0.023f * _trackingSpeed * _camera.Zoom);
+            var target = _trackingEntity.Center + _targetOffset;
+
+            var offset = target - _camera.Position;
+            var angleToTarget = offset.Angle();
+            var deadZone = _deadZoneInPercentOfViewport * _camera.Size;
+            var distX = Math.Abs(offset.X);
+            if (distX >= deadZone.X)
+                _velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
+
+            var distY = Math.Abs(offset.Y);
+            if (distY >= deadZone.Y)
+                _velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
+        }
+
+        if (IsMouseAndKeyboardControlEnabled)
+        {
+            HandleInput(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
+        }
+
+        // Compute frictions
+        var frictX = _baseFriction - _trackingSpeed * _camera.Zoom * 0.027f * _baseFriction;
+        var frictY = frictX;
+
+        if (ClampToLevelBounds)
+        {
+            // "Brake" when approaching bounds
+            var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
+            var brakeDist = _brakeDistNearBounds * _camera.Width;
+            if (_velocity.X <= 0)
+            {
+                var brakeRatio = 1 - MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist);
+                frictX *= 1 - 1 * brakeRatio;
+            }
+            else if (_velocity.X > 0)
+            {
+                var brakeRatio = 1 - MathF.Clamp01(((worldSize.X - _camera.Width * 0.5f) - _camera.Position.X) / brakeDist);
+                frictX *= 1 - 0.9f * brakeRatio;
+            }
+
+            brakeDist = _brakeDistNearBounds * _camera.Height;
+            if (_velocity.Y < 0)
+            {
+                var brakeRatio = 1 - MathF.Clamp01((_camera.Position.Y - _camera.Height * 0.5f) / brakeDist);
+                frictY *= 1 - 0.9f * brakeRatio;
+            }
+            else if (_velocity.Y > 0)
+            {
+                var brakeRatio = 1 - MathF.Clamp01(((worldSize.Y - _camera.Height * 0.5f) - _camera.Position.Y) / brakeDist);
+                frictY *= 1 - 0.9f * brakeRatio;
+            }
+        }
+
+        _camera.Position += new Vector2(_velocity.X, _velocity.Y) * deltaSeconds;
+
+        _velocity.X *= MathF.Pow(frictX, deltaSeconds);
+        _velocity.Y *= MathF.Pow(frictY, deltaSeconds);
+
+        // Bounds clamping
+        if (ClampToLevelBounds)
+        {
+            var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
+
+            if (worldSize.X < _camera.Width)
+                _camera.Position.X = worldSize.X * 0.5f; // centered small level
+            else
+                _camera.Position.X = MathF.Clamp(_camera.Position.X, _camera.Width * 0.5f, worldSize.X - _camera.Width * 0.5f);
+
+            if (worldSize.Y < _camera.Height)
+                _camera.Position.Y = worldSize.Y * 0.5f; // centered small level
+            else
+                _camera.Position.Y = MathF.Clamp(_camera.Position.Y, _camera.Height * 0.5f, worldSize.Y - _camera.Height * 0.5f);
+        }
+
         ViewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
-        
+    }
+
+    private void HandleInput(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
+    {
         if (allowKeyboardInput && input.IsKeyPressed(KeyCode.F1))
         {
             Use3D = !Use3D;
@@ -90,17 +191,17 @@ public class CameraController
                     _camera.Zoom = 1.0f;
                     _camera.Position = Vector2.Zero;
                 }
-                
+
                 if (input.IsKeyDown(KeyCode.PageUp))
                 {
                     _camera.Zoom += 0.025f * _camera.Zoom;
                 }
-               
+
                 if (input.IsKeyDown(KeyCode.PageDown))
                 {
                     _camera.Zoom -= 0.025f * _camera.Zoom;
                 }
-                
+
                 if (input.IsKeyDown(KeyCode.W))
                 {
                     _camera.Position.Y -= moveDelta;
@@ -122,5 +223,10 @@ public class CameraController
                 }
             }
         }
+    }
+
+    public void TrackEntity(Entity? target)
+    {
+        _trackingEntity = target;
     }
 }

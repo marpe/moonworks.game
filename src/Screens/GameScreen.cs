@@ -1,5 +1,4 @@
 ﻿using MyGame.Cameras;
-using MyGame.Generated;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 
@@ -11,6 +10,8 @@ public class GameScreen
     private MyGameMain _game;
     private GraphicsDevice _device;
     private CameraController _cameraController;
+    public CameraController CameraController => _cameraController;
+    
     private World? _world;
 
     public World? World => _world;
@@ -23,7 +24,7 @@ public class GameScreen
         LoadWorld();
 
         _camera = new Camera();
-        _cameraController = new CameraController(_camera);
+        _cameraController = new CameraController(this, _camera);
     }
 
     [ConsoleHandler("restart")]
@@ -36,7 +37,7 @@ public class GameScreen
     {
         Task.Run(() =>
         {
-            _world = new World(_game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            _world = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
 
             _camera.Position = ((Vector2)_world.WorldSize) * 0.5f;
             _camera.Zoom = 4.0f;

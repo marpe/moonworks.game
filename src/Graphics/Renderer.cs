@@ -1,6 +1,4 @@
 ﻿using MoonWorks.Graphics.Font;
-using MyGame.Generated;
-using MyGame.Utils;
 
 namespace MyGame.Graphics;
 

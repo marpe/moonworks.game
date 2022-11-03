@@ -1,6 +1,6 @@
 ﻿using MyGame.Cameras;
-using MyGame.Generated;
 using MyGame.Graphics;
+using MyGame.Screens;
 using MyGame.TWConsole;
 using MyGame.Utils;
 using Newtonsoft.Json;
@@ -31,6 +31,7 @@ public partial class Entity
     public Vector2 SpritePosition;
     public Vector2 Origin => Pivot * Size;
     public Bounds Bounds => new Bounds(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
+    public Vector2 Center => new Vector2(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
 }
 
 public partial class Player : Entity
@@ -79,12 +80,14 @@ public class World
     private float _totalTime;
     public float Gravity = 512f;
 
+    private readonly GameScreen _parent;
     private List<DebugDraw> _debugDrawCalls = new();
 
     public long GridSize => LdtkRaw.DefaultGridSize;
 
-    public World(GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
+    public World(GameScreen parent, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
+        _parent = parent;
         var jsonString = File.ReadAllText(ldtkPath.ToString());
         LdtkRaw = LdtkJson.FromJson(jsonString);
         TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
@@ -119,6 +122,7 @@ public class World
         }
 
         _player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
+        _parent.CameraController.TrackEntity(_player);
         _enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
     }
 

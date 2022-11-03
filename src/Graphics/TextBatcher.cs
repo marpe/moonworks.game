@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using MoonWorks.Graphics.Font;
-using MyGame.Generated;
 using WellspringCS;
 
 using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
