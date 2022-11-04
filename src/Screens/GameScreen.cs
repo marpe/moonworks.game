@@ -53,13 +53,8 @@ public class GameScreen
     public void Update(bool isPaused, float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
         var input = _game.InputHandler;
-        _cameraController.UpdatePrevious();
-        if(!isPaused)
-            _cameraController.Update(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
-
-        _world?.UpdatePrevious();
-        if(!isPaused)
-            _world?.Update(deltaSeconds, input, allowKeyboardInput, allowMouseInput);
+        _cameraController.Update(isPaused, deltaSeconds, input, allowMouseInput, allowKeyboardInput);
+        _world?.Update(isPaused, deltaSeconds, input, allowKeyboardInput, allowMouseInput);
     }
 
     public void Draw(Renderer renderer, double alpha)
@@ -67,7 +62,7 @@ public class GameScreen
         // not sure why but if i don't render anything here the first loading screen gets weird and renders at a small size
         var swapSize = new Point((int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height);
         renderer.DrawRect(new Rectangle(0, 0, swapSize.X, swapSize.Y), Color.Black);
-        
+
         _world?.Draw(renderer, _camera, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;

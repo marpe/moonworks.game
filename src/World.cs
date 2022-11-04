@@ -2,171 +2,11 @@
 using MyGame.Graphics;
 using MyGame.Screens;
 using MyGame.TWConsole;
-using MyGame.TWImGui;
-using MyGame.TWImGui.Inspectors;
 using MyGame.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace MyGame;
-
-public struct Bounds
-{
-    public Vector2 Min;
-    public Vector2 Size;
-    public Vector2 Max => Min + Size;
-
-    public Bounds(float x, float y, float w, float h)
-    {
-        Min = new Vector2(x, y);
-        Size = new Vector2(w, h);
-    }
-
-    public Bounds(Vector2 min, Vector2 max) : this(min.X, min.Y, max.X - min.X, max.Y - min.Y)
-    {
-    }
-
-    public static implicit operator Rectangle(Bounds b)
-    {
-        return new Rectangle((int)b.Min.X, (int)b.Min.Y, (int)b.Size.X, (int)b.Size.Y);
-    }
-
-    public static Bounds Lerp(Bounds a, Bounds b, double alpha)
-    {
-        var min = Vector2.Lerp(a.Min, b.Min, (float)alpha);
-        var max = Vector2.Lerp(a.Max, b.Max, (float)alpha);
-        return new Bounds(min, max);
-    }
-}
-
-public partial class Entity
-{
-    public Vector2 InitialPosition;
-    public Vector2 PreviousPosition;
-    public Vector2 Origin => Pivot * Size;
-    public Bounds Bounds => new Bounds(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
-    public Vector2 Center => new Vector2(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
-}
-
-[CustomInspector(typeof(GroupInspector))]
-public class Velocity
-{
-    public const float KillThreshold = 0.0005f;
-    public Vector2 Delta = Vector2.Zero;
-    public Vector2 Friction = new Vector2(0.84f, 0.94f);
-
-    public float X
-    {
-        get => Delta.X;
-        set => Delta.X = value;
-    }
-
-    public float Y
-    {
-        get => Delta.Y;
-        set => Delta.Y = value;
-    }
-
-    public static void ApplyFriction(Velocity velocity)
-    {
-        velocity.Delta *= velocity.Friction;
-        if (MathF.IsNearZero(velocity.X, KillThreshold))
-            velocity.X = 0;
-        if (MathF.IsNearZero(velocity.Y, KillThreshold))
-            velocity.Y = 0;
-    }
-
-    public static Vector2 operator *(Velocity velocity, float value) => velocity.Delta * value;
-    public static implicit operator Vector2(Velocity velocity) => velocity.Delta;
-}
-
-public partial class Enemy : Entity
-{
-    public Velocity Velocity = new();
-}
-
-public partial class Gun_Pickup : Entity
-{
-}
-
-public partial class RefTest : Entity
-{
-}
-
-public class DebugDrawItems
-{
-    private List<DebugDraw> _debugDrawCalls = new();
-
-    public void AddText(ReadOnlySpan<char> text, Vector2 position, Color color)
-    {
-        _debugDrawCalls.Add(new DebugDraw()
-        {
-            Color = color,
-            Text = text.ToString(),
-            Rectangle = new Rectangle((int)position.X, (int)position.Y, 0, 0),
-            UpdateCountAtDraw = Shared.Game.UpdateCount,
-            DrawType = DebugDrawType.Text,
-        });
-    }
-
-    public void Render(Renderer renderer)
-    {
-        for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
-        {
-            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
-                _debugDrawCalls.RemoveAt(i);
-        }
-
-        foreach (var debugDrawCall in _debugDrawCalls)
-        {
-            if (debugDrawCall.Text != null)
-            {
-                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min() + Vector2.One,
-                    Color.Black);
-                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min(), debugDrawCall.Color);
-            }
-            else
-            {
-                renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
-            }
-        }
-    }
-}
-
-public partial class Player : Entity
-{
-    public Velocity Velocity = new()
-    {
-        Delta = Vector2.Zero,
-        Friction = new Vector2(0.84f, 0.98f)
-    };
-
-    public uint FrameIndex;
-    public float TotalTime;
-    public float Speed = 20f;
-    public float JumpSpeed = -300f;
-    public float LastOnGroundTime;
-    public Vector2 Squash = Vector2.One;
-    public bool IsJumping;
-    public float JumpHoldTime = 0.3f;
-    public float LastJumpTime;
-    public bool EnableSquash = true;
-}
-
-public enum DebugDrawType
-{
-    Rect,
-    Text
-}
-
-public class DebugDraw
-{
-    public Rectangle Rectangle;
-    public Color Color;
-    public ulong UpdateCountAtDraw;
-    public string Text = "";
-    public DebugDrawType DrawType = DebugDrawType.Text;
-}
 
 public class World
 {
@@ -273,19 +113,22 @@ public class World
         return entities;
     }
 
-    public void UpdatePrevious()
+    private void UpdatePrevious()
     {
         _player.PreviousPosition = _player.Position;
     }
-    
-    public void Update(float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
+
+    public void Update(bool isPaused, float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
     {
+        UpdatePrevious();
+        if (isPaused)
+            return;
+
         var (movementX, movementY) = HandleInput(input, allowKeyboard);
 
         if (_player.Position.Y > 300)
         {
-            _player.Position = _player.InitialPosition;
-            UpdatePrevious();
+            _player.SetPositions(_player.InitialPosition);
         }
 
         _totalTime += deltaSeconds;
