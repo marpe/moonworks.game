@@ -98,6 +98,7 @@ public partial class Player : Entity
     public float Speed = 20f;
     public float JumpSpeed = -500f;
     public float LastOnGroundTime;
+    public Vector2 Squash = Vector2.One;
 }
 
 public class DebugDraw
@@ -232,6 +233,7 @@ public class World
         var canJump = (_totalTime - _player.LastOnGroundTime) < 0.1f;
         if (movementY == -1 && canJump)
         {
+            _player.Squash = new Vector2(0.6f, 1.4f);
             _player.LastOnGroundTime = 0;
             _player.Velocity.Y = _player.JumpSpeed;
         }
@@ -243,6 +245,8 @@ public class World
 
         if (!IsGrounded(_player, _player.Velocity))
             _player.Velocity.Y += Gravity * deltaSeconds;
+
+        _player.Squash = Vector2.SmoothStep(_player.Squash, Vector2.One, deltaSeconds * 20f);
     }
 
     private (int movementX, int movementY) HandleInput(InputHandler input, bool allowKeyboard)
@@ -300,6 +304,9 @@ public class World
         if (resultCellPos.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
         {
             entity.Position.Y = (cell.Y + 1.0f) * GridSize;
+            if (entity is Player p)
+                p.Squash = new Vector2(1.5f, 0.5f);
+
             velocity.Y = 0;
         }
 
@@ -398,7 +405,9 @@ public class World
         {
             var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
             var position = Vector2.Lerp(_player.PreviousPosition, _player.Position, (float)alpha);
-            var xform = Matrix3x2.CreateTranslation(position.X - _player.Origin.X, position.Y - _player.Origin.Y);
+            var xform = Matrix3x2.CreateTranslation(-_player.Origin.X, -_player.Origin.Y) *
+                        Matrix3x2.CreateScale(_player.Squash) *
+                        Matrix3x2.CreateTranslation(position.X, position.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
             if (Debug)
                 DrawDebug(renderer, _player);
