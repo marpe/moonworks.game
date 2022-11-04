@@ -158,7 +158,7 @@ public class World
         for (var i = 0; i < _enemies.Count; i++)
         {
             var entity = _enemies[i];
-            
+
             entity.TotalTime += deltaSeconds;
 
             if (entity.Type == EnemyType.Slug)
@@ -365,21 +365,21 @@ public class World
         return new Point(gridX, gridY);
     }
 
+    private LayerDefinition GetLayerDefinition(long layerDefUid)
+    {
+        for (var i = 0; i < LdtkRaw.Defs.Layers.Length; i++)
+        {
+            if (LdtkRaw.Defs.Layers[i].Uid == layerDefUid)
+                return LdtkRaw.Defs.Layers[i];
+        }
+
+        throw new InvalidOperationException();
+    }
+
     private bool HasCollision(int x, int y)
     {
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-
-        LayerDefinition GetLayerDefinition(long layerDefUid)
-        {
-            for (var i = 0; i < LdtkRaw.Defs.Layers.Length; i++)
-            {
-                if (LdtkRaw.Defs.Layers[i].Uid == layerDefUid)
-                    return LdtkRaw.Defs.Layers[i];
-            }
-
-            throw new InvalidOperationException();
-        }
 
         foreach (var level in levels)
         {
@@ -397,7 +397,7 @@ public class World
                     continue;
                 var gridCoords = new Point(x - levelMin.X, y - levelMin.Y);
                 var value = layer.IntGridCsv[gridCoords.Y * layer.CWid + gridCoords.X];
-                if (value == 5 || value == 6)
+                if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
                     return true;
             }
         }
@@ -421,7 +421,8 @@ public class World
             for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
             {
                 var layer = level.LayerInstances[layerIndex];
-                DrawLayer(renderer, level, layer, cameraBounds);
+                var layerDef = GetLayerDefinition(layer.LayerDefUid);
+                DrawLayer(renderer, level, layer, layerDef, cameraBounds);
             }
 
             if (Debug)
@@ -477,7 +478,7 @@ public class World
         }
     }
 
-    private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, Rectangle cameraBounds)
+    private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
     {
         if (!layer.TilesetDefUid.HasValue)
             return;
@@ -497,14 +498,17 @@ public class World
             for (var i = 0; i < layer.IntGridCsv.Length; i++)
             {
                 var value = layer.IntGridCsv[i];
-                if (value is 5 or 6)
+                var enumValue = (LayerDefs.Tiles)value;
+                if (enumValue is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
                 {
                     var gridSize = layer.GridSize;
                     var gridY = (int)(i / layer.CWid);
                     var gridX = (int)(i % layer.CWid);
                     var min = level.Position + layer.TotalOffset + new Vector2(gridX, gridY) * gridSize;
                     var max = min + new Vector2(gridSize, gridSize);
-                    renderer.DrawRect(min, max, Color.Red, 1.0f);
+                    var intGridValue = layerDef.IntGridValues[value - 1];
+                    var color = LayerDefs.TilesColors[enumValue]; // ColorExt.FromHex(intGridValue.Color.AsSpan().Slice(1));
+                    renderer.DrawRect(min, max, color, 1.0f);
                 }
             }
         }

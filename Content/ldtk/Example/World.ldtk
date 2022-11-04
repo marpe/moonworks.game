@@ -1331,7 +1331,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Enemy",
-							"__grid": [11,9],
+							"__grid": [11,6],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1340,7 +1340,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [185,152],
+							"px": [185,104],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [{ "cx": 19, "cy": 9 }], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [{
 									"id": "V_String",
@@ -1355,7 +1355,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [4,7],
+							"__grid": [5,4],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1364,7 +1364,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [73,120],
+							"px": [89,72],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [ { "cx": 8, "cy": 7 }, { "cx": 4, "cy": 7 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
 									"id": "V_String",
@@ -1500,7 +1500,7 @@
 						},
 						{
 							"__identifier": "Gun_Pickup",
-							"__grid": [2,8],
+							"__grid": [2,5],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1509,7 +1509,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 107,
-							"px": [40,144],
+							"px": [40,96],
 							"fieldInstances": []
 						}
 					]

@@ -14,6 +14,32 @@ public static class Worlds
     }
 }
 
+public static class LayerDefs
+{
+    public enum Tiles : long
+    {
+        Mushroom = 1,
+        Flower = 2,
+        Grass = 3,
+        Fence = 4,
+        Tree = 5,
+        Ground = 6,
+        Left_Ground = 7,
+    }
+
+    public static Dictionary<Tiles, Color> TilesColors = new()
+    {
+        { Tiles.Mushroom, new Color(1f, 0f, 0f, 1f) },
+        { Tiles.Flower, new Color(0.81f, 0.42f, 0.42f, 1f) },
+        { Tiles.Grass, new Color(0.27f, 0.79f, 0.34f, 1f) },
+        { Tiles.Fence, new Color(0.35f, 0.24f, 0.15f, 1f) },
+        { Tiles.Tree, new Color(0.28f, 0.69f, 0.16f, 1f) },
+        { Tiles.Ground, new Color(0f, 0.2f, 1f, 1f) },
+        { Tiles.Left_Ground, new Color(0.51f, 0f, 1f, 1f) },
+    };
+
+}
+
 public enum EnemyType
 {
     YellowBee,
@@ -77,3 +103,4 @@ public partial class RefTest
     public EnemyType? EnemyType;
     public FieldInstanceEntityReference? AnotherRef;
 }
+

@@ -18,11 +18,50 @@ public static class LDtkGenerator
         TextGenerator.WriteLine();
 
         WriteWorlds(ldtk);
+        WriteLayerDefs(ldtk);
         WriteEnums(ldtk);
         WriteLevelFields(ldtk);
         WriteEntities(ldtk);
 
+
         return TextGenerator.AsString();
+    }
+
+    private static void WriteLayerDefs(LdtkJson ldtk)
+    {
+        TextGenerator.WriteLine($"public static class LayerDefs");
+        TextGenerator.StartBlock();
+        foreach (var layer in ldtk.Defs.Layers)
+        {
+            if (layer.IntGridValues.Length > 0)
+            {
+                TextGenerator.WriteLine($"public enum {layer.Identifier} : long");
+                TextGenerator.StartBlock();
+                for (var i = 0; i < layer.IntGridValues.Length; i++)
+                {
+                    var intGridValue = layer.IntGridValues[i];
+                    TextGenerator.WriteLine($"{intGridValue.Identifier} = {intGridValue.Value},");
+                }
+
+                TextGenerator.EndBlock();
+                TextGenerator.WriteLine();
+
+                TextGenerator.WriteLine($"public static Dictionary<{layer.Identifier}, Color> {layer.Identifier}Colors = new()");
+                TextGenerator.StartBlock();
+                for (var i = 0; i < layer.IntGridValues.Length; i++)
+                {
+                    var intGridValue = layer.IntGridValues[i];
+                    var (r, g, b, a) = FromHex(intGridValue.Color.AsSpan().Slice(1));
+                    TextGenerator.WriteLine($"{{ {layer.Identifier}.{intGridValue.Identifier}, new Color({r:0.##}f, {g:0.##}f, {b:0.##}f, {a:0.##}f) }},");
+                }
+
+                TextGenerator.EndBlock("};");
+                TextGenerator.WriteLine();
+            }
+        }
+
+        TextGenerator.EndBlock();
+        TextGenerator.WriteLine();
     }
 
     private static void WriteEntities(LdtkJson ldtk)
@@ -49,7 +88,7 @@ public static class LDtkGenerator
         TextGenerator.WriteLine($"public Vector2 Size;");
         TextGenerator.WriteLine($"public Vector2 Pivot;");
         TextGenerator.WriteLine($"public Color SmartColor;");
-        
+
         // type map start
         TextGenerator.WriteLine($"public static Dictionary<EntityType, Type> TypeMap = new()");
         TextGenerator.StartBlock();
@@ -81,6 +120,8 @@ public static class LDtkGenerator
             if (i < ldtk.Defs.Entities.Length - 1)
                 TextGenerator.WriteLine();
         }
+
+        TextGenerator.WriteLine();
     }
 
     private static void WriteLevelFields(LdtkJson ldtk)
@@ -173,5 +214,17 @@ public static class LDtkGenerator
 
         TextGenerator.EndBlock();
         TextGenerator.WriteLine();
+    }
+
+    private const string HEX = "0123456789ABCDEF";
+    private static byte HexToByte(char c) => (byte)HEX.IndexOf(char.ToUpper(c));
+
+    public static (float r, float g, float b, float a) FromHex(ReadOnlySpan<char> hex)
+    {
+        var r = (HexToByte(hex[0]) * 16 + HexToByte(hex[1])) / 255.0f;
+        var g = (HexToByte(hex[2]) * 16 + HexToByte(hex[3])) / 255.0f;
+        var b = (HexToByte(hex[4]) * 16 + HexToByte(hex[5])) / 255.0f;
+
+        return (r, g, b, 1.0f);
     }
 }
