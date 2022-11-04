@@ -99,6 +99,7 @@ public partial class Player : Entity
     public float JumpSpeed = -500f;
     public float LastOnGroundTime;
     public Vector2 Squash = Vector2.One;
+    public bool EnableSquash = true;
 }
 
 public class DebugDraw
@@ -284,25 +285,29 @@ public class World
     {
         var deltaMove = (velocity * deltaSeconds) / GridSize;
         var cell = GetGridCoords(entity);
+        var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
         var positionInCell = new Vector2(
-            (entity.Position.X % GridSize) / GridSize,
-            (entity.Position.Y % GridSize) / GridSize
+            ((entity.Position.X + adjustX) % GridSize) / GridSize,
+            ((entity.Position.Y + adjustY) % GridSize) / GridSize
         );
         var resultCellPos = positionInCell + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
         if (resultCellPos.X > 0.8f && HasCollision(cell.X + 1, cell.Y))
         {
+            // Logger.LogInfo("Collide +x");
             entity.Position.X = (cell.X + 0.8f - MathF.Epsilon) * GridSize;
             velocity.X = 0;
         }
 
         if (resultCellPos.X < 0.2f && HasCollision(cell.X - 1, cell.Y))
         {
+            // Logger.LogInfo("Collide -x");
             entity.Position.X = (cell.X + 0.2f + MathF.Epsilon) * GridSize;
             velocity.X = 0;
         }
 
         if (resultCellPos.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
         {
+            // Logger.LogInfo("Collide +y");
             entity.Position.Y = (cell.Y + 1.0f) * GridSize;
             if (entity is Player p)
                 p.Squash = new Vector2(1.5f, 0.5f);
@@ -310,9 +315,10 @@ public class World
             velocity.Y = 0;
         }
 
-        if (velocity.Y < 0 && resultCellPos.Y < 0.2f && HasCollision(cell.X, cell.Y - 1))
+        if (velocity.Y < 0 && resultCellPos.Y < 0.8f && HasCollision(cell.X, cell.Y - 1))
         {
-            entity.Position.Y = (cell.Y + 1.2f) * GridSize;
+            // Logger.LogInfo("Collide -y");
+            entity.Position.Y = (cell.Y + 0.8f) * GridSize;
             velocity.Y = 0;
         }
     }
@@ -406,7 +412,7 @@ public class World
             var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
             var position = Vector2.Lerp(_player.PreviousPosition, _player.Position, (float)alpha);
             var xform = Matrix3x2.CreateTranslation(-_player.Origin.X, -_player.Origin.Y) *
-                        Matrix3x2.CreateScale(_player.Squash) *
+                        Matrix3x2.CreateScale(_player.EnableSquash ? _player.Squash : Vector2.One) *
                         Matrix3x2.CreateTranslation(position.X, position.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
             if (Debug)
