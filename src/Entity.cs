@@ -14,6 +14,8 @@ public partial class Entity
 public partial class Enemy : Entity
 {
     public Velocity Velocity = new();
+    public SpriteFlip Flip;
+    public float TotalTime;
 }
 
 public partial class Gun_Pickup : Entity
@@ -40,7 +42,7 @@ public partial class Player : Entity
     public Vector2 Squash = Vector2.One;
     public bool IsJumping;
     public float JumpHoldTime = 0.3f;
-    public float LastJumpTime;
+    public float LastJumpStartTime;
     public bool EnableSquash = true;
     public SpriteFlip Flip = SpriteFlip.None;
 

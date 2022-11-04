@@ -8,6 +8,16 @@ using Newtonsoft.Json.Linq;
 
 namespace MyGame;
 
+[Flags]
+public enum CollisionDir
+{
+    None = 0,
+    Top = 1 << 0,
+    Right = 1 << 1,
+    Down = 1 << 2,
+    Left = 1 << 3,
+}
+
 public class World
 {
     [CVar("world.debug", "Toggle world debugging")]
@@ -24,7 +34,6 @@ public class World
     private Player _player;
     public Player Player => _player;
 
-    private float _totalTime;
     public float Gravity = 800f;
 
     private readonly GameScreen _parent;
@@ -54,6 +63,16 @@ public class World
         {
             var entities = LoadEntitiesInLevel(level);
             allEntities.AddRange(entities);
+        }
+
+        foreach (var ent in allEntities)
+        {
+            if (ent is Enemy enemy && enemy.Type == EnemyType.Slug)
+            {
+                var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
+                enemy.Velocity.Delta = new Vector2(randomDirection * 100f, 0);
+                enemy.Velocity.Friction = new Vector2(0.99f, 0.99f);
+            }
         }
 
         var textures = new[] { ContentPaths.ldtk.Example.Characters_png };
@@ -116,6 +135,12 @@ public class World
     private void UpdatePrevious()
     {
         _player.PreviousPosition = _player.Position;
+
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var entity = _enemies[i];
+            entity.PreviousPosition = entity.Position;
+        }
     }
 
     public void Update(bool isPaused, float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
@@ -124,44 +149,127 @@ public class World
         if (isPaused)
             return;
 
-        var (movementX, movementY) = HandleInput(input, allowKeyboard);
+        UpdatePlayer(deltaSeconds, input, allowKeyboard);
+        UpdateEnemies(deltaSeconds);
+    }
+
+    private void UpdateEnemies(float deltaSeconds)
+    {
+        for (var i = 0; i < _enemies.Count; i++)
+        {
+            var entity = _enemies[i];
+            
+            entity.TotalTime += deltaSeconds;
+
+            if (entity.Type == EnemyType.Slug)
+            {
+                var cell = GetGridCoords(entity);
+                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1))
+                    entity.Velocity.X *= -1;
+                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1))
+                    entity.Velocity.X *= -1;
+
+                var prevVelocity = entity.Velocity.Delta;
+                var collisions = HandleCollisions(entity, entity.Velocity, deltaSeconds);
+
+                entity.Position += entity.Velocity * deltaSeconds;
+                if ((collisions & CollisionDir.Left) != 0)
+                    entity.Velocity.Delta = new Vector2(100f, 0);
+                else if ((collisions & CollisionDir.Right) != 0)
+                    entity.Velocity.Delta = new Vector2(-100f, 0);
+
+                Velocity.ApplyFriction(entity.Velocity);
+
+                if (entity.Velocity.X > 0)
+                    entity.Flip = SpriteFlip.None;
+                else if (entity.Velocity.X < 0)
+                    entity.Flip = SpriteFlip.FlipHorizontally;
+
+                if (!IsGrounded(entity, entity.Velocity))
+                    entity.Velocity.Y += Gravity * deltaSeconds;
+                if (Math.Abs(entity.Velocity.X) < 50f)
+                {
+                    entity.Velocity.X += entity.Velocity.X;
+                }
+            }
+            else if (entity.Type == EnemyType.YellowBee)
+            {
+                var speed = 3f;
+                var deltaMove = new Vector2(MathF.Cos(entity.TotalTime * 3f), MathF.Sin(entity.TotalTime * 3f)) * 10f;
+                entity.Velocity.Delta = deltaMove;
+                entity.Position += entity.Velocity * deltaSeconds;
+
+                if (entity.Velocity.X > 0)
+                    entity.Flip = SpriteFlip.None;
+                else if (entity.Velocity.X < 0)
+                    entity.Flip = SpriteFlip.FlipHorizontally;
+            }
+        }
+    }
+
+
+    private void UpdatePlayer(float deltaSeconds, InputHandler input, bool allowKeyboard)
+    {
+        HandleInput(input, allowKeyboard, out var movementX);
+        var isJumpDown = input.IsKeyDown(KeyCode.Space);
+        var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
 
         if (_player.Position.Y > 300)
         {
             _player.SetPositions(_player.InitialPosition);
         }
 
-        _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
 
         if (IsGrounded(_player, _player.Velocity))
-            _player.LastOnGroundTime = _totalTime;
+            _player.LastOnGroundTime = _player.TotalTime;
 
         if (movementX != 0)
             _player.Velocity.X += movementX * _player.Speed;
-        var canJump = (_totalTime - _player.LastOnGroundTime) < 0.1f;
-        if (movementY == -1 && canJump)
+
+        if (!_player.IsJumping && isJumpPressed)
         {
-            _player.Squash = new Vector2(0.6f, 1.4f);
-            _player.LastOnGroundTime = 0;
-            _player.Velocity.Y = _player.JumpSpeed;
-            _player.LastJumpTime = _totalTime;
-            _player.IsJumping = true;
+            var timeSinceOnGround = _player.TotalTime - _player.LastOnGroundTime;
+            if (timeSinceOnGround < 0.1f)
+            {
+                _player.Squash = new Vector2(0.6f, 1.4f);
+                _player.LastOnGroundTime = 0;
+                _player.Velocity.Y = _player.JumpSpeed;
+                _player.LastJumpStartTime = _player.TotalTime;
+                _player.IsJumping = true;
+            }
         }
 
         if (_player.IsJumping)
         {
-            var hasReachedPeak = (_totalTime - _player.LastJumpTime > _player.JumpHoldTime);
-            if (hasReachedPeak || movementY != -1)
+            if (!isJumpDown)
+            {
                 _player.IsJumping = false;
+            }
+            else
+            {
+                var timeAirborne = _player.TotalTime - _player.LastJumpStartTime;
+                if (timeAirborne > _player.JumpHoldTime)
+                    _player.IsJumping = false;
+            }
         }
 
-        HandleCollisions(_player, _player.Velocity, deltaSeconds);
+        var collisions = HandleCollisions(_player, _player.Velocity, deltaSeconds);
+        if ((collisions & CollisionDir.Down) == CollisionDir.Down)
+        {
+            _player.Squash = new Vector2(1.5f, 0.5f);
+        }
+
+        if ((collisions & CollisionDir.Top) == CollisionDir.Top)
+        {
+            _player.IsJumping = false;
+        }
+
         _player.Position += _player.Velocity * deltaSeconds;
 
         Velocity.ApplyFriction(_player.Velocity);
-        if(_player.Velocity.X > 0)
+        if (_player.Velocity.X > 0)
             _player.Flip = SpriteFlip.None;
         else if (_player.Velocity.X < 0)
             _player.Flip = SpriteFlip.FlipHorizontally;
@@ -170,15 +278,11 @@ public class World
             _player.Velocity.Y += Gravity * deltaSeconds;
 
         _player.Squash = Vector2.SmoothStep(_player.Squash, Vector2.One, deltaSeconds * 20f);
-
-        _debugDraw.AddText(_player.IsJumping ? "IsJumping" : "", _player.Position, Color.White);
     }
 
-    private (int movementX, int movementY) HandleInput(InputHandler input, bool allowKeyboard)
+    private void HandleInput(InputHandler input, bool allowKeyboard, out int movementX)
     {
-        var movementX = 0;
-        var movementY = 0;
-
+        movementX = 0;
         if (allowKeyboard)
         {
             if (input.IsKeyPressed(KeyCode.Insert))
@@ -191,12 +295,7 @@ public class World
             if (input.IsKeyDown(KeyCode.Left) ||
                 input.IsKeyDown(KeyCode.A))
                 movementX += -1;
-
-            if (input.IsKeyDown(KeyCode.Space))
-                movementY -= 1;
         }
-
-        return (movementX, movementY);
     }
 
     public bool IsGrounded(Entity entity, Vector2 velocity)
@@ -205,8 +304,10 @@ public class World
         return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
     }
 
-    private void HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
+    private CollisionDir HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
     {
+        var result = CollisionDir.None;
+
         var deltaMove = (velocity * deltaSeconds) / GridSize;
         var cell = GetGridCoords(entity);
         var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
@@ -218,6 +319,7 @@ public class World
         if (resultCellPos.X > 0.8f && HasCollision(cell.X + 1, cell.Y))
         {
             // Logger.LogInfo("Collide +x");
+            result |= CollisionDir.Right;
             entity.Position.X = (cell.X + 0.8f - MathF.Epsilon) * GridSize;
             velocity.X = 0;
         }
@@ -225,6 +327,7 @@ public class World
         if (resultCellPos.X < 0.2f && HasCollision(cell.X - 1, cell.Y))
         {
             // Logger.LogInfo("Collide -x");
+            result |= CollisionDir.Left;
             entity.Position.X = (cell.X + 0.2f + MathF.Epsilon) * GridSize;
             velocity.X = 0;
         }
@@ -232,21 +335,20 @@ public class World
         if (resultCellPos.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
         {
             // Logger.LogInfo("Collide +y");
+            result |= CollisionDir.Down;
             entity.Position.Y = (cell.Y + 1.0f) * GridSize;
-            if (entity is Player p)
-                p.Squash = new Vector2(1.5f, 0.5f);
-
             velocity.Y = 0;
         }
 
         if (velocity.Y < 0 && resultCellPos.Y < 0.8f && HasCollision(cell.X, cell.Y - 1))
         {
             // Logger.LogInfo("Collide -y");
-            if (entity is Player p)
-                p.IsJumping = false;
+            result |= CollisionDir.Top;
             entity.Position.Y = (cell.Y + 0.8f) * GridSize;
             velocity.Y = 0;
         }
+
+        return result;
     }
 
     public Point GetGridCoords(Entity entity)
@@ -356,11 +458,11 @@ public class World
                 EnemyType.YellowBee or _ => 1,
             };
 
-            var frameIndex = (int)(_totalTime * 10) % 2;
+            var frameIndex = (int)(entity.TotalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var position = Vector2.Lerp(entity.PreviousPosition, entity.Position, (float)alpha);
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
                 DrawDebug(renderer, entity);
         }
@@ -463,7 +565,7 @@ public class World
         var max = e.Bounds.Max;
         renderer.DrawRect(min, max, e.SmartColor, 1.0f);
         renderer.DrawRect(new Rectangle((int)e.Position.X, (int)e.Position.Y, 1, 1), Color.Magenta, 0);
-        var snappedToGrid = GetGridCoords(_player) * (int)LdtkRaw.DefaultGridSize;
+        var snappedToGrid = GetGridCoords(e) * (int)LdtkRaw.DefaultGridSize;
         renderer.DrawRect(new Rectangle(snappedToGrid.X - 1, snappedToGrid.Y, 3, 1), Color.Red, 0);
         renderer.DrawRect(new Rectangle(snappedToGrid.X, snappedToGrid.Y - 1, 1, 3), Color.Red, 0);
     }

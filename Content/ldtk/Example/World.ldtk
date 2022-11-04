@@ -1342,13 +1342,10 @@
 							"defUid": 98,
 							"px": [185,152],
 							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [ { "cx": 19, "cy": 9 }, { "cx": 11, "cy": 9 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
+								{ "__identifier": "Wander", "__value": [{ "cx": 19, "cy": 9 }], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["19,9"]
-								}, {
-									"id": "V_String",
-									"params": ["11,9"]
-								} ] },
+								}] },
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
@@ -1503,7 +1500,7 @@
 						},
 						{
 							"__identifier": "Gun_Pickup",
-							"__grid": [7,9],
+							"__grid": [2,8],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1512,7 +1509,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 107,
-							"px": [120,160],
+							"px": [40,144],
 							"fieldInstances": []
 						}
 					]
@@ -1694,7 +1691,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [14,11],
+							"__grid": [15,10],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1703,7 +1700,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [231,184],
+							"px": [247,168],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [ { "cx": 16, "cy": 11 }, { "cx": 14, "cy": 11 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
 									"id": "V_String",
@@ -1721,7 +1718,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [20,11],
+							"__grid": [19,9],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1730,7 +1727,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [329,184],
+							"px": [313,152],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [ { "cx": 18, "cy": 11 }, { "cx": 20, "cy": 11 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
 									"id": "V_String",
