@@ -1,4 +1,5 @@
 ﻿using MyGame.Utils;
+using SDL2;
 
 namespace MyGame;
 
@@ -42,7 +43,7 @@ public struct InputState
         inputState.TextInput.AsSpan().Fill('\0');
         inputState.NumTextInputChars = 0;
     }
-    
+
     public static bool IsKeyDown(in InputState inpuState, KeyCode keyCode)
     {
         return inpuState.KeyboardState[(int)keyCode];
@@ -62,6 +63,86 @@ public struct InputState
     public static bool IsMouseButtonDown(in InputState inputState, MouseButtonCode mouseButton)
     {
         return inputState.MouseState[(int)mouseButton];
+    }
+
+    public void Print(string label)
+    {
+        List<KeyCode> codes = new();
+        for (var i = 0; i < KeyboardState.Length; i++)
+        {
+            if (KeyboardState[i])
+                codes.Add((KeyCode)i);
+        }
+
+        if (NumTextInputChars > 0 || codes.Count > 0)
+            Logger.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", codes.Select(x => x.ToString()))}");
+    }
+
+    public static InputState Aggregate(List<InputState> inputStates)
+    {
+        var result = new InputState();
+
+        foreach (var state in inputStates)
+        {
+            var oldNumChars = result.NumTextInputChars;
+            result.NumTextInputChars += state.NumTextInputChars;
+            if (result.TextInput.Length < result.NumTextInputChars)
+                Array.Resize(ref result.TextInput, result.NumTextInputChars);
+            for (var i = 0; i < state.NumTextInputChars; i++)
+            {
+                result.TextInput[oldNumChars + i] = state.TextInput[i];
+            }
+
+            for (var i = 0; i < state.KeyboardState.Length; i++)
+            {
+                result.KeyboardState[i] |= state.KeyboardState[i];
+            }
+
+            result.GlobalMousePosition = state.GlobalMousePosition;
+            result.MouseWheelDelta += state.MouseWheelDelta;
+            for (var i = 0; i < 3; i++)
+            {
+                result.MouseState[i] |= state.MouseState[i];
+            }
+        }
+
+        return result;
+    }
+
+    public static InputState Create(InputHandler input, bool allowKeyboard, bool allowMouse)
+    {
+        var state = new InputState();
+
+        if (allowKeyboard)
+        {
+            Array.Resize(ref state.TextInput, input.TextInput.Count);
+            state.NumTextInputChars = input.TextInput.Count;
+            for (var i = 0; i < state.NumTextInputChars; i++)
+            {
+                state.TextInput[i] = input.TextInput[i];
+            }
+
+            for (var i = 0; i < state.KeyboardState.Length; i++)
+            {
+                if (Enum.IsDefined((KeyCode)i))
+                {
+                    state.KeyboardState[i] = input.IsKeyDown((KeyCode)i);
+                }
+            }
+        }
+
+        if (allowMouse)
+        {
+            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
+            state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
+            state.MouseWheelDelta = input.MouseWheelDelta;
+            for (var i = 0; i < 3; i++)
+            {
+                state.MouseState[i] = input.IsMouseButtonDown((MouseButtonCode)i);
+            }
+        }
+
+        return state;
     }
 }
 
@@ -145,6 +226,8 @@ public class InputHandler
 
     public void EndFrame()
     {
+        /*if (TextInput.Count > 0)
+            Logger.LogInfo($"TextInput: {new string(TextInput.ToArray())}");*/
         TextInput.Clear();
     }
 

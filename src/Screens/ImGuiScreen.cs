@@ -22,10 +22,11 @@ public class ImGuiScreen
     private List<ImGuiMenu> _menuItems = new();
     private float _mainMenuPaddingY = 6f;
     private bool _doRender;
-    private InputState _inputState = new();
+    private List<InputState> _inputStates = new();
 
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
+
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -94,46 +95,21 @@ public class ImGuiScreen
             IsHidden = !IsHidden;
         }
 
-        if (_game.TotalElapsedTime - _lastUpdateTime < _updateRate)
+        if (IsHidden)
             return;
 
-        _lastUpdateTime = _game.TotalElapsedTime;
-
-        if (IsHidden)
-            allowKeyboardInput = allowMouseInput = false;
-
-        // TODO (marpe): Accumulate input events until next draw?
-        InputState.Clear(ref _inputState);
-
-        if (allowKeyboardInput)
+        var newState = InputState.Create(inputHandler, allowKeyboardInput, allowMouseInput);
+        _inputStates.Add(newState);
+        
+        var deltaTime = _game.TotalElapsedTime - _lastUpdateTime;
+        if (deltaTime > _updateRate)
         {
-            Array.Resize(ref _inputState.TextInput, inputHandler.TextInput.Count);
-            _inputState.NumTextInputChars = inputHandler.TextInput.Count;
-            for (var i = 0; i < _inputState.NumTextInputChars; i++)
-            {
-                _inputState.TextInput[i] = inputHandler.TextInput[i];
-            }
-
-            for (var i = 0; i < _inputState.KeyboardState.Length; i++)
-            {
-                if (Enum.IsDefined((KeyCode)i))
-                    _inputState.KeyboardState[i] = inputHandler.IsKeyDown((KeyCode)i);
-            }
+            var inputState = InputState.Aggregate(_inputStates);
+            _inputStates.Clear();
+            _imGuiRenderer.Update(deltaTime, inputState);
+            _lastUpdateTime = _game.TotalElapsedTime;
+            _doRender = true;
         }
-
-        if (allowMouseInput)
-        {
-            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
-            _inputState.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
-            _inputState.MouseWheelDelta = inputHandler.MouseWheelDelta;
-            for (var i = 0; i < 3; i++)
-            {
-                _inputState.MouseState[i] = inputHandler.IsMouseButtonDown((MouseButtonCode)i);
-            }
-        }
-
-        _imGuiRenderer.Update(deltaSeconds, _inputState);
-        _doRender = true;
     }
 
     public void Draw(Renderer renderer)
