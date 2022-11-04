@@ -31,6 +31,7 @@ public class LoadingScreen
     private SceneTransition _sceneTransition = new FadeToBlack();
     private SceneTransition _diamondTransition;
     private float _transitionSpeed = 2.0f;
+    private float _previousProgress;
 
     [ConsoleHandler("load", "Load a level")]
     public static void TestLoad()
@@ -69,6 +70,7 @@ public class LoadingScreen
 
     public void Update(float deltaSeconds)
     {
+        _previousProgress = _progress;
         if (_state == TransitionState.TransitionOn)
         {
             _progress += _transitionSpeed * deltaSeconds;
@@ -99,7 +101,7 @@ public class LoadingScreen
         }
     }
 
-    public void Draw(Renderer renderer)
+    public void Draw(Renderer renderer, double alpha)
     {
         if (_state == TransitionState.Hidden)
             return;
@@ -131,6 +133,7 @@ public class LoadingScreen
 
         var textSize = renderer.TextBatcher.MeasureString(FontType.RobotoMedium, loadingStr);
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
-        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, Color.White * _progress);
+        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position,
+            Color.White * MathHelper.Lerp(_previousProgress, _progress, (float)alpha));
     }
 }

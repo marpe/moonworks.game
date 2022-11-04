@@ -140,15 +140,13 @@ public class MyGameMain : Game
 
         _imGuiScreen?.Draw(Renderer);
 
-        _menuScreen.Draw(Renderer);
+        _menuScreen.Draw(Renderer, alpha);
 
-        _consoleScreen.Draw(Renderer);
+        _consoleScreen.Draw(Renderer, alpha);
 
-        LoadingScreen.Draw(Renderer);
+        LoadingScreen.Draw(Renderer, alpha);
 
-        var swap = Renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        Renderer.FlushBatches(swap, viewProjection);
+        Renderer.FlushBatches();
 
         Renderer.EndFrame();
     }

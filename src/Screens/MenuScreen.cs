@@ -49,7 +49,7 @@ public class MenuScreen
         _game.Quit();
     }
 
-    public void Draw(Renderer renderer)
+    public void Draw(Renderer renderer, double alpha)
     {
         if (!IsHidden)
         {

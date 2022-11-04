@@ -407,7 +407,7 @@ public class ConsoleScreen
             renderer.DrawText(text, position, depth, color);
     }
 
-    public void Draw(Renderer renderer, SpriteFlip playerFlip = SpriteFlip.None)
+    public void Draw(Renderer renderer, double alpha)
     {
         if (ScreenState == ScreenState.Hidden)
             return;
@@ -433,7 +433,7 @@ public class ConsoleScreen
         }
 
         var sprite = new Sprite(_renderTarget);
-        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0, playerFlip);
+        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
 
         /*var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
