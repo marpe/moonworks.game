@@ -273,6 +273,11 @@ public class World
         return entities;
     }
 
+    public void UpdatePrevious()
+    {
+        _player.PreviousPosition = _player.Position;
+    }
+    
     public void Update(float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
     {
         var (movementX, movementY) = HandleInput(input, allowKeyboard);
@@ -280,9 +285,9 @@ public class World
         if (_player.Position.Y > 300)
         {
             _player.Position = _player.InitialPosition;
+            UpdatePrevious();
         }
 
-        _player.PreviousPosition = _player.Position;
         _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;

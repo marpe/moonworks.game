@@ -53,12 +53,15 @@ public class CameraController
         _viewProjection = _previousViewProjection = _camera.ViewProjection;
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
     }
-
-    public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
+    
+    public void UpdatePrevious()
     {
         _camera.PreviousBounds = _camera.Bounds;
         _previousViewProjection = _viewProjection;
-
+    }
+    
+    public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
+    {
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 

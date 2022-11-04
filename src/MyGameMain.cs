@@ -21,7 +21,7 @@ public class MyGameMain : Game
 
     private readonly GameScreen _gameScreen;
     public GameScreen GameScreen => _gameScreen;
-    
+
     private readonly MenuScreen _menuScreen;
 
     public readonly Renderer Renderer;
@@ -50,7 +50,7 @@ public class MyGameMain : Game
         Task.Run(() => { Shared.Console.Initialize(); });
 
         LoadingScreen = new LoadingScreen(this);
-        
+
         InputHandler = new InputHandler(this);
 
         Renderer = new Renderer(this);
@@ -117,8 +117,8 @@ public class MyGameMain : Game
                 }
             }
 
-            if (_menuScreen.IsHidden)
-                _gameScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+            var isPaused = !_menuScreen.IsHidden;
+            _gameScreen.Update(isPaused, ElapsedTime, allowKeyboardInput, allowMouseInput);
         }
 
 

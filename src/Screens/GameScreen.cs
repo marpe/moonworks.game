@@ -50,12 +50,16 @@ public class GameScreen
         _world?.Dispose();
     }
 
-    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
+    public void Update(bool isPaused, float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
         var input = _game.InputHandler;
-        _cameraController.Update(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
+        _cameraController.UpdatePrevious();
+        if(!isPaused)
+            _cameraController.Update(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
 
-        _world?.Update(deltaSeconds, input, allowKeyboardInput, allowMouseInput);
+        _world?.UpdatePrevious();
+        if(!isPaused)
+            _world?.Update(deltaSeconds, input, allowKeyboardInput, allowMouseInput);
     }
 
     public void Draw(Renderer renderer, double alpha)
