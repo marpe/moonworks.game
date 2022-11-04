@@ -49,6 +49,7 @@ public partial class Player : Entity
     public float Speed = 20f;
     public Vector2 Velocity;
     public float JumpSpeed = -500f;
+    public float LastOnGroundTime;
 }
 
 public class DebugDraw
@@ -168,6 +169,9 @@ public class World
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
 
+        if (IsGrounded(_player, _player.Velocity))
+            _player.LastOnGroundTime = _totalTime; 
+
         var movementX = 0;
         var movementY = 0;
 
@@ -184,8 +188,11 @@ public class World
                 input.IsKeyDown(KeyCode.A))
                 movementX += -1;
 
-            if (IsGrounded(_player, _player.Velocity) && input.IsKeyPressed(KeyCode.Space))
+            if ((_totalTime - _player.LastOnGroundTime) < 0.1f && input.IsKeyPressed(KeyCode.Space))
+            {
                 movementY -= 1;
+                _player.LastOnGroundTime = 0;
+            }
         }
 
         if (movementX != 0)
@@ -252,13 +259,12 @@ public class World
         }
     }
 
-    public Point GetGridCoords(Entity entity, Vector2? deltaMove = null)
+    public Point GetGridCoords(Entity entity)
     {
-        var p = entity.Position + (deltaMove ?? Vector2.Zero);
-        return GetGridCoords(p, entity.Pivot, (int)LdtkRaw.DefaultGridSize);
+        return GetGridCoords(entity.Position, entity.Pivot, GridSize);
     }
 
-    public static Point GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
+    public static Point GetGridCoords(Vector2 position, Vector2 pivot, long gridSize)
     {
         var (x, y) = (position.X, position.Y);
         var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);
@@ -423,7 +429,7 @@ public class World
         {
             var tile = layer.GridTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X < boundsMin.X || tilePos.Y < boundsMin.Y ||
+            if ((tilePos.X + layer.GridSize) < boundsMin.X || (tilePos.Y + layer.GridSize) < boundsMin.Y ||
                 tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
                 continue;
             RenderTile(renderer, tilePos, tile, layer, texture);
@@ -433,7 +439,7 @@ public class World
         {
             var tile = layer.AutoLayerTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X < boundsMin.X || tilePos.Y < boundsMin.Y ||
+            if ((tilePos.X + layer.GridSize) < boundsMin.X || (tilePos.Y + layer.GridSize) < boundsMin.Y ||
                 tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
                 continue;
             RenderTile(renderer, tilePos, tile, layer, texture);
