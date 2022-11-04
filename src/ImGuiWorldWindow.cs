@@ -6,8 +6,9 @@ namespace MyGame;
 
 public class ImGuiWorldWindow : ImGuiWindow
 {
-    private GroupInspector? _playerInspector;
-    private GroupInspector? _cameraConInspector;
+    private GroupInspector? _inspector;
+    private World? _prevWorld;
+    private GroupInspector? _cameraControllerInspector;
     private GroupInspector? _cameraInspector;
     public const string WindowTitle = "World";
 
@@ -31,48 +32,39 @@ public class ImGuiWorldWindow : ImGuiWindow
             return;
         }
 
-        ImGuiExt.DrawCheckbox("Debug", ref World.Debug);
+        if (ImGui.BeginTabBar("Tabs"))
+        {
+            if (ImGui.BeginTabItem("World"))
+            {
+                if (_prevWorld != world || _inspector == null)
+                    _inspector ??= InspectorExt.GetInspectorForTarget(world);
+                _prevWorld = world;
+                _inspector.Draw();
+                ImGui.EndTabItem();
+            }
 
-        ImGui.Separator();
+            if (ImGui.BeginTabItem("Camera"))
+            {
+                if (ImGuiExt.BeginCollapsingHeader("Controller", Color.Blue))
+                {
+                    _cameraControllerInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.CameraController);
+                    _cameraControllerInspector.Draw();
+                    ImGuiExt.EndCollapsingHeader();
+                }
 
-        ImGui.PushID("Player");
-        ImGui.Separator();
-        ImGui.TextUnformatted("Player");
-        ImGui.Separator();
-        _playerInspector ??= InspectorExt.GetInspectorForTarget(world.Player);
-        _playerInspector.Draw();
-        
-        var cell = world.GetGridCoords(world.Player);
-        
-        var (adjustX, adjustY) = (MathF.Approx(world.Player.Pivot.X, 1) ? -1 : 0, MathF.Approx(world.Player.Pivot.Y, 1) ? -1 : 0);
-        var positionInCell = new Vector2(
-            ((world.Player.Position.X + adjustX) % world.GridSize) / world.GridSize,
-            ((world.Player.Position.Y + adjustY) % world.GridSize) / world.GridSize
-        );
-        
-        ImGui.TextUnformatted($"Cell: {cell}");
-        ImGui.TextUnformatted($"Rel: {positionInCell}");
+                if (ImGuiExt.BeginCollapsingHeader("Camera", Color.Blue))
+                {
+                    _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
+                    _cameraInspector.Draw();
+                    ImGuiExt.EndCollapsingHeader();
+                }
 
-        ImGui.InputFloat("Gravity", ref world.Gravity);
-        
-        ImGui.PopID();
+                ImGui.EndTabItem();
+            }
 
-        ImGui.PushID("CameraCon");
-        ImGui.Separator();
-        ImGui.TextUnformatted("CameraCon");
-        ImGui.Separator();
-        _cameraConInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.CameraController);
-        _cameraConInspector.Draw();
-        ImGui.PopID();
+            ImGui.EndTabBar();
+        }
 
-        ImGui.PushID("Camera");
-        ImGui.Separator();
-        ImGui.TextUnformatted("Camera");
-        ImGui.Separator();
-        _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
-        _cameraInspector.Draw();
-        ImGui.PopID();
-        
         ImGui.End();
     }
 }

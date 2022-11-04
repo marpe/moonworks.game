@@ -163,7 +163,7 @@ public class World
 
             if (entity.Type == EnemyType.Slug)
             {
-                var cell = GetGridCoords(entity);
+                var (cell, cellRel) = GetGridCoords(entity);
                 if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1))
                     entity.Velocity.X *= -1;
                 else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1))
@@ -300,7 +300,7 @@ public class World
 
     public bool IsGrounded(Entity entity, Vector2 velocity)
     {
-        var cell = GetGridCoords(entity);
+        var (cell, _) = GetGridCoords(entity);
         return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
     }
 
@@ -309,13 +309,9 @@ public class World
         var result = CollisionDir.None;
 
         var deltaMove = (velocity * deltaSeconds) / GridSize;
-        var cell = GetGridCoords(entity);
-        var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
-        var positionInCell = new Vector2(
-            ((entity.Position.X + adjustX) % GridSize) / GridSize,
-            ((entity.Position.Y + adjustY) % GridSize) / GridSize
-        );
-        var resultCellPos = positionInCell + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
+        var (cell, cellRel) = GetGridCoords(entity);
+
+        var resultCellPos = cellRel + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
         if (resultCellPos.X > 0.8f && HasCollision(cell.X + 1, cell.Y))
         {
             // Logger.LogInfo("Collide +x");
@@ -351,18 +347,18 @@ public class World
         return result;
     }
 
-    public Point GetGridCoords(Entity entity)
+    public (Point, Vector2) GetGridCoords(Entity entity)
     {
-        return GetGridCoords(entity.Position, entity.Pivot, GridSize);
-    }
-
-    public static Point GetGridCoords(Vector2 position, Vector2 pivot, long gridSize)
-    {
-        var (x, y) = (position.X, position.Y);
-        var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);
-        var gridX = (int)((x + adjustX) / gridSize);
-        var gridY = (int)((y + adjustY) / gridSize);
-        return new Point(gridX, gridY);
+        var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
+        var cell = new Point(
+            (int)((entity.Position.X + adjustX) / GridSize),
+            (int)((entity.Position.Y + adjustY) / GridSize)
+        );
+        var relativeCell = new Vector2(
+            (entity.Position.X + adjustX) % GridSize / GridSize,
+            (entity.Position.Y + adjustY) % GridSize / GridSize
+        );
+        return (cell, relativeCell);
     }
 
     private LayerDefinition GetLayerDefinition(long layerDefUid)
@@ -445,7 +441,7 @@ public class World
                         Matrix3x2.CreateTranslation(position.X, position.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, _player.Flip);
             if (Debug)
-                DrawDebug(renderer, _player);
+                DrawDebug(renderer, _player, alpha);
         }
 
         for (var i = 0; i < _enemies.Count; i++)
@@ -465,7 +461,7 @@ public class World
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
-                DrawDebug(renderer, entity);
+                DrawDebug(renderer, entity, alpha);
         }
 
         if (Debug)
@@ -563,15 +559,18 @@ public class World
         TilesetTextures.Clear();
     }
 
-    public void DrawDebug(Renderer renderer, Entity e)
+    public void DrawDebug(Renderer renderer, Entity e, double alpha)
     {
-        var min = e.Bounds.Min;
-        var max = e.Bounds.Max;
-        renderer.DrawRect(min, max, e.SmartColor, 1.0f);
-        renderer.DrawRect(new Rectangle((int)e.Position.X, (int)e.Position.Y, 1, 1), Color.Magenta, 0);
-        var snappedToGrid = GetGridCoords(e) * (int)LdtkRaw.DefaultGridSize;
-        renderer.DrawRect(new Rectangle(snappedToGrid.X - 1, snappedToGrid.Y, 3, 1), Color.Red, 0);
-        renderer.DrawRect(new Rectangle(snappedToGrid.X, snappedToGrid.Y - 1, 1, 3), Color.Red, 0);
+        var prevMin = e.PreviousPosition - e.Origin;
+        var min = e.Position - e.Origin;
+        var lerpMin = Vector2.Lerp(prevMin, min, (float)alpha);
+
+        renderer.DrawRect(lerpMin, lerpMin + e.Size, e.SmartColor, 1.0f);
+        renderer.DrawRect(new Rectangle((int)lerpMin.X, (int)lerpMin.Y, 1, 1), e.SmartColor, 0);
+        var (cell, cellRel) = GetGridCoords(e);
+        var cellInScreen = cell * (int)GridSize;
+        renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor, 0);
+        renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor, 0);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)

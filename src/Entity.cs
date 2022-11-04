@@ -1,7 +1,10 @@
 ﻿using MyGame.Graphics;
+using MyGame.TWImGui;
+using MyGame.TWImGui.Inspectors;
 
 namespace MyGame;
 
+[CustomInspector(typeof(GroupInspector))]
 public partial class Entity
 {
     public Vector2 InitialPosition;

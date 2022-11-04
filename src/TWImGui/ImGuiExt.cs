@@ -556,4 +556,34 @@ public static class ImGuiExt
         ImGui.EndGroup();
         DrawCollapsingHeaderBorder();
     }
+    
+    public static void SeparatorText(string text)
+    {
+        var textDisabledColor = ImGui.GetStyle().Colors[(int)ImGuiCol.TextDisabled].ToColor();
+        SeparatorText(text, textDisabledColor, textDisabledColor);
+    }
+    
+    public static void SeparatorText(string text, Color textColor, Color separatorColor)
+    {
+        ImGui.Spacing();
+        var draw = ImGui.GetWindowDrawList();
+        var halfLine = new System.Numerics.Vector2(0, ImGui.GetTextLineHeight() * 0.5f);
+        draw.AddLine(
+            ImGui.GetCursorScreenPos() + halfLine,
+            ImGui.GetCursorScreenPos() + halfLine + new System.Numerics.Vector2(12, 0),
+            separatorColor.PackedValue,
+            1f
+        );
+        ImGui.SetCursorPosX(ImGui.GetCursorPos().X + 20f);
+        ImGui.TextColored(textColor.ToNumerics(), text);
+        ImGui.SameLine();
+        draw.AddLine(
+            ImGui.GetCursorScreenPos() + halfLine,
+            ImGui.GetCursorScreenPos() + halfLine + new System.Numerics.Vector2(ImGui.GetWindowWidth() - ImGui.GetCursorPos().X, 0),
+            separatorColor.PackedValue,
+            1f
+        );
+        ImGui.NewLine();
+        ImGui.Spacing();
+    }
 }

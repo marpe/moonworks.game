@@ -8,7 +8,7 @@ public static class InspectorExt
 {
 	private static bool GetCustomAttributeInspector(MemberInfo type, [NotNullWhen(true)] out Inspector? inspector)
 	{
-		var customInspectorForFieldAttr = type.GetCustomAttribute<CustomInspectorAttribute>(false);
+		var customInspectorForFieldAttr = type.GetCustomAttribute<CustomInspectorAttribute>(true);
 		if (customInspectorForFieldAttr != null)
 		{
 			inspector = ReflectionUtils.CreateInstance<Inspector>(customInspectorForFieldAttr.InspectorType);

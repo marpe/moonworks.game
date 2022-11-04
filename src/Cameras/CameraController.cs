@@ -19,7 +19,7 @@ public class CameraController
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
     public static bool ClampToLevelBounds;
 
-    private Entity? _trackingEntity;
+    public Entity? TrackingEntity;
 
     public Velocity Velocity = new Velocity()
     {
@@ -69,10 +69,10 @@ public class CameraController
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
-        if (_trackingEntity != null)
+        if (TrackingEntity != null)
         {
             var trackSpeed = TrackingSpeed * _camera.Zoom;
-            _camera.TargetPosition = _trackingEntity.Center + _camera.TargetOffset;
+            _camera.TargetPosition = TrackingEntity.Center + _camera.TargetOffset;
 
             var offset = _camera.TargetPosition - _camera.Position;
             var angleToTarget = offset.Angle();
@@ -276,7 +276,7 @@ public class CameraController
 
     public void TrackEntity(Entity? target)
     {
-        _trackingEntity = target;
+        TrackingEntity = target;
         if (target != null)
         {
             var targetPosition = target.Center + _camera.TargetOffset;
