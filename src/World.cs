@@ -162,27 +162,31 @@ public class World
         return entities;
     }
 
-    public void Update(float deltaSeconds, InputHandler input)
+    public void Update(float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
     {
         _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
 
-        if (input.IsKeyPressed(KeyCode.Insert))
-            _player.Position = new Vector2(100, 50);
-
         var movementX = 0;
-        if (input.IsKeyDown(KeyCode.Right) ||
-            input.IsKeyDown(KeyCode.D))
-            movementX += 1;
-
-        if (input.IsKeyDown(KeyCode.Left) ||
-            input.IsKeyDown(KeyCode.A))
-            movementX += -1;
-
         var movementY = 0;
-        if (IsGrounded(_player, _player.Velocity) && input.IsKeyPressed(KeyCode.Space))
-            movementY -= 1;
+
+        if (allowKeyboard)
+        {
+            if (input.IsKeyPressed(KeyCode.Insert))
+                _player.Position = new Vector2(100, 50);
+            
+            if (input.IsKeyDown(KeyCode.Right) ||
+                input.IsKeyDown(KeyCode.D))
+                movementX += 1;
+
+            if (input.IsKeyDown(KeyCode.Left) ||
+                input.IsKeyDown(KeyCode.A))
+                movementX += -1;
+
+            if (IsGrounded(_player, _player.Velocity) && input.IsKeyPressed(KeyCode.Space))
+                movementY -= 1;
+        }
 
         if (movementX != 0)
             _player.Velocity.X += movementX * _player.Speed;

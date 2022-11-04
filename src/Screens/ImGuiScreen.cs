@@ -311,13 +311,13 @@ public class ImGuiScreen
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
 
-        ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
+        var dockId = ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
 
         DrawMenu();
 
         var drawList = ImGui.GetBackgroundDrawList();
 
-        DrawWindows();
+        DrawWindows(dockId);
 
         if (!_game.ConsoleScreen.IsHidden)
         {
@@ -339,7 +339,7 @@ public class ImGuiScreen
         }
     }
 
-    private void DrawWindows()
+    private void DrawWindows(uint dockId)
     {
         foreach (var (key, window) in Windows)
         {
@@ -349,6 +349,7 @@ public class ImGuiScreen
                     window.IsOpen = !window.IsOpen;
             }
 
+            ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
             window.Draw();
         }
     }
