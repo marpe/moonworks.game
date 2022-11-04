@@ -162,9 +162,9 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth)
+    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, color, depth, transform, PointClamp);
+        SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
 
     public void DrawText(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color,

@@ -161,6 +161,10 @@ public class World
         _player.Position += _player.Velocity * deltaSeconds;
 
         Velocity.ApplyFriction(_player.Velocity);
+        if(_player.Velocity.X > 0)
+            _player.Flip = SpriteFlip.None;
+        else if (_player.Velocity.X < 0)
+            _player.Flip = SpriteFlip.FlipHorizontally;
 
         if (!IsGrounded(_player, _player.Velocity) && !_player.IsJumping)
             _player.Velocity.Y += Gravity * deltaSeconds;
@@ -336,7 +340,7 @@ public class World
             var xform = Matrix3x2.CreateTranslation(-_player.Origin.X, -_player.Origin.Y) *
                         Matrix3x2.CreateScale(_player.EnableSquash ? _player.Squash : Vector2.One) *
                         Matrix3x2.CreateTranslation(position.X, position.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, _player.Flip);
             if (Debug)
                 DrawDebug(renderer, _player);
         }

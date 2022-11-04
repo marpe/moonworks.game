@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using MyGame.Graphics;
+
+namespace MyGame;
 
 public partial class Entity
 {
@@ -40,6 +42,7 @@ public partial class Player : Entity
     public float JumpHoldTime = 0.3f;
     public float LastJumpTime;
     public bool EnableSquash = true;
+    public SpriteFlip Flip = SpriteFlip.None;
 
     public void SetPositions(Vector2 position)
     {
