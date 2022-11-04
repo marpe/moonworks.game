@@ -2,8 +2,20 @@
 
 namespace MyGame.Graphics;
 
+[Flags]
+public enum SpriteFlip
+{
+    None = 0,
+    FlipVertically = 1,
+    FlipHorizontally = 2,
+}
+
 public class SpriteBatch
 {
+    // Used to calculate texture coordinates
+    private static readonly float[] CornerOffsetX = { 0.0f, 0.0f, 1.0f, 1.0f };
+    private static readonly float[] CornerOffsetY = { 0.0f, 1.0f, 0.0f, 1.0f };
+    
     private uint[] _indices;
     private Buffer _vertexBuffer;
     private Buffer _indexBuffer;
@@ -32,7 +44,7 @@ public class SpriteBatch
         _indexBuffer.Dispose();
     }
 
-    public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler)
+    public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
     {
         if (sprite.Texture.IsDisposed)
             throw new ObjectDisposedException(nameof(sprite.Texture));
@@ -75,21 +87,30 @@ public class SpriteBatch
         Vector2.Transform(ref bottomRight, ref transform, out bottomRight);
 
         SetVector(ref _vertices[vertexCount].Position, topLeft, depth);
-        _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
-        _vertices[vertexCount].Color = color;
-
         SetVector(ref _vertices[vertexCount + 1].Position, bottomLeft, depth);
-        _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
-        _vertices[vertexCount + 1].Color = color;
-
         SetVector(ref _vertices[vertexCount + 2].Position, topRight, depth);
-        _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
-        _vertices[vertexCount + 2].Color = color;
-
         SetVector(ref _vertices[vertexCount + 3].Position, bottomRight, depth);
-        _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
-        _vertices[vertexCount + 3].Color = color;
 
+        _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
+        _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
+        _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
+        _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
+        
+        var effects = (byte)(flip & (SpriteFlip)0x03);
+        _vertices[vertexCount].TexCoord.X = (CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
+        _vertices[vertexCount].TexCoord.Y = (CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
+        _vertices[vertexCount + 1].TexCoord.X = (CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
+        _vertices[vertexCount + 1].TexCoord.Y = (CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
+        _vertices[vertexCount + 2].TexCoord.X = (CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
+        _vertices[vertexCount + 2].TexCoord.Y = (CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
+        _vertices[vertexCount + 3].TexCoord.X = (CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
+        _vertices[vertexCount + 3].TexCoord.Y = (CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
+
+        _vertices[vertexCount].Color = color;
+        _vertices[vertexCount + 1].Color = color;
+        _vertices[vertexCount + 2].Color = color;
+        _vertices[vertexCount + 3].Color = color;
+        
         _numSprites += 1;
     }
 
