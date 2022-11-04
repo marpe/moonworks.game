@@ -29,7 +29,7 @@ public class CameraController
     
     private Vector2 _targetOffset = Vector2.Zero;
 
-    public Vector2 _deadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
+    public Vector2 DeadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
     private float _baseFriction = 0.89f;
     private float _brakeDistNearBounds = 0.1f;
     private float bumpFrict = 0.85f;
@@ -61,7 +61,7 @@ public class CameraController
 
             var offset = TargetPosition - _camera.Position;
             var angleToTarget = offset.Angle();
-            var deadZone = _deadZoneInPercentOfViewport * _camera.Size;
+            var deadZone = DeadZoneInPercentOfViewport * _camera.Size;
             var distX = Math.Abs(offset.X);
             if (distX >= deadZone.X)
                 _velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
@@ -81,28 +81,29 @@ public class CameraController
         if (ClampToLevelBounds)
         {
             var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
-            var brakeDist = _brakeDistNearBounds * _camera.Width;
-            if (_velocity.X <= 0)
+            var cameraSize = new Vector2(_camera.Width, _camera.Height);
+            var brakeDist = cameraSize * _brakeDistNearBounds;
+
+            var left = MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist.X);
+            var right = MathF.Clamp01((worldSize.X - _camera.Width * 0.5f - _camera.Position.X) / brakeDist.X);
+            var top = MathF.Clamp01((_camera.Position.Y - _camera.Height * 0.5f) / brakeDist.Y);
+            var bottom = MathF.Clamp01((worldSize.Y - _camera.Height * 0.5f - _camera.Position.Y) / brakeDist.Y);
+
+            if (_velocity.X < 0)
             {
-                var brakeRatio = 1 - MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist);
-                _velocity.Friction.X *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.X *= left;
             }
             else if (_velocity.X > 0)
             {
-                var brakeRatio = 1 - MathF.Clamp01((worldSize.X - _camera.Width * 0.5f - _camera.Position.X) / brakeDist);
-                _velocity.Friction.X *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.X *= right;
             }
-
-            brakeDist = _brakeDistNearBounds * _camera.Height;
             if (_velocity.Y < 0)
             {
-                var brakeRatio = 1 - MathF.Clamp01((_camera.Position.Y - _camera.Height * 0.5f) / brakeDist);
-                _velocity.Friction.Y *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.Y *= top;
             }
             else if (_velocity.Y > 0)
             {
-                var brakeRatio = 1 - MathF.Clamp01(((worldSize.Y - _camera.Height * 0.5f) - _camera.Position.Y) / brakeDist);
-                _velocity.Friction.Y *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.Y *= bottom;
             }
         }
 
