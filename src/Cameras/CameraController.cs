@@ -1,5 +1,6 @@
 ﻿using MyGame.Screens;
 using MyGame.TWConsole;
+using MyGame.TWImGui;
 
 namespace MyGame.Cameras;
 
@@ -14,38 +15,39 @@ public class CameraController
 
     [CVar("camera.input", "Toggle camera controls")]
     public static bool IsMouseAndKeyboardControlEnabled;
-    
+
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
     public static bool ClampToLevelBounds;
 
-
     private Entity? _trackingEntity;
 
-    private Velocity _velocity = new Velocity();
+    public Velocity Velocity = new Velocity()
+    {
+        Friction = new Vector2(0.9f, 0.9f)
+    };
+
+    public Vector2 InitialFriction;
 
     [CVar("camera.trackspeed", "Camera tracking speed")]
     public static Vector2 TrackingSpeed = new Vector2(5f, 5f);
-    
-    private Vector2 _targetOffset = Vector2.Zero;
 
-    public Vector2 DeadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
-    private float _baseFriction = 0.89f;
-    private float _brakeDistNearBounds = 0.1f;
-    private float bumpFrict = 0.85f;
-    private Vector2 bumpOffset;
     private float _timer = 0;
-    
+
+    public float BrakeDistNearBounds = 0.1f;
+    public float BumpFrict = 0.85f;
+
     private float _shakeDuration = 0;
     private float _shakeTime = 0;
-    private float _shakePower = 1.0f;
-    public Vector2 TargetPosition = Vector2.Zero;
-    
-    private Vector2 _previousCameraPosition;
+    private float _shakePower = 4f;
+
     private Matrix4x4 _viewProjection;
     private Matrix4x4 _previousViewProjection;
+    public Vector2 ShakeFequencies = new Vector2(50, 40);
 
     public CameraController(GameScreen parent, Camera camera)
     {
+        InitialFriction = Velocity.Friction;
+        
         _parent = parent;
         _camera = camera;
         _viewProjection = _previousViewProjection = _camera.ViewProjection;
@@ -55,27 +57,26 @@ public class CameraController
     public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
     {
         _camera.PreviousBounds = _camera.Bounds;
-        _previousCameraPosition = _camera.Position;
         _previousViewProjection = _viewProjection;
-        
+
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
         if (_trackingEntity != null)
         {
             var trackSpeed = TrackingSpeed * _camera.Zoom;
-            TargetPosition = _trackingEntity.Center + _targetOffset;
+            _camera.TargetPosition = _trackingEntity.Center + _camera.TargetOffset;
 
-            var offset = TargetPosition - _camera.Position;
+            var offset = _camera.TargetPosition - _camera.Position;
             var angleToTarget = offset.Angle();
-            var deadZone = DeadZoneInPercentOfViewport * _camera.Size;
+            var deadZone = _camera.DeadZoneInPercentOfViewport * _camera.Size;
             var distX = Math.Abs(offset.X);
             if (distX >= deadZone.X)
-                _velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
+                Velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
 
             var distY = Math.Abs(offset.Y);
             if (distY >= deadZone.Y)
-                _velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
+                Velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
         }
 
         if (IsMouseAndKeyboardControlEnabled)
@@ -83,41 +84,42 @@ public class CameraController
             HandleInput(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
         }
 
-        _velocity.Friction = new Vector2(_baseFriction, _baseFriction);
+        Velocity.Friction = InitialFriction;
 
         if (ClampToLevelBounds)
         {
             var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
             var cameraSize = new Vector2(_camera.Width, _camera.Height);
-            var brakeDist = cameraSize * _brakeDistNearBounds;
+            var brakeDist = cameraSize * BrakeDistNearBounds;
 
             var left = MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist.X);
             var right = MathF.Clamp01((worldSize.X - _camera.Width * 0.5f - _camera.Position.X) / brakeDist.X);
             var top = MathF.Clamp01((_camera.Position.Y - _camera.Height * 0.5f) / brakeDist.Y);
             var bottom = MathF.Clamp01((worldSize.Y - _camera.Height * 0.5f - _camera.Position.Y) / brakeDist.Y);
 
-            if (_velocity.X < 0)
+            if (Velocity.X < 0)
             {
-                _velocity.Friction.X *= left;
+                Velocity.Friction.X *= left;
             }
-            else if (_velocity.X > 0)
+            else if (Velocity.X > 0)
             {
-                _velocity.Friction.X *= right;
+                Velocity.Friction.X *= right;
             }
-            if (_velocity.Y < 0)
+
+            if (Velocity.Y < 0)
             {
-                _velocity.Friction.Y *= top;
+                Velocity.Friction.Y *= top;
             }
-            else if (_velocity.Y > 0)
+            else if (Velocity.Y > 0)
             {
-                _velocity.Friction.Y *= bottom;
+                Velocity.Friction.Y *= bottom;
             }
         }
 
-        _camera.Position += _velocity * deltaSeconds;
+        _camera.Position += Velocity * deltaSeconds;
 
-        Velocity.ApplyFriction(_velocity);
-        
+        Velocity.ApplyFriction(Velocity);
+
         // Bounds clamping
         if (ClampToLevelBounds)
         {
@@ -136,20 +138,29 @@ public class CameraController
 
         if (_shakeTime > 0 && _shakeDuration > 0)
         {
-            var percentDone = _shakeTime / _shakeDuration;
-            var shakeOffset = new Vector2(MathF.Cos(0.0f + _timer * 1.1f), MathF.Sin(0.3f + _timer * 1.7f))
-                              * percentDone * 2.5f * _shakePower;
-            _camera.Position += shakeOffset;
+            var percentDone = MathF.Clamp01(_shakeTime / _shakeDuration);
+            _shakeTime -= deltaSeconds;
+            _camera.ShakeOffset = new Vector2(
+                MathF.Cos(0.0f + _timer * ShakeFequencies.X),
+                MathF.Sin(0.3f + _timer * ShakeFequencies.X)
+            ) * percentDone * _shakePower;
         }
 
-        bumpOffset *= Vector2.One * MathF.Pow(bumpFrict, deltaSeconds);
-        _camera.Position += bumpOffset;
+        _camera.BumpOffset *= Vector2.One * MathF.Pow(BumpFrict, deltaSeconds);
+
         _viewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
     public Matrix4x4 GetViewProjection(double alpha)
     {
         return Matrix4x4.Lerp(_previousViewProjection, _viewProjection, (float)alpha);
+    }
+
+    [InspectorCallable]
+    public void SetShake(float shakeDuration, float shakePower)
+    {
+        _shakeTime = _shakeDuration = shakeDuration;
+        _shakePower = shakePower;
     }
 
     private void HandleInput(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
@@ -261,8 +272,8 @@ public class CameraController
         _trackingEntity = target;
         if (target != null)
         {
-            var targetPosition = target.Center + _targetOffset;
-            _camera.Position = _previousCameraPosition = TargetPosition = targetPosition;
+            var targetPosition = target.Center + _camera.TargetOffset;
+            _camera.Position = _camera.TargetPosition = targetPosition;
         }
     }
 }

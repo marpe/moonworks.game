@@ -55,7 +55,7 @@ public abstract class Inspector : IInspector
 		if (memberInfo is FieldInfo field)
 		{
 			_valueType = field.FieldType;
-			IsReadOnly = field.IsInitOnly;
+			IsReadOnly = field.IsInitOnly || field.IsLiteral;
 		}
 		else if (memberInfo is PropertyInfo prop)
 		{

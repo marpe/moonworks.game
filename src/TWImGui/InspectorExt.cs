@@ -134,6 +134,10 @@ public static class InspectorExt
 				inspector.SetTarget(target, type, field);
 				inspectors.Add(inspector);
 			}
+			else
+			{
+				Logger.LogWarn($"Could not find an inspector for field: {field}");
+			}
 		}
 
 		foreach (var prop in properties)
@@ -149,6 +153,10 @@ public static class InspectorExt
 			{
 				inspector.SetTarget(target, type, prop);
 				inspectors.Add(inspector);
+			}
+			else
+			{
+				Logger.LogWarn($"Could not find an inspector for property: {prop}");
 			}
 		}
 

@@ -46,6 +46,9 @@ public class ImGuiScreen
         var file = new ImGuiMenu("File")
             .AddChild(new ImGuiMenu("Quit", "^Q", () => _game.Quit()));
         _menuItems.Add(file);
+        var imgui = new ImGuiMenu("ImGui")
+            .AddChild(new ImGuiMenu("Debug Inspectors", null, () => { ImGuiExt.DebugInspectors = !ImGuiExt.DebugInspectors; }));
+        _menuItems.Add(imgui);
     }
 
 

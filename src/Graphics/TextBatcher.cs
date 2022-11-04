@@ -102,6 +102,9 @@ public class TextBatcher
     public void Add(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color, HorizontalAlignment alignH,
         VerticalAlignment alignV)
     {
+        if (text.Length == 0)
+            return;
+        
         _addCountSinceDraw++;
 
         var font = _fonts[fontType];

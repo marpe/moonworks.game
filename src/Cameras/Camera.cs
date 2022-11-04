@@ -22,22 +22,37 @@ public class Camera
             _zoom = MathF.Clamp(value, 0.001f, 10f);
         }
     }
+
+    public Vector2 ShakeOffset;
+    public Vector2 BumpOffset;
+    public Vector2 TargetPosition;
+    public Vector2 TargetOffset;
     
+    public Vector2 DeadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
+
     public Vector2 Position;
+    
+    /// <summary>
+    /// This is the "true" position, that was used for the view projection calculation
+    /// Which has shake and bump and crap applied
+    /// </summary>
+    public Vector2 ViewPosition;
 
     public Vector3 Position3D = new(0, 0, -1000);
 
+    
     public Matrix4x4 View
     {
         get
         {
+            ViewPosition = Position + ShakeOffset + BumpOffset;
             var view = Matrix4x4.CreateLookAt(
-                new Vector3(Position.X, Position.Y, 1000),
-                new Vector3(Position.X, Position.Y, 0),
+                new Vector3(ViewPosition.X, ViewPosition.Y, 1000),
+                new Vector3(ViewPosition.X, ViewPosition.Y, 0),
                 Vector3.Up
             );
-            var viewport = Viewport;
-            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) * Matrix4x4.CreateTranslation(Viewport.X * 0.5f, Viewport.Y * 0.5f, 0);
+            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) *
+                   Matrix4x4.CreateTranslation(Viewport.X * 0.5f, Viewport.Y * 0.5f, 0);
         }
     }
 

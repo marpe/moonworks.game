@@ -2,6 +2,8 @@
 using MyGame.Graphics;
 using MyGame.Screens;
 using MyGame.TWConsole;
+using MyGame.TWImGui;
+using MyGame.TWImGui.Inspectors;
 using MyGame.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -46,6 +48,7 @@ public partial class Entity
     public Vector2 Center => new Vector2(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
 }
 
+[CustomInspector(typeof(GroupInspector))]
 public class Velocity
 {
     public const float KillThreshold = 0.0005f;
@@ -90,16 +93,70 @@ public partial class RefTest : Entity
 {
 }
 
+public class DebugDrawItems
+{
+    private List<DebugDraw> _debugDrawCalls = new();
+
+    public void AddText(ReadOnlySpan<char> text, Vector2 position, Color color)
+    {
+        _debugDrawCalls.Add(new DebugDraw()
+        {
+            Color = color,
+            Text = text.ToString(),
+            Rectangle = new Rectangle((int)position.X, (int)position.Y, 0, 0),
+            UpdateCountAtDraw = Shared.Game.UpdateCount,
+            DrawType = DebugDrawType.Text,
+        });
+    }
+
+    public void Render(Renderer renderer)
+    {
+        for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
+        {
+            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
+                _debugDrawCalls.RemoveAt(i);
+        }
+
+        foreach (var debugDrawCall in _debugDrawCalls)
+        {
+            if (debugDrawCall.Text != null)
+            {
+                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min() + Vector2.One,
+                    Color.Black);
+                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min(), debugDrawCall.Color);
+            }
+            else
+            {
+                renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
+            }
+        }
+    }
+}
+
 public partial class Player : Entity
 {
-    public Velocity Velocity = new();
+    public Velocity Velocity = new()
+    {
+        Delta = Vector2.Zero,
+        Friction = new Vector2(0.84f, 0.98f)
+    };
+
     public uint FrameIndex;
     public float TotalTime;
     public float Speed = 20f;
-    public float JumpSpeed = -500f;
+    public float JumpSpeed = -300f;
     public float LastOnGroundTime;
     public Vector2 Squash = Vector2.One;
+    public bool IsJumping;
+    public float JumpHoldTime = 0.3f;
+    public float LastJumpTime;
     public bool EnableSquash = true;
+}
+
+public enum DebugDrawType
+{
+    Rect,
+    Text
 }
 
 public class DebugDraw
@@ -107,7 +164,8 @@ public class DebugDraw
     public Rectangle Rectangle;
     public Color Color;
     public ulong UpdateCountAtDraw;
-    public string? Text;
+    public string Text = "";
+    public DebugDrawType DrawType = DebugDrawType.Text;
 }
 
 public class World
@@ -127,10 +185,11 @@ public class World
     public Player Player => _player;
 
     private float _totalTime;
-    public float Gravity = 512f;
+    public float Gravity = 800f;
 
     private readonly GameScreen _parent;
-    private List<DebugDraw> _debugDrawCalls = new();
+
+    private DebugDrawItems _debugDraw;
 
     public long GridSize => LdtkRaw.DefaultGridSize;
 
@@ -141,6 +200,8 @@ public class World
         LdtkRaw = LdtkJson.FromJson(jsonString);
         TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
         WorldSize = GetWorldSize(LdtkRaw);
+
+        _debugDraw = new();
 
         foreach (var entityDef in LdtkRaw.Defs.Entities)
         {
@@ -237,6 +298,15 @@ public class World
             _player.Squash = new Vector2(0.6f, 1.4f);
             _player.LastOnGroundTime = 0;
             _player.Velocity.Y = _player.JumpSpeed;
+            _player.LastJumpTime = _totalTime;
+            _player.IsJumping = true;
+        }
+
+        if (_player.IsJumping)
+        {
+            var hasReachedPeak = (_totalTime - _player.LastJumpTime > _player.JumpHoldTime);
+            if (hasReachedPeak || movementY != -1)
+                _player.IsJumping = false;
         }
 
         HandleCollisions(_player, _player.Velocity, deltaSeconds);
@@ -244,10 +314,12 @@ public class World
 
         Velocity.ApplyFriction(_player.Velocity);
 
-        if (!IsGrounded(_player, _player.Velocity))
+        if (!IsGrounded(_player, _player.Velocity) && !_player.IsJumping)
             _player.Velocity.Y += Gravity * deltaSeconds;
 
         _player.Squash = Vector2.SmoothStep(_player.Squash, Vector2.One, deltaSeconds * 20f);
+
+        _debugDraw.AddText(_player.IsJumping ? "IsJumping" : "", _player.Position, Color.White);
     }
 
     private (int movementX, int movementY) HandleInput(InputHandler input, bool allowKeyboard)
@@ -268,7 +340,7 @@ public class World
                 input.IsKeyDown(KeyCode.A))
                 movementX += -1;
 
-            if (input.IsKeyPressed(KeyCode.Space))
+            if (input.IsKeyDown(KeyCode.Space))
                 movementY -= 1;
         }
 
@@ -318,6 +390,8 @@ public class World
         if (velocity.Y < 0 && resultCellPos.Y < 0.8f && HasCollision(cell.X, cell.Y - 1))
         {
             // Logger.LogInfo("Collide -y");
+            if (entity is Player p)
+                p.IsJumping = false;
             entity.Position.Y = (cell.Y + 0.8f) * GridSize;
             velocity.Y = 0;
         }
@@ -439,23 +513,8 @@ public class World
                 DrawDebug(renderer, entity);
         }
 
-        for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
-        {
-            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
-                _debugDrawCalls.RemoveAt(i);
-        }
-
-        foreach (var debugDrawCall in _debugDrawCalls)
-        {
-            if (debugDrawCall.Text != null)
-            {
-                renderer.DrawText(FontType.ConsolasMonoMedium, debugDrawCall.Text, debugDrawCall.Rectangle.Min(), debugDrawCall.Color);
-            }
-            else
-            {
-                renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
-            }
-        }
+        if (Debug)
+            _debugDraw.Render(renderer);
 
         if (Debug)
         {
