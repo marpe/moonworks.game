@@ -57,14 +57,14 @@ public class GameScreen
         _world?.Update(deltaSeconds, input, allowKeyboardInput, allowMouseInput);
     }
 
-    public void Draw(Renderer renderer)
+    public void Draw(Renderer renderer, double alpha)
     {
-        _world?.Draw(renderer, _camera);
+        _world?.Draw(renderer, _camera, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        renderer.FlushBatches(renderer.SwapTexture, _cameraController.ViewProjection, renderer.DefaultClearColor);
+        renderer.FlushBatches(renderer.SwapTexture, _cameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
     }
 
 

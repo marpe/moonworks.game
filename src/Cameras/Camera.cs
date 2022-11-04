@@ -2,6 +2,8 @@
 
 public class Camera
 {
+    public Bounds PreviousBounds;
+
     public static Vector2 Viewport => Shared.Game.MainWindow.Size;
     public static Vector2 Scale = Vector2.One;
     public int Width => MathF.CeilToInt(Viewport.X / Scale.X / Zoom);
@@ -9,7 +11,7 @@ public class Camera
 
     public Point Size => new(Width, Height);
 
-    public Rectangle Bounds => new Rectangle((int)Position.X - Width / 2, (int)Position.Y - Height / 2, Width, Height);
+    public Bounds Bounds => new Bounds(Position.X - Width / 2f, Position.Y - Height / 2f, Width, Height);
     
     private float _zoom = 1.0f;
     public float Zoom
@@ -53,7 +55,6 @@ public class Camera
     }
     
     public Quaternion Rotation3D = Quaternion.Identity;
-
     public Matrix4x4 Projection
     {
         get

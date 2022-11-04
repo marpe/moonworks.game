@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace MyGame;
 
-public class Bounds
+public struct Bounds
 {
     public Vector2 Min;
     public Vector2 Size;
@@ -20,14 +20,27 @@ public class Bounds
         Size = new Vector2(w, h);
     }
 
+    public Bounds(Vector2 min, Vector2 max) : this(min.X, min.Y, max.X - min.X, max.Y - min.Y)
+    {
+    }
+
     public static implicit operator Rectangle(Bounds b)
     {
         return new Rectangle((int)b.Min.X, (int)b.Min.Y, (int)b.Size.X, (int)b.Size.Y);
+    }
+
+    public static Bounds Lerp(Bounds a, Bounds b, double alpha)
+    {
+        var min = Vector2.Lerp(a.Min, b.Min, (float)alpha);
+        var max = Vector2.Lerp(a.Max, b.Max, (float)alpha);
+        return new Bounds(min, max);
     }
 }
 
 public partial class Entity
 {
+    public Vector2 InitialPosition;
+    public Vector2 PreviousPosition;
     public Vector2 Origin => Pivot * Size;
     public Bounds Bounds => new Bounds(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
     public Vector2 Center => new Vector2(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
@@ -39,9 +52,18 @@ public class Velocity
     public Vector2 Delta = Vector2.Zero;
     public Vector2 Friction = new Vector2(0.84f, 0.94f);
 
-    public float X { get => Delta.X; set => Delta.X = value; }
-    public float Y { get => Delta.Y; set => Delta.Y = value; }
-    
+    public float X
+    {
+        get => Delta.X;
+        set => Delta.X = value;
+    }
+
+    public float Y
+    {
+        get => Delta.Y;
+        set => Delta.Y = value;
+    }
+
     public static void ApplyFriction(Velocity velocity)
     {
         velocity.Delta *= velocity.Friction;
@@ -50,7 +72,7 @@ public class Velocity
         if (MathF.IsNearZero(velocity.Y, KillThreshold))
             velocity.Y = 0;
     }
-    
+
     public static Vector2 operator *(Velocity velocity, float value) => velocity.Delta * value;
     public static implicit operator Vector2(Velocity velocity) => velocity.Delta;
 }
@@ -88,7 +110,6 @@ public class DebugDraw
 
 public class World
 {
-
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
@@ -170,6 +191,7 @@ public class World
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Pivot = entityInstance.PivotVec;
                 entity.Position = level.Position + entityInstance.Position;
+                entity.InitialPosition = entity.PreviousPosition = entity.Position;
                 entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor[1..]);
 
@@ -190,14 +212,21 @@ public class World
 
     public void Update(float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
     {
+        var (movementX, movementY) = HandleInput(input, allowKeyboard);
+
+        if (_player.Position.Y > 300)
+        {
+            _player.Position = _player.InitialPosition;
+        }
+
+        _player.PreviousPosition = _player.Position;
         _totalTime += deltaSeconds;
         _player.TotalTime += deltaSeconds;
         _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
 
         if (IsGrounded(_player, _player.Velocity))
-            _player.LastOnGroundTime = _totalTime; 
+            _player.LastOnGroundTime = _totalTime;
 
-        var (movementX, movementY) = HandleInput(input, allowKeyboard);
         if (movementX != 0)
             _player.Velocity.X += movementX * _player.Speed;
         var canJump = (_totalTime - _player.LastOnGroundTime) < 0.1f;
@@ -335,9 +364,9 @@ public class World
         return false;
     }
 
-    public void Draw(Renderer renderer, Camera camera)
+    public void Draw(Renderer renderer, Camera camera, double alpha)
     {
-        var cameraBounds = camera.Bounds;
+        var cameraBounds = Bounds.Lerp(camera.PreviousBounds, camera.Bounds, alpha);
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
@@ -368,7 +397,8 @@ public class World
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         {
             var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
-            var xform = Matrix3x2.CreateTranslation(_player.Position.X - _player.Origin.X, _player.Position.Y - _player.Origin.Y);
+            var position = Vector2.Lerp(_player.PreviousPosition, _player.Position, (float)alpha);
+            var xform = Matrix3x2.CreateTranslation(position.X - _player.Origin.X, position.Y - _player.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
             if (Debug)
                 DrawDebug(renderer, _player);
@@ -387,7 +417,8 @@ public class World
 
             var frameIndex = (int)(_totalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-            var xform = Matrix3x2.CreateTranslation(entity.Position.X - entity.Origin.X, entity.Position.Y - entity.Origin.Y);
+            var position = Vector2.Lerp(entity.PreviousPosition, entity.Position, (float)alpha);
+            var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0);
             if (Debug)
                 DrawDebug(renderer, entity);
@@ -411,8 +442,11 @@ public class World
             }
         }
 
-        var (boundsMin, boundsMax) = (cameraBounds.Min(), cameraBounds.Max());
-        renderer.DrawRect(boundsMin, boundsMax, Color.Red, 1f);
+        if (Debug)
+        {
+            var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
+            renderer.DrawRect(boundsMin, boundsMax, Color.Red, 1f);
+        }
     }
 
     private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, Rectangle cameraBounds)

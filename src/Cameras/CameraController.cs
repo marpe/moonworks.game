@@ -5,11 +5,11 @@ namespace MyGame.Cameras;
 
 public class CameraController
 {
+    private GameScreen _parent;
     private Camera _camera;
     private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
     public bool Use3D;
     private float _lerpT = 0;
-    public Matrix4x4 ViewProjection;
     private float _lerpSpeed = 1f;
 
     [CVar("camera.input", "Toggle camera controls")]
@@ -18,7 +18,6 @@ public class CameraController
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
     public static bool ClampToLevelBounds;
 
-    private GameScreen _parent;
 
     private Entity? _trackingEntity;
 
@@ -39,18 +38,26 @@ public class CameraController
     private float _shakeDuration = 0;
     private float _shakeTime = 0;
     private float _shakePower = 1.0f;
-    private Vector2 TargetPosition = Vector2.Zero;
+    public Vector2 TargetPosition = Vector2.Zero;
+    
+    private Vector2 _previousCameraPosition;
+    private Matrix4x4 _viewProjection;
+    private Matrix4x4 _previousViewProjection;
 
     public CameraController(GameScreen parent, Camera camera)
     {
         _parent = parent;
         _camera = camera;
-        ViewProjection = _camera.ViewProjection;
+        _viewProjection = _previousViewProjection = _camera.ViewProjection;
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
     }
 
     public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
     {
+        _camera.PreviousBounds = _camera.Bounds;
+        _previousCameraPosition = _camera.Position;
+        _previousViewProjection = _viewProjection;
+        
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
@@ -137,8 +144,12 @@ public class CameraController
 
         bumpOffset *= Vector2.One * MathF.Pow(bumpFrict, deltaSeconds);
         _camera.Position += bumpOffset;
-        
-        ViewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+        _viewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+    }
+
+    public Matrix4x4 GetViewProjection(double alpha)
+    {
+        return Matrix4x4.Lerp(_previousViewProjection, _viewProjection, (float)alpha);
     }
 
     private void HandleInput(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
@@ -251,8 +262,7 @@ public class CameraController
         if (target != null)
         {
             var targetPosition = target.Center + _targetOffset;
-            Logger.LogInfo($"Setting camera position: {targetPosition}");
-            _camera.Position = TargetPosition = targetPosition;
+            _camera.Position = _previousCameraPosition = TargetPosition = targetPosition;
         }
     }
 }

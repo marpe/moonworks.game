@@ -135,7 +135,7 @@ public class MyGameMain : Game
         if (!Renderer.BeginFrame())
             return;
 
-        _gameScreen.Draw(Renderer);
+        _gameScreen.Draw(Renderer, alpha);
 
         _imGuiScreen?.Draw(Renderer);
 
