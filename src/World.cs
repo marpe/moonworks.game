@@ -28,26 +28,52 @@ public class Bounds
 
 public partial class Entity
 {
-    public Vector2 SpritePosition;
     public Vector2 Origin => Pivot * Size;
     public Bounds Bounds => new Bounds(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
     public Vector2 Center => new Vector2(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
 }
 
+public class Velocity
+{
+    public const float KillThreshold = 0.0005f;
+    public Vector2 Delta = Vector2.Zero;
+    public Vector2 Friction = new Vector2(0.84f, 0.94f);
+
+    public float X { get => Delta.X; set => Delta.X = value; }
+    public float Y { get => Delta.Y; set => Delta.Y = value; }
+    
+    public static void ApplyFriction(Velocity velocity)
+    {
+        velocity.Delta *= velocity.Friction;
+        if (MathF.IsNearZero(velocity.X, KillThreshold))
+            velocity.X = 0;
+        if (MathF.IsNearZero(velocity.Y, KillThreshold))
+            velocity.Y = 0;
+    }
+    
+    public static Vector2 operator *(Velocity velocity, float value) => velocity.Delta * value;
+    public static implicit operator Vector2(Velocity velocity) => velocity.Delta;
+}
+
+public partial class Enemy : Entity
+{
+    public Velocity Velocity = new();
+}
+
+public partial class Gun_Pickup : Entity
+{
+}
+
+public partial class RefTest : Entity
+{
+}
+
 public partial class Player : Entity
 {
-    public enum PlayerState
-    {
-        Idle,
-        Locomote,
-    }
-
-    public PlayerState State = PlayerState.Idle;
-
+    public Velocity Velocity = new();
     public uint FrameIndex;
     public float TotalTime;
     public float Speed = 20f;
-    public Vector2 Velocity;
     public float JumpSpeed = -500f;
     public float LastOnGroundTime;
 }
@@ -62,7 +88,6 @@ public class DebugDraw
 
 public class World
 {
-    public const float KillThreshold = 0.0005f;
 
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
@@ -172,6 +197,27 @@ public class World
         if (IsGrounded(_player, _player.Velocity))
             _player.LastOnGroundTime = _totalTime; 
 
+        var (movementX, movementY) = HandleInput(input, allowKeyboard);
+        if (movementX != 0)
+            _player.Velocity.X += movementX * _player.Speed;
+        var canJump = (_totalTime - _player.LastOnGroundTime) < 0.1f;
+        if (movementY == -1 && canJump)
+        {
+            _player.LastOnGroundTime = 0;
+            _player.Velocity.Y = _player.JumpSpeed;
+        }
+
+        HandleCollisions(_player, _player.Velocity, deltaSeconds);
+        _player.Position += _player.Velocity * deltaSeconds;
+
+        Velocity.ApplyFriction(_player.Velocity);
+
+        if (!IsGrounded(_player, _player.Velocity))
+            _player.Velocity.Y += Gravity * deltaSeconds;
+    }
+
+    private (int movementX, int movementY) HandleInput(InputHandler input, bool allowKeyboard)
+    {
         var movementX = 0;
         var movementY = 0;
 
@@ -179,7 +225,7 @@ public class World
         {
             if (input.IsKeyPressed(KeyCode.Insert))
                 _player.Position = new Vector2(100, 50);
-            
+
             if (input.IsKeyDown(KeyCode.Right) ||
                 input.IsKeyDown(KeyCode.D))
                 movementX += 1;
@@ -188,25 +234,11 @@ public class World
                 input.IsKeyDown(KeyCode.A))
                 movementX += -1;
 
-            if ((_totalTime - _player.LastOnGroundTime) < 0.1f && input.IsKeyPressed(KeyCode.Space))
-            {
+            if (input.IsKeyPressed(KeyCode.Space))
                 movementY -= 1;
-                _player.LastOnGroundTime = 0;
-            }
         }
 
-        if (movementX != 0)
-            _player.Velocity.X += movementX * _player.Speed;
-        if (movementY < 0)
-            _player.Velocity.Y = _player.JumpSpeed;
-
-        HandleCollisions(_player, ref _player.Velocity, deltaSeconds);
-        _player.Position += _player.Velocity * deltaSeconds;
-
-        Break(ref _player.Velocity);
-
-        if (!IsGrounded(_player, _player.Velocity))
-            _player.Velocity.Y += Gravity * deltaSeconds;
+        return (movementX, movementY);
     }
 
     public bool IsGrounded(Entity entity, Vector2 velocity)
@@ -215,17 +247,7 @@ public class World
         return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
     }
 
-    private static void Break(ref Vector2 velocity)
-    {
-        velocity.X *= 0.84f;
-        if (MathF.IsNearZero(velocity.X, KillThreshold))
-            velocity.X = 0;
-        velocity.Y *= 0.94f;
-        if (MathF.IsNearZero(velocity.Y, KillThreshold))
-            velocity.Y = 0;
-    }
-
-    private void HandleCollisions(Entity entity, ref Vector2 velocity, float deltaSeconds)
+    private void HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
     {
         var deltaMove = (velocity * deltaSeconds) / GridSize;
         var cell = GetGridCoords(entity);

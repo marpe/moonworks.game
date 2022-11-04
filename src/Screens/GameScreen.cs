@@ -40,8 +40,6 @@ public class GameScreen
         Task.Run(() =>
         {
             _world = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-
-            _camera.Position = ((Vector2)_world.WorldSize) * 0.5f;
             _camera.Zoom = 4.0f;
         });
     }

@@ -54,22 +54,22 @@ public partial class Entity
 
 }
 
-public partial class Enemy : Entity
+public partial class Enemy
 {
     public Point[] Wander;
     public EnemyType Type;
     public Color Color;
 }
 
-public partial class Gun_Pickup : Entity
+public partial class Gun_Pickup
 {
 }
 
-public partial class Player : Entity
+public partial class Player
 {
 }
 
-public partial class RefTest : Entity
+public partial class RefTest
 {
     public FieldInstanceEntityReference? Test;
     public TilesetRectangle? TileTest;

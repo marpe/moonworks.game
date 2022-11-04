@@ -1,5 +1,6 @@
 using ImGuiNET;
 using MyGame.Graphics;
+using MyGame.TWConsole;
 using MyGame.TWImGui;
 using SDL2;
 
@@ -22,7 +23,9 @@ public class ImGuiScreen
     private float _mainMenuPaddingY = 6f;
     private bool _doRender;
     private InputState _inputState = new();
-    public bool IsHidden { get; private set; } = true;
+
+    [CVar("imgui.hidden", "Toggle ImGui screen")]
+    public static bool IsHidden = true;
 
     public ImGuiScreen(MyGameMain game)
     {

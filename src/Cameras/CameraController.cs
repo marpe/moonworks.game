@@ -22,10 +22,10 @@ public class CameraController
 
     private Entity? _trackingEntity;
 
-    private Vector3 _velocity = Vector3.Zero;
-    
+    private Velocity _velocity = new Velocity();
+
     [CVar("camera.trackspeed", "Camera tracking speed")]
-    public static float TrackingSpeed = 50f;
+    public static Vector2 TrackingSpeed = new Vector2(5f, 5f);
     
     private Vector2 _targetOffset = Vector2.Zero;
 
@@ -39,6 +39,7 @@ public class CameraController
     private float _shakeDuration = 0;
     private float _shakeTime = 0;
     private float _shakePower = 1.0f;
+    private Vector2 TargetPosition = Vector2.Zero;
 
     public CameraController(GameScreen parent, Camera camera)
     {
@@ -55,10 +56,10 @@ public class CameraController
 
         if (_trackingEntity != null)
         {
-            var trackSpeed = new Vector2(0.015f * TrackingSpeed * _camera.Zoom, 0.023f * TrackingSpeed * _camera.Zoom);
-            var target = _trackingEntity.Center + _targetOffset;
+            var trackSpeed = TrackingSpeed * _camera.Zoom;
+            TargetPosition = _trackingEntity.Center + _targetOffset;
 
-            var offset = target - _camera.Position;
+            var offset = TargetPosition - _camera.Position;
             var angleToTarget = offset.Angle();
             var deadZone = _deadZoneInPercentOfViewport * _camera.Size;
             var distX = Math.Abs(offset.X);
@@ -75,44 +76,40 @@ public class CameraController
             HandleInput(deltaSeconds, input, allowMouseInput, allowKeyboardInput);
         }
 
-        // Compute frictions
-        var frictX = _baseFriction - TrackingSpeed * _camera.Zoom * 0.027f * _baseFriction;
-        var frictY = frictX;
+        _velocity.Friction = new Vector2(_baseFriction, _baseFriction);
 
         if (ClampToLevelBounds)
         {
-            // "Brake" when approaching bounds
             var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
             var brakeDist = _brakeDistNearBounds * _camera.Width;
             if (_velocity.X <= 0)
             {
                 var brakeRatio = 1 - MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist);
-                frictX *= 1 - 1.0f * brakeRatio;
+                _velocity.Friction.X *= 1 - 0.9f * brakeRatio;
             }
             else if (_velocity.X > 0)
             {
                 var brakeRatio = 1 - MathF.Clamp01((worldSize.X - _camera.Width * 0.5f - _camera.Position.X) / brakeDist);
-                frictX *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.X *= 1 - 0.9f * brakeRatio;
             }
 
             brakeDist = _brakeDistNearBounds * _camera.Height;
             if (_velocity.Y < 0)
             {
                 var brakeRatio = 1 - MathF.Clamp01((_camera.Position.Y - _camera.Height * 0.5f) / brakeDist);
-                frictY *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.Y *= 1 - 0.9f * brakeRatio;
             }
             else if (_velocity.Y > 0)
             {
                 var brakeRatio = 1 - MathF.Clamp01(((worldSize.Y - _camera.Height * 0.5f) - _camera.Position.Y) / brakeDist);
-                frictY *= 1 - 0.9f * brakeRatio;
+                _velocity.Friction.Y *= 1 - 0.9f * brakeRatio;
             }
         }
 
-        _camera.Position += new Vector2(_velocity.X, _velocity.Y) * deltaSeconds;
+        _camera.Position += _velocity * deltaSeconds;
 
-        _velocity.X *= frictX > 0 ? MathF.Pow(frictX, deltaSeconds) : 0.95f;
-        _velocity.Y *= frictY > 0 ? MathF.Pow(frictY, deltaSeconds) : 0.95f;
-
+        Velocity.ApplyFriction(_velocity);
+        
         // Bounds clamping
         if (ClampToLevelBounds)
         {
@@ -134,9 +131,11 @@ public class CameraController
             var percentDone = _shakeTime / _shakeDuration;
             var shakeOffset = new Vector2(MathF.Cos(0.0f + _timer * 1.1f), MathF.Sin(0.3f + _timer * 1.7f))
                               * percentDone * 2.5f * _shakePower;
+            _camera.Position += shakeOffset;
         }
 
         bumpOffset *= Vector2.One * MathF.Pow(bumpFrict, deltaSeconds);
+        _camera.Position += bumpOffset;
         
         ViewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
@@ -248,5 +247,11 @@ public class CameraController
     public void TrackEntity(Entity? target)
     {
         _trackingEntity = target;
+        if (target != null)
+        {
+            var targetPosition = target.Center + _targetOffset;
+            Logger.LogInfo($"Setting camera position: {targetPosition}");
+            _camera.Position = TargetPosition = targetPosition;
+        }
     }
 }

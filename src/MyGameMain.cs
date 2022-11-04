@@ -106,7 +106,7 @@ public class MyGameMain : Game
             if (_imGuiScreen != null)
             {
                 _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
-                if (!_imGuiScreen.IsHidden)
+                if (!ImGuiScreen.IsHidden)
                 {
                     var io = ImGui.GetIO();
                     if (io.WantCaptureKeyboard)

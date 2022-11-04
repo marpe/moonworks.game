@@ -70,7 +70,7 @@ public static class LDtkGenerator
         for (var i = 0; i < ldtk.Defs.Entities.Length; i++)
         {
             var entity = ldtk.Defs.Entities[i];
-            TextGenerator.WriteLine($"public partial class {entity.Identifier} : Entity");
+            TextGenerator.WriteLine($"public partial class {entity.Identifier}");
             TextGenerator.StartBlock();
             foreach (var field in entity.FieldDefs)
             {
