@@ -12,9 +12,9 @@ public class CameraController
     public Matrix4x4 ViewProjection;
     private float _lerpSpeed = 1f;
 
-    [CVar("noclio", "Toggle camera controls")]
+    [CVar("camera.input", "Toggle camera controls")]
     public static bool IsMouseAndKeyboardControlEnabled;
-
+    
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
     public static bool ClampToLevelBounds;
 
@@ -23,12 +23,22 @@ public class CameraController
     private Entity? _trackingEntity;
 
     private Vector3 _velocity = Vector3.Zero;
-    private float _trackingSpeed = 5f;
+    
+    [CVar("camera.trackspeed", "Camera tracking speed")]
+    public static float TrackingSpeed = 50f;
+    
     private Vector2 _targetOffset = Vector2.Zero;
 
     public Vector2 _deadZoneInPercentOfViewport = new Vector2(0.04f, 0.1f);
     private float _baseFriction = 0.89f;
     private float _brakeDistNearBounds = 0.1f;
+    private float bumpFrict = 0.85f;
+    private Vector2 bumpOffset;
+    private float _timer = 0;
+    
+    private float _shakeDuration = 0;
+    private float _shakeTime = 0;
+    private float _shakePower = 1.0f;
 
     public CameraController(GameScreen parent, Camera camera)
     {
@@ -40,11 +50,12 @@ public class CameraController
 
     public void Update(float deltaSeconds, InputHandler input, bool allowMouseInput, bool allowKeyboardInput)
     {
+        _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
         if (_trackingEntity != null)
         {
-            var trackSpeed = new Vector2(0.015f * _trackingSpeed * _camera.Zoom, 0.023f * _trackingSpeed * _camera.Zoom);
+            var trackSpeed = new Vector2(0.015f * TrackingSpeed * _camera.Zoom, 0.023f * TrackingSpeed * _camera.Zoom);
             var target = _trackingEntity.Center + _targetOffset;
 
             var offset = target - _camera.Position;
@@ -65,7 +76,7 @@ public class CameraController
         }
 
         // Compute frictions
-        var frictX = _baseFriction - _trackingSpeed * _camera.Zoom * 0.027f * _baseFriction;
+        var frictX = _baseFriction - TrackingSpeed * _camera.Zoom * 0.027f * _baseFriction;
         var frictY = frictX;
 
         if (ClampToLevelBounds)
@@ -76,11 +87,11 @@ public class CameraController
             if (_velocity.X <= 0)
             {
                 var brakeRatio = 1 - MathF.Clamp01((_camera.Position.X - _camera.Width * 0.5f) / brakeDist);
-                frictX *= 1 - 1 * brakeRatio;
+                frictX *= 1 - 1.0f * brakeRatio;
             }
             else if (_velocity.X > 0)
             {
-                var brakeRatio = 1 - MathF.Clamp01(((worldSize.X - _camera.Width * 0.5f) - _camera.Position.X) / brakeDist);
+                var brakeRatio = 1 - MathF.Clamp01((worldSize.X - _camera.Width * 0.5f - _camera.Position.X) / brakeDist);
                 frictX *= 1 - 0.9f * brakeRatio;
             }
 
@@ -118,6 +129,15 @@ public class CameraController
                 _camera.Position.Y = MathF.Clamp(_camera.Position.Y, _camera.Height * 0.5f, worldSize.Y - _camera.Height * 0.5f);
         }
 
+        if (_shakeTime > 0 && _shakeDuration > 0)
+        {
+            var percentDone = _shakeTime / _shakeDuration;
+            var shakeOffset = new Vector2(MathF.Cos(0.0f + _timer * 1.1f), MathF.Sin(0.3f + _timer * 1.7f))
+                              * percentDone * 2.5f * _shakePower;
+        }
+
+        bumpOffset *= Vector2.One * MathF.Pow(bumpFrict, deltaSeconds);
+        
         ViewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
