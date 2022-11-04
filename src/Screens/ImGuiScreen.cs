@@ -152,6 +152,11 @@ public class ImGuiScreen
                 _updateRate = 1.0f / _updateFps;
             }
 
+            if (ImGui.Button("Reload World"))
+            {
+                _game.GameScreen.LoadWorld();
+            }
+
             ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
             ImGui.Separator();
             var spriteBatchBlendStateIndex = (int)_game.Renderer.BlendState;

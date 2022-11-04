@@ -70,7 +70,8 @@ public class DiamondTransition : SceneTransition
         var commandBuffer = renderer.CommandBuffer;
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black, 1f);
+        var swapRect = new Rectangle(0, 0, (int)swap.Width, (int)swap.Height);
+        renderer.DrawRect(swapRect, Color.Black, 1f);
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
             new ColorAttachmentInfo(swap, LoadOp.Load));

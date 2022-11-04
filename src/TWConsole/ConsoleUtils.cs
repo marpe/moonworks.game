@@ -1,4 +1,5 @@
 using System.Globalization;
+using Vector2 = MoonWorks.Math.Float.Vector2;
 
 namespace MyGame.TWConsole;
 
@@ -56,6 +57,7 @@ public static class ConsoleUtils
         { typeof(object), "object" },
         { typeof(Color), "color" },
         { typeof(Point), "point" },
+        { typeof(Vector2), "vector2" },
     };
 
     private static readonly Dictionary<Type, IStringParser> _parsers = new();
@@ -77,10 +79,11 @@ public static class ConsoleUtils
         _parsers.Add(typeof(string), new StringParser<string>((_, str) => str));
         _parsers.Add(typeof(bool), new StringParser<bool>((_, str) => ParseBool(str)));
         _parsers.Add(typeof(Color), new StringParser<Color>((_, str) => ParseColor(str)));
+        _parsers.Add(typeof(Vector2), new StringParser<Vector2>((_, str) => ParseVector2(str)));
         _parsers.Add(typeof(Point), new StringParser<Point>((_, str) => ParsePoint(str)));
         _parsers.Add(typeof(Enum), new StringParser<Enum>((type, str) => ParseEnum(type, str)));
     }
-
+    
     public static string GetDisplayName(Type type)
     {
         if (_typeDisplayNames.ContainsKey(type))
@@ -140,6 +143,18 @@ public static class ConsoleUtils
         }
 
         return new Point(parsed[0], parsed[1]);
+    }
+    
+    private static Vector2 ParseVector2(string strValues)
+    {
+        var splitBy = strValues.Contains(',') ? ',' : ' ';
+        var xy = strValues.Split(splitBy);
+        var parsed = new[] { 0f, 0f };
+        for (var i = 0; i < xy.Length && i < 2; i++)
+        {
+            parsed[i] = Parse<float>(xy[i]);
+        }
+        return new Vector2(parsed[0], parsed[1]);
     }
 
     public static Point ParsePoint(ReadOnlySpan<char> strValue)
@@ -239,6 +254,9 @@ public static class ConsoleUtils
         if (value is Point p)
             return $"{p.X}, {p.Y}";
 
+        if (value is Vector2 v)
+            return $"{v.X}, {v.Y}";
+        
         return Convert.ToString(value, CultureInfo.InvariantCulture)?.ToLower() ?? string.Empty;
     }
 }

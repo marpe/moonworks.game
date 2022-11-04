@@ -50,6 +50,7 @@ public class MyGameMain : Game
         Task.Run(() => { Shared.Console.Initialize(); });
 
         LoadingScreen = new LoadingScreen(this);
+        
         InputHandler = new InputHandler(this);
 
         Renderer = new Renderer(this);

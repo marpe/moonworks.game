@@ -160,11 +160,26 @@ public class TWConsole
 			defaults[i] = new ConsoleCommandArg(param.Name, param.HasDefaultValue, param.DefaultValue, param.ParameterType);
 		}
 
+		var target = method.DeclaringType == GetType() ? this : null;
+
+		string GetDisplayName(Type? type)
+		{
+			if (type == null)
+				return "null";
+			if (type.DeclaringType != null)
+				return type.DeclaringType.Name + "." + type.Name;
+			return type.Name;
+		}
+		
+		if (target == null && !method.IsStatic)
+			throw new InvalidOperationException(
+				$"Method has to be static: {GetDisplayName(method.DeclaringType)}.{method.Name}");
+		
 		RegisterCommand(
 			new ConsoleCommand(
 				attr.Command,
 				attr.Description,
-				ConsoleCommandHandler(method),
+				ConsoleCommandHandler(target, method),
 				defaults,
 				attr.Aliases,
 				false
@@ -176,11 +191,6 @@ public class TWConsole
 	{
 		return (console, cmd, args) =>
 		{
-			/*if (args.Length == 1 && cvar.VarType == typeof(bool))
-			{
-				cvar.SetValue(!cvar.GetValue<bool>());
-			}
-			else */
 			if (args.Length > 1)
 			{
 				try
@@ -189,7 +199,7 @@ public class TWConsole
 				}
 				catch (Exception e)
 				{
-					console.Print($"^4Error: {e}");
+					console.Print($"^4An error occurred while invoking the set handler for {cmd.Key}:\n{e}");
 				}
 			}
 
@@ -197,7 +207,7 @@ public class TWConsole
 		};
 	}
 	
-	private static ConsoleCommand.ConsoleCommandHandler ConsoleCommandHandler(MethodBase method)
+	private static ConsoleCommand.ConsoleCommandHandler ConsoleCommandHandler(object? target, MethodBase method)
 	{
 		return (console, cmd, args) =>
 		{
@@ -220,7 +230,7 @@ public class TWConsole
 					parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[i + 1]);
 				}
 
-				method.Invoke(console, parameters);
+				method.Invoke(target, parameters);
 			}
 			catch (Exception e)
 			{
