@@ -433,18 +433,19 @@ public static class ImGuiExt
         ImGui.Text(label);
     }
     
-    private static void DrawCollapsingHeaderBorder()
+    private static void DrawCollapsingHeaderBorder(Color color)
     {
         var drawList = ImGui.GetWindowDrawList();
         var min = ImGui.GetItemRectMin();
         var max = ImGui.GetItemRectMax();
         var padding = ImGui.GetStyle().WindowPadding;
         max.X = min.X + ImGui.GetContentRegionAvail().X;
-        var color = ImGui.GetColorU32(ImGuiCol.FrameBg);
+        // var color = ImGui.GetColorU32(ImGuiCol.FrameBg);
+        var packedColor = color.PackedValue;
         drawList.AddRect(
             min - new Num.Vector2(padding.X * 0.5f - 1.0f, 0),
             max + new Num.Vector2(padding.X * 0.5f, 0),
-            color
+            packedColor
         );
     }
     
@@ -494,6 +495,7 @@ public static class ImGuiExt
         );
     }
     
+    private static Stack<Color> _colorStack = new();
     
     public static bool BeginCollapsingHeader(string header, Color color,
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
@@ -502,7 +504,8 @@ public static class ImGuiExt
 
         // flags |= ImGuiTreeNodeFlags.Framed;
 
-        ImGui.PushStyleColor(ImGuiCol.Header, ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f).ToNumerics());
+        var headerColor = ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f);
+        ImGui.PushStyleColor(ImGuiCol.Header, headerColor.ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f).ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.HeaderActive, ColorExt.HsvToRgb(h, s * 1f, v * 0.8f).ToNumerics());
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new System.Numerics.Vector2(6, 4));
@@ -513,6 +516,7 @@ public static class ImGuiExt
         var hovered = false;
         if (ImGui.CollapsingHeader(header, flags))
         {
+            _colorStack.Push(headerColor);
             hovered = ImGui.IsItemHovered();
             Indent();
             ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
@@ -522,7 +526,7 @@ public static class ImGuiExt
         {
             hovered = ImGui.IsItemHovered();
             ImGui.EndGroup();
-            DrawCollapsingHeaderBorder();
+            DrawCollapsingHeaderBorder(headerColor);
         }
 
         if (hovered)
@@ -554,7 +558,8 @@ public static class ImGuiExt
         Unindent();
         ImGui.Spacing();
         ImGui.EndGroup();
-        DrawCollapsingHeaderBorder();
+        var color = _colorStack.Pop();
+        DrawCollapsingHeaderBorder(color);
     }
     
     public static void SeparatorText(string text)

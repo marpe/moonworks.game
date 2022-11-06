@@ -115,8 +115,8 @@ public class GroupInspector : Inspector
             {
                 grpInspector.HeaderColor = Temp.Colors[depth % Temp.Colors.Length];
                 grpInspector.Draw(depth + 1);
-                if (hasHeader && grpInspector._inspectors.Count > 0)
-                    ImGuiExt.SeparatorText(_name + " End", HeaderColor, HeaderColor);
+                // if (hasHeader && grpInspector._inspectors.Count > 0)
+                //     ImGuiExt.SeparatorText(_name + " End", HeaderColor, HeaderColor);
             }
             else
                 _inspectors[i].Draw();
