@@ -4,3 +4,6 @@
 [submodule "lib/ldtk"]
 	path = lib/ldtk
 	url = git@github.com:marpe/ldtk.git
+[submodule "lib/codegen"]
+	path = lib/codegen
+	url = git@github.com:marpe/codegen.git

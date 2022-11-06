@@ -402,9 +402,9 @@ public class ConsoleScreen
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
         if (ConsoleSettings.UseBMFont)
-            renderer.DrawBMText(text, position, depth, color);
+            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, text, position, Vector2.Zero, Vector2.One, 0, depth, color);
         else
-            renderer.DrawText(text, position, depth, color);
+            renderer.DrawText(FontType.ConsolasMonoMedium, text, position, depth, color);
     }
 
     public void Draw(Renderer renderer, double alpha)

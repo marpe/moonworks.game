@@ -6,7 +6,20 @@ public static class ContentPaths
     public static class bmfonts
     {
         public const string config_bmfc = @"Content\bmfonts\config.bmfc";
+        public const string config48_bmfc = @"Content\bmfonts\config48.bmfc";
+        public const string config60_bmfc = @"Content\bmfonts\config60.bmfc";
+        public const string config72_bmfc = @"Content\bmfonts\config72.bmfc";
         public const string consolas_fnt = @"Content\bmfonts\consolas.fnt";
+        public const string consolas48_fnt = @"Content\bmfonts\consolas48.fnt";
+        public const string consolas48_0_png = @"Content\bmfonts\consolas48_0.png";
+        public const string consolas48_1_png = @"Content\bmfonts\consolas48_1.png";
+        public const string consolas60_fnt = @"Content\bmfonts\consolas60.fnt";
+        public const string consolas60_0_png = @"Content\bmfonts\consolas60_0.png";
+        public const string consolas60_1_png = @"Content\bmfonts\consolas60_1.png";
+        public const string consolas72_fnt = @"Content\bmfonts\consolas72.fnt";
+        public const string consolas72_0_png = @"Content\bmfonts\consolas72_0.png";
+        public const string consolas72_1_png = @"Content\bmfonts\consolas72_1.png";
+        public const string consolas72_2_png = @"Content\bmfonts\consolas72_2.png";
         public const string consolas_0_png = @"Content\bmfonts\consolas_0.png";
     }
     public static class fonts

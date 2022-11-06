@@ -1,1 +1,1 @@
-bmfont64.exe -c config.bmfc -o consolas.fnt
+bmfont64.exe -c config72.bmfc -o consolas72.fnt

@@ -23,11 +23,14 @@ public class MenuScreen
 
     private int _selectedIndex = -1;
     private List<MenuItem> _menuItems;
+    private readonly FancyTextComponent _title;
+    private Point Position;
 
     public MenuScreen(MyGameMain game)
     {
         _game = game;
 
+        _title = new FancyTextComponent("<~>Menu</~>");
         _menuItems = new(new[]
         {
             new MenuItem("Resume", () => { IsHidden = !IsHidden; }),
@@ -49,21 +52,58 @@ public class MenuScreen
         _game.Quit();
     }
 
+    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
+    {
+        var input = _game.InputHandler;
+
+        if (allowKeyboardInput && input.IsKeyPressed(KeyCode.Escape))
+            IsHidden = !IsHidden;
+
+        if (IsHidden)
+            return;
+
+        Position = _game.MainWindow.Size / 2;
+        _title.Position = Position + new Vector2(0, -60);
+        _title.Update(deltaSeconds);
+
+        if (allowKeyboardInput)
+        {
+            if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
+            {
+                _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
+            }
+            else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
+            {
+                _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
+            }
+
+            if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
+            {
+                if (_selectedIndex != -1)
+                {
+                    _menuItems[_selectedIndex].Callback.Invoke();
+                }
+            }
+        }
+    }
+
     public void Draw(Renderer renderer, double alpha)
     {
         if (!IsHidden)
         {
-            renderer.DrawRect(new Rectangle(0, 0, (int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height), Color.Black * 0.5f,
-                0f);
+            renderer.DrawRect(renderer.RenderRect, Color.Black * 0.5f, 0f);
 
-            var center = new Vector2(renderer.SwapTexture.Width * 0.5f, renderer.SwapTexture.Height * 0.5f);
-            var position = center;
+            var font = BMFontType.ConsolasMonoHuge;
+            // var font = renderer.TextBatcher.GetFont(FontType.ConsolasMonoLarge);
+            _title.Render(font, renderer, alpha);
+
+            var position = Position;
             var lineHeight = 50;
 
             for (var i = 0; i < _menuItems.Count; i++)
             {
                 var color = _selectedIndex == i ? Color.Red : Color.White;
-                renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position.X, position.Y, 0, color, HorizontalAlignment.Center,
+                renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center,
                     VerticalAlignment.Middle);
                 position.Y += lineHeight;
             }
@@ -76,39 +116,5 @@ public class MenuScreen
         /*var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         renderer.FlushBatches(swap, viewProjection);*/
-    }
-
-    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
-    {
-        var input = _game.InputHandler;
-
-        if (allowKeyboardInput)
-        {
-            if (input.IsKeyPressed(KeyCode.Escape))
-            {
-                IsHidden = !IsHidden;
-                // _game.LoadingScreen.StartLoad(() => { });
-            }
-
-            if (!IsHidden)
-            {
-                if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
-                {
-                    _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
-                }
-                else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
-                {
-                    _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
-                }
-
-                if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
-                {
-                    if (_selectedIndex != -1)
-                    {
-                        _menuItems[_selectedIndex].Callback.Invoke();
-                    }
-                }
-            }
-        }
     }
 }

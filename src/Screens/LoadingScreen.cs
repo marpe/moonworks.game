@@ -131,9 +131,8 @@ public class LoadingScreen
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
         var windowSize = _game.MainWindow.Size;
 
-        var textSize = renderer.TextBatcher.MeasureString(FontType.RobotoMedium, loadingStr);
+        var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
-        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position,
-            Color.White * MathHelper.Lerp(_previousProgress, _progress, (float)alpha));
+        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * MathHelper.Lerp(_previousProgress, _progress, (float)alpha));
     }
 }

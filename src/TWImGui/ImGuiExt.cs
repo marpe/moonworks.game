@@ -586,4 +586,19 @@ public static class ImGuiExt
         ImGui.NewLine();
         ImGui.Spacing();
     }
+    
+    public static void ItemTooltip(ReadOnlySpan<char> tooltip)
+    {
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(4, 4));
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.TextUnformatted(tooltip.ToString());
+            ImGui.EndTooltip();
+        }
+
+        ImGui.PopStyleVar();
+    }
+    
+    public static void MediumVerticalSpace() => ImGui.Dummy(new System.Numerics.Vector2(0, 10));
 }

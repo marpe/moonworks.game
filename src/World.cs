@@ -31,6 +31,8 @@ public class World
     private static JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private List<Enemy> _enemies;
+    public List<Enemy> Enemies => _enemies;
+    
     private Player _player;
     public Player Player => _player;
 

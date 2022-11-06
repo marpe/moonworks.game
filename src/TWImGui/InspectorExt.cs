@@ -23,10 +23,6 @@ public static class InspectorExt
 	{
 		if (GetCustomAttributeInspector(type, out var inspector))
 			return inspector;
-		/*if (type == typeof(Timeline))
-			return new TimelineInspector();
-		if (type == typeof(Color[]))
-			return new GradientInspector();
 		if (type.IsEnum)
 			return new EnumInspector();
 		if (type.IsArray && type.GetArrayRank() == 1)
@@ -34,7 +30,11 @@ public static class InspectorExt
 		if (type.IsGenericType && typeof(IList).IsAssignableFrom(type) && type.GetInterface(nameof(IList)) != null)
 			return new CollectionInspector();
 		if (type.IsGenericType && typeof(IDictionary).IsAssignableFrom(type) && type.GetInterface(nameof(IDictionary)) != null)
-			return new CollectionInspector();*/
+			return new CollectionInspector();
+		if (type == typeof(Color[]))
+			return new GradientInspector();
+		/*if (type == typeof(Timeline))
+			return new TimelineInspector();*/
 		if (SimpleTypeInspector.SupportedTypes.Contains(type))
 			return new SimpleTypeInspector();
 		return null;

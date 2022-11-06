@@ -45,6 +45,9 @@ public class Renderer
     public Texture SwapTexture =>
         _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
 
+    public Rectangle RenderRect => new Rectangle(0, 0, RenderSize.X, RenderSize.Y);
+    public Point RenderSize = new Point(1920, 1080);
+
     public ColorAttachmentBlendState CustomBlendState = new ColorAttachmentBlendState
     {
         BlendEnable = true,
@@ -57,7 +60,8 @@ public class Renderer
         DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha
     };
 
-    private readonly BMFont _bmFont;
+    private readonly BMFont[] _bmFonts;
+    public BMFont[] BMFonts => _bmFonts;
     public Color DefaultClearColor = Color.CornflowerBlue;
 
     public Renderer(MyGameMain game)
@@ -89,7 +93,20 @@ public class Renderer
             _pipelines[i] = CreateGraphicsPipeline(_device, blendState);
         }
 
-        _bmFont = new BMFont(game.GraphicsDevice, ContentPaths.bmfonts.consolas_fnt);
+        var bmFontTypes = new[]
+        {
+            (BMFontType.ConsolasMonoSmall, ContentPaths.bmfonts.consolas_fnt),
+            (BMFontType.ConsolasMonoMedium, ContentPaths.bmfonts.consolas48_fnt),
+            (BMFontType.ConsolasMonoLarge, ContentPaths.bmfonts.consolas60_fnt),
+            (BMFontType.ConsolasMonoHuge, ContentPaths.bmfonts.consolas72_fnt),
+        };
+
+        _bmFonts = new BMFont[bmFontTypes.Length];
+        for (var i = 0; i < bmFontTypes.Length; i++)
+        {
+            var (type, path) = bmFontTypes[i];
+            _bmFonts[i] = new BMFont(game.GraphicsDevice, path);
+        }
 
         DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
         DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
@@ -108,6 +125,11 @@ public class Renderer
         };
     }
 
+    public BMFont GetFont(BMFontType fontType)
+    {
+        return _bmFonts[(int)fontType];
+    }
+    
     public void UpdateCustomBlendPipeline()
     {
         _pipelines[(int)BlendState.Custom] = CreateGraphicsPipeline(_device, CustomBlendState);
@@ -130,6 +152,12 @@ public class Renderer
         return true;
     }
 
+    public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
+    {
+        var scale = Matrix3x2.CreateScale(size, size) * Matrix3x2.CreateTranslation(position.X, position.Y);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
+    }
+    
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
@@ -146,7 +174,7 @@ public class Renderer
         var tAll = origin * scale * rotation * translation;
         SpriteBatch.Draw(_blankSprite, color, 0, tAll, PointClamp);
     }
-    
+
     public void DrawRect(Vector2 min, Vector2 max, Color color, float thickness)
     {
         ReadOnlySpan<Vector2> points = stackalloc Vector2[]
@@ -167,30 +195,16 @@ public class Renderer
         SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
 
-    public void DrawText(FontType fontType, ReadOnlySpan<char> text, float x, float y, float depth, Color color,
+    public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 position, float depth, Color color,
         HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
     {
-        TextBatcher.Add(fontType, text, x, y, depth, color, alignH, alignV);
+        TextBatcher.Add(fontType, text, position.X, position.Y, depth, color, alignH, alignV);
     }
 
-    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, float depth, Color color)
+    public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
+        Color color)
     {
-        DrawText(FontType.ConsolasMonoMedium, text, pos.X, pos.Y, depth, color);
-    }
-
-    public void DrawText(ReadOnlySpan<char> text, Vector2 pos, Color color)
-    {
-        DrawText(text, pos, 0, color);
-    }
-
-    public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 pos, Color color)
-    {
-        DrawText(fontType, text, pos.X, pos.Y, 0, color);
-    }
-
-    public void DrawBMText(ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
-    {
-        BMFont.DrawInto(this, _bmFont, text, position, color, 0, Vector2.Zero, Vector2.One, depth);
+        BMFont.DrawInto(this, _bmFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
 
     public void FlushBatches()
@@ -199,7 +213,7 @@ public class Renderer
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
         FlushBatches(swap, viewProjection);
     }
-    
+
     public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
@@ -227,7 +241,8 @@ public class Renderer
 
     public void Unload()
     {
-        _bmFont.Dispose();
+        for (var i = 0; i < _bmFonts.Length; i++)
+            _bmFonts[i].Dispose();
 
         for (var i = 0; i < _pipelines.Length; i++)
         {
@@ -282,7 +297,7 @@ public class Renderer
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1);
-        
+
         var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(

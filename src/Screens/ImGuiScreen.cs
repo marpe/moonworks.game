@@ -63,12 +63,12 @@ public class ImGuiScreen
     {
         var windows = new ImGuiWindow[]
         {
-            new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
+            new ImGuiCallbackWindow("Debug", DrawDebugWindow)
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F1"
             },
-            new ImGuiCallbackWindow("Test Window", DrawTestWindow)
+            new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F2"
@@ -132,7 +132,7 @@ public class ImGuiScreen
         renderer.FlushBatches(swap, viewProjection);*/
     }
 
-    private void DrawTestWindow(ImGuiWindow window)
+    private void DrawDebugWindow(ImGuiWindow window)
     {
         if (!window.IsOpen)
             return;
@@ -140,54 +140,18 @@ public class ImGuiScreen
 
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
-            ImGui.Text("ImGui Window 1");
-            ImGui.Separator();
-            ImGui.SliderFloat("MenuPadding", ref _mainMenuPaddingY, 0, 100f);
-            ImGui.Separator();
+            ImGui.Text("MyGame Debug");
             ImGui.TextUnformatted($"Nav: {ImGui.GetIO().NavActive}");
             ImGui.TextUnformatted($"FrameCount: {_game.UpdateCount}");
-            ImGui.TextUnformatted($"Total: {_game.TotalElapsedTime}");
-            ImGui.TextUnformatted($"Elapsed: {_game.ElapsedTime}");
             ImGui.TextUnformatted($"RenderCount: {_game.DrawCount}");
-            ImGui.TextUnformatted($"ImGuiDrawCount: {_imGuiDrawCount}");
-            if (ImGui.SliderInt("UpdateFPS", ref _updateFps, 1, 120))
-            {
-                _updateRate = 1.0f / _updateFps;
-            }
 
             if (ImGui.Button("Reload World"))
             {
                 _game.GameScreen.LoadWorld();
             }
 
-            ImGui.SliderFloat("Alpha", ref _alpha, 0, 1.0f);
-            ImGui.Separator();
-            var spriteBatchBlendStateIndex = (int)_game.Renderer.BlendState;
-            if (ImGui.BeginCombo("SpriteBatchBlendState", _blendStateNames[spriteBatchBlendStateIndex]))
-            {
-                for (var i = 0; i < _blendStateNames.Length; i++)
-                {
-                    var isSelected = i == spriteBatchBlendStateIndex;
-                    if (ImGui.Selectable(_blendStateNames[i], isSelected))
-                        _game.Renderer.BlendState = (BlendState)i;
-                    if (isSelected)
-                        ImGui.SetItemDefaultFocus();
-                }
-
-                ImGui.EndCombo();
-            }
-
-            if (BlendStateEditor.Draw("SpriteBatch", ref _game.Renderer.CustomBlendState))
-            {
-                _game.Renderer.UpdateCustomBlendPipeline();
-            }
-
-            ImGui.Separator();
-            var blendState = _imGuiRenderer.BlendState;
-            if (BlendStateEditor.Draw("ImGui", ref blendState))
-            {
-                _imGuiRenderer.SetBlendState(blendState);
-            }
+            ImGui.SliderFloat("ShakeSpeed", ref FancyTextComponent.ShakeSpeed, 0, 500);
+            ImGui.SliderFloat("ShakeAmount", ref FancyTextComponent.ShakeAmount, 0, 500);
         }
 
         ImGui.End();

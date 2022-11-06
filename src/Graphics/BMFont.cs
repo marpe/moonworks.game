@@ -4,10 +4,6 @@ namespace MyGame.Graphics;
 
 public class BMFont : IDisposable
 {
-    private static Sprite _tempSprite = new();
-    private static Kerning _tempKerning = new();
-    private static Matrix3x2 _tempMatrix = Matrix3x2.Identity;
-
     public bool IsDisposed { get; private set; }
 
     public BitmapFont Font;
@@ -21,7 +17,7 @@ public class BMFont : IDisposable
         Font = BitmapFont.LoadXml(reader);
         var directoryName = Path.GetDirectoryName(filename);
         Textures = new Texture[Font.Pages.Length];
-        
+
         for (var i = 0; i < Textures.Length; i++)
         {
             var path = Path.Combine(directoryName ?? "", Font.Pages[i].Filename);
@@ -54,20 +50,26 @@ public class BMFont : IDisposable
         IsDisposed = true;
     }
 
-    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Vector2 position, Color color, float rotation,
-        Vector2 origin, Vector2 scale, float depth)
+    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Vector2 position, Vector2 origin,
+        float rotation, Vector2 scale, Color color, float depth)
     {
-        var font = bmFont.Font;
-
-        /*var o = Matrix3x2.CreateTranslation(-origin.X, -origin.Y);
+        var o = Matrix3x2.CreateTranslation(-origin.X, -origin.Y);
         var s = Matrix3x2.CreateScale(scale.X, scale.Y);
         var r = Matrix3x2.CreateRotation(rotation);
         var t = Matrix3x2.CreateTranslation(position.X, position.Y);
-        var transformationMatrix = o * s * r * t; // o * t * r * s;*/
+        var transformationMatrix = o * s * r * t;
+        return DrawInto(renderer, bmFont, text, transformationMatrix, color, depth);
+    }
+
+    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Matrix3x2 transform, Color color, float depth)
+    {
+        var font = bmFont.Font;
 
         var previousCharacter = ' ';
         Character? currentChar = null;
         var offset = Vector2.Zero;
+
+        var characterTransform = Matrix3x2.Identity;
 
         for (var i = 0; i < text.Length; ++i)
         {
@@ -89,17 +91,14 @@ public class BMFont : IDisposable
 
             currentChar = font.Characters.ContainsKey(c) ? font.Characters[c] : font.DefaultCharacter;
 
-            SetTranslationMatrix(
-                ref _tempMatrix,
-                position.X + offset.X + currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
-                position.Y + offset.Y + currentChar.Offset.Y
-            );
+            characterTransform.Translation =
+                new Vector2(
+                    offset.X + currentChar.Offset.X + bmFont.GetKerning(previousCharacter, currentChar.Char),
+                    offset.Y + currentChar.Offset.Y
+                );
 
-            _tempSprite.Texture = bmFont.Textures[currentChar.TexturePage];
-            _tempSprite.SrcRect = currentChar.Bounds;
-            Sprite.GenerateUVs(ref _tempSprite.UV, _tempSprite.Texture, _tempSprite.SrcRect);
-
-            renderer.DrawSprite(_tempSprite, _tempMatrix /** transformationMatrix*/, color, depth);
+            var sprite = new Sprite(bmFont.Textures[currentChar.TexturePage], currentChar.Bounds);
+            renderer.DrawSprite(sprite, characterTransform * transform, color, depth);
 
             previousCharacter = c;
         }
@@ -112,23 +111,15 @@ public class BMFont : IDisposable
         return offset;
     }
 
-    private static void SetTranslationMatrix(ref Matrix3x2 mat, float xPosition, float yPosition)
-    {
-        mat.M11 = 1.0f;
-        mat.M12 = 0.0f;
-        mat.M21 = 0.0f;
-        mat.M22 = 1.0f;
-
-        mat.M31 = xPosition;
-        mat.M32 = yPosition;
-    }
-
     private int GetKerning(char previous, char current)
     {
-        _tempKerning.FirstCharacter = previous;
-        _tempKerning.SecondCharacter = current;
-        _tempKerning.Amount = 0;
-        if (!Font.Kernings.TryGetValue(_tempKerning, out var result))
+        var kerning = new Kerning()
+        {
+            FirstCharacter = previous,
+            SecondCharacter = current,
+            Amount = 0
+        };
+        if (!Font.Kernings.TryGetValue(kerning, out var result))
             return 0;
         return result;
     }

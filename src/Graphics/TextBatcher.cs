@@ -1,46 +1,17 @@
 ﻿using System.Runtime.InteropServices;
 using MoonWorks.Graphics.Font;
 using WellspringCS;
-
 using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
 using AlignV = WellspringCS.Wellspring.VerticalAlignment;
 
 namespace MyGame.Graphics;
 
-public enum FontType
-{
-    RobotoMedium,
-    RobotoLarge,
-    ConsolasMonoMedium,
-}
-
-public class FontData
-{
-    public FontType Name;
-
-    public TextBatch Batch;
-    public Packer Packer;
-    public Font Font;
-    public Texture? Texture;
-    public bool HasStarted;
-
-    public FontData(FontType name, TextBatch batch, Packer packer, Font font)
-    {
-        Name = name;
-        Batch = batch;
-        Packer = packer;
-        Font = font;
-    }
-}
-
 public class TextBatcher
 {
-    private byte[] _stringBytes;
-
-    public FontRange FontRange = new()
+    public FontRange BasicLatin = new()
     {
-        FirstCodepoint = 0x20,
-        NumChars = 0x7e - 0x20 + 1,
+        FirstCodepoint = 0x0,
+        NumChars = 0x7f + 1,
         OversampleH = 0,
         OversampleV = 0
     };
@@ -54,13 +25,12 @@ public class TextBatcher
     {
         _device = device;
 
-        _stringBytes = new byte[128];
-        
         var fonts = new[]
         {
             (FontType.RobotoMedium, 18f, ContentPaths.fonts.Roboto_Regular_ttf),
             (FontType.RobotoLarge, 48f, ContentPaths.fonts.Roboto_Regular_ttf),
-            (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf)
+            (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf),
+            (FontType.ConsolasMonoLarge, 48f, ContentPaths.fonts.consola_ttf)
         };
 
         var commandBuffer = device.AcquireCommandBuffer();
@@ -68,7 +38,7 @@ public class TextBatcher
         {
             var font = new Font(path);
             var fontPacker = new Packer(device, font, size, 512, 512, 2u);
-            fontPacker.PackFontRanges(FontRange);
+            fontPacker.PackFontRanges(BasicLatin);
             fontPacker.SetTextureData(commandBuffer);
             var textBatchFont = new FontData(key, new TextBatch(device), fontPacker, font);
             _fonts.Add(key, textBatchFont);
@@ -85,6 +55,8 @@ public class TextBatcher
             _fonts[key].Texture = fontTexture;
         }
     }
+
+    public FontData GetFont(FontType fontType) => _fonts[fontType];
 
     public void Unload()
     {
@@ -104,7 +76,7 @@ public class TextBatcher
     {
         if (text.Length == 0)
             return;
-        
+
         _addCountSinceDraw++;
 
         var font = _fonts[fontType];
@@ -115,27 +87,6 @@ public class TextBatcher
         }
 
         font.Batch.Draw(text, x, y, depth, color, alignH, alignV);
-    }
-
-    public unsafe Vector2 MeasureString(FontType fontType, ReadOnlySpan<char> text, float x = 0, float y = 0, AlignH alignH = AlignH.Left, AlignV alignV = AlignV.Top)
-    {
-        var font = _fonts[fontType];
-        
-        var byteCount = Encoding.UTF8.GetByteCount(text);
-
-        if (_stringBytes.Length < byteCount)
-        {
-            Array.Resize(ref _stringBytes, byteCount);
-        }
-        
-        Span<byte> byteSpan = _stringBytes.AsSpan();
-        Encoding.UTF8.GetBytes(text, byteSpan);
-
-        fixed (byte* bytes = byteSpan)
-        {
-            Wellspring.Wellspring_TextBounds(font.Packer.Handle, x, y, alignH, alignV, (IntPtr)bytes, (uint)byteCount, out var rect);
-            return new Vector2(rect.W, rect.H);
-        }
     }
 
     public void FlushToSpriteBatch(SpriteBatch spriteBatch)
