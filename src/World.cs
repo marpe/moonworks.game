@@ -72,7 +72,7 @@ public class World
             if (ent is Enemy enemy && enemy.Type == EnemyType.Slug)
             {
                 var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
-                enemy.Velocity.Delta = new Vector2(randomDirection * 100f, 0);
+                enemy.Velocity.Delta = new Vector2(randomDirection * 50f, 0);
                 enemy.Velocity.Friction = new Vector2(0.99f, 0.99f);
             }
         }
@@ -166,9 +166,9 @@ public class World
             if (entity.Type == EnemyType.Slug)
             {
                 var (cell, cellRel) = GetGridCoords(entity);
-                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1))
+                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1) && cellRel.X > 0.9f)
                     entity.Velocity.X *= -1;
-                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1))
+                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1) && cellRel.X < 0.1f)
                     entity.Velocity.X *= -1;
 
                 var prevVelocity = entity.Velocity.Delta;
@@ -176,9 +176,9 @@ public class World
 
                 entity.Position += entity.Velocity * deltaSeconds;
                 if ((collisions & CollisionDir.Left) != 0)
-                    entity.Velocity.Delta = new Vector2(100f, 0);
+                    entity.Velocity.Delta = new Vector2(50f, 0);
                 else if ((collisions & CollisionDir.Right) != 0)
-                    entity.Velocity.Delta = new Vector2(-100f, 0);
+                    entity.Velocity.Delta = new Vector2(-50f, 0);
 
                 Velocity.ApplyFriction(entity.Velocity);
 
@@ -189,7 +189,7 @@ public class World
 
                 if (!IsGrounded(entity, entity.Velocity))
                     entity.Velocity.Y += Gravity * deltaSeconds;
-                if (Math.Abs(entity.Velocity.X) < 50f)
+                if (Math.Abs(entity.Velocity.X) < 25f)
                 {
                     entity.Velocity.X += entity.Velocity.X;
                 }
