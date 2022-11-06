@@ -213,8 +213,8 @@ public class World
     private void UpdatePlayer(float deltaSeconds, InputHandler input, bool allowKeyboard)
     {
         HandleInput(input, allowKeyboard, out var movementX);
-        var isJumpDown = input.IsKeyDown(KeyCode.Space);
-        var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
+        var isJumpDown = allowKeyboard && input.IsKeyDown(KeyCode.Space);
+        var isJumpPressed = allowKeyboard && input.IsKeyPressed(KeyCode.Space);
 
         if (_player.Position.Y > 300)
         {

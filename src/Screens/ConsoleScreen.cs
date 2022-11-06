@@ -15,6 +15,9 @@ public enum ScreenState
 
 public class ConsoleScreen
 {
+    private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
+    private Easing.Function.Float[] _easeFuncs = Enum.GetValues<Easing.Function.Float>();
+
     public bool IsHidden
     {
         get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
@@ -35,6 +38,7 @@ public class ConsoleScreen
     private TWConsole.TWConsole TwConsole => Shared.Console;
 
     private Rectangle _backgroundRect;
+
     private readonly List<string> _autoCompleteHits = new();
     private int _autoCompleteIndex = -1;
     private int _commandHistoryIndex = -1;
@@ -152,6 +156,13 @@ public class ConsoleScreen
             if (_transitionPercentage <= 0)
                 ScreenState = ScreenState.Hidden;
         }
+
+        var winSize = _game.MainWindow.Size;
+        var height = winSize.Y * ConsoleSettings.RelativeConsoleHeight;
+        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
+        _backgroundRect.Y = (int)(-height + height * t);
+        _backgroundRect.Height = (int)height;
+        _backgroundRect.Width = winSize.X;
     }
 
     private static bool IsAllowedCharacter(char c)
@@ -367,6 +378,17 @@ public class ConsoleScreen
         {
             _inputField.SetCursor(0);
         }
+
+        if (input.IsKeyPressed(KeyCode.F12))
+        {
+            _easeFunc = (Easing.Function.Float)((_easeFuncs.Length + (int)_easeFunc + 1) % _easeFuncs.Length);
+            TwConsole.Print($"EaseFunc: {_easeFunc}");
+        }
+        else if (input.IsKeyPressed(KeyCode.F11))
+        {
+            _easeFunc = (Easing.Function.Float)((_easeFuncs.Length + (int)_easeFunc - 1) % _easeFuncs.Length);
+            TwConsole.Print($"EaseFunc: {_easeFunc}");
+        }
     }
 
     private void ScrollTop()
@@ -416,12 +438,12 @@ public class ConsoleScreen
         {
             DrawCount++;
             renderer.FlushBatches(); // flush so that draw calls doesn't spill into console renderTarget
-            
-            DrawInternal(renderer);
+
+            DrawInternal(renderer, alpha);
 
             var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
             renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
-            
+
             _nextRenderTime = _stopwatch.Elapsed.TotalSeconds + 1.0 / ConsoleSettings.RenderRatePerSecond;
         }
 
@@ -440,16 +462,10 @@ public class ConsoleScreen
         renderer.FlushBatches(swap, viewProjection);*/
     }
 
-    private void DrawInternal(Renderer renderer)
+    private void DrawInternal(Renderer renderer, double alpha)
     {
         var winSize = _game.MainWindow.Size;
         TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)winSize.X, (uint)winSize.Y);
-
-        _backgroundRect.X = 0;
-        var height = (int)(winSize.Y * ConsoleSettings.RelativeConsoleHeight);
-        _backgroundRect.Y = (int)(height * (_transitionPercentage - 1));
-        _backgroundRect.Width = winSize.X;
-        _backgroundRect.Height = height;
 
         renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha, 0);
 
