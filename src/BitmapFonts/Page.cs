@@ -1,18 +1,19 @@
 namespace MyGame.BitmapFonts;
 
-/// <summary>
-/// Represents a texture page.
-/// </summary>
+/// <summary>Represents a texture page.</summary>
 public struct Page
 {
-	public string Filename;
-	public int Id;
+    public string Filename;
+    public int Id;
 
-	public Page(int id, string filename)
-	{
-		Filename = filename;
-		Id = id;
-	}
+    public Page(int id, string filename)
+    {
+        Filename = filename;
+        Id = id;
+    }
 
-	public override string ToString() => string.Format("{0} ({1})", Id, Path.GetFileName(Filename));
+    public override string ToString()
+    {
+        return string.Format("{0} ({1})", Id, Path.GetFileName(Filename));
+    }
 }

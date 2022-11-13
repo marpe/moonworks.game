@@ -1,10 +1,10 @@
-using ImGuiNET;
+using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
 public static class Temp
 {
-    public static Color[] Colors = new[]
+    public static Color[] Colors =
     {
         Color.Fuchsia,
         Color.GreenYellow,
@@ -19,15 +19,13 @@ public static class Temp
     };
 }
 
-public class GroupInspector : Inspector
+public unsafe class GroupInspector : Inspector
 {
-    private List<IInspector> _inspectors = new();
-    public Color HeaderColor = Color.DarkBlue;
-    public bool ShowHeader = false;
+    private readonly List<IInspector> _inspectors = new();
 
     private bool _isInitialized;
-
-    public int ChildCount => _inspectors.Count;
+    public Color HeaderColor = Color.DarkBlue;
+    public bool ShowHeader = false;
 
     public GroupInspector()
     {
@@ -38,6 +36,8 @@ public class GroupInspector : Inspector
         _inspectors = inspectors;
         _isInitialized = true;
     }
+
+    public int ChildCount => _inspectors.Count;
 
     public override void Initialize()
     {
@@ -79,7 +79,7 @@ public class GroupInspector : Inspector
             {
                 var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
                 ImGui.TextUnformatted($"NumSubInspectors: {_inspectors.Count}");
-                ImGui.Checkbox("Show Header", ref ShowHeader);
+                ImGui.Checkbox("Show Header", ImGuiExt.RefPtr(ref ShowHeader));
                 ImGuiExt.ColorEdit("Header Color", ref HeaderColor);
             }
         }
@@ -119,7 +119,9 @@ public class GroupInspector : Inspector
                 //     ImGuiExt.SeparatorText(_name + " End", HeaderColor, HeaderColor);
             }
             else
+            {
                 _inspectors[i].Draw();
+            }
 
             ImGui.PopID();
         }

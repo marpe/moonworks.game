@@ -15,17 +15,16 @@ public class SpriteBatch
     // Used to calculate texture coordinates
     private static readonly float[] CornerOffsetX = { 0.0f, 0.0f, 1.0f, 1.0f };
     private static readonly float[] CornerOffsetY = { 0.0f, 1.0f, 0.0f, 1.0f };
-    
-    private uint[] _indices;
-    private Buffer _vertexBuffer;
+    private readonly GraphicsDevice _device;
     private Buffer _indexBuffer;
 
-    private Position3DTextureColorVertex[] _vertices;
+    private uint[] _indices;
+    private uint _numSprites = 0;
 
     private TextureSamplerBinding[] _spriteInfo;
-    private uint _numSprites = 0;
-    private readonly GraphicsDevice _device;
-    public uint DrawCalls { get; private set; }
+    private Buffer _vertexBuffer;
+
+    private Position3DTextureColorVertex[] _vertices;
 
     public SpriteBatch(GraphicsDevice device)
     {
@@ -38,6 +37,8 @@ public class SpriteBatch
         _indexBuffer = Buffer.Create<uint>(device, BufferUsageFlags.Index, (uint)_indices.Length);
     }
 
+    public uint DrawCalls { get; private set; }
+
     public void Unload()
     {
         _vertexBuffer.Dispose();
@@ -47,7 +48,9 @@ public class SpriteBatch
     public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
     {
         if (sprite.Texture.IsDisposed)
+        {
             throw new ObjectDisposedException(nameof(sprite.Texture));
+        }
 
         if (_numSprites == _spriteInfo.Length)
         {
@@ -95,22 +98,22 @@ public class SpriteBatch
         _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
         _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
         _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
-        
+
         var effects = (byte)(flip & (SpriteFlip)0x03);
-        _vertices[vertexCount].TexCoord.X = (CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
-        _vertices[vertexCount].TexCoord.Y = (CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
-        _vertices[vertexCount + 1].TexCoord.X = (CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
-        _vertices[vertexCount + 1].TexCoord.Y = (CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
-        _vertices[vertexCount + 2].TexCoord.X = (CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
-        _vertices[vertexCount + 2].TexCoord.Y = (CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
-        _vertices[vertexCount + 3].TexCoord.X = (CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X) + sprite.UV.Position.X;
-        _vertices[vertexCount + 3].TexCoord.Y = (CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y) + sprite.UV.Position.Y;
+        _vertices[vertexCount].TexCoord.X = CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount].TexCoord.Y = CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 1].TexCoord.X = CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 1].TexCoord.Y = CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 2].TexCoord.X = CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 2].TexCoord.Y = CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 3].TexCoord.X = CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 3].TexCoord.Y = CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
 
         _vertices[vertexCount].Color = color;
         _vertices[vertexCount + 1].Color = color;
         _vertices[vertexCount + 2].Color = color;
         _vertices[vertexCount + 3].Color = color;
-        
+
         _numSprites += 1;
     }
 
@@ -149,7 +152,10 @@ public class SpriteBatch
     public void UpdateBuffers(CommandBuffer commandBuffer)
     {
         if (_numSprites == 0)
+        {
             return;
+        }
+
         commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
     }
@@ -159,7 +165,9 @@ public class SpriteBatch
         DrawCalls = 0;
 
         if (_numSprites == 0)
+        {
             return;
+        }
 
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 

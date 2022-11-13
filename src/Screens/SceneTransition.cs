@@ -18,12 +18,6 @@ public class FadeToBlack : SceneTransition
 
 public class DiamondTransition : SceneTransition
 {
-    public struct Uniforms
-    {
-        public float Progress;
-        public float DiamondPixelSize;
-    }
-
     public readonly GraphicsPipeline Pipeline;
     public Uniforms Uniform = new() { Progress = 0, DiamondPixelSize = 36 };
 
@@ -41,7 +35,7 @@ public class DiamondTransition : SceneTransition
             DepthWriteEnable = true,
             CompareOp = CompareOp.GreaterOrEqual,
             DepthBoundsTestEnable = false,
-            StencilTestEnable = false
+            StencilTestEnable = false,
         };
 
         var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
@@ -80,5 +74,11 @@ public class DiamondTransition : SceneTransition
         commandBuffer.PushFragmentShaderUniforms(Uniform);
         renderer.SpriteBatch.Flush(commandBuffer, viewProjection);
         commandBuffer.EndRenderPass();
+    }
+
+    public struct Uniforms
+    {
+        public float Progress;
+        public float DiamondPixelSize;
     }
 }

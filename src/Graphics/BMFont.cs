@@ -4,8 +4,6 @@ namespace MyGame.Graphics;
 
 public class BMFont : IDisposable
 {
-    public bool IsDisposed { get; private set; }
-
     public BitmapFont Font;
 
     public Texture[] Textures;
@@ -25,6 +23,8 @@ public class BMFont : IDisposable
             Textures[i] = TextureUtils.PremultiplyAlpha(device, texture);
         }
     }
+
+    public bool IsDisposed { get; private set; }
 
     public void Dispose()
     {
@@ -76,7 +76,9 @@ public class BMFont : IDisposable
             var c = text[i];
 
             if (c == '\r')
+            {
                 continue;
+            }
 
             if (c == '\n')
             {
@@ -87,7 +89,9 @@ public class BMFont : IDisposable
             }
 
             if (currentChar != null)
+            {
                 offset.X += font.Spacing.X + currentChar.XAdvance;
+            }
 
             currentChar = font.Characters.ContainsKey(c) ? font.Characters[c] : font.DefaultCharacter;
 
@@ -117,10 +121,13 @@ public class BMFont : IDisposable
         {
             FirstCharacter = previous,
             SecondCharacter = current,
-            Amount = 0
+            Amount = 0,
         };
         if (!Font.Kernings.TryGetValue(kerning, out var result))
+        {
             return 0;
+        }
+
         return result;
     }
 
@@ -149,7 +156,9 @@ public class BMFont : IDisposable
         for (var i = 0; i < length; i++)
         {
             if (text[i] == '\r')
+            {
                 continue;
+            }
 
             if (text[i] == '\n')
             {

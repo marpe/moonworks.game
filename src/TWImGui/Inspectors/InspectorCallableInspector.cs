@@ -1,12 +1,12 @@
-using ImGuiNET;
+using Mochi.DearImGui;
 using MyGame.Utils;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public class InspectorCallableInspector : Inspector
+public unsafe class InspectorCallableInspector : Inspector
 {
-    private object?[] _invokeParams = Array.Empty<object>();
     private string[] _invokeParamNames = Array.Empty<string>();
+    private object?[] _invokeParams = Array.Empty<object>();
 
     public override void Initialize()
     {
@@ -50,14 +50,16 @@ public class InspectorCallableInspector : Inspector
             var invokeParam = _invokeParams[i];
             if (invokeParam is string strParam)
             {
-                if (ImGui.InputText(_invokeParamNames[i], ref strParam, 255))
+                var inputBuffer = new ImGuiInputBuffer(strParam, 255);
+
+                if (ImGui.InputText(_invokeParamNames[i], inputBuffer.Data, inputBuffer.Length))
                 {
-                    _invokeParams[i] = strParam;
+                    _invokeParams[i] = inputBuffer.ToString();
                 }
             }
             else if (invokeParam is bool boolParam)
             {
-                if (ImGui.Checkbox(_invokeParamNames[i], ref boolParam))
+                if (ImGui.Checkbox(_invokeParamNames[i], ImGuiExt.RefPtr(ref boolParam)))
                 {
                     _invokeParams[i] = boolParam;
                 }
@@ -65,14 +67,14 @@ public class InspectorCallableInspector : Inspector
             else if (invokeParam is Vector2 vectorParam)
             {
                 var asNumeric = vectorParam.ToNumerics();
-                if (ImGui.DragFloat2(_name, ref asNumeric, 1.0f, 0, 0, "%g"))
+                if (ImGui.DragFloat2(_name, ImGuiExt.RefPtr(ref asNumeric), 1.0f, 0, 0, "%g"))
                 {
                     _invokeParams[i] = asNumeric.ToXNA();
                 }
             }
             else if (invokeParam is float floatParam)
             {
-                if (ImGui.InputFloat(_invokeParamNames[i], ref floatParam))
+                if (ImGui.InputFloat(_invokeParamNames[i], ImGuiExt.RefPtr(ref floatParam), default, default, default))
                 {
                     _invokeParams[i] = floatParam;
                 }

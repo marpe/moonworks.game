@@ -6,21 +6,21 @@ namespace MyGame;
 public enum DebugDrawType
 {
     Rect,
-    Text
+    Text,
 }
 
 public class DebugDraw
 {
-    public Rectangle Rectangle;
     public Color Color;
-    public ulong UpdateCountAtDraw;
-    public string Text = "";
     public DebugDrawType DrawType = DebugDrawType.Text;
+    public Rectangle Rectangle;
+    public string Text = "";
+    public ulong UpdateCountAtDraw;
 }
 
 public class DebugDrawItems
 {
-    private List<DebugDraw> _debugDrawCalls = new();
+    private readonly List<DebugDraw> _debugDrawCalls = new();
 
     public void AddText(ReadOnlySpan<char> text, Vector2 position, Color color)
     {
@@ -39,7 +39,9 @@ public class DebugDrawItems
         for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
         {
             if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
+            {
                 _debugDrawCalls.RemoveAt(i);
+            }
         }
 
         foreach (var debugDrawCall in _debugDrawCalls)

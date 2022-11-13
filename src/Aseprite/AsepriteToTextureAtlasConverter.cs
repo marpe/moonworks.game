@@ -7,18 +7,24 @@ public static class AsepriteToTextureAtlasConverter
     private static AsepriteFile.Layer? GetParentLayer(AsepriteFile.AsepriteFrame frame, AsepriteFile.Layer layer)
     {
         if (layer.ChildLevel == 0)
+        {
             return null;
+        }
 
         var layers = frame.Layers;
         var index = layers.IndexOf(layer);
 
         if (index < 0)
+        {
             return null;
+        }
 
         for (var i = index - 1; i > 0; i--)
         {
             if (layers[i].ChildLevel == layer.ChildLevel - 1)
+            {
                 return layers[i];
+            }
         }
 
         return null;
@@ -45,8 +51,8 @@ public static class AsepriteToTextureAtlasConverter
         {
             for (var x = x0; x < x1; x++)
             {
-                var ys = (y - y0);
-                var xs = (x - x0);
+                var ys = y - y0;
+                var xs = x - x0;
                 var pixelIndex = cel.Width * ys + xs;
                 var celPixel = cel.Pixels[pixelIndex];
                 var colorIndex = startIndexInColorArr + atlasWidth * ys + xs;
@@ -55,7 +61,7 @@ public static class AsepriteToTextureAtlasConverter
                 {
                     AsepriteFile.LayerBlendMode.Normal => Texture2DBlender.BlendNormal(result[colorIndex], celPixel, opacity),
                     AsepriteFile.LayerBlendMode.Multiply => Texture2DBlender.BlendMultiply(result[colorIndex], celPixel, opacity),
-                    _ => throw new NotImplementedException()
+                    _ => throw new NotImplementedException(),
                 };
             }
         }
@@ -73,7 +79,9 @@ public static class AsepriteToTextureAtlasConverter
         {
             var layer = layers[cels[i].LayerIndex];
             if (layer.LayerName.StartsWith("@")) // ignore metadata layer
+            {
                 continue;
+            }
 
             var blendMode = (AsepriteFile.LayerBlendMode)layer.BlendMode;
             var opacity = Math.Min(layer.Opacity, cels[i].Opacity);

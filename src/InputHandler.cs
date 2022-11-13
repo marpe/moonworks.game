@@ -54,7 +54,9 @@ public struct InputState
         for (var i = 0; i < keyCodes.Length; i++)
         {
             if (inputState.KeyboardState[(int)keyCodes[i]])
+            {
                 return true;
+            }
         }
 
         return false;
@@ -71,11 +73,15 @@ public struct InputState
         for (var i = 0; i < KeyboardState.Length; i++)
         {
             if (KeyboardState[i])
+            {
                 codes.Add((KeyCode)i);
+            }
         }
 
         if (NumTextInputChars > 0 || codes.Count > 0)
+        {
             Logger.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", codes.Select(x => x.ToString()))}");
+        }
     }
 
     public static InputState Aggregate(List<InputState> inputStates)
@@ -87,7 +93,10 @@ public struct InputState
             var oldNumChars = result.NumTextInputChars;
             result.NumTextInputChars += state.NumTextInputChars;
             if (result.TextInput.Length < result.NumTextInputChars)
+            {
                 Array.Resize(ref result.TextInput, result.NumTextInputChars);
+            }
+
             for (var i = 0; i < state.NumTextInputChars; i++)
             {
                 result.TextInput[oldNumChars + i] = state.TextInput[i];
@@ -148,17 +157,11 @@ public struct InputState
 
 public class InputHandler
 {
-    /// <summary>
-    /// Number of seconds between each registered keypress when a key is being held down
-    /// </summary>
+    /// <summary>Number of seconds between each registered keypress when a key is being held down</summary>
     public const float REPEAT_DELAY = 0.03f;
 
-    /// <summary>
-    /// Number of seconds a key can be held down before being repeated
-    /// </summary>
+    /// <summary>Number of seconds a key can be held down before being repeated</summary>
     public const float INITIAL_REPEAT_DELAY = 0.5f;
-
-    private readonly MyGameMain _game;
 
     public static readonly KeyCode[] ModifierKeys =
     {
@@ -189,15 +192,13 @@ public class InputHandler
 
     public static readonly char ControlV = (char)22;
 
+    private readonly MyGameMain _game;
+
     private readonly Inputs _inputs;
 
-    public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
-
-    public int MouseWheelDelta => _inputs.Mouse.Wheel;
+    private readonly Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
 
     public List<char> TextInput = new();
-
-    private Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
 
     public InputHandler(MyGameMain game)
     {
@@ -206,9 +207,11 @@ public class InputHandler
         Inputs.TextInput += OnTextInput;
     }
 
-    /// <summary>
-    /// https://github.com/FNA-XNA/FNA/wiki/5:-FNA-Extensions#textinputext
-    /// </summary>
+    public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
+
+    public int MouseWheelDelta => _inputs.Mouse.Wheel;
+
+    /// <summary>https://github.com/FNA-XNA/FNA/wiki/5:-FNA-Extensions#textinputext</summary>
     /// <param name="c"></param>
     private void OnTextInput(char c)
     {
@@ -243,7 +246,10 @@ public class InputHandler
         if (allowRepeating)
         {
             if (!_repeatableKeys.ContainsKey(key))
+            {
                 _repeatableKeys.Add(key, new RepeatableKey());
+            }
+
             isPressed |= _repeatableKeys[key].WasRepeated;
         }
 
@@ -282,7 +288,7 @@ public class InputHandler
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsDown,
             MouseButtonCode.Right => _inputs.Mouse.RightButton.IsDown,
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsDown,
-            _ => throw new InvalidOperationException()
+            _ => throw new InvalidOperationException(),
         };
     }
 
@@ -293,7 +299,7 @@ public class InputHandler
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsHeld,
             MouseButtonCode.Right => _inputs.Mouse.RightButton.IsHeld,
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsHeld,
-            _ => throw new InvalidOperationException()
+            _ => throw new InvalidOperationException(),
         };
     }
 }

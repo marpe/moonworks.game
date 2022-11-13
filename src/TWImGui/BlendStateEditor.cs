@@ -1,8 +1,8 @@
-﻿using ImGuiNET;
+﻿using Mochi.DearImGui;
 
 namespace MyGame.TWImGui;
 
-public static class BlendStateEditor
+public static unsafe class BlendStateEditor
 {
     private static readonly string[] _blendOpNames;
     private static readonly string[] _blendFactorNames;
@@ -32,14 +32,14 @@ public static class BlendStateEditor
         ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
         ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
 
-        if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label))
+        if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label, default))
         {
             currentIndex = (items.Length + currentIndex - 1) % items.Length;
             result = true;
         }
 
         ImGui.SameLine(0, 0);
-        if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label))
+        if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label, default))
         {
             currentIndex = (items.Length + currentIndex + 1) % items.Length;
             result = true;
@@ -48,7 +48,8 @@ public static class BlendStateEditor
         ImGui.PopStyleColor(3);
 
         ImGui.SameLine();
-        result |= ImGui.Combo(label, ref currentIndex, items, items.Length);
+        var itemsByZero = string.Join('0', items);
+        result |= ImGui.Combo(label, ImGuiExt.RefPtr(ref currentIndex), itemsByZero, items.Length);
 
         return result;
     }
@@ -64,7 +65,7 @@ public static class BlendStateEditor
         var sourceAlphaBlendFactorIndex = (int)state.SourceAlphaBlendFactor;
         var blendEnabled = state.BlendEnable;
         var prevState = state;
-        ImGui.Checkbox("Enabled", ref blendEnabled);
+        ImGui.Checkbox("Enabled", ImGuiExt.RefPtr(ref blendEnabled));
         ComboStep("AlphaOp", ref alphaBlendOpIndex, _blendOpNames);
         ComboStep("ColorOp", ref colorBlendOpIndex, _blendOpNames);
         ComboStep("SourceColor", ref sourceColorBlendFactorIndex, _blendFactorNames);
@@ -79,21 +80,21 @@ public static class BlendStateEditor
         state.DestinationColorBlendFactor = (BlendFactor)destColorBlendFactorIndex;
         state.DestinationAlphaBlendFactor = (BlendFactor)destAlphaBlendFactorIndex;
         /// Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
-        ImGui.Text($"sourceColor * {state.SourceColorBlendFactor} + destColor * {state.DestinationColorBlendFactor}");
-        ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor} + destAlpha * {state.DestinationAlphaBlendFactor}");
-        if (ImGui.Button("AlphaBlend"))
+        ImGui.Text($"sourceColor * {state.SourceColorBlendFactor.ToString()} + destColor * {state.DestinationColorBlendFactor.ToString()}");
+        ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor.ToString()} + destAlpha * {state.DestinationAlphaBlendFactor.ToString()}");
+        if (ImGui.Button("AlphaBlend", default))
         {
             state = ColorAttachmentBlendState.AlphaBlend;
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("NonPremultiplied"))
+        if (ImGui.Button("NonPremultiplied", default))
         {
             state = ColorAttachmentBlendState.NonPremultiplied;
         }
 
         ImGui.SameLine();
-        if (ImGui.Button("Opaque"))
+        if (ImGui.Button("Opaque", default))
         {
             state = ColorAttachmentBlendState.Opaque;
         }

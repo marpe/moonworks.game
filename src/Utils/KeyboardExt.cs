@@ -7,7 +7,9 @@ public static class KeyboardExt
         for (var i = 0; i < codes.Length; i++)
         {
             if (keyboard.IsDown(codes[i]))
+            {
                 return true;
+            }
         }
 
         return false;

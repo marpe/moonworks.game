@@ -2,7 +2,6 @@ using MoonWorks.Graphics.Font;
 using MyGame.Graphics;
 using MyGame.TWImGui;
 using MyGame.Utils;
-using WellspringCS;
 using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
 using AlignV = WellspringCS.Wellspring.VerticalAlignment;
 
@@ -46,22 +45,19 @@ public struct FancyTextPart
 
 public class FancyTextComponent
 {
-    [Inspectable] public readonly FancyTextPart[] Parts = Array.Empty<FancyTextPart>();
-
-    [Range(0f, 1f, .01f)] public float Alpha = 1f;
-    public AlignH AlignH { get; set; } = AlignH.Center;
-    public AlignV AlignV { get; set; } = AlignV.Middle;
-
     public static float ShakeSpeed = 100f;
     public static float ShakeAmount = 1f;
 
-    public float Timer;
-
     private readonly char[] _strippedText;
-    
-    public float Rotation;
+    [Inspectable] public readonly FancyTextPart[] Parts = Array.Empty<FancyTextPart>();
+
+    [Range(0f, 1f, .01f)] public float Alpha = 1f;
     public Vector2 Position;
+
+    public float Rotation;
     public Vector2 Scale = Vector2.One;
+
+    public float Timer;
 
     public FancyTextComponent(ReadOnlySpan<char> rawText)
     {
@@ -70,6 +66,9 @@ public class FancyTextComponent
         Parts = parts;
     }
 
+    public AlignH AlignH { get; set; } = AlignH.Center;
+    public AlignV AlignV { get; set; } = AlignV.Middle;
+
     public static Vector2 GetAlignVector(AlignH horizontal, AlignV vertical)
     {
         var originX = horizontal switch
@@ -77,7 +76,7 @@ public class FancyTextComponent
             AlignH.Left => 0,
             AlignH.Center => .5f,
             AlignH.Right => 1,
-            _ => 0
+            _ => 0,
         };
 
         var originY = vertical switch
@@ -85,7 +84,7 @@ public class FancyTextComponent
             AlignV.Top => 0,
             AlignV.Middle => .5f,
             AlignV.Bottom => 1f,
-            _ => 0
+            _ => 0,
         };
 
         return new Vector2(originX, originY);
@@ -232,7 +231,7 @@ public class FancyTextComponent
             var color = MultiplyAlpha(part.Color, Alpha, part.Alpha);
 
             var partOffset = part.Offset * charSize;
-            var partPos = - origin + shakeOffset + waveOffset + partOffset;
+            var partPos = -origin + shakeOffset + waveOffset + partOffset;
             var partOrigin = charSize / 2;
             var finalPos = partOrigin + Position + Vector2.Transform(partPos * Scale, rotation);
 
@@ -243,16 +242,21 @@ public class FancyTextComponent
 
     private static int CountLines(ReadOnlySpan<char> text)
     {
-        int numLines = 0;
-        for(var i = 0; i < text.Length; i++)
+        var numLines = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
             if (text[i] == '\n')
+            {
                 numLines++;
+            }
+        }
+
         return numLines;
     }
 
     private static Color MultiplyAlpha(Color color, float partAlpha, float mainAlpha)
     {
-        return color * (partAlpha * mainAlpha); 
+        return color * (partAlpha * mainAlpha);
         var a = Convert.ToByte(mainAlpha * partAlpha * 255);
         var r = (byte)(color.R * color.A / 255f);
         var g = (byte)(color.G * color.A / 255f);

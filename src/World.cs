@@ -23,26 +23,18 @@ public class World
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
-    private LdtkJson LdtkRaw;
-    private Dictionary<long, Texture> TilesetTextures;
-    private Dictionary<string, Texture> Textures = new();
-    public Point WorldSize;
-
-    private static JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
-
-    private List<Enemy> _enemies;
-    public List<Enemy> Enemies => _enemies;
-    
-    private Player _player;
-    public Player Player => _player;
-
-    public float Gravity = 800f;
+    private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private readonly GameScreen _parent;
 
-    private DebugDrawItems _debugDraw;
+    private readonly DebugDrawItems _debugDraw;
 
-    public long GridSize => LdtkRaw.DefaultGridSize;
+    public float Gravity = 800f;
+
+    private readonly LdtkJson LdtkRaw;
+    private readonly Dictionary<string, Texture> Textures = new();
+    private readonly Dictionary<long, Texture> TilesetTextures;
+    public Point WorldSize;
 
     public World(GameScreen parent, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -52,7 +44,7 @@ public class World
         TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
         WorldSize = GetWorldSize(LdtkRaw);
 
-        _debugDraw = new();
+        _debugDraw = new DebugDrawItems();
 
         foreach (var entityDef in LdtkRaw.Defs.Entities)
         {
@@ -92,10 +84,16 @@ public class World
             }
         }
 
-        _player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
-        _parent.CameraController.TrackEntity(_player);
-        _enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
+        Player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
+        _parent.CameraController.TrackEntity(Player);
+        Enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
     }
+
+    public List<Enemy> Enemies { get; }
+
+    public Player Player { get; }
+
+    public long GridSize => LdtkRaw.DefaultGridSize;
 
     private static List<Entity> LoadEntitiesInLevel(Level level)
     {
@@ -103,7 +101,9 @@ public class World
         foreach (var layer in level.LayerInstances)
         {
             if (layer.Type != "Entities")
+            {
                 continue;
+            }
 
             foreach (var entityInstance in layer.EntityInstances)
             {
@@ -136,11 +136,11 @@ public class World
 
     private void UpdatePrevious()
     {
-        _player.PreviousPosition = _player.Position;
+        Player.PreviousPosition = Player.Position;
 
-        for (var i = 0; i < _enemies.Count; i++)
+        for (var i = 0; i < Enemies.Count; i++)
         {
-            var entity = _enemies[i];
+            var entity = Enemies[i];
             entity.PreviousPosition = entity.Position;
         }
     }
@@ -149,7 +149,9 @@ public class World
     {
         UpdatePrevious();
         if (isPaused)
+        {
             return;
+        }
 
         UpdatePlayer(deltaSeconds, input, allowKeyboard);
         UpdateEnemies(deltaSeconds);
@@ -157,9 +159,9 @@ public class World
 
     private void UpdateEnemies(float deltaSeconds)
     {
-        for (var i = 0; i < _enemies.Count; i++)
+        for (var i = 0; i < Enemies.Count; i++)
         {
-            var entity = _enemies[i];
+            var entity = Enemies[i];
 
             entity.TotalTime += deltaSeconds;
 
@@ -167,28 +169,43 @@ public class World
             {
                 var (cell, cellRel) = GetGridCoords(entity);
                 if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1) && cellRel.X > 0.9f)
+                {
                     entity.Velocity.X *= -1;
+                }
                 else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1) && cellRel.X < 0.1f)
+                {
                     entity.Velocity.X *= -1;
+                }
 
                 var prevVelocity = entity.Velocity.Delta;
                 var collisions = HandleCollisions(entity, entity.Velocity, deltaSeconds);
 
                 entity.Position += entity.Velocity * deltaSeconds;
                 if ((collisions & CollisionDir.Left) != 0)
+                {
                     entity.Velocity.Delta = new Vector2(50f, 0);
+                }
                 else if ((collisions & CollisionDir.Right) != 0)
+                {
                     entity.Velocity.Delta = new Vector2(-50f, 0);
+                }
 
                 Velocity.ApplyFriction(entity.Velocity);
 
                 if (entity.Velocity.X > 0)
+                {
                     entity.Flip = SpriteFlip.None;
+                }
                 else if (entity.Velocity.X < 0)
+                {
                     entity.Flip = SpriteFlip.FlipHorizontally;
+                }
 
                 if (!IsGrounded(entity, entity.Velocity))
+                {
                     entity.Velocity.Y += Gravity * deltaSeconds;
+                }
+
                 if (Math.Abs(entity.Velocity.X) < 25f)
                 {
                     entity.Velocity.X += entity.Velocity.X;
@@ -202,9 +219,13 @@ public class World
                 entity.Position += entity.Velocity * deltaSeconds;
 
                 if (entity.Velocity.X > 0)
+                {
                     entity.Flip = SpriteFlip.None;
+                }
                 else if (entity.Velocity.X < 0)
+                {
                     entity.Flip = SpriteFlip.FlipHorizontally;
+                }
             }
         }
     }
@@ -216,70 +237,82 @@ public class World
         var isJumpDown = allowKeyboard && input.IsKeyDown(KeyCode.Space);
         var isJumpPressed = allowKeyboard && input.IsKeyPressed(KeyCode.Space);
 
-        if (_player.Position.Y > 300)
+        if (Player.Position.Y > 300)
         {
-            _player.SetPositions(_player.InitialPosition);
+            Player.SetPositions(Player.InitialPosition);
         }
 
-        _player.TotalTime += deltaSeconds;
-        _player.FrameIndex = MathF.IsNearZero(_player.Velocity.X) ? 0 : (uint)(_player.TotalTime * 10) % 2;
+        Player.TotalTime += deltaSeconds;
+        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X) ? 0 : (uint)(Player.TotalTime * 10) % 2;
 
-        if (IsGrounded(_player, _player.Velocity))
-            _player.LastOnGroundTime = _player.TotalTime;
+        if (IsGrounded(Player, Player.Velocity))
+        {
+            Player.LastOnGroundTime = Player.TotalTime;
+        }
 
         if (movementX != 0)
-            _player.Velocity.X += movementX * _player.Speed;
-
-        if (!_player.IsJumping && isJumpPressed)
         {
-            var timeSinceOnGround = _player.TotalTime - _player.LastOnGroundTime;
+            Player.Velocity.X += movementX * Player.Speed;
+        }
+
+        if (!Player.IsJumping && isJumpPressed)
+        {
+            var timeSinceOnGround = Player.TotalTime - Player.LastOnGroundTime;
             if (timeSinceOnGround < 0.1f)
             {
-                _player.Squash = new Vector2(0.6f, 1.4f);
-                _player.LastOnGroundTime = 0;
-                _player.Velocity.Y = _player.JumpSpeed;
-                _player.LastJumpStartTime = _player.TotalTime;
-                _player.IsJumping = true;
+                Player.Squash = new Vector2(0.6f, 1.4f);
+                Player.LastOnGroundTime = 0;
+                Player.Velocity.Y = Player.JumpSpeed;
+                Player.LastJumpStartTime = Player.TotalTime;
+                Player.IsJumping = true;
             }
         }
 
-        if (_player.IsJumping)
+        if (Player.IsJumping)
         {
             if (!isJumpDown)
             {
-                _player.IsJumping = false;
+                Player.IsJumping = false;
             }
             else
             {
-                var timeAirborne = _player.TotalTime - _player.LastJumpStartTime;
-                if (timeAirborne > _player.JumpHoldTime)
-                    _player.IsJumping = false;
+                var timeAirborne = Player.TotalTime - Player.LastJumpStartTime;
+                if (timeAirborne > Player.JumpHoldTime)
+                {
+                    Player.IsJumping = false;
+                }
             }
         }
 
-        var collisions = HandleCollisions(_player, _player.Velocity, deltaSeconds);
+        var collisions = HandleCollisions(Player, Player.Velocity, deltaSeconds);
         if ((collisions & CollisionDir.Down) == CollisionDir.Down)
         {
-            _player.Squash = new Vector2(1.5f, 0.5f);
+            Player.Squash = new Vector2(1.5f, 0.5f);
         }
 
         if ((collisions & CollisionDir.Top) == CollisionDir.Top)
         {
-            _player.IsJumping = false;
+            Player.IsJumping = false;
         }
 
-        _player.Position += _player.Velocity * deltaSeconds;
+        Player.Position += Player.Velocity * deltaSeconds;
 
-        Velocity.ApplyFriction(_player.Velocity);
-        if (_player.Velocity.X > 0)
-            _player.Flip = SpriteFlip.None;
-        else if (_player.Velocity.X < 0)
-            _player.Flip = SpriteFlip.FlipHorizontally;
+        Velocity.ApplyFriction(Player.Velocity);
+        if (Player.Velocity.X > 0)
+        {
+            Player.Flip = SpriteFlip.None;
+        }
+        else if (Player.Velocity.X < 0)
+        {
+            Player.Flip = SpriteFlip.FlipHorizontally;
+        }
 
-        if (!IsGrounded(_player, _player.Velocity) && !_player.IsJumping)
-            _player.Velocity.Y += Gravity * deltaSeconds;
+        if (!IsGrounded(Player, Player.Velocity) && !Player.IsJumping)
+        {
+            Player.Velocity.Y += Gravity * deltaSeconds;
+        }
 
-        _player.Squash = Vector2.SmoothStep(_player.Squash, Vector2.One, deltaSeconds * 20f);
+        Player.Squash = Vector2.SmoothStep(Player.Squash, Vector2.One, deltaSeconds * 20f);
     }
 
     private void HandleInput(InputHandler input, bool allowKeyboard, out int movementX)
@@ -288,15 +321,21 @@ public class World
         if (allowKeyboard)
         {
             if (input.IsKeyPressed(KeyCode.Insert))
-                _player.Position = new Vector2(100, 50);
+            {
+                Player.Position = new Vector2(100, 50);
+            }
 
             if (input.IsKeyDown(KeyCode.Right) ||
                 input.IsKeyDown(KeyCode.D))
+            {
                 movementX += 1;
+            }
 
             if (input.IsKeyDown(KeyCode.Left) ||
                 input.IsKeyDown(KeyCode.A))
+            {
                 movementX += -1;
+            }
         }
     }
 
@@ -310,7 +349,7 @@ public class World
     {
         var result = CollisionDir.None;
 
-        var deltaMove = (velocity * deltaSeconds) / GridSize;
+        var deltaMove = velocity * deltaSeconds / GridSize;
         var (cell, cellRel) = GetGridCoords(entity);
 
         var resultCellPos = cellRel + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
@@ -368,7 +407,9 @@ public class World
         for (var i = 0; i < LdtkRaw.Defs.Layers.Length; i++)
         {
             if (LdtkRaw.Defs.Layers[i].Uid == layerDefUid)
+            {
                 return LdtkRaw.Defs.Layers[i];
+            }
         }
 
         throw new InvalidOperationException();
@@ -384,19 +425,30 @@ public class World
             foreach (var layer in level.LayerInstances)
             {
                 if (layer.Identifier != "Tiles")
+                {
                     continue;
+                }
+
                 if (layer.Type != "IntGrid")
+                {
                     continue;
+                }
+
                 var layerDef = GetLayerDefinition(layer.LayerDefUid);
                 var levelMin = level.Position / (int)layerDef.GridSize;
                 var levelMax = levelMin + level.Size / (int)layerDef.GridSize;
                 if (x < levelMin.X || y < levelMin.Y ||
                     x >= levelMax.X || y >= levelMax.Y)
+                {
                     continue;
+                }
+
                 var gridCoords = new Point(x - levelMin.X, y - levelMin.Y);
                 var value = layer.IntGridCsv[gridCoords.Y * layer.CWid + gridCoords.X];
                 if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
+                {
                     return true;
+                }
             }
         }
 
@@ -430,25 +482,29 @@ public class World
         }
 
         if (Debug)
+        {
             renderer.DrawRect(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
+        }
 
         // DrawDebug(renderer, _player);
 
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         {
-            var srcRect = new Rectangle((int)(_player.FrameIndex * 16), 0, 16, 16);
-            var position = Vector2.Lerp(_player.PreviousPosition, _player.Position, (float)alpha);
-            var xform = Matrix3x2.CreateTranslation(-_player.Origin.X, -_player.Origin.Y) *
-                        Matrix3x2.CreateScale(_player.EnableSquash ? _player.Squash : Vector2.One) *
+            var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
+            var position = Vector2.Lerp(Player.PreviousPosition, Player.Position, (float)alpha);
+            var xform = Matrix3x2.CreateTranslation(-Player.Origin.X, -Player.Origin.Y) *
+                        Matrix3x2.CreateScale(Player.EnableSquash ? Player.Squash : Vector2.One) *
                         Matrix3x2.CreateTranslation(position.X, position.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, _player.Flip);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
             if (Debug)
-                DrawDebug(renderer, _player, alpha);
+            {
+                DrawDebug(renderer, Player, alpha);
+            }
         }
 
-        for (var i = 0; i < _enemies.Count; i++)
+        for (var i = 0; i < Enemies.Count; i++)
         {
-            var entity = _enemies[i];
+            var entity = Enemies[i];
 
             var offset = entity.Type switch
             {
@@ -463,11 +519,15 @@ public class World
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
+            {
                 DrawDebug(renderer, entity, alpha);
+            }
         }
 
         if (Debug)
+        {
             _debugDraw.Render(renderer);
+        }
 
         if (Debug)
         {
@@ -479,7 +539,9 @@ public class World
     private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
     {
         if (!layer.TilesetDefUid.HasValue)
+        {
             return;
+        }
 
         var texture = TilesetTextures[layer.TilesetDefUid.Value];
 
@@ -515,9 +577,12 @@ public class World
         {
             var tile = layer.GridTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if ((tilePos.X + layer.GridSize) < boundsMin.X || (tilePos.Y + layer.GridSize) < boundsMin.Y ||
+            if (tilePos.X + layer.GridSize < boundsMin.X || tilePos.Y + layer.GridSize < boundsMin.Y ||
                 tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
+            {
                 continue;
+            }
+
             RenderTile(renderer, tilePos, tile, layer, texture);
         }
 
@@ -525,9 +590,12 @@ public class World
         {
             var tile = layer.AutoLayerTiles[i];
             var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if ((tilePos.X + layer.GridSize) < boundsMin.X || (tilePos.Y + layer.GridSize) < boundsMin.Y ||
+            if (tilePos.X + layer.GridSize < boundsMin.X || tilePos.Y + layer.GridSize < boundsMin.Y ||
                 tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
+            {
                 continue;
+            }
+
             RenderTile(renderer, tilePos, tile, layer, texture);
         }
 
@@ -568,11 +636,11 @@ public class World
         var lerpMin = Vector2.Lerp(prevMin, min, (float)alpha);
 
         renderer.DrawRect(lerpMin, lerpMin + e.Size, e.SmartColor, 1.0f);
-        renderer.DrawRect(new Rectangle((int)lerpMin.X, (int)lerpMin.Y, 1, 1), e.SmartColor, 0);
+        renderer.DrawRect(new Rectangle((int)lerpMin.X, (int)lerpMin.Y, 1, 1), e.SmartColor);
         var (cell, cellRel) = GetGridCoords(e);
         var cellInScreen = cell * (int)GridSize;
-        renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor, 0);
-        renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor, 0);
+        renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
+        renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
@@ -592,8 +660,15 @@ public class World
         for (var i = 0; i < levels.Length; i++)
         {
             var max = levels[i].Position + levels[i].Size;
-            if (worldSize.X < max.X) worldSize.X = max.X;
-            if (worldSize.Y < max.Y) worldSize.Y = max.Y;
+            if (worldSize.X < max.X)
+            {
+                worldSize.X = max.X;
+            }
+
+            if (worldSize.Y < max.Y)
+            {
+                worldSize.Y = max.Y;
+            }
         }
 
         return worldSize;
@@ -607,7 +682,10 @@ public class World
         foreach (var tilesetDef in tilesets)
         {
             if (string.IsNullOrWhiteSpace(tilesetDef.RelPath))
+            {
                 continue;
+            }
+
             var tilesetPath = Path.Combine(Path.GetDirectoryName(ldtkPath).ToString(), tilesetDef.RelPath);
             if (tilesetPath.EndsWith(".aseprite"))
             {

@@ -1,8 +1,6 @@
 namespace MyGame.TWImGui;
 
-/// <summary>
-/// Attribute that is used to indicate that the field/property should be present in the inspector
-/// </summary>
+/// <summary>Attribute that is used to indicate that the field/property should be present in the inspector</summary>
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class InspectableAttribute : Attribute
 {
@@ -11,38 +9,38 @@ public class InspectableAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method)]
 public class InspectorCallableAttribute : Attribute
 {
-	public readonly string? Label;
+    public readonly string? Label;
 
-	public InspectorCallableAttribute()
-	{
-	}
+    public InspectorCallableAttribute()
+    {
+    }
 
-	public InspectorCallableAttribute(string label)
-	{
-		Label = label;
-	}
+    public InspectorCallableAttribute(string label)
+    {
+        Label = label;
+    }
 }
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class HideInInspectorAttribute : Attribute
 {
-	public readonly Predicate<object?>? Condition;
+    public readonly Predicate<object?>? Condition;
 
-	public HideInInspectorAttribute()
-	{
-	}
+    public HideInInspectorAttribute()
+    {
+    }
 
-	public HideInInspectorAttribute(Predicate<object?> condition)
-	{
-		Condition = condition;
-	}
+    public HideInInspectorAttribute(Predicate<object?> condition)
+    {
+        Condition = condition;
+    }
 }
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class RangeAttribute : Attribute
 {
-    public float MinValue;
     public float MaxValue;
+    public float MinValue;
     public float StepSize;
     public bool UseDragVersion;
 
@@ -59,6 +57,7 @@ public class RangeAttribute : Attribute
 public class StepSizeAttribute : Attribute
 {
     public float StepSize;
+
     public StepSizeAttribute(float stepSize)
     {
         StepSize = stepSize;
@@ -68,35 +67,35 @@ public class StepSizeAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property)]
 public class CustomInspectorAttribute : Attribute
 {
-	public Type InspectorType;
+    public Type InspectorType;
 
-	public CustomInspectorAttribute(Type inspectorType)
-	{
-		InspectorType = inspectorType;
-	}
+    public CustomInspectorAttribute(Type inspectorType)
+    {
+        InspectorType = inspectorType;
+    }
 }
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method)]
 public class CustomDrawInspectorAttribute : Attribute
 {
-	public string? MethodName;
+    public string? MethodName;
 
-	public CustomDrawInspectorAttribute()
-	{
-	}
+    public CustomDrawInspectorAttribute()
+    {
+    }
 
-	public CustomDrawInspectorAttribute(string methodName)
-	{
-		MethodName = methodName;
-	}
+    public CustomDrawInspectorAttribute(string methodName)
+    {
+        MethodName = methodName;
+    }
 }
 
 public class MenuItemAttribute : Attribute
 {
-	public string MenuPath;
+    public string MenuPath;
 
-	public MenuItemAttribute(string menuPath)
-	{
-		MenuPath = menuPath;
-	}
+    public MenuItemAttribute(string menuPath)
+    {
+        MenuPath = menuPath;
+    }
 }

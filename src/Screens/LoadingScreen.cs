@@ -14,30 +14,21 @@ public enum TransitionState
 
 public class LoadingScreen
 {
-    private TransitionState _state = TransitionState.Hidden;
-    public TransitionState State => _state;
-
     private readonly Sprite _backgroundSprite;
     private readonly Sprite _blankSprite;
 
-    private MyGameMain _game;
-
-    private Texture? _copyRender;
-    private bool _shouldCopyRender;
-
     private Action? _callback;
 
-    private float _progress = 0;
-    private SceneTransition _sceneTransition = new FadeToBlack();
-    private SceneTransition _diamondTransition;
-    private float _transitionSpeed = 2.0f;
+    private Texture? _copyRender;
+    private readonly SceneTransition _diamondTransition;
+
+    private readonly MyGameMain _game;
     private float _previousProgress;
 
-    [ConsoleHandler("load", "Load a level")]
-    public static void TestLoad()
-    {
-        Shared.Game.LoadingScreen.StartLoad(() => { Thread.Sleep(1000); });
-    }
+    private float _progress = 0;
+    private readonly SceneTransition _sceneTransition = new FadeToBlack();
+    private bool _shouldCopyRender;
+    private readonly float _transitionSpeed = 2.0f;
 
     public LoadingScreen(MyGameMain game)
     {
@@ -55,45 +46,53 @@ public class LoadingScreen
         _sceneTransition = _diamondTransition;
     }
 
+    public TransitionState State { get; private set; } = TransitionState.Hidden;
+
+    [ConsoleHandler("load", "Load a level")]
+    public static void TestLoad()
+    {
+        Shared.Game.LoadingScreen.StartLoad(() => { Thread.Sleep(1000); });
+    }
+
     public void StartLoad(Action loadMethod)
     {
-        if (_state != TransitionState.Hidden)
+        if (State != TransitionState.Hidden)
         {
             Logger.LogError("Loading is already in progress");
             return;
         }
 
         _shouldCopyRender = true;
-        _state = TransitionState.TransitionOn;
+        State = TransitionState.TransitionOn;
         _callback = loadMethod;
     }
 
     public void Update(float deltaSeconds)
     {
         _previousProgress = _progress;
-        if (_state == TransitionState.TransitionOn)
+        if (State == TransitionState.TransitionOn)
         {
             _progress += _transitionSpeed * deltaSeconds;
 
             if (_progress >= 1.0f)
             {
                 _progress = 1.0f;
-                _state = TransitionState.Active;
+                State = TransitionState.Active;
 
                 Task.Run(() =>
                 {
                     _callback?.Invoke();
-                    _state = TransitionState.TransitionOff;
+                    State = TransitionState.TransitionOff;
                 });
             }
         }
-        else if (_state == TransitionState.TransitionOff)
+        else if (State == TransitionState.TransitionOff)
         {
             _progress -= _transitionSpeed * deltaSeconds;
             if (_progress <= 0)
             {
                 _progress = 0;
-                _state = TransitionState.Hidden;
+                State = TransitionState.Hidden;
 
                 _copyRender = null;
                 _callback = null;
@@ -103,22 +102,24 @@ public class LoadingScreen
 
     public void Draw(Renderer renderer, double alpha)
     {
-        if (_state == TransitionState.Hidden)
+        if (State == TransitionState.Hidden)
+        {
             return;
+        }
 
         var swap = renderer.SwapTexture;
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
 
         if (_shouldCopyRender)
         {
-            Logger.LogInfo($"Copying render...");
+            Logger.LogInfo("Copying render...");
             renderer.FlushBatches();
             _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderer.SwapTexture);
             renderer.CommandBuffer.CopyTextureToTexture(renderer.SwapTexture, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
         }
 
-        if (_copyRender != null && (_state is TransitionState.TransitionOn or TransitionState.Active))
+        if (_copyRender != null && State is TransitionState.TransitionOn or TransitionState.Active)
         {
             renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
         }

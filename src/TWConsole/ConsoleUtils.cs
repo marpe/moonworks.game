@@ -1,5 +1,4 @@
 using System.Globalization;
-using Vector2 = MoonWorks.Math.Float.Vector2;
 
 namespace MyGame.TWConsole;
 
@@ -10,21 +9,21 @@ public interface IStringParser
 
 public class StringParser<T> : IStringParser where T : notnull
 {
-    private Func<Type, string, T> _parser;
+    private readonly Func<Type, string, T> _parser;
 
     public StringParser(Func<Type, string, T> parser)
     {
         _parser = parser;
     }
 
-    public T Parse(string value)
-    {
-        return _parser(typeof(T), value);
-    }
-
     public object Parse(Type type, string value)
     {
         return Parse(value);
+    }
+
+    public T Parse(string value)
+    {
+        return _parser(typeof(T), value);
     }
 }
 
@@ -35,7 +34,7 @@ public static class ConsoleUtils
         { "true", true },
         { "1", true },
         { "false", false },
-        { "0", false }
+        { "0", false },
     };
 
     private static readonly Dictionary<Type, string> _typeDisplayNames = new()
@@ -83,7 +82,7 @@ public static class ConsoleUtils
         _parsers.Add(typeof(Point), new StringParser<Point>((_, str) => ParsePoint(str)));
         _parsers.Add(typeof(Enum), new StringParser<Enum>((type, str) => ParseEnum(type, str)));
     }
-    
+
     public static string GetDisplayName(Type type)
     {
         if (_typeDisplayNames.ContainsKey(type))
@@ -92,7 +91,10 @@ public static class ConsoleUtils
         }
 
         if (type.DeclaringType != null)
+        {
             return type.DeclaringType.Name + "." + type.Name;
+        }
+
         return type.Name;
     }
 
@@ -115,10 +117,14 @@ public static class ConsoleUtils
     {
         var t = typeof(T);
         if (t.IsEnum)
+        {
             return Enum.Parse<T>(strValue, true);
+        }
 
         if (!_parsers.ContainsKey(t))
+        {
             throw new InvalidOperationException($"Cannot parse {GetDisplayName(t)}.");
+        }
 
         var parser = (StringParser<T>)_parsers[t];
         return parser.Parse(strValue);
@@ -127,7 +133,9 @@ public static class ConsoleUtils
     public static object ParseArg(Type type, string strValue)
     {
         if (!_parsers.ContainsKey(type))
+        {
             throw new InvalidOperationException($"Cannot parse {GetDisplayName(type)}.");
+        }
 
         return _parsers[type].Parse(type, strValue);
     }
@@ -144,7 +152,7 @@ public static class ConsoleUtils
 
         return new Point(parsed[0], parsed[1]);
     }
-    
+
     private static Vector2 ParseVector2(string strValues)
     {
         var splitBy = strValues.Contains(',') ? ',' : ' ';
@@ -154,6 +162,7 @@ public static class ConsoleUtils
         {
             parsed[i] = Parse<float>(xy[i]);
         }
+
         return new Vector2(parsed[0], parsed[1]);
     }
 
@@ -200,7 +209,7 @@ public static class ConsoleUtils
         var inQuotes = false;
         var splitStart = 0;
 
-        for (int i = 0; i < text.Length; i++)
+        for (var i = 0; i < text.Length; i++)
         {
             if (text[i] == '"')
             {
@@ -237,10 +246,14 @@ public static class ConsoleUtils
     public static string ConvertToString<T>(T value)
     {
         if (value is null)
+        {
             return "null";
+        }
 
         if (value is string strValue)
+        {
             return strValue;
+        }
 
         if (value is Color c)
         {
@@ -252,11 +265,15 @@ public static class ConsoleUtils
         }
 
         if (value is Point p)
+        {
             return $"{p.X}, {p.Y}";
+        }
 
         if (value is Vector2 v)
+        {
             return $"{v.X}, {v.Y}";
-        
+        }
+
         return Convert.ToString(value, CultureInfo.InvariantCulture)?.ToLower() ?? string.Empty;
     }
 }

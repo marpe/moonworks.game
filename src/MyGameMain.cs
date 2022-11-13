@@ -1,4 +1,4 @@
-using ImGuiNET;
+using Mochi.DearImGui;
 using MyGame.Graphics;
 using MyGame.Screens;
 using SDL2;
@@ -10,32 +10,22 @@ public class MyGameMain : Game
     public const string ContentRoot = "Content";
     private const int TARGET_TIMESTEP = 120;
 
-    public ulong UpdateCount { get; private set; }
-    public ulong DrawCount { get; private set; }
-    public float TotalElapsedTime { get; private set; }
-    public float ElapsedTime { get; private set; }
-
-    private ImGuiScreen? _imGuiScreen;
-    private readonly ConsoleScreen _consoleScreen;
-    public ConsoleScreen ConsoleScreen => _consoleScreen;
-
-    private readonly GameScreen _gameScreen;
-    public GameScreen GameScreen => _gameScreen;
-
     private readonly MenuScreen _menuScreen;
 
-    public readonly Renderer Renderer;
-
     public readonly InputHandler InputHandler;
-
-    private Stopwatch _stopwatch;
     public readonly LoadingScreen LoadingScreen;
+
+    public readonly Renderer Renderer;
+    private double _drawFps;
+
+    private ImGuiScreen? _imGuiScreen;
 
     private double _nextFPSUpdate = 1.0;
     private ulong _prevDrawCount;
     private ulong _prevUpdateCount;
+
+    private readonly Stopwatch _stopwatch;
     private double _updateFps;
-    private double _drawFps;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -56,14 +46,22 @@ public class MyGameMain : Game
         Renderer = new Renderer(this);
         Renderer.DefaultClearColor = Color.Black;
 
-        _gameScreen = new GameScreen(this);
+        GameScreen = new GameScreen(this);
         _menuScreen = new MenuScreen(this);
-        _consoleScreen = new ConsoleScreen(this);
+        ConsoleScreen = new ConsoleScreen(this);
 
         Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
 
         Logger.LogInfo($"Game Loaded in {_stopwatch.ElapsedMilliseconds} ms");
     }
+
+    public ulong UpdateCount { get; private set; }
+    public ulong DrawCount { get; private set; }
+    public float TotalElapsedTime { get; private set; }
+    public float ElapsedTime { get; private set; }
+    public ConsoleScreen ConsoleScreen { get; }
+
+    public GameScreen GameScreen { get; }
 
 
     protected override void Update(TimeSpan dt)
@@ -91,10 +89,10 @@ public class MyGameMain : Game
 
         if (doUpdate)
         {
-            _consoleScreen.Update(ElapsedTime);
+            ConsoleScreen.Update(ElapsedTime);
 
-            var allowKeyboardInput = _consoleScreen.IsHidden;
-            var allowMouseInput = _consoleScreen.IsHidden;
+            var allowKeyboardInput = ConsoleScreen.IsHidden;
+            var allowMouseInput = ConsoleScreen.IsHidden;
 
             _menuScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
 
@@ -104,21 +102,29 @@ public class MyGameMain : Game
                 allowMouseInput = false;
             }
 
-            if (_imGuiScreen != null)
+            unsafe
             {
-                _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
-                if (!ImGuiScreen.IsHidden)
+                if (_imGuiScreen != null)
                 {
-                    var io = ImGui.GetIO();
-                    if (io.WantCaptureKeyboard)
-                        allowKeyboardInput = false;
-                    if (io.WantCaptureMouse)
-                        allowMouseInput = false;
+                    _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+                    if (!ImGuiScreen.IsHidden)
+                    {
+                        var io = ImGui.GetIO();
+                        if (io->WantCaptureKeyboard)
+                        {
+                            allowKeyboardInput = false;
+                        }
+
+                        if (io->WantCaptureMouse)
+                        {
+                            allowMouseInput = false;
+                        }
+                    }
                 }
             }
 
             var isPaused = !_menuScreen.IsHidden;
-            _gameScreen.Update(isPaused, ElapsedTime, allowKeyboardInput, allowMouseInput);
+            GameScreen.Update(isPaused, ElapsedTime, allowKeyboardInput, allowMouseInput);
         }
 
 
@@ -129,20 +135,24 @@ public class MyGameMain : Game
     protected override void Draw(double alpha)
     {
         if (MainWindow.IsMinimized)
+        {
             return;
+        }
 
         DrawCount++;
 
         if (!Renderer.BeginFrame())
+        {
             return;
+        }
 
-        _gameScreen.Draw(Renderer, alpha);
+        GameScreen.Draw(Renderer, alpha);
 
         _imGuiScreen?.Draw(Renderer);
 
         _menuScreen.Draw(Renderer, alpha);
 
-        _consoleScreen.Draw(Renderer, alpha);
+        ConsoleScreen.Draw(Renderer, alpha);
 
         LoadingScreen.Draw(Renderer, alpha);
 
@@ -155,9 +165,9 @@ public class MyGameMain : Game
     {
         _imGuiScreen?.Destroy();
 
-        _gameScreen.Unload();
+        GameScreen.Unload();
 
-        _consoleScreen.Unload();
+        ConsoleScreen.Unload();
 
         Renderer.Unload();
 

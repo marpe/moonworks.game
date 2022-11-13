@@ -1,12 +1,22 @@
 // See: http://wwwimages.adobe.com/www.adobe.com/content/dam/Adobe/en/devnet/pdf/pdfs/PDF32000_2008.pdf
 // Page 333
+
 namespace MyGame.Utils;
 
 public static class Texture2DBlender
 {
-	public static float Screen(float b, float s)
+    private const float ToFloat = 1.0f / byte.MaxValue;
+
+    private const int R_SHIFT = 0;
+    private const int G_SHIFT = 8;
+    private const int B_SHIFT = 16;
+    private const int A_SHIFT = 24;
+    private const int RGB_MASK = 0x00ffffff;
+    private const byte ONE_HALF = 128;
+
+    public static float Screen(float b, float s)
     {
-        return b + s - (b * s);
+        return b + s - b * s;
     }
 
     public static float Overlay(float b, float s)
@@ -28,45 +38,61 @@ public static class Texture2DBlender
     public static float ColorDodge(float b, float s)
     {
         if (b == 0)
+        {
             return 0;
-        else if (b >= (1 - s))
+        }
+
+        if (b >= 1 - s)
+        {
             return 1;
-        else
-            return b / (1 - s);
+        }
+
+        return b / (1 - s);
     }
 
     public static float ColorBurn(float b, float s)
     {
         if (MathF.Approx(b, 1))
+        {
             return 1;
-        else if ((1 - b) >= s)
+        }
+
+        if (1 - b >= s)
+        {
             return 0;
-        else
-            return 1 - ((1 - b) / s);
+        }
+
+        return 1 - (1 - b) / s;
     }
 
     public static float HardLight(float b, float s)
     {
         if (s <= 0.5)
+        {
             return b * 2 * s;
-        else
-            return Screen(b, 2 * s - 1);
+        }
+
+        return Screen(b, 2 * s - 1);
     }
 
     public static float SoftLight(float b, float s)
     {
         if (s <= 0.5)
+        {
             return b - (1 - 2 * s) * b * (1 - b);
-        else
-            return b + (2 * s - 1) * (SoftLightD(b) - b);
+        }
+
+        return b + (2 * s - 1) * (SoftLightD(b) - b);
     }
 
     private static float SoftLightD(float x)
     {
         if (x <= 0.25)
+        {
             return ((16 * x - 12) * x + 4) * x;
-        else
-            return MathF.Sqrt(x);
+        }
+
+        return MathF.Sqrt(x);
     }
 
     public static float Difference(float b, float s)
@@ -87,77 +113,70 @@ public static class Texture2DBlender
         src = PackRGBA(r, g, b, 0) | GetA(src);
         return BlendNormal(backdrop, src, opacity);
     }
-    
+
     public static uint BlendNormal(uint backdrop, uint src, byte opacity)
     {
-	    if (GetA(backdrop) == 0)
-	    {
-		    byte a = Multiply(GetA(src), opacity);
-		    uint rgb = src & RGB_MASK;
-		    return rgb | (uint)(a << A_SHIFT);
-	    }
+        if (GetA(backdrop) == 0)
+        {
+            var a = Multiply(GetA(src), opacity);
+            var rgb = src & RGB_MASK;
+            return rgb | (uint)(a << A_SHIFT);
+        }
 
-	    if (GetA(src) == 0) {
-		    return backdrop;
-	    }
+        if (GetA(src) == 0)
+        {
+            return backdrop;
+        }
 
-	    var Br = GetR(backdrop);
-	    var Bg = GetG(backdrop);
-	    var Bb = GetB(backdrop);
-	    var Ba = GetA(backdrop);
+        var Br = GetR(backdrop);
+        var Bg = GetG(backdrop);
+        var Bb = GetB(backdrop);
+        var Ba = GetA(backdrop);
 
-	    var Sr = GetR(src);
-	    var Sg = GetG(src);
-	    var Sb = GetB(src);
-	    var Sa = GetA(src);
+        var Sr = GetR(src);
+        var Sg = GetG(src);
+        var Sb = GetB(src);
+        var Sa = GetA(src);
 
-	    Sa = Multiply(Sa, opacity);
+        Sa = Multiply(Sa, opacity);
 
-	    // Ra = Sa + Ba*(1-Sa)
-	    //    = Sa + Ba - Ba*Sa
-	    var Ra = Sa + Ba - Multiply(Ba, Sa);
+        // Ra = Sa + Ba*(1-Sa)
+        //    = Sa + Ba - Ba*Sa
+        var Ra = Sa + Ba - Multiply(Ba, Sa);
 
-	    // Ra = Sa + Ba*(1-Sa)
-	    // Ba = (Ra-Sa) / (1-Sa)
-	    // Rc = (Sc*Sa + Bc*Ba*(1-Sa)) / Ra                Replacing Ba with (Ra-Sa) / (1-Sa)...
-	    //    = (Sc*Sa + Bc*(Ra-Sa)/(1-Sa)*(1-Sa)) / Ra
-	    //    = (Sc*Sa + Bc*(Ra-Sa)) / Ra
-	    //    = Sc*Sa/Ra + Bc*Ra/Ra - Bc*Sa/Ra
-	    //    = Sc*Sa/Ra + Bc - Bc*Sa/Ra
-	    //    = Bc + (Sc-Bc)*Sa/Ra
-	    var Rr = Br + (Sr - Br) * Sa / Ra;
-	    var Rg = Bg + (Sg - Bg) * Sa / Ra;
-	    var Rb = Bb + (Sb - Bb) * Sa / Ra;
+        // Ra = Sa + Ba*(1-Sa)
+        // Ba = (Ra-Sa) / (1-Sa)
+        // Rc = (Sc*Sa + Bc*Ba*(1-Sa)) / Ra                Replacing Ba with (Ra-Sa) / (1-Sa)...
+        //    = (Sc*Sa + Bc*(Ra-Sa)/(1-Sa)*(1-Sa)) / Ra
+        //    = (Sc*Sa + Bc*(Ra-Sa)) / Ra
+        //    = Sc*Sa/Ra + Bc*Ra/Ra - Bc*Sa/Ra
+        //    = Sc*Sa/Ra + Bc - Bc*Sa/Ra
+        //    = Bc + (Sc-Bc)*Sa/Ra
+        var Rr = Br + (Sr - Br) * Sa / Ra;
+        var Rg = Bg + (Sg - Bg) * Sa / Ra;
+        var Rb = Bb + (Sb - Bb) * Sa / Ra;
 
-	    return PackRGBA(Rr, Rg, Rb, Ra);
+        return PackRGBA(Rr, Rg, Rb, Ra);
     }
 
-    private const float ToFloat = 1.0f / byte.MaxValue;
-
-    /// <summary>
-    /// Multiplication method converted from
-    /// https://github.com/aseprite/pixman/blob/eb0dfaa0c6eb54ca9f8a6d8bf63d346c0fc4f2b9/pixman/pixman-combine32.h#L67
-    /// </summary>
+    /// <summary>Multiplication method converted from https://github.com/aseprite/pixman/blob/eb0dfaa0c6eb54ca9f8a6d8bf63d346c0fc4f2b9/pixman/pixman-combine32.h#L67</summary>
     public static byte Multiply(byte a, byte b)
     {
-	    var t = (uint)(a * b + ONE_HALF);
-	    t = GetG(GetG(t) + t);
-	    return (byte)t;
+        var t = (uint)(a * b + ONE_HALF);
+        t = GetG(GetG(t) + t);
+        return (byte)t;
     }
 
     public static void Normal(Span<uint> dstLayer, uint[] srcLayer, byte opacity)
     {
-	    for (int i = 0; i < dstLayer.Length; i++)
-	    {
-		    dstLayer[i] = BlendNormal(dstLayer[i], srcLayer[i], opacity);
-	    }
+        for (var i = 0; i < dstLayer.Length; i++)
+        {
+            dstLayer[i] = BlendNormal(dstLayer[i], srcLayer[i], opacity);
+        }
     }
 
-    
-    /// <summary>
-    /// Converted from
-    /// https://github.com/aseprite/aseprite/blob/a5c36d0b0f3663d36a8105497458e86a41da310e/src/doc/blend_funcs.cpp#L254
-    /// </summary>
+
+    /// <summary>Converted from https://github.com/aseprite/aseprite/blob/a5c36d0b0f3663d36a8105497458e86a41da310e/src/doc/blend_funcs.cpp#L254</summary>
     public static void Multiply(Span<uint> dstLayer, uint[] srcLayer, byte opacity)
     {
         for (var i = 0; i < dstLayer.Length; i++)
@@ -169,11 +188,16 @@ public static class Texture2DBlender
     private static float BlendDivide(float b, float s)
     {
         if (b == 0)
+        {
             return 0;
-        else if (b >= s)
+        }
+
+        if (b >= s)
+        {
             return 1f;
-        else
-            return b / s;
+        }
+
+        return b / s;
     }
 
     private static float Lum(Color c)
@@ -193,6 +217,7 @@ public static class Texture2DBlender
             c.G = (byte)(l + (c.G - l) * l / (l - n));
             c.B = (byte)(l + (c.B - l) * l / (l - n));
         }
+
         if (x > 1)
         {
             c.R = (byte)(l + (c.R - l) * (1 - l) / (x - l));
@@ -218,14 +243,21 @@ public static class Texture2DBlender
         return Math.Max(c.R, Math.Max(c.G, c.B)) - Math.Min(c.R, Math.Min(c.G, c.B));
     }
 
-    private static double DMax(double x, double y) { return (x > y) ? x : y; }
-    private static double DMin(double x, double y) { return (x < y) ? x : y; }
+    private static double DMax(double x, double y)
+    {
+        return x > y ? x : y;
+    }
+
+    private static double DMin(double x, double y)
+    {
+        return x < y ? x : y;
+    }
 
     private static Color SetSat(Color c, double s)
     {
-        char cMin = GetMinComponent(c);
-        char cMid = GetMidComponent(c);
-        char cMax = GetMaxComponent(c);
+        var cMin = GetMinComponent(c);
+        var cMid = GetMidComponent(c);
+        var cMax = GetMaxComponent(c);
 
         double min = GetComponent(c, cMin);
         double mid = GetComponent(c, cMid);
@@ -234,7 +266,7 @@ public static class Texture2DBlender
 
         if (max > min)
         {
-            mid = ((mid - min) * s) / (max - min);
+            mid = (mid - min) * s / (max - min);
             c = SetComponent(c, cMid, (float)mid);
             max = s;
             c = SetComponent(c, cMax, (float)max);
@@ -268,9 +300,15 @@ public static class Texture2DBlender
     {
         switch (component)
         {
-            case 'r': c.R = (byte) (value * byte.MaxValue); break;
-            case 'g': c.G = (byte) (value * byte.MaxValue); break;
-            case 'b': c.B = (byte) (value * byte.MaxValue); break;
+            case 'r':
+                c.R = (byte)(value * byte.MaxValue);
+                break;
+            case 'g':
+                c.G = (byte)(value * byte.MaxValue);
+                break;
+            case 'b':
+                c.B = (byte)(value * byte.MaxValue);
+                break;
         }
 
         return c;
@@ -305,17 +343,17 @@ public static class Texture2DBlender
 
     private static KeyValuePair<char, float> MIN(KeyValuePair<char, float> x, KeyValuePair<char, float> y)
     {
-        return (x.Value < y.Value) ? x : y;
+        return x.Value < y.Value ? x : y;
     }
 
     private static KeyValuePair<char, float> MAX(KeyValuePair<char, float> x, KeyValuePair<char, float> y)
     {
-        return (x.Value > y.Value) ? x : y;
+        return x.Value > y.Value ? x : y;
     }
 
     private static KeyValuePair<char, float> MID(KeyValuePair<char, float> x, KeyValuePair<char, float> y, KeyValuePair<char, float> z)
     {
-        List<KeyValuePair<char, float>> components = new List<KeyValuePair<char, float>>();
+        var components = new List<KeyValuePair<char, float>>();
         components.Add(x);
         components.Add(z);
         components.Add(y);
@@ -359,33 +397,26 @@ public static class Texture2DBlender
 
     private static byte GetR(uint packedValue)
     {
-	    return unchecked((byte)(packedValue >> R_SHIFT));
+        return unchecked((byte)(packedValue >> R_SHIFT));
     }
 
     private static byte GetG(uint packedValue)
     {
-	    return unchecked((byte)(packedValue >> G_SHIFT));
+        return unchecked((byte)(packedValue >> G_SHIFT));
     }
 
     private static byte GetB(uint packedValue)
     {
-	    return unchecked((byte)(packedValue >> B_SHIFT));
+        return unchecked((byte)(packedValue >> B_SHIFT));
     }
 
     private static byte GetA(uint packedValue)
     {
-	    return unchecked((byte)(packedValue >> A_SHIFT));
+        return unchecked((byte)(packedValue >> A_SHIFT));
     }
-
-    private const int R_SHIFT = 0;
-    private const int G_SHIFT = 8;
-    private const int B_SHIFT = 16;
-    private const int A_SHIFT = 24;
-    private const int RGB_MASK = 0x00ffffff;
-    private const byte ONE_HALF = 128;
 
     private static uint PackRGBA(int r, int g, int b, int a)
     {
-	    return (uint)((r << R_SHIFT) | (g << G_SHIFT) | (b << B_SHIFT) | (a << A_SHIFT));
+        return (uint)((r << R_SHIFT) | (g << G_SHIFT) | (b << B_SHIFT) | (a << A_SHIFT));
     }
 }

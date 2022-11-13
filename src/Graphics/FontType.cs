@@ -5,7 +5,7 @@ public enum FontType
     RobotoMedium,
     RobotoLarge,
     ConsolasMonoMedium,
-    ConsolasMonoLarge
+    ConsolasMonoLarge,
 }
 
 public enum BMFontType

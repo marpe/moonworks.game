@@ -5,8 +5,12 @@ namespace MyGame.Utils;
 public static class ColorExt
 {
     private const string HEX = "0123456789ABCDEF";
-    private static byte HexToByte(char c) => (byte)HEX.IndexOf(char.ToUpper(c));
-    
+
+    private static byte HexToByte(char c)
+    {
+        return (byte)HEX.IndexOf(char.ToUpper(c));
+    }
+
     public static Color FromHex(ReadOnlySpan<char> hex)
     {
         var r = (HexToByte(hex[0]) * 16 + HexToByte(hex[1])) / 255.0f;
@@ -15,7 +19,7 @@ public static class ColorExt
 
         return new Color(r, g, b);
     }
-    
+
     public static (float, float, float) RgbToHsv(Color color)
     {
         var k = 0f;
@@ -42,10 +46,8 @@ public static class ColorExt
 
         return (h, s, v);
     }
-    
-    /// <summary>
-    /// Convert HSV floats to Color
-    /// </summary>
+
+    /// <summary>Convert HSV floats to Color</summary>
     /// <param name="h">Hue in range [0-1]</param>
     /// <param name="s">Saturation in range [0-1]</param>
     /// <param name="v">Value in range [0-1]</param>
@@ -77,7 +79,7 @@ public static class ColorExt
             2 => new Color(p, v, t),
             3 => new Color(p, q, v),
             4 => new Color(t, p, v),
-            _ => new Color(v, p, q)
+            _ => new Color(v, p, q),
         };
     }
 }
@@ -92,13 +94,17 @@ public class ColorConverter : JsonConverter<Color>
         JsonSerializer serializer)
     {
         var strValue = reader.Value as string;
-        
+
         if (string.IsNullOrWhiteSpace(strValue))
+        {
             return new Color();
-        
+        }
+
         if (strValue[0] == '#')
+        {
             strValue = strValue[1..];
-        
+        }
+
         return ColorExt.FromHex(strValue);
     }
 }

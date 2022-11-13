@@ -6,8 +6,10 @@ public struct PositionTextureColorVertex
 {
     // [FieldOffset(0)]
     public Vector2 Position;
+
     // [FieldOffset(8)]
     public Vector2 TexCoord;
+
     // [FieldOffset(16)]
     public Color Color;
 }

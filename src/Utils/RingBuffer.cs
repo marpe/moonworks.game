@@ -2,95 +2,93 @@ namespace MyGame.Utils;
 
 public class RingBuffer<T> : IEnumerable<T>
 {
-	private T[] _buffer;
-	private int _start;
-	private int _end;
-	private int _count;
+    private readonly T[] _buffer;
+    private int _end;
+    private int _start;
 
-	private readonly int _capacity;
+    public RingBuffer(int capacity)
+    {
+        Capacity = capacity;
+        _buffer = new T[capacity];
+    }
 
-	public int Count => _count;
+    public int Count { get; private set; }
 
-	public int Capacity => _capacity;
+    public int Capacity { get; }
 
-	public bool IsEmpty => _count == 0;
+    public bool IsEmpty => Count == 0;
 
-	public RingBuffer(int capacity)
-	{
-		_capacity = capacity;
-		_buffer = new T[capacity];
-	}
+    public T this[int index]
+    {
+        get
+        {
+            if (IsEmpty)
+            {
+                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
+            }
 
-	public void Add(T item)
-	{
-		if (_count == _capacity)
-		{
-			_buffer[_end] = item;
-			_end = MathF.IncrementWithWrap(_end, _capacity);
-			_start = _end;
-		}
-		else
-		{
-			_buffer[_end] = item;
-			_end = MathF.IncrementWithWrap(_end, _capacity);
-			_count++;
-		}
-	}
+            if (index >= Count)
+            {
+                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, Count));
+            }
 
-	public T this[int index]
-	{
-		get
-		{
-			if (IsEmpty)
-			{
-				throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
-			}
+            var actualIndex = InternalIndex(index);
+            return _buffer[actualIndex];
+        }
+        set
+        {
+            if (IsEmpty)
+            {
+                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
+            }
 
-			if (index >= _count)
-			{
-				throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, _count));
-			}
+            if (index >= Count)
+            {
+                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, Count));
+            }
 
-			var actualIndex = InternalIndex(index);
-			return _buffer[actualIndex];
-		}
-		set
-		{
-			if (IsEmpty)
-			{
-				throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
-			}
+            var actualIndex = InternalIndex(index);
+            _buffer[actualIndex] = value;
+        }
+    }
 
-			if (index >= _count)
-			{
-				throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, _count));
-			}
+    public IEnumerator<T> GetEnumerator()
+    {
+        for (var i = 0; i < Count; i++)
+        {
+            var index = _start + i;
+            if (index >= Capacity)
+            {
+                index -= Capacity;
+            }
 
-			var actualIndex = InternalIndex(index);
-			_buffer[actualIndex] = value;
-		}
-	}
+            yield return _buffer[index];
+        }
+    }
 
-	private int InternalIndex(int index)
-	{
-		return _start + (index < (_capacity - _start) ? index : index - _capacity);
-	}
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+    }
 
-	public IEnumerator<T> GetEnumerator()
-	{
-		for (int i = 0; i < _count; i++)
-		{
-			var index = _start + i;
-			if (index >= _capacity)
-			{
-				index -= _capacity;
-			}
-			yield return _buffer[index];
-		}
-	}
+    public void Add(T item)
+    {
+        if (Count == Capacity)
+        {
+            _buffer[_end] = item;
+            _end = MathF.IncrementWithWrap(_end, Capacity);
+            _start = _end;
+        }
+        else
+        {
+            _buffer[_end] = item;
+            _end = MathF.IncrementWithWrap(_end, Capacity);
+            Count++;
+        }
+    }
 
-	IEnumerator IEnumerable.GetEnumerator()
-	{
-		return GetEnumerator();
-	}
+    private int InternalIndex(int index)
+    {
+        return _start + (index < Capacity - _start ? index : index - Capacity);
+    }
 }

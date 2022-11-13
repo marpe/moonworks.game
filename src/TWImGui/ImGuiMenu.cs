@@ -2,11 +2,11 @@ namespace MyGame.TWImGui;
 
 public class ImGuiMenu
 {
+    public Action? Callback;
     public List<ImGuiMenu> Children = new();
-    public string Text;
     public bool? IsEnabled;
     public string? Shortcut;
-    public Action? Callback;
+    public string Text;
 
     public ImGuiMenu(string text, string? shortcut = null, Action? callback = null, bool? isEnabled = null)
     {

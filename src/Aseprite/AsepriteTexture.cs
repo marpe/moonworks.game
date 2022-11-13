@@ -2,37 +2,39 @@ namespace MyGame.Aseprite;
 
 public class AsepriteTexture : IDisposable
 {
-	public Texture Texture;
-	public Rectangle[] SourceRectangles;
-	public AsepriteFile File;
-	public string FilePath;
+    public AsepriteFile File;
+    public string FilePath;
+    public Rectangle[] SourceRectangles;
+    public Texture Texture;
 
-	public bool IsDisposed { get; private set; }
+    public AsepriteTexture(Rectangle[] sourceRects, Texture texture, AsepriteFile asepriteFile, string filepath)
+    {
+        SourceRectangles = sourceRects;
+        Texture = texture;
+        File = asepriteFile;
+        FilePath = filepath;
+    }
 
-	public AsepriteTexture(Rectangle[] sourceRects, Texture texture, AsepriteFile asepriteFile, string filepath)
-	{
-		SourceRectangles = sourceRects;
-		Texture = texture;
-		File = asepriteFile;
-		FilePath = filepath;
-	}
+    public bool IsDisposed { get; private set; }
 
-	protected virtual void Dispose(bool isDisposing)
-	{
-		if (IsDisposed)
-			return;
-		
-		if (isDisposing)
-		{
-			Texture.Dispose();
-		}
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
 
-		IsDisposed = true;
-	}
-	
-	public void Dispose()
-	{
-		Dispose(true);
-		GC.SuppressFinalize(this);
-	}
+    protected virtual void Dispose(bool isDisposing)
+    {
+        if (IsDisposed)
+        {
+            return;
+        }
+
+        if (isDisposing)
+        {
+            Texture.Dispose();
+        }
+
+        IsDisposed = true;
+    }
 }

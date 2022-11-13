@@ -9,7 +9,7 @@ public struct Sprite
     public Sprite(Texture texture) : this(texture, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height))
     {
     }
-    
+
     public Sprite(Texture texture, Rectangle srcRect)
     {
         Texture = texture;
@@ -28,10 +28,10 @@ public struct Sprite
 
         uv.Position.X = posX;
         uv.Position.Y = posY;
-        
+
         uv.Dimensions.X = dimX;
         uv.Dimensions.Y = dimY;
-        
+
         uv.TopLeft.X = uv.TopRight.X = uv.BottomLeft.X = uv.BottomRight.X = uv.Position.X;
         uv.TopLeft.Y = uv.TopRight.Y = uv.BottomLeft.Y = uv.BottomRight.Y = uv.Position.Y;
 

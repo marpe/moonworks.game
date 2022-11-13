@@ -3,42 +3,40 @@
 public class ConsoleScreenBuffer
 {
     private short[] _buffer;
-    private int _wrappedY => (_cursorY % _height) * _width;
+    private int _cursorX = 0;
 
     private int _displayY = 0;
+
+    public ConsoleScreenBuffer(int width, int height)
+    {
+        Height = height;
+        Width = width;
+        _buffer = new short[width * height];
+    }
+
+    private int _wrappedY => CursorY % Height * Width;
 
     public int DisplayY
     {
         get => _displayY;
         set
         {
-            var minValue = Math.Max(0, _cursorY - _height + 1); // show at least one line
-            _displayY = MathF.Clamp(value, minValue, _cursorY);
+            var minValue = Math.Max(0, CursorY - Height + 1); // show at least one line
+            _displayY = MathF.Clamp(value, minValue, CursorY);
         }
     }
 
-    private int _cursorY = 0;
-    private int _cursorX = 0;
+    public int Height { get; private set; }
 
-    private int _height;
-    private int _width;
+    public int Width { get; private set; }
 
-    public int Height => _height;
-    public int Width => _width;
-    public int CursorY => _cursorY;
-
-    public ConsoleScreenBuffer(int width, int height)
-    {
-        _height = height;
-        _width = width;
-        _buffer = new short[width * height];
-    }
+    public int CursorY { get; private set; } = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetChar(int x, int y, out char c, out byte color)
     {
-        var line = (_height + y) % _height;
-        var i = line * _width + x;
+        var line = (Height + y) % Height;
+        var i = line * Width + x;
         Unpack(_buffer[i], out c, out color);
     }
 
@@ -58,33 +56,40 @@ public class ConsoleScreenBuffer
     public void Clear()
     {
         for (var i = 0; i < _buffer.Length; i++)
+        {
             _buffer[i] = Pack(' ', 0);
+        }
 
         _cursorX = 0;
-        _cursorY = 0;
+        CursorY = 0;
         _displayY = 0;
     }
 
     private void Linefeed()
     {
-        var shouldScrollDisplay = _displayY == _cursorY;
-        _cursorY++;
+        var shouldScrollDisplay = _displayY == CursorY;
+        CursorY++;
         if (shouldScrollDisplay)
-            _displayY = _cursorY;
+        {
+            _displayY = CursorY;
+        }
+
         _cursorX = 0;
-        ClearLine(_cursorY);
+        ClearLine(CursorY);
     }
 
     private void ClearLine(int y)
     {
-        for (var i = 0; i < _width; i++)
+        for (var i = 0; i < Width; i++)
+        {
             _buffer[_wrappedY + i] = Pack(' ', 0);
+        }
     }
 
     public void AddLine(ReadOnlySpan<char> line)
     {
         var lastY = 0;
-        foreach (var run in line.SplitLines(true, _width))
+        foreach (var run in line.SplitLines(true, Width))
         {
             while (run.Y - lastY > 0)
             {
@@ -94,8 +99,11 @@ public class ConsoleScreenBuffer
 
             for (var i = 0; i < run.Text.Length; i++)
             {
-                if (_cursorX >= _width)
+                if (_cursorX >= Width)
+                {
                     Linefeed();
+                }
+
                 _buffer[_wrappedY + _cursorX] = Pack(run.Text[i], run.Color);
                 _cursorX++;
             }
@@ -106,24 +114,24 @@ public class ConsoleScreenBuffer
 
     public void Resize(int width, int height)
     {
-        var (oldWidth, oldHeight) = (_width, _height);
-        _width = width;
-        _height = height;
+        var (oldWidth, oldHeight) = (Width, Height);
+        Width = width;
+        Height = height;
 
         var newBuffer = new short[width * height];
 
-        var numLines = _height < oldHeight ? _height : oldHeight;
-        var numChars = _width < oldWidth ? _width : oldWidth;
+        var numLines = Height < oldHeight ? Height : oldHeight;
+        var numChars = Width < oldWidth ? Width : oldWidth;
         for (var y = 0; y < numLines; y++)
         {
-            for (var x = 0; x < numChars ; x++)
+            for (var x = 0; x < numChars; x++)
             {
-                newBuffer[(height - 1 - y) * width + x] = _buffer[(_cursorY - y + oldHeight) % oldHeight * oldWidth + x];
+                newBuffer[(height - 1 - y) * width + x] = _buffer[(CursorY - y + oldHeight) % oldHeight * oldWidth + x];
             }
         }
 
         _buffer = newBuffer;
-        _cursorY = _height - 1;
-        _displayY = _cursorY;
+        CursorY = Height - 1;
+        _displayY = CursorY;
     }
 }

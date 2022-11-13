@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame.Graphics;
 
@@ -7,7 +8,9 @@ public static class TextureUtils
     public static void EnsureTextureSize(ref Texture texture, GraphicsDevice device, uint width, uint height)
     {
         if (width == texture.Width && height == texture.Height)
+        {
             return;
+        }
 
         texture.Dispose();
         texture = Texture.CreateTexture2D(device, width, height, texture.Format, texture.UsageFlags);
@@ -16,10 +19,12 @@ public static class TextureUtils
     public static Span<byte> ConvertSingleChannelTextureToRGBA(GraphicsDevice device, Texture texture)
     {
         if (texture.Format != TextureFormat.R8)
+        {
             throw new InvalidOperationException("Expected texture format to be R8");
+        }
 
         var pixelSize = (uint)Marshal.SizeOf<Color>();
-        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
+        var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
         device.Submit(commandBuffer);
@@ -64,7 +69,7 @@ public static class TextureUtils
     public static Texture PremultiplyAlpha(GraphicsDevice device, Texture texture)
     {
         var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
-        var buffer = MoonWorks.Graphics.Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * bytesPerPixel);
+        var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * bytesPerPixel);
 
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
@@ -87,8 +92,11 @@ public static class TextureUtils
         {
             var alpha = pixels[j + 3];
             if (alpha == 255)
+            {
                 continue;
-            var a = (alpha / 255f);
+            }
+
+            var a = alpha / 255f;
             pixels[j + 0] = (byte)(pixels[j + 0] * a);
             pixels[j + 1] = (byte)(pixels[j + 1] * a);
             pixels[j + 2] = (byte)(pixels[j + 2] * a);
@@ -114,7 +122,10 @@ public static class TextureUtils
     public static Texture LoadPngTexture(GraphicsDevice device, string path)
     {
         if (!File.Exists(path))
+        {
             throw new InvalidOperationException($"File not found: {path}");
+        }
+
         var commandBuffer = device.AcquireCommandBuffer();
         var texture = Texture.LoadPNG(device, commandBuffer, path);
         device.Submit(commandBuffer);

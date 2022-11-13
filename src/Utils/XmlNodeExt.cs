@@ -9,14 +9,20 @@ public static class XmlNodeExt
         var strValue = node.Attributes?[attribute]?.Value;
         return strValue != null ? XmlConvert.ToBoolean(strValue) : fallbackValue;
     }
-        
+
     public static string AttributeValue(this XmlNode node, string attribute)
     {
         if (node.Attributes == null)
+        {
             throw new InvalidOperationException();
+        }
+
         var attr = node.Attributes[attribute];
         if (attr == null)
+        {
             throw new InvalidOperationException();
+        }
+
         return attr.Value;
     }
 

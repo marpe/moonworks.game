@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using MyGame.Cameras;
+﻿using MyGame.Cameras;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 
@@ -7,17 +6,9 @@ namespace MyGame.Screens;
 
 public class GameScreen
 {
-    private Camera _camera;
-    public Camera Camera => _camera;
-
-    private MyGameMain _game;
     private GraphicsDevice _device;
-    private CameraController _cameraController;
-    public CameraController CameraController => _cameraController;
 
-    private World? _world;
-
-    public World? World => _world;
+    private readonly MyGameMain _game;
 
     public GameScreen(MyGameMain game)
     {
@@ -26,9 +17,15 @@ public class GameScreen
 
         LoadWorld();
 
-        _camera = new Camera();
-        _cameraController = new CameraController(this, _camera);
+        Camera = new Camera();
+        CameraController = new CameraController(this, Camera);
     }
+
+    public Camera Camera { get; }
+
+    public CameraController CameraController { get; }
+
+    public World? World { get; private set; }
 
     [ConsoleHandler("restart")]
     public static void Restart()
@@ -40,21 +37,21 @@ public class GameScreen
     {
         _game.LoadingScreen.StartLoad(() =>
         {
-            _world = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            _camera.Zoom = 4.0f;
+            World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            Camera.Zoom = 4.0f;
         });
     }
 
     public void Unload()
     {
-        _world?.Dispose();
+        World?.Dispose();
     }
 
     public void Update(bool isPaused, float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
     {
         var input = _game.InputHandler;
-        _cameraController.Update(isPaused, deltaSeconds, input, allowMouseInput, allowKeyboardInput);
-        _world?.Update(isPaused, deltaSeconds, input, allowKeyboardInput, allowMouseInput);
+        CameraController.Update(isPaused, deltaSeconds, input, allowMouseInput, allowKeyboardInput);
+        World?.Update(isPaused, deltaSeconds, input, allowKeyboardInput, allowMouseInput);
     }
 
     public void Draw(Renderer renderer, double alpha)
@@ -63,11 +60,11 @@ public class GameScreen
         var swapSize = new Point((int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height);
         renderer.DrawRect(new Rectangle(0, 0, swapSize.X, swapSize.Y), Color.Black);
 
-        _world?.Draw(renderer, _camera, alpha);
+        World?.Draw(renderer, Camera, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        renderer.FlushBatches(renderer.SwapTexture, _cameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
+        renderer.FlushBatches(renderer.SwapTexture, CameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
     }
 }

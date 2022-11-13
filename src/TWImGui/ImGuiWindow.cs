@@ -2,8 +2,8 @@
 
 public abstract class ImGuiWindow
 {
-    public bool IsOpen;
     public readonly string Title;
+    public bool IsOpen;
     public string? KeyboardShortcut;
 
     public ImGuiWindow(string title)

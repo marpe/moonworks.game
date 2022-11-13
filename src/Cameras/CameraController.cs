@@ -6,43 +6,43 @@ namespace MyGame.Cameras;
 
 public class CameraController
 {
-    private GameScreen _parent;
-    private Camera _camera;
-    private Vector2 _cameraRotation = new Vector2(0, MathHelper.Pi);
-    public bool Use3D;
-    private float _lerpT = 0;
-    private float _lerpSpeed = 1f;
-
     [CVar("camera.input", "Toggle camera controls")]
     public static bool IsMouseAndKeyboardControlEnabled;
 
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
     public static bool ClampToLevelBounds;
 
-    public Entity? TrackingEntity;
-
-    public Velocity Velocity = new Velocity()
-    {
-        Friction = new Vector2(0.9f, 0.9f)
-    };
-
-    public Vector2 InitialFriction;
-
     [CVar("camera.trackspeed", "Camera tracking speed")]
-    public static Vector2 TrackingSpeed = new Vector2(5f, 5f);
+    public static Vector2 TrackingSpeed = new(5f, 5f);
+
+    private readonly Camera _camera;
+    private Vector2 _cameraRotation = new(0, MathHelper.Pi);
+    private readonly float _lerpSpeed = 1f;
+    private float _lerpT = 0;
+    private readonly GameScreen _parent;
+    private Matrix4x4 _previousViewProjection;
+
+    private float _shakeDuration = 0;
+    private float _shakePower = 4f;
+    private float _shakeTime = 0;
 
     private float _timer = 0;
+
+    private Matrix4x4 _viewProjection;
 
     public float BrakeDistNearBounds = 0.1f;
     public float BumpFrict = 0.85f;
 
-    private float _shakeDuration = 0;
-    private float _shakeTime = 0;
-    private float _shakePower = 4f;
+    public Vector2 InitialFriction;
+    public Vector2 ShakeFequencies = new(50, 40);
 
-    private Matrix4x4 _viewProjection;
-    private Matrix4x4 _previousViewProjection;
-    public Vector2 ShakeFequencies = new Vector2(50, 40);
+    public Entity? TrackingEntity;
+    public bool Use3D;
+
+    public Velocity Velocity = new()
+    {
+        Friction = new Vector2(0.9f, 0.9f),
+    };
 
     public CameraController(GameScreen parent, Camera camera)
     {
@@ -64,7 +64,9 @@ public class CameraController
     {
         UpdatePrevious();
         if (isPaused)
+        {
             return;
+        }
 
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
@@ -79,11 +81,15 @@ public class CameraController
             var deadZone = _camera.DeadZoneInPercentOfViewport * _camera.Size;
             var distX = Math.Abs(offset.X);
             if (distX >= deadZone.X)
+            {
                 Velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
+            }
 
             var distY = Math.Abs(offset.Y);
             if (distY >= deadZone.Y)
+            {
                 Velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
+            }
         }
 
         if (IsMouseAndKeyboardControlEnabled)
@@ -133,14 +139,22 @@ public class CameraController
             var worldSize = _parent.World?.WorldSize ?? new Point(512, 256);
 
             if (worldSize.X < _camera.Width)
+            {
                 _camera.Position.X = worldSize.X * 0.5f; // centered small level
+            }
             else
+            {
                 _camera.Position.X = MathF.Clamp(_camera.Position.X, _camera.Width * 0.5f, worldSize.X - _camera.Width * 0.5f);
+            }
 
             if (worldSize.Y < _camera.Height)
+            {
                 _camera.Position.Y = worldSize.Y * 0.5f; // centered small level
+            }
             else
+            {
                 _camera.Position.Y = MathF.Clamp(_camera.Position.Y, _camera.Height * 0.5f, worldSize.Y - _camera.Height * 0.5f);
+            }
         }
 
         if (_shakeTime > 0 && _shakeDuration > 0)

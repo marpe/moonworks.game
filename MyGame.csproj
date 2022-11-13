@@ -11,7 +11,7 @@
         <RootNamespace>MyGame</RootNamespace>
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <ApplicationIcon />
+        <ApplicationIcon/>
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release</Configurations>
         <Platforms>x64</Platforms>
@@ -25,22 +25,22 @@
         <DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="lib\ldtk\LDtk.csproj" />
-        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
+        <ProjectReference Include="lib\ldtk\LDtk.csproj"/>
+        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2"/>
     </ItemGroup>
     <ItemGroup>
-        <Reference Include="ImGui.NET">
-            <HintPath>lib\ImGui.NET\net5.0\ImGui.NET.dll</HintPath>
-        </Reference>
-    </ItemGroup>
-    <ItemGroup>
-        <ContentWithTargetPath Include="lib\ImGui.NET\deps\cimgui\win-x64\cimgui.dll">
+        <ContentWithTargetPath Include="lib\Mochi.DearImGui.Native\win-x64\Debug\Mochi.DearImGui.Native.dll">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>cimgui.dll</TargetPath>
+            <TargetPath>Mochi.DearImGui.Native.dll</TargetPath>
         </ContentWithTargetPath>
     </ItemGroup>
-    <Import Project=".\CopyMoonlibs.targets" />
+    <ItemGroup>
+        <Reference Include="Mochi.DearImGui">
+            <HintPath>lib\Mochi.DearImGui\Debug-AnyCPU\Mochi.DearImGui.dll</HintPath>
+        </Reference>
+    </ItemGroup>
+    <Import Project=".\CopyMoonlibs.targets"/>
 </Project>

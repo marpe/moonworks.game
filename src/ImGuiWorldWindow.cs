@@ -1,16 +1,16 @@
-﻿using ImGuiNET;
+﻿using Mochi.DearImGui;
 using MyGame.TWImGui;
 using MyGame.TWImGui.Inspectors;
 
 namespace MyGame;
 
-public class ImGuiWorldWindow : ImGuiWindow
+public unsafe class ImGuiWorldWindow : ImGuiWindow
 {
-    private GroupInspector? _inspector;
-    private World? _prevWorld;
+    public const string WindowTitle = "World";
     private GroupInspector? _cameraControllerInspector;
     private GroupInspector? _cameraInspector;
-    public const string WindowTitle = "World";
+    private GroupInspector? _inspector;
+    private World? _prevWorld;
 
     public ImGuiWorldWindow() : base(WindowTitle)
     {
@@ -20,9 +20,11 @@ public class ImGuiWorldWindow : ImGuiWindow
     public override void Draw()
     {
         if (!IsOpen)
+        {
             return;
+        }
 
-        ImGui.Begin(Title, ref IsOpen);
+        ImGui.Begin(Title, ImGuiExt.RefPtr(ref IsOpen));
 
         var world = Shared.Game.GameScreen.World;
         if (world == null)
@@ -37,7 +39,10 @@ public class ImGuiWorldWindow : ImGuiWindow
             if (ImGui.BeginTabItem("World"))
             {
                 if (_prevWorld != world || _inspector == null)
+                {
                     _inspector ??= InspectorExt.GetInspectorForTarget(world);
+                }
+
                 _prevWorld = world;
                 _inspector.Draw();
                 ImGui.EndTabItem();

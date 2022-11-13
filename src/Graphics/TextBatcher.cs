@@ -8,18 +8,18 @@ namespace MyGame.Graphics;
 
 public class TextBatcher
 {
+    private readonly Dictionary<FontType, FontData> _fonts = new();
+
+    private uint _addCountSinceDraw = 0;
+    private GraphicsDevice _device;
+
     public FontRange BasicLatin = new()
     {
         FirstCodepoint = 0x0,
         NumChars = 0x7f + 1,
         OversampleH = 0,
-        OversampleV = 0
+        OversampleV = 0,
     };
-
-    private uint _addCountSinceDraw = 0;
-
-    private readonly Dictionary<FontType, FontData> _fonts = new();
-    private GraphicsDevice _device;
 
     public TextBatcher(GraphicsDevice device)
     {
@@ -30,7 +30,7 @@ public class TextBatcher
             (FontType.RobotoMedium, 18f, ContentPaths.fonts.Roboto_Regular_ttf),
             (FontType.RobotoLarge, 48f, ContentPaths.fonts.Roboto_Regular_ttf),
             (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf),
-            (FontType.ConsolasMonoLarge, 48f, ContentPaths.fonts.consola_ttf)
+            (FontType.ConsolasMonoLarge, 48f, ContentPaths.fonts.consola_ttf),
         };
 
         var commandBuffer = device.AcquireCommandBuffer();
@@ -56,7 +56,10 @@ public class TextBatcher
         }
     }
 
-    public FontData GetFont(FontType fontType) => _fonts[fontType];
+    public FontData GetFont(FontType fontType)
+    {
+        return _fonts[fontType];
+    }
 
     public void Unload()
     {
@@ -75,7 +78,9 @@ public class TextBatcher
         VerticalAlignment alignV)
     {
         if (text.Length == 0)
+        {
             return;
+        }
 
         _addCountSinceDraw++;
 
@@ -92,20 +97,24 @@ public class TextBatcher
     public void FlushToSpriteBatch(SpriteBatch spriteBatch)
     {
         if (_addCountSinceDraw == 0)
+        {
             return;
+        }
 
         foreach (var (key, font) in _fonts)
         {
             if (!font.HasStarted)
+            {
                 continue;
+            }
 
             Wellspring.Wellspring_GetBufferData(
                 font.Batch.Handle,
-                out uint vertexCount,
-                out IntPtr vertexDataPointer,
-                out uint vertexDataLengthInBytes,
-                out IntPtr indexDataPointer,
-                out uint indexDataLengthInBytes
+                out var vertexCount,
+                out var vertexDataPointer,
+                out var vertexDataLengthInBytes,
+                out var indexDataPointer,
+                out var indexDataLengthInBytes
             );
 
             unsafe

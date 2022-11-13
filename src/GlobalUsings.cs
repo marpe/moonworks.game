@@ -5,7 +5,7 @@ global using MoonWorks.Math.Float;
 global using MoonWorks.Math;
 global using MoonWorks;
 global using MyGame.Aseprite;
-global using Num = System.Numerics; 
+global using Num = System.Numerics;
 global using System.Collections.Generic;
 global using System.Collections;
 global using System.Diagnostics;

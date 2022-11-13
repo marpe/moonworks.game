@@ -7,13 +7,13 @@ public class FontData
 {
     private static byte[] _stringBytes = new byte[128];
 
-    public FontType Name;
-
     public TextBatch Batch;
-    public Packer Packer;
     public Font Font;
-    public Texture? Texture;
     public bool HasStarted;
+
+    public FontType Name;
+    public Packer Packer;
+    public Texture? Texture;
 
     public FontData(FontType name, TextBatch batch, Packer packer, Font font)
     {
@@ -32,12 +32,13 @@ public class FontData
             Array.Resize(ref _stringBytes, byteCount);
         }
 
-        Span<byte> byteSpan = _stringBytes.AsSpan();
+        var byteSpan = _stringBytes.AsSpan();
         Encoding.UTF8.GetBytes(text, byteSpan);
 
         fixed (byte* bytes = byteSpan)
         {
-            Wellspring.Wellspring_TextBounds(Packer.Handle, 0, 0, Wellspring.HorizontalAlignment.Left, Wellspring.VerticalAlignment.Top, (IntPtr)bytes, (uint)byteCount, out var rect);
+            Wellspring.Wellspring_TextBounds(Packer.Handle, 0, 0, Wellspring.HorizontalAlignment.Left, Wellspring.VerticalAlignment.Top, (IntPtr)bytes,
+                (uint)byteCount, out var rect);
             return new Vector2(rect.W, rect.H);
         }
     }

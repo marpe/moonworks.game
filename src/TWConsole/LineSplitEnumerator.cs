@@ -19,8 +19,8 @@ public readonly ref struct RefTextRun
 public ref struct LineSplitEnumerator
 {
     private ReadOnlySpan<char> _str;
-    private bool _stripColors;
-    private int _maxLineWidth;
+    private readonly bool _stripColors;
+    private readonly int _maxLineWidth;
 
     public RefTextRun Current { get; private set; }
 
@@ -67,7 +67,7 @@ public ref struct LineSplitEnumerator
 
     private static bool IsLinebreak(ReadOnlySpan<char> text, out int nextLinebreak)
     {
-        if (text.Length > 0 && text[0] == '\r' || text[0] == '\n')
+        if ((text.Length > 0 && text[0] == '\r') || text[0] == '\n')
         {
             nextLinebreak =
                 text[0] == '\r' && text.Length > 1 && text[1] == '\n' ? 2 : 1; // if this is an \r followed by an \n, return 2 instead of 1
@@ -84,11 +84,17 @@ public ref struct LineSplitEnumerator
         for (var i = 0; i < text.Length; i++)
         {
             if (stripColors && IsColor(text[i..], out _))
+            {
                 i += 1;
+            }
             else if (text[i] == ' ' || IsLinebreak(text[i..], out _))
+            {
                 break;
+            }
             else
+            {
                 l++;
+            }
         }
 
         return l;
@@ -130,7 +136,9 @@ public ref struct LineSplitEnumerator
             if (i > 0 && IsColor(remaining, out var nextColor))
             {
                 if (stripColors || nextColor != color)
+                {
                     break;
+                }
             }
 
             var prevWasSpace = i > 0 && run[i - 1] == ' ';
@@ -158,12 +166,16 @@ public ref struct LineSplitEnumerator
     public bool MoveNext()
     {
         if (_str.Length == 0)
+        {
             return false;
+        }
 
         var (start, length, color, wrap) = GetNextRun(_str, _currentColor, _stripColors, _cursorX, _maxLineWidth);
 
         if (length == 0)
+        {
             return false;
+        }
 
         var run = _str.Slice(start, length);
         _str = _str.Slice(start + length);
@@ -181,7 +193,10 @@ public ref struct LineSplitEnumerator
         return true;
     }
 
-    public LineSplitEnumerator GetEnumerator() => this;
+    public LineSplitEnumerator GetEnumerator()
+    {
+        return this;
+    }
 }
 
 public static class StringExtensions

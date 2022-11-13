@@ -1,38 +1,48 @@
 namespace MyGame.BitmapFonts;
 
-/// <summary>
-/// Represents the font kerning between two characters.
-/// </summary>
+/// <summary>Represents the font kerning between two characters.</summary>
 public struct Kerning : IEquatable<Kerning>
 {
-	/// <summary>
-	/// Gets or sets how much the x position should be adjusted when drawing the second character immediately following the first.
-	/// </summary>
+	/// <summary>Gets or sets how much the x position should be adjusted when drawing the second character immediately following the first.</summary>
 	public int Amount;
 
-	public char FirstCharacter;
-	public char SecondCharacter;
+    public char FirstCharacter;
+    public char SecondCharacter;
 
-	public Kerning(char firstCharacter, char secondCharacter, int amount)
-	{
-		FirstCharacter = firstCharacter;
-		SecondCharacter = secondCharacter;
-		Amount = amount;
-	}
+    public Kerning(char firstCharacter, char secondCharacter, int amount)
+    {
+        FirstCharacter = firstCharacter;
+        SecondCharacter = secondCharacter;
+        Amount = amount;
+    }
 
-	public override bool Equals(object? obj)
-	{
-		if (obj == null)
-			return false;
-		if (obj.GetType() != typeof(Kerning))
-			return false;
+    public override bool Equals(object? obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
 
-		return Equals((Kerning) obj);
-	}
+        if (obj.GetType() != typeof(Kerning))
+        {
+            return false;
+        }
 
-	public bool Equals(Kerning other) => FirstCharacter == other.FirstCharacter && SecondCharacter == other.SecondCharacter;
+        return Equals((Kerning)obj);
+    }
 
-	public override int GetHashCode() => (FirstCharacter << 16) | SecondCharacter;
+    public bool Equals(Kerning other)
+    {
+        return FirstCharacter == other.FirstCharacter && SecondCharacter == other.SecondCharacter;
+    }
 
-	public override string ToString() => string.Format("{0} to {1} = {2}", FirstCharacter, SecondCharacter, Amount);
+    public override int GetHashCode()
+    {
+        return (FirstCharacter << 16) | SecondCharacter;
+    }
+
+    public override string ToString()
+    {
+        return string.Format("{0} to {1} = {2}", FirstCharacter, SecondCharacter, Amount);
+    }
 }

@@ -1,31 +1,30 @@
-using ImGuiNET;
+using Mochi.DearImGui;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 using MyGame.TWImGui;
-using SDL2;
 
 namespace MyGame.Screens;
 
-public class ImGuiScreen
+public unsafe class ImGuiScreen
 {
-    internal SortedList<string, ImGuiWindow> Windows = new();
-
-    private readonly ImGuiRenderer _imGuiRenderer;
-    private MyGameMain _game;
-    private float _alpha = 1.0f;
-    private readonly Sampler _sampler;
-    private ulong _imGuiDrawCount;
-    private int _updateFps = 60;
-    private float _updateRate = 1 / 60f;
-    private float _lastUpdateTime;
-    private readonly string[] _blendStateNames;
-    private List<ImGuiMenu> _menuItems = new();
-    private float _mainMenuPaddingY = 6f;
-    private bool _doRender;
-    private List<InputState> _inputStates = new();
-
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
+
+    private readonly string[] _blendStateNames;
+
+    private readonly ImGuiRenderer _imGuiRenderer;
+    private readonly Sampler _sampler;
+    private readonly float _alpha = 1.0f;
+    private bool _doRender;
+    private readonly MyGameMain _game;
+    private ulong _imGuiDrawCount;
+    private readonly List<InputState> _inputStates = new();
+    private float _lastUpdateTime;
+    private readonly float _mainMenuPaddingY = 6f;
+    private readonly List<ImGuiMenu> _menuItems = new();
+    private int _updateFps = 60;
+    private readonly float _updateRate = 1 / 60f;
+    internal SortedList<string, ImGuiWindow> Windows = new();
 
 
     public ImGuiScreen(MyGameMain game)
@@ -55,8 +54,14 @@ public class ImGuiScreen
     private static void ShowImGuiDemoWindow(ImGuiWindow window)
     {
         if (!window.IsOpen)
+        {
             return;
-        ImGui.ShowDemoWindow(ref window.IsOpen);
+        }
+
+        fixed (bool* isOpen = &window.IsOpen)
+        {
+            ImGui.ShowDemoWindow(isOpen);
+        }
     }
 
     private void AddDefaultWindows()
@@ -66,14 +71,14 @@ public class ImGuiScreen
             new ImGuiCallbackWindow("Debug", DrawDebugWindow)
             {
                 IsOpen = true,
-                KeyboardShortcut = "^F1"
+                KeyboardShortcut = "^F1",
             },
             new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
             {
                 IsOpen = true,
-                KeyboardShortcut = "^F2"
+                KeyboardShortcut = "^F2",
             },
-            new ImGuiWorldWindow()
+            new ImGuiWorldWindow(),
         };
         foreach (var window in windows)
         {
@@ -91,11 +96,13 @@ public class ImGuiScreen
         }
 
         if (IsHidden)
+        {
             return;
+        }
 
         var newState = InputState.Create(inputHandler, allowKeyboardInput, allowMouseInput);
         _inputStates.Add(newState);
-        
+
         var deltaTime = _game.TotalElapsedTime - _lastUpdateTime;
         if (deltaTime > _updateRate)
         {
@@ -110,7 +117,9 @@ public class ImGuiScreen
     public void Draw(Renderer renderer)
     {
         if (IsHidden)
+        {
             return;
+        }
 
         if (_doRender)
         {
@@ -122,7 +131,9 @@ public class ImGuiScreen
         }
 
         if (_imGuiDrawCount == 0)
+        {
             return;
+        }
 
         var sprite = new Sprite(_imGuiRenderer.RenderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White, 0);
@@ -135,23 +146,26 @@ public class ImGuiScreen
     private void DrawDebugWindow(ImGuiWindow window)
     {
         if (!window.IsOpen)
+        {
             return;
+        }
+
         ImGui.SetNextWindowBgAlpha(_alpha);
 
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
             ImGui.Text("MyGame Debug");
-            ImGui.TextUnformatted($"Nav: {ImGui.GetIO().NavActive}");
+            ImGui.TextUnformatted($"Nav: {(ImGui.GetIO()->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"FrameCount: {_game.UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {_game.DrawCount}");
 
-            if (ImGui.Button("Reload World"))
+            if (ImGui.Button("Reload World", default))
             {
                 _game.GameScreen.LoadWorld();
             }
 
-            ImGui.SliderFloat("ShakeSpeed", ref FancyTextComponent.ShakeSpeed, 0, 500);
-            ImGui.SliderFloat("ShakeAmount", ref FancyTextComponent.ShakeAmount, 0, 500);
+            ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
+            ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
         }
 
         ImGui.End();
@@ -164,8 +178,8 @@ public class ImGuiScreen
             if (depth == 0)
             {
                 var style = ImGui.GetStyle();
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style.ItemSpacing.X, style.FramePadding.Y * 2f));
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
             }
 
             var result = ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true);
@@ -196,7 +210,9 @@ public class ImGuiScreen
     private void CheckMenuShortcuts(ImGuiMenu menu)
     {
         if (!(menu.IsEnabled ?? true))
+        {
             return;
+        }
 
         if (ImGuiExt.IsKeyboardShortcutPressed(menu.Shortcut))
         {
@@ -212,11 +228,13 @@ public class ImGuiScreen
     private void DrawMenu()
     {
         var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
         var result = ImGui.BeginMainMenuBar();
         ImGui.PopStyleVar();
         if (!result)
+        {
             return;
+        }
 
         foreach (var menu in _menuItems)
         {
@@ -228,15 +246,15 @@ public class ImGuiScreen
             CheckMenuShortcuts(menu);
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style.FramePadding.X, _mainMenuPaddingY));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style.ItemSpacing.X, style.FramePadding.Y * 2f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
         var windowMenu = ImGui.BeginMenu("Window");
         ImGui.PopStyleVar(2);
         if (windowMenu)
         {
             foreach (var (key, window) in Windows)
             {
-                ImGui.MenuItem(window.Title, window.KeyboardShortcut, ref window.IsOpen);
+                ImGui.MenuItem(window.Title, window.KeyboardShortcut, ImGuiExt.RefPtr(ref window.IsOpen));
             }
 
             ImGui.EndMenu();
@@ -251,7 +269,9 @@ public class ImGuiScreen
         {
             var cursor = ImGui.GetMouseCursor();
             if (cursor == ImGuiMouseCursor.Arrow)
+            {
                 ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            }
         }
 
         var dockId = ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
@@ -286,10 +306,12 @@ public class ImGuiScreen
     {
         foreach (var (key, window) in Windows)
         {
-            if (!ImGui.GetIO().WantTextInput)
+            if (!ImGui.GetIO()->WantTextInput)
             {
                 if (ImGuiExt.IsKeyboardShortcutPressed(window.KeyboardShortcut))
+                {
                     window.IsOpen = !window.IsOpen;
+                }
             }
 
             ImGui.SetNextWindowDockID(dockId, ImGuiCond.FirstUseEver);
@@ -299,9 +321,9 @@ public class ImGuiScreen
 
     public void Destroy()
     {
-        var fileName = ImGui.GetIO().IniFilename;
+        var fileName = ImGuiExt.StringFromPtr(ImGui.GetIO()->IniFilename);
         ImGui.SaveIniSettingsToDisk(fileName);
-        Logger.LogInfo($"Saved ImGui Settings to {fileName}");
+        Logger.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
         _imGuiRenderer.Dispose();
     }
 }

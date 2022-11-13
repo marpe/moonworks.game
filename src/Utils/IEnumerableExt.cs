@@ -14,7 +14,7 @@ public static class IEnumerableExt
 
         var list = items.ToList();
 
-        int maxDigits = list
+        var maxDigits = list
             .SelectMany(i =>
                 regex.Matches(selector(i) ?? string.Empty)
                     .Select(digitChunk => (int?)digitChunk.Value.Length)

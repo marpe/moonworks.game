@@ -5,8 +5,8 @@ namespace MyGame.Screens;
 
 public class MenuItem
 {
-    public string Text;
     public Action Callback;
+    public string Text;
 
     public MenuItem(string text, Action callback)
     {
@@ -17,13 +17,12 @@ public class MenuItem
 
 public class MenuScreen
 {
-    public bool IsHidden { get; private set; } = true;
+    private readonly FancyTextComponent _title;
 
-    private MyGameMain _game;
+    private readonly MyGameMain _game;
+    private readonly List<MenuItem> _menuItems;
 
     private int _selectedIndex = -1;
-    private List<MenuItem> _menuItems;
-    private readonly FancyTextComponent _title;
     private Point Position;
 
     public MenuScreen(MyGameMain game)
@@ -31,7 +30,7 @@ public class MenuScreen
         _game = game;
 
         _title = new FancyTextComponent("<~>Menu</~>");
-        _menuItems = new(new[]
+        _menuItems = new List<MenuItem>(new[]
         {
             new MenuItem("Resume", () => { IsHidden = !IsHidden; }),
             new MenuItem("New Game", OnPlay),
@@ -41,6 +40,8 @@ public class MenuScreen
 
         _selectedIndex = 0;
     }
+
+    public bool IsHidden { get; private set; } = true;
 
 
     private void OnPlay()
@@ -57,10 +58,14 @@ public class MenuScreen
         var input = _game.InputHandler;
 
         if (allowKeyboardInput && input.IsKeyPressed(KeyCode.Escape))
+        {
             IsHidden = !IsHidden;
+        }
 
         if (IsHidden)
+        {
             return;
+        }
 
         Position = _game.MainWindow.Size / 2;
         _title.Position = Position + new Vector2(0, -60);
@@ -91,7 +96,7 @@ public class MenuScreen
     {
         if (!IsHidden)
         {
-            renderer.DrawRect(renderer.RenderRect, Color.Black * 0.5f, 0f);
+            renderer.DrawRect(renderer.RenderRect, Color.Black * 0.5f);
 
             var font = BMFontType.ConsolasMonoHuge;
             // var font = renderer.TextBatcher.GetFont(FontType.ConsolasMonoLarge);

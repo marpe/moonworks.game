@@ -25,11 +25,11 @@ public static class ConsoleSettings
     public static float CaretBlinkSpeed = 5f;
     public static int ScrollSpeed = 3;
     public static int HorizontalPadding = 30;
-    
+
     public static string CaretChar = "_";
     public static string InputLineChar = "> ";
     public static string ScrollIndicatorChar = "^";
-    
+
     [CVar("con.alpha", "Sets console alpha [0-1]")]
     public static float BackgroundAlpha = .9f;
 
@@ -38,13 +38,13 @@ public static class ConsoleSettings
 
     [CVar("con.speed", "Config transition duration in seconds")]
     public static float TransitionDuration = 0.1f;
-    
+
     [CVar("con.debug", "Show console debug info")]
     public static bool ShowDebug;
 
     [CVar("con.bmfont", "Use BMFont to render console")]
     public static bool UseBMFont;
-    
+
     [CVar("con.render_rate", "Controls the console render rate (fps)")]
     public static float RenderRatePerSecond = 120f;
 }
