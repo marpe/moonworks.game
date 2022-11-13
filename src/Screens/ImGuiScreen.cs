@@ -19,12 +19,11 @@ public unsafe class ImGuiScreen
     private readonly MyGameMain _game;
     private ulong _imGuiDrawCount;
     private readonly List<InputState> _inputStates = new();
-    private float _lastUpdateTime;
     private readonly float _mainMenuPaddingY = 6f;
     private readonly List<ImGuiMenu> _menuItems = new();
-    private int _updateFps = 60;
-    private readonly float _updateRate = 1 / 60f;
+    private int _updateRate = 1;
     internal SortedList<string, ImGuiWindow> Windows = new();
+    private float _prevElapsedTime;
 
 
     public ImGuiScreen(MyGameMain game)
@@ -103,13 +102,13 @@ public unsafe class ImGuiScreen
         var newState = InputState.Create(inputHandler, allowKeyboardInput, allowMouseInput);
         _inputStates.Add(newState);
 
-        var deltaTime = _game.TotalElapsedTime - _lastUpdateTime;
-        if (deltaTime > _updateRate)
+        if ((int)_game.UpdateCount % _updateRate == 0)
         {
             var inputState = InputState.Aggregate(_inputStates);
             _inputStates.Clear();
+            var deltaTime = _game.TotalElapsedTime - _prevElapsedTime;
             _imGuiRenderer.Update(deltaTime, inputState);
-            _lastUpdateTime = _game.TotalElapsedTime;
+            _prevElapsedTime = _game.TotalElapsedTime;
             _doRender = true;
         }
     }
@@ -154,10 +153,12 @@ public unsafe class ImGuiScreen
 
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
+            var io = ImGui.GetIO();
             ImGui.Text("MyGame Debug");
-            ImGui.TextUnformatted($"Nav: {(ImGui.GetIO()->NavActive ? "Y" : "N")}");
+            ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"FrameCount: {_game.UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {_game.DrawCount}");
+            ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
             if (ImGui.Button("Reload World", default))
             {
@@ -166,6 +167,7 @@ public unsafe class ImGuiScreen
 
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
             ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
+            ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _updateRate), 1, 10, default);
         }
 
         ImGui.End();

@@ -329,12 +329,12 @@ public unsafe class ImGuiRenderer
 
         if (isDisposing)
         {
+            ImGui.DestroyPlatformWindows();
+
             var io = ImGui.GetIO();
             ImGui.MemFree(io->BackendPlatformName);
             io->BackendPlatformName = null;
-
-            ImGui.DestroyPlatformWindows();
-
+            io->BackendPlatformUserData = null;
             _handle.Free();
 
             foreach (var texture in _textures)

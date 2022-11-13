@@ -91,7 +91,7 @@ public static unsafe class ImGuiThemes
         style->PopupBorderSize = 1;
         style->FrameBorderSize = 0;
         style->TabBorderSize = 1;
-        style->WindowRounding = 7;
+        style->WindowRounding = 0; // 7
         style->ChildRounding = 4;
         style->FrameRounding = 3;
         style->PopupRounding = 4;

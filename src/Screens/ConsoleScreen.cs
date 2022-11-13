@@ -34,25 +34,19 @@ public class ConsoleScreen
     private float _caretBlinkTimer;
     private int _charsDrawn;
     private int _commandHistoryIndex = -1;
-    private ulong _drawCountPerSecond;
     private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
     private readonly Easing.Function.Float[] _easeFuncs = Enum.GetValues<Easing.Function.Float>();
 
     private readonly InputField _inputField = new(1024, TWConsole.TWConsole.BUFFER_WIDTH);
-    private double _nextFPSUpdate;
-    private double _nextRenderTime = 0;
 
     private readonly KeyCode[] _pageUpAndDown = { KeyCode.PageUp, KeyCode.PageDown };
-    private ulong _prevDrawCount;
 
     private Texture _renderTarget;
 
-    private readonly Stopwatch _stopwatch;
     private readonly char[] _tmpArr = new char[1];
 
     private float _transitionPercentage;
     private readonly KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
-    private ulong DrawCount;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -62,7 +56,6 @@ public class ConsoleScreen
         _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
-        _stopwatch = Stopwatch.StartNew();
 
         _colors = new[]
         {
@@ -458,24 +451,14 @@ public class ConsoleScreen
             return;
         }
 
-        if (_stopwatch.Elapsed.TotalSeconds > _nextRenderTime)
+        if (((int)_game.DrawCount % ConsoleSettings.RenderRate) == 0)
         {
-            DrawCount++;
             renderer.FlushBatches(); // flush so that draw calls doesn't spill into console renderTarget
 
             DrawInternal(renderer, alpha);
 
             var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
             renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
-
-            _nextRenderTime = _stopwatch.Elapsed.TotalSeconds + 1.0 / ConsoleSettings.RenderRatePerSecond;
-        }
-
-        if (_stopwatch.Elapsed.TotalSeconds > _nextFPSUpdate)
-        {
-            _drawCountPerSecond = (ulong)((DrawCount - _prevDrawCount) / 1.0);
-            _prevDrawCount = DrawCount;
-            _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 1.0;
         }
 
         var sprite = new Sprite(_renderTarget);
@@ -568,13 +551,11 @@ public class ConsoleScreen
             }
         }
 
-        var elapsedMs = sw.ElapsedMilliseconds;
 
         if (showInput)
         {
             DrawInput(renderer, textArea, displayPosition);
         }
-
 
         if (ConsoleSettings.ShowDebug)
         {
@@ -583,8 +564,7 @@ public class ConsoleScreen
                 $"DrawCalls({renderer.SpriteBatch.DrawCalls}) " +
                 $"DisplayY({TwConsole.ScreenBuffer.DisplayY}) " +
                 $"CursorY({TwConsole.ScreenBuffer.CursorY}) " +
-                $"Elapsed({elapsedMs}ms) " +
-                $"FPS({_drawCountPerSecond}) ";
+                $"Elapsed({sw.ElapsedMilliseconds}ms) ";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
                 _backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
