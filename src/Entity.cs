@@ -19,6 +19,7 @@ public partial class Enemy : Entity
     public SpriteFlip Flip;
     public float TotalTime;
     public Velocity Velocity = new();
+    public float TimeOffset;
 }
 
 public partial class Gun_Pickup : Entity

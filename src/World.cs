@@ -32,6 +32,12 @@ public class World
 
     public float Gravity = 800f;
 
+    public List<Enemy> Enemies { get; }
+
+    public Player Player { get; }
+
+    public long GridSize => LdtkRaw.DefaultGridSize;
+
     private readonly LdtkJson LdtkRaw;
     private readonly Dictionary<string, Texture> Textures = new();
     private readonly Dictionary<long, Texture> TilesetTextures;
@@ -62,11 +68,15 @@ public class World
 
         foreach (var ent in allEntities)
         {
-            if (ent is Enemy enemy && enemy.Type == EnemyType.Slug)
+            if (ent is Enemy enemy)
             {
-                var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
-                enemy.Velocity.Delta = new Vector2(randomDirection * 50f, 0);
-                enemy.Velocity.Friction = new Vector2(0.99f, 0.99f);
+                enemy.TimeOffset = enemy.Position.X;
+                if (enemy.Type == EnemyType.Slug)
+                {
+                    var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
+                    enemy.Velocity.Delta = new Vector2(randomDirection * 50f, 0);
+                    enemy.Velocity.Friction = new Vector2(0.99f, 0.99f);
+                }
             }
         }
 
@@ -90,12 +100,6 @@ public class World
         Enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
     }
 
-    public List<Enemy> Enemies { get; }
-
-    public Player Player { get; }
-
-    public long GridSize => LdtkRaw.DefaultGridSize;
-
     private static List<Entity> LoadEntitiesInLevel(Level level)
     {
         var entities = new List<Entity>();
@@ -118,7 +122,7 @@ public class World
                 entity.Position = level.Position + entityInstance.Position;
                 entity.InitialPosition = entity.PreviousPosition = entity.Position;
                 entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
-                entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor[1..]);
+                entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
 
                 foreach (var field in entityInstance.FieldInstances)
                 {
@@ -167,26 +171,27 @@ public class World
             if (entity.Type == EnemyType.Slug)
             {
                 var (cell, cellRel) = GetGridCoords(entity);
-                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1) && cellRel.X > 0.9f)
+                var turnDistanceFromEdge = 0.1f;
+                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1) && cellRel.X > (1.0f - turnDistanceFromEdge))
                 {
                     entity.Velocity.X *= -1;
                 }
-                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1) && cellRel.X < 0.1f)
+                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1) && cellRel.X < turnDistanceFromEdge)
                 {
                     entity.Velocity.X *= -1;
                 }
 
-                var prevVelocity = entity.Velocity.Delta;
                 var collisions = HandleCollisions(entity, entity.Velocity, deltaSeconds);
 
                 entity.Position += entity.Velocity * deltaSeconds;
+                var slugSpeed = 50f;
                 if ((collisions & CollisionDir.Left) != 0)
                 {
-                    entity.Velocity.Delta = new Vector2(50f, 0);
+                    entity.Velocity.Delta = new Vector2(slugSpeed, 0);
                 }
                 else if ((collisions & CollisionDir.Right) != 0)
                 {
-                    entity.Velocity.Delta = new Vector2(-50f, 0);
+                    entity.Velocity.Delta = new Vector2(-slugSpeed, 0);
                 }
 
                 Velocity.ApplyFriction(entity.Velocity);
@@ -205,15 +210,17 @@ public class World
                     entity.Velocity.Y += Gravity * deltaSeconds;
                 }
 
-                if (Math.Abs(entity.Velocity.X) < 25f)
+                if (Math.Abs(entity.Velocity.X) < slugSpeed * 0.5f)
                 {
                     entity.Velocity.X += entity.Velocity.X;
                 }
             }
             else if (entity.Type == EnemyType.YellowBee)
             {
-                var speed = 3f;
-                var deltaMove = new Vector2(MathF.Cos(entity.TotalTime * 3f), MathF.Sin(entity.TotalTime * 3f)) * 10f;
+                var speed = 2f;
+                var radius = 25f;
+                var t = entity.TimeOffset + entity.TotalTime * speed;
+                var deltaMove = new Vector2(MathF.Cos(t) * 2.0f, MathF.Cos(t) * MathF.Cos(t) - MathF.Sin(t) * MathF.Sin(t)) * 2.0f * radius;
                 entity.Velocity.Delta = deltaMove;
                 entity.Position += entity.Velocity * deltaSeconds;
 
@@ -409,7 +416,7 @@ public class World
             {
                 Logger.LogInfo($"Collision was resolved at: {new Point(cell.X + cellDelta.X, cell.Y)}!");
             }
-            
+
             if (velocity.X < 0 && !collisionResolved)
             {
                 result |= CollisionDir.Left;

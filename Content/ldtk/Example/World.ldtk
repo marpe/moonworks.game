@@ -1677,7 +1677,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Gun_Pickup",
-							"__grid": [10,11],
+							"__grid": [10,10],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1686,12 +1686,12 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 107,
-							"px": [171,178],
+							"px": [171,162],
 							"fieldInstances": []
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [15,10],
+							"__grid": [14,9],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1700,7 +1700,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [247,168],
+							"px": [231,152],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [ { "cx": 16, "cy": 11 }, { "cx": 14, "cy": 11 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
 									"id": "V_String",
@@ -1893,7 +1893,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [15,11],
+							"__grid": [15,9],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
@@ -1902,7 +1902,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [248,184],
+							"px": [248,152],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
@@ -1914,7 +1914,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [19,11],
+							"__grid": [19,9],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
@@ -1923,7 +1923,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [312,184],
+							"px": [312,152],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
