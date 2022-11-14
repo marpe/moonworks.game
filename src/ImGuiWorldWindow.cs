@@ -15,6 +15,7 @@ public unsafe class ImGuiWorldWindow : ImGuiWindow
     public ImGuiWorldWindow() : base(WindowTitle)
     {
         KeyboardShortcut = "^W";
+        IsOpen = true;
     }
 
     public override void Draw()

@@ -1,7 +1,9 @@
 using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 using MyGame.Graphics;
 using MyGame.TWConsole;
 using MyGame.TWImGui;
+using ImGuiWindow = MyGame.TWImGui.ImGuiWindow;
 
 namespace MyGame.Screens;
 
@@ -24,7 +26,9 @@ public unsafe class ImGuiScreen
     private int _updateRate = 1;
     internal SortedList<string, ImGuiWindow> Windows = new();
     private float _prevElapsedTime;
-
+    private bool _firstTime = true;
+    private static readonly string _debugWindowName = "MyGame Debug";
+    private static string _imguiDemoWindowName = "ImGui Demo Window";
 
     public ImGuiScreen(MyGameMain game)
     {
@@ -67,14 +71,14 @@ public unsafe class ImGuiScreen
     {
         var windows = new ImGuiWindow[]
         {
-            new ImGuiCallbackWindow("Debug", DrawDebugWindow)
+            new ImGuiCallbackWindow(_debugWindowName, DrawDebugWindow)
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F1",
             },
-            new ImGuiCallbackWindow("ImGui Demo Window", ShowImGuiDemoWindow)
+            new ImGuiCallbackWindow(_imguiDemoWindowName, ShowImGuiDemoWindow)
             {
-                IsOpen = true,
+                IsOpen = false,
                 KeyboardShortcut = "^F2",
             },
             new ImGuiWorldWindow(),
@@ -154,7 +158,6 @@ public unsafe class ImGuiScreen
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
             var io = ImGui.GetIO();
-            ImGui.Text("MyGame Debug");
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"FrameCount: {_game.UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {_game.DrawCount}");
@@ -276,7 +279,22 @@ public unsafe class ImGuiScreen
             }
         }
 
-        var dockId = ImGui.DockSpaceOverViewport(ImGui.GetMainViewport(), ImGuiDockNodeFlags.PassthruCentralNode);
+        var mainViewport = ImGui.GetMainViewport();
+        var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
+
+        if (_firstTime)
+        {
+            ImGuiInternal.DockBuilderRemoveNodeChildNodes(dockId);
+
+            var leftWidth = 0.15f;
+            var dockLeft = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, null, &dockId);
+            var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
+            var dockDown = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
+            ImGuiInternal.DockBuilderDockWindow(_debugWindowName, dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(ImGuiWorldWindow.WindowTitle, dockDown);
+            ImGuiInternal.DockBuilderFinish(dockId);
+            _firstTime = false;
+        }
 
         DrawMenu();
 
