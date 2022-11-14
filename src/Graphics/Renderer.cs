@@ -1,4 +1,5 @@
-﻿using MoonWorks.Graphics.Font;
+﻿using System.Diagnostics.CodeAnalysis;
+using MoonWorks.Graphics.Font;
 
 namespace MyGame.Graphics;
 
@@ -28,8 +29,6 @@ public class Renderer
     public readonly TextBatcher TextBatcher;
 
     private CommandBuffer? _commandBuffer;
-
-    private Texture? _prevSwapTexture;
 
     private Texture? _swapTexture;
 
@@ -118,10 +117,8 @@ public class Renderer
     public CommandBuffer CommandBuffer =>
         _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
 
-    public Texture PrevSwapTexture => _prevSwapTexture ?? throw new InvalidOperationException("PrevSwapTexture is null");
-
-    public Texture SwapTexture =>
-        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");
+    /*public Texture SwapTexture =>
+        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");*/
 
     public Rectangle RenderRect => new(0, 0, RenderSize.X, RenderSize.Y);
     public BMFont[] BMFonts { get; }
@@ -136,16 +133,19 @@ public class Renderer
         _pipelines[(int)BlendState.Custom] = CreateGraphicsPipeline(_device, CustomBlendState);
     }
 
-    public bool BeginFrame()
+    public bool BeginFrame([NotNullWhen(true)] out Texture? swapTexture)
     {
         _commandBuffer = _device.AcquireCommandBuffer();
         _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
+        
         if (_swapTexture == null)
         {
             Logger.LogError("Could not acquire swapchain texture");
+            swapTexture = null;
             return false;
         }
 
+        swapTexture = _swapTexture;
         var windowSize = _game.MainWindow.Size;
         TextureUtils.EnsureTextureSize(ref DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
         DepthStencilAttachmentInfo.Texture = DepthTexture;
@@ -208,13 +208,12 @@ public class Renderer
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
 
-    public void FlushBatches()
+    public void FlushBatches(Texture renderTarget)
     {
-        var swap = SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        FlushBatches(swap, viewProjection);
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderTarget.Width, renderTarget.Height);
+        FlushBatches(renderTarget, viewProjection);
     }
-
+    
     public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
@@ -236,7 +235,6 @@ public class Renderer
     {
         _device.Submit(CommandBuffer);
         _commandBuffer = null;
-        _prevSwapTexture = _swapTexture;
         _swapTexture = null;
     }
 
@@ -252,7 +250,6 @@ public class Renderer
             _pipelines[i].Dispose();
         }
 
-        _prevSwapTexture?.Dispose();
         _blankTexture.Dispose();
         TextBatcher.Unload();
         SpriteBatch.Unload();

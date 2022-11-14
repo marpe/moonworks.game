@@ -53,11 +53,11 @@ public class MenuScreen
         _game.Quit();
     }
 
-    public void Update(float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
+    public void Update(float deltaSeconds)
     {
         var input = _game.InputHandler;
 
-        if (allowKeyboardInput && input.IsKeyPressed(KeyCode.Escape))
+        if (input.IsKeyPressed(KeyCode.Escape))
         {
             IsHidden = !IsHidden;
         }
@@ -71,28 +71,26 @@ public class MenuScreen
         _title.Position = Position + new Vector2(0, -60);
         _title.Update(deltaSeconds);
 
-        if (allowKeyboardInput)
-        {
-            if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
-            {
-                _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
-            }
-            else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
-            {
-                _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
-            }
 
-            if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
+        if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
+        {
+            _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
+        }
+        else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
+        {
+            _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
+        }
+
+        if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
+        {
+            if (_selectedIndex != -1)
             {
-                if (_selectedIndex != -1)
-                {
-                    _menuItems[_selectedIndex].Callback.Invoke();
-                }
+                _menuItems[_selectedIndex].Callback.Invoke();
             }
         }
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         if (!IsHidden)
         {

@@ -1,4 +1,3 @@
-using Mochi.DearImGui;
 using MyGame.Graphics;
 using MyGame.Screens;
 using SDL2;
@@ -18,14 +17,19 @@ public class MyGameMain : Game
     public readonly Renderer Renderer;
     private double _drawFps;
 
-    private ImGuiScreen? _imGuiScreen;
-
     private double _nextFPSUpdate = 1.0;
     private ulong _prevDrawCount;
     private ulong _prevUpdateCount;
 
     private readonly Stopwatch _stopwatch;
     private double _updateFps;
+    
+    public ulong UpdateCount { get; private set; }
+    public ulong DrawCount { get; private set; }
+    public float TotalElapsedTime { get; private set; }
+    public float ElapsedTime { get; private set; }
+    public ConsoleScreen ConsoleScreen { get; }
+    public GameScreen GameScreen { get; }
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -50,18 +54,8 @@ public class MyGameMain : Game
         _menuScreen = new MenuScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
 
-        Task.Run(() => { _imGuiScreen = new ImGuiScreen(this); });
-
         Logger.LogInfo($"Game Loaded in {_stopwatch.ElapsedMilliseconds} ms");
     }
-
-    public ulong UpdateCount { get; private set; }
-    public ulong DrawCount { get; private set; }
-    public float TotalElapsedTime { get; private set; }
-    public float ElapsedTime { get; private set; }
-    public ConsoleScreen ConsoleScreen { get; }
-
-    public GameScreen GameScreen { get; }
 
 
     protected override void Update(TimeSpan dt)
@@ -70,15 +64,7 @@ public class MyGameMain : Game
         ElapsedTime = (float)dt.TotalSeconds;
         TotalElapsedTime += ElapsedTime;
 
-        if (_stopwatch.Elapsed.TotalSeconds >= _nextFPSUpdate)
-        {
-            _updateFps = UpdateCount - _prevUpdateCount;
-            _drawFps = DrawCount - _prevDrawCount;
-            _prevUpdateCount = UpdateCount;
-            _prevDrawCount = DrawCount;
-            _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 1.0;
-            SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {_updateFps:0.##}, Draw: {_drawFps:0.##}");
-        }
+        UpdateWindowTitle();
 
         InputHandler.BeginFrame();
 
@@ -91,80 +77,65 @@ public class MyGameMain : Game
         {
             ConsoleScreen.Update(ElapsedTime);
 
-            var allowKeyboardInput = ConsoleScreen.IsHidden;
-            var allowMouseInput = ConsoleScreen.IsHidden;
-
-            _menuScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
+            if (!ConsoleScreen.IsHidden)
+                InputHandler.MouseEnabled = InputHandler.KeyboardEnabled = false;
+            
+            _menuScreen.Update(ElapsedTime);
 
             if (!_menuScreen.IsHidden)
-            {
-                allowKeyboardInput = false;
-                allowMouseInput = false;
-            }
-
-            unsafe
-            {
-                if (_imGuiScreen != null)
-                {
-                    _imGuiScreen.Update(ElapsedTime, allowKeyboardInput, allowMouseInput);
-                    if (!ImGuiScreen.IsHidden)
-                    {
-                        var io = ImGui.GetIO();
-                        if (io->WantCaptureKeyboard)
-                        {
-                            allowKeyboardInput = false;
-                        }
-
-                        if (io->WantCaptureMouse)
-                        {
-                            allowMouseInput = false;
-                        }
-                    }
-                }
-            }
+                InputHandler.MouseEnabled = InputHandler.KeyboardEnabled = false;
 
             var isPaused = !_menuScreen.IsHidden;
-            GameScreen.Update(isPaused, ElapsedTime, allowKeyboardInput, allowMouseInput);
+            GameScreen.Update(isPaused, ElapsedTime);
         }
 
 
         InputHandler.EndFrame();
     }
 
+    private void UpdateWindowTitle()
+    {
+        if (_stopwatch.Elapsed.TotalSeconds < _nextFPSUpdate)
+            return;
+
+        _updateFps = UpdateCount - _prevUpdateCount;
+        _drawFps = DrawCount - _prevDrawCount;
+        _prevUpdateCount = UpdateCount;
+        _prevDrawCount = DrawCount;
+        _nextFPSUpdate = _stopwatch.Elapsed.TotalSeconds + 1.0;
+        SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {_updateFps:0.##}, Draw: {_drawFps:0.##}");
+    }
 
     protected override void Draw(double alpha)
     {
         if (MainWindow.IsMinimized)
-        {
             return;
-        }
 
+        if (!Renderer.BeginFrame(out var swapTexture))
+            return;
+        
+        RenderGame(alpha, swapTexture);
+        
+        Renderer.EndFrame();
+    }
+
+    protected void RenderGame(double alpha, Texture renderDestination)
+    {
         DrawCount++;
 
-        if (!Renderer.BeginFrame())
-        {
-            return;
-        }
+        GameScreen.Draw(Renderer, renderDestination, alpha);
 
-        GameScreen.Draw(Renderer, alpha);
+        _menuScreen.Draw(Renderer, renderDestination, alpha);
 
-        _imGuiScreen?.Draw(Renderer);
+        ConsoleScreen.Draw(Renderer, renderDestination, alpha);
 
-        _menuScreen.Draw(Renderer, alpha);
+        LoadingScreen.Draw(Renderer, renderDestination, alpha);
 
-        ConsoleScreen.Draw(Renderer, alpha);
-
-        LoadingScreen.Draw(Renderer, alpha);
-
-        Renderer.FlushBatches();
-
-        Renderer.EndFrame();
+        Renderer.FlushBatches(renderDestination);
     }
 
     protected override void Destroy()
     {
-        _imGuiScreen?.Destroy();
-
         GameScreen.Unload();
 
         ConsoleScreen.Unload();

@@ -8,9 +8,7 @@ public static class TextureUtils
     public static void EnsureTextureSize(ref Texture texture, GraphicsDevice device, uint width, uint height)
     {
         if (width == texture.Width && height == texture.Height)
-        {
             return;
-        }
 
         texture.Dispose();
         texture = Texture.CreateTexture2D(device, width, height, texture.Format, texture.UsageFlags);

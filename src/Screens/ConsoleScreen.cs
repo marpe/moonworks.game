@@ -120,9 +120,10 @@ public class ConsoleScreen
             }
         }
 
-        foreach (var c in inputState.TextInput)
+        var textInput = inputState.GetTextInput();
+        for (var i = 0; i < textInput.Length; i++)
         {
-            HandleTextInput(c);
+            HandleTextInput(textInput[i]);
         }
     }
 
@@ -444,7 +445,7 @@ public class ConsoleScreen
         }
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         if (ScreenState == ScreenState.Hidden)
         {
@@ -453,7 +454,7 @@ public class ConsoleScreen
 
         if (((int)_game.DrawCount % ConsoleSettings.RenderRate) == 0)
         {
-            renderer.FlushBatches(); // flush so that draw calls doesn't spill into console renderTarget
+            renderer.FlushBatches(renderDestination); // flush so that draw calls doesn't spill into console renderTarget
 
             DrawInternal(renderer, alpha);
 

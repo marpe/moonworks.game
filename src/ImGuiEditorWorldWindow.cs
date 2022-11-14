@@ -4,7 +4,7 @@ using MyGame.TWImGui.Inspectors;
 
 namespace MyGame;
 
-public unsafe class ImGuiWorldWindow : ImGuiWindow
+public unsafe class ImGuiEditorWorldWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "World";
     private GroupInspector? _cameraControllerInspector;
@@ -12,7 +12,7 @@ public unsafe class ImGuiWorldWindow : ImGuiWindow
     private GroupInspector? _inspector;
     private World? _prevWorld;
 
-    public ImGuiWorldWindow() : base(WindowTitle)
+    public ImGuiEditorWorldWindow() : base(WindowTitle)
     {
         KeyboardShortcut = "^W";
         IsOpen = true;

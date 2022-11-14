@@ -145,7 +145,7 @@ public class World
         }
     }
 
-    public void Update(bool isPaused, float deltaSeconds, InputHandler input, bool allowKeyboard, bool allowMouse)
+    public void Update(bool isPaused, float deltaSeconds, InputHandler input)
     {
         UpdatePrevious();
         if (isPaused)
@@ -153,7 +153,7 @@ public class World
             return;
         }
 
-        UpdatePlayer(deltaSeconds, input, allowKeyboard);
+        UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
     }
 
@@ -231,11 +231,11 @@ public class World
     }
 
 
-    private void UpdatePlayer(float deltaSeconds, InputHandler input, bool allowKeyboard)
+    private void UpdatePlayer(float deltaSeconds, InputHandler input)
     {
-        HandleInput(input, allowKeyboard, out var movementX);
-        var isJumpDown = allowKeyboard && input.IsKeyDown(KeyCode.Space);
-        var isJumpPressed = allowKeyboard && input.IsKeyPressed(KeyCode.Space);
+        HandleInput(input, out var movementX);
+        var isJumpDown = input.IsKeyDown(KeyCode.Space);
+        var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
 
         if (Player.Position.Y > 300)
         {
@@ -315,27 +315,24 @@ public class World
         Player.Squash = Vector2.SmoothStep(Player.Squash, Vector2.One, deltaSeconds * 20f);
     }
 
-    private void HandleInput(InputHandler input, bool allowKeyboard, out int movementX)
+    private void HandleInput(InputHandler input, out int movementX)
     {
         movementX = 0;
-        if (allowKeyboard)
+        if (input.IsKeyPressed(KeyCode.Insert))
         {
-            if (input.IsKeyPressed(KeyCode.Insert))
-            {
-                Player.Position = new Vector2(100, 50);
-            }
+            Player.Position = new Vector2(100, 50);
+        }
 
-            if (input.IsKeyDown(KeyCode.Right) ||
-                input.IsKeyDown(KeyCode.D))
-            {
-                movementX += 1;
-            }
+        if (input.IsKeyDown(KeyCode.Right) ||
+            input.IsKeyDown(KeyCode.D))
+        {
+            movementX += 1;
+        }
 
-            if (input.IsKeyDown(KeyCode.Left) ||
-                input.IsKeyDown(KeyCode.A))
-            {
-                movementX += -1;
-            }
+        if (input.IsKeyDown(KeyCode.Left) ||
+            input.IsKeyDown(KeyCode.A))
+        {
+            movementX += -1;
         }
     }
 

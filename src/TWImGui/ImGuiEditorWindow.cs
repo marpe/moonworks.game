@@ -1,12 +1,12 @@
 ﻿namespace MyGame.TWImGui;
 
-public abstract class ImGuiWindow
+public abstract class ImGuiEditorWindow
 {
     public readonly string Title;
     public bool IsOpen;
     public string? KeyboardShortcut;
 
-    public ImGuiWindow(string title)
+    public ImGuiEditorWindow(string title)
     {
         Title = title;
     }

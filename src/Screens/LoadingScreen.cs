@@ -100,22 +100,21 @@ public class LoadingScreen
         }
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         if (State == TransitionState.Hidden)
         {
             return;
         }
 
-        var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderDestination.Width, renderDestination.Height);
 
         if (_shouldCopyRender)
         {
             Logger.LogInfo("Copying render...");
-            renderer.FlushBatches();
-            _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderer.SwapTexture);
-            renderer.CommandBuffer.CopyTextureToTexture(renderer.SwapTexture, _copyRender, Filter.Nearest);
+            renderer.FlushBatches(renderDestination);
+            _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+            renderer.CommandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
         }
 
@@ -124,8 +123,8 @@ public class LoadingScreen
             renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
         }
 
-        renderer.FlushBatches();
-        _sceneTransition.Draw(renderer, _progress);
+        renderer.FlushBatches(renderDestination);
+        _sceneTransition.Draw(renderer, renderDestination, _progress);
 
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;

@@ -118,37 +118,32 @@ public struct InputState
         return result;
     }
 
-    public static InputState Create(InputHandler input, bool allowKeyboard, bool allowMouse)
+    public static InputState Create(InputHandler input)
     {
         var state = new InputState();
 
-        if (allowKeyboard)
+        var textInput = input.GetTextInput();
+        Array.Resize(ref state.TextInput, textInput.Length);
+        state.NumTextInputChars = textInput.Length;
+        for (var i = 0; i < state.NumTextInputChars; i++)
         {
-            Array.Resize(ref state.TextInput, input.TextInput.Count);
-            state.NumTextInputChars = input.TextInput.Count;
-            for (var i = 0; i < state.NumTextInputChars; i++)
-            {
-                state.TextInput[i] = input.TextInput[i];
-            }
+            state.TextInput[i] = textInput[i];
+        }
 
-            for (var i = 0; i < state.KeyboardState.Length; i++)
+        for (var i = 0; i < state.KeyboardState.Length; i++)
+        {
+            if (Enum.IsDefined((KeyCode)i))
             {
-                if (Enum.IsDefined((KeyCode)i))
-                {
-                    state.KeyboardState[i] = input.IsKeyDown((KeyCode)i);
-                }
+                state.KeyboardState[i] = input.IsKeyDown((KeyCode)i);
             }
         }
 
-        if (allowMouse)
+        SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
+        state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
+        state.MouseWheelDelta = input.MouseWheelDelta;
+        for (var i = 0; i < 3; i++)
         {
-            SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
-            state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
-            state.MouseWheelDelta = input.MouseWheelDelta;
-            for (var i = 0; i < 3; i++)
-            {
-                state.MouseState[i] = input.IsMouseButtonDown((MouseButtonCode)i);
-            }
+            state.MouseState[i] = input.IsMouseButtonDown((MouseButtonCode)i);
         }
 
         return state;
@@ -198,7 +193,11 @@ public class InputHandler
 
     private readonly Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
 
-    public List<char> TextInput = new();
+    private char[] _textInput = new char[128];
+    private int _numTextInputChars = 0;
+
+    public bool KeyboardEnabled;
+    public bool MouseEnabled;
 
     public InputHandler(MyGameMain game)
     {
@@ -207,15 +206,18 @@ public class InputHandler
         Inputs.TextInput += OnTextInput;
     }
 
-    public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
+    public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;
 
-    public int MouseWheelDelta => _inputs.Mouse.Wheel;
+    public int MouseWheelDelta => MouseEnabled ? _inputs.Mouse.Wheel : 0;
 
     /// <summary>https://github.com/FNA-XNA/FNA/wiki/5:-FNA-Extensions#textinputext</summary>
     /// <param name="c"></param>
     private void OnTextInput(char c)
     {
-        TextInput.Add(c);
+        if(_numTextInputChars >= _textInput.Length)
+            Array.Resize(ref _textInput, _textInput.Length * 2);
+        _textInput[_numTextInputChars] = c;
+        _numTextInputChars += 1;
     }
 
     public void BeginFrame()
@@ -229,18 +231,19 @@ public class InputHandler
 
     public void EndFrame()
     {
-        /*if (TextInput.Count > 0)
-            Logger.LogInfo($"TextInput: {new string(TextInput.ToArray())}");*/
-        TextInput.Clear();
+        _numTextInputChars = 0;
     }
 
     public bool IsAnyModifierKeyDown()
     {
-        return _inputs.Keyboard.IsAnyKeyDown(ModifierKeys);
+        return !KeyboardEnabled && _inputs.Keyboard.IsAnyKeyDown(ModifierKeys);
     }
 
     public bool IsKeyPressed(KeyCode key, bool allowRepeating = false)
     {
+        if (!KeyboardEnabled)
+            return false;
+
         var isPressed = _inputs.Keyboard.IsPressed(key);
 
         if (allowRepeating)
@@ -258,6 +261,9 @@ public class InputHandler
 
     public bool IsAnyKeyPressed(bool allowRepeating = false)
     {
+        if (!KeyboardEnabled)
+            return false;
+
         var isPressed = _inputs.Keyboard.AnyPressed;
 
         if (allowRepeating)
@@ -273,16 +279,19 @@ public class InputHandler
 
     public bool IsAnyKeyDown(ReadOnlySpan<KeyCode> keyCodes)
     {
-        return _inputs.Keyboard.IsAnyKeyDown(keyCodes);
+        return KeyboardEnabled && _inputs.Keyboard.IsAnyKeyDown(keyCodes);
     }
 
     public bool IsKeyDown(KeyCode key)
     {
-        return _inputs.Keyboard.IsDown(key);
+        return KeyboardEnabled && _inputs.Keyboard.IsDown(key);
     }
 
     public bool IsMouseButtonDown(MouseButtonCode mouseButton)
     {
+        if (!MouseEnabled)
+            return false;
+
         return mouseButton switch
         {
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsDown,
@@ -294,6 +303,9 @@ public class InputHandler
 
     public bool IsMouseButtonHeld(MouseButtonCode mouseButton)
     {
+        if (!MouseEnabled)
+            return false;
+
         return mouseButton switch
         {
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsHeld,
@@ -301,5 +313,12 @@ public class InputHandler
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsHeld,
             _ => throw new InvalidOperationException(),
         };
+    }
+
+    public ReadOnlySpan<char> GetTextInput()
+    {
+        if (!KeyboardEnabled)
+            return Array.Empty<char>();
+        return new ReadOnlySpan<char>(_textInput, 0, _numTextInputChars);
     }
 }

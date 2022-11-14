@@ -11,7 +11,7 @@
         <RootNamespace>MyGame</RootNamespace>
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <ApplicationIcon/>
+        <ApplicationIcon />
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release</Configurations>
         <Platforms>x64</Platforms>
@@ -25,11 +25,11 @@
         <DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="lib\ldtk\LDtk.csproj"/>
-        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj"/>
+        <ProjectReference Include="lib\ldtk\LDtk.csproj" />
+        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
     </ItemGroup>
     <ItemGroup>
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
     </ItemGroup>
     <ItemGroup>
         <ContentWithTargetPath Include="lib\Mochi.DearImGui.Native\win-x64\Debug\Mochi.DearImGui.Native.dll">
@@ -42,5 +42,5 @@
             <HintPath>lib\Mochi.DearImGui\Debug-AnyCPU\Mochi.DearImGui.dll</HintPath>
         </Reference>
     </ItemGroup>
-    <Import Project=".\CopyMoonlibs.targets"/>
+    <Import Project=".\CopyMoonlibs.targets" />
 </Project>

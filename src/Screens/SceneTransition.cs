@@ -4,15 +4,14 @@ namespace MyGame.Screens;
 
 public abstract class SceneTransition
 {
-    public abstract void Draw(Renderer renderer, float progress);
+    public abstract void Draw(Renderer renderer, Texture renderDestination, float progress);
 }
 
 public class FadeToBlack : SceneTransition
 {
-    public override void Draw(Renderer renderer, float progress)
+    public override void Draw(Renderer renderer, Texture renderDestination, float progress)
     {
-        var swap = renderer.SwapTexture;
-        renderer.DrawRect(new Rectangle(0, 0, (int)swap.Width, (int)swap.Height), Color.Black * progress);
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * progress);
     }
 }
 
@@ -59,16 +58,15 @@ public class DiamondTransition : SceneTransition
         );
     }
 
-    public override void Draw(Renderer renderer, float progress)
+    public override void Draw(Renderer renderer, Texture renderDestination, float progress)
     {
         var commandBuffer = renderer.CommandBuffer;
-        var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        var swapRect = new Rectangle(0, 0, (int)swap.Width, (int)swap.Height);
+        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderDestination.Width, renderDestination.Height);
+        var swapRect = new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height);
         renderer.DrawRect(swapRect, Color.Black, 1f);
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
-            new ColorAttachmentInfo(swap, LoadOp.Load));
+            new ColorAttachmentInfo(renderDestination, LoadOp.Load));
         commandBuffer.BindGraphicsPipeline(Pipeline);
         Uniform.Progress = progress;
         commandBuffer.PushFragmentShaderUniforms(Uniform);

@@ -40,4 +40,6 @@ public struct Sprite
         uv.BottomRight.X += uv.Dimensions.X;
         uv.BottomRight.Y += uv.Dimensions.Y;
     }
+
+    public static implicit operator Sprite(Texture texture) => new(texture);
 }

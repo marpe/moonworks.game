@@ -47,24 +47,24 @@ public class GameScreen
         World?.Dispose();
     }
 
-    public void Update(bool isPaused, float deltaSeconds, bool allowKeyboardInput, bool allowMouseInput)
+    public void Update(bool isPaused, float deltaSeconds)
     {
         var input = _game.InputHandler;
-        CameraController.Update(isPaused, deltaSeconds, input, allowMouseInput, allowKeyboardInput);
-        World?.Update(isPaused, deltaSeconds, input, allowKeyboardInput, allowMouseInput);
+        CameraController.Update(isPaused, deltaSeconds, input);
+        World?.Update(isPaused, deltaSeconds, input);
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         // not sure why but if i don't render anything here the first loading screen gets weird and renders at a small size
-        var swapSize = new Point((int)renderer.SwapTexture.Width, (int)renderer.SwapTexture.Height);
-        renderer.DrawRect(new Rectangle(0, 0, swapSize.X, swapSize.Y), Color.Black);
+        // so just draw a black rectangle ¯\_(ツ)_/¯
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
 
         World?.Draw(renderer, Camera, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        renderer.FlushBatches(renderer.SwapTexture, CameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
+        renderer.FlushBatches(renderDestination, CameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
     }
 }
