@@ -103,24 +103,40 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
-        if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
+        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
+        if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen), flags))
         {
             if (_gameRenderTextureId != null)
                 _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
             _gameRenderTextureId = _imGuiRenderer.BindTexture(_gameRender);
 
             var avail = ImGui.GetContentRegionAvail();
-            
-            ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
-            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
-            ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
-            ImGui.PushStyleColor(ImGuiCol.Border, Color.Lime.PackedValue);
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Num.Vector2.Zero);
-            ImGui.ImageButton((void*)_gameRenderTextureId.Value, avail, Num.Vector2.Zero, Num.Vector2.One, -1, Num.Vector4.Zero, Num.Vector4.One);
-            ImGui.PopStyleColor(4);
-            ImGui.PopStyleVar(1);
+            var width = ImGui.GetContentRegionAvail().X;
+            var ar = (float)_gameRender.Height / _gameRender.Width;
+            var height = width * ar;
+
+            if (height > avail.Y)
+            {
+                height = avail.Y;
+                width = avail.Y * 1.0f / ar;
+            }
+
+            var imageSize = new Num.Vector2(width, height);
+            var padding = (avail - imageSize) / 2;
+
+            ImGui.SetCursorPos(padding);
+            ImGui.Image((void*)_gameRenderTextureId.Value, imageSize, Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, new Num.Vector4(1.0f, 0, 0, 1.0f));
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetNextFrameWantCaptureMouse(false);
+                ImGui.SetNextFrameWantCaptureKeyboard(false);
+            }
         }
 
+        ImGui.PopStyleVar();
         ImGui.End();
     }
 
@@ -138,6 +154,8 @@ public unsafe class MyEditorMain : MyGameMain
         {
             var io = ImGui.GetIO();
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
+            ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
+            ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
             ImGui.TextUnformatted($"FrameCount: {UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {DrawCount}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
@@ -326,6 +344,9 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
+
+            var hoveredViewport = io->MouseHoveredViewport;
+
             if (io->WantCaptureMouse)
                 InputHandler.MouseEnabled = false;
         }
@@ -346,13 +367,14 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
+        if (!Renderer.BeginFrame(out var swapTexture))
+            return;
+
+        var windowSize = MainWindow.Size;
         if (_doRender)
         {
-            if (!Renderer.BeginFrame(out _))
-                return;
-            TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, 1080, 720);
+            TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
             RenderGame(alpha, _gameRender);
-            Renderer.EndFrame();
 
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
@@ -361,10 +383,8 @@ public unsafe class MyEditorMain : MyGameMain
             _doRender = false;
         }
 
-        if (!Renderer.BeginFrame(out var swapTexture))
-            return;
         Renderer.DrawSprite(_imGuiRenderer.RenderTarget, Matrix3x2.Identity, Color.White, 0);
-        var view = SpriteBatch.GetViewProjection(0, 0, (uint)MainWindow.Size.X, (uint)MainWindow.Size.Y);
+        var view = SpriteBatch.GetViewProjection(0, 0, (uint)windowSize.X, (uint)windowSize.Y);
         Renderer.FlushBatches(swapTexture, view, Color.Black);
         Renderer.EndFrame();
     }

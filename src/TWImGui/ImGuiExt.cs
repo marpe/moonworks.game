@@ -22,11 +22,11 @@ public static unsafe class ImGuiExt
     private static readonly Stack<Color> _colorStack = new();
     public static Vector2 ButtonPadding => new(6f, 4f);
 
-    public static bool Begin(string name, ref bool isOpen)
+    public static bool Begin(string name, ref bool isOpen, ImGuiWindowFlags flags = ImGuiWindowFlags.None)
     {
         var framePadding = ImGui.GetStyle()->FramePadding;
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(framePadding.X, 8));
-        var flags = ImGuiWindowFlags.NoCollapse; // | ImGuiWindowFlags.NoTitleBar;
+        flags |= ImGuiWindowFlags.NoCollapse; // | ImGuiWindowFlags.NoTitleBar;
         var result = ImGui.Begin(name, RefPtr(ref isOpen), flags);
         ImGui.PopStyleVar();
 
