@@ -1,5 +1,3 @@
-#pragma warning disable CS8618
-
 using System.Runtime.InteropServices;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
@@ -239,7 +237,7 @@ public unsafe class ImGuiRenderer
         }
 
         var fontPath = ContentPaths.fonts.Roboto_Regular_ttf;
-        var fontPathBold = ContentPaths.fonts.Roboto_Bold_ttf;
+        // var fontPathBold = ContentPaths.fonts.Roboto_Bold_ttf;
 
         foreach (var font in _fonts)
         {
