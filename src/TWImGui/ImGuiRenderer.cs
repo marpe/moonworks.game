@@ -933,7 +933,7 @@ public unsafe class ImGuiRenderer
 
     #region KeyMapping
 
-        private static Dictionary<KeyCode, ImGuiKey> _keyMap = new()
+    private static Dictionary<KeyCode, ImGuiKey> _keyMap = new()
     {
         { KeyCode.Tab, ImGuiKey.Tab },
         { KeyCode.Left, ImGuiKey.LeftArrow },
@@ -1039,7 +1039,7 @@ public unsafe class ImGuiRenderer
         { KeyCode.KeypadPlus, ImGuiKey.KeypadAdd },
         { KeyCode.KeypadEnter, ImGuiKey.Enter },
     };
-    
+
     private static ImGuiKey MapKey(KeyCode key)
     {
         if (_keyMap.ContainsKey(key))
