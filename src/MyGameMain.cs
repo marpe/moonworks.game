@@ -1,4 +1,5 @@
 using MyGame.Graphics;
+using MyGame.Input;
 using MyGame.Screens;
 using SDL2;
 
@@ -136,11 +137,15 @@ public class MyGameMain : Game
 
     protected override void Destroy()
     {
+        Logger.LogInfo("Shutting down");
+        
         GameScreen.Unload();
 
         ConsoleScreen.Unload();
 
         Renderer.Unload();
+
+        LoadingScreen.Unload();
 
         Shared.Console.SaveCVars();
     }

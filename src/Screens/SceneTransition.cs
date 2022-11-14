@@ -4,6 +4,10 @@ namespace MyGame.Screens;
 
 public abstract class SceneTransition
 {
+    public virtual void Unload()
+    {
+    }
+    
     public abstract void Draw(Renderer renderer, Texture renderDestination, float progress);
 }
 
@@ -56,6 +60,11 @@ public class DiamondTransition : SceneTransition
             device,
             myGraphicsPipelineCreateInfo
         );
+    }
+
+    public override void Unload()
+    {
+        Pipeline.Dispose();
     }
 
     public override void Draw(Renderer renderer, Texture renderDestination, float progress)

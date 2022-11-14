@@ -24,7 +24,7 @@ internal class Program
         Logger.LogInfo = LogInfo;
         Logger.LogWarn = LogWarn;
         Logger.LogError = LogError;
-        var gameMain = new MyEditorMain(
+        var gameMain = new MyGameMain(
             windowCreateInfo,
             frameLimiterSettings,
             true

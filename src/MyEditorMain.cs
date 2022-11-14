@@ -1,6 +1,7 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Graphics;
+using MyGame.Input;
 using MyGame.TWConsole;
 using MyGame.TWImGui;
 using Vector2 = System.Numerics.Vector2;
@@ -349,8 +350,6 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         base.Update(dt);
-
-        InputHandler.KeyboardEnabled = InputHandler.MouseEnabled = true;
     }
 
     protected override void Draw(double alpha)

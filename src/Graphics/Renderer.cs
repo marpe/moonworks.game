@@ -256,8 +256,6 @@ public class Renderer
         PointClamp.Dispose();
 
         DepthTexture.Dispose();
-        DepthStencilAttachmentInfo.Texture.Dispose();
-        ColorAttachmentInfo.Texture.Dispose();
     }
 
     public static VertexInputState GetVertexInputState()

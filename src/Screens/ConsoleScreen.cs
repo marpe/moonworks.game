@@ -1,4 +1,5 @@
 using MyGame.Graphics;
+using MyGame.Input;
 using MyGame.TWConsole;
 using MyGame.Utils;
 using SDL2;
@@ -47,6 +48,7 @@ public class ConsoleScreen
 
     private float _transitionPercentage;
     private readonly KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
+    private bool _hasRender;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -448,12 +450,11 @@ public class ConsoleScreen
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         if (ScreenState == ScreenState.Hidden)
-        {
             return;
-        }
 
         if (((int)_game.DrawCount % ConsoleSettings.RenderRate) == 0)
         {
+            _hasRender = true;
             renderer.FlushBatches(renderDestination); // flush so that draw calls doesn't spill into console renderTarget
 
             DrawInternal(renderer, alpha);
@@ -461,6 +462,9 @@ public class ConsoleScreen
             var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
             renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
         }
+
+        if (!_hasRender)
+            return;
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);

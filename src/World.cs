@@ -1,5 +1,6 @@
 ﻿using MyGame.Cameras;
 using MyGame.Graphics;
+using MyGame.Input;
 using MyGame.Screens;
 using MyGame.TWConsole;
 using MyGame.Utils;

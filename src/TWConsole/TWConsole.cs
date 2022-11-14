@@ -13,13 +13,12 @@ public class TWConsole
     public readonly SortedDictionary<string, ConsoleCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);
     public readonly Dictionary<string, CVar> CVars = new();
     public readonly ConsoleScreenBuffer ScreenBuffer;
+    public static event Action<StringBuilder>? OnCfgSave;
 
     public TWConsole()
     {
         ScreenBuffer = new ConsoleScreenBuffer(BUFFER_WIDTH, BUFFER_HEIGHT);
     }
-
-    public static event Action<StringBuilder>? OnCfgSave;
 
     public void Initialize()
     {

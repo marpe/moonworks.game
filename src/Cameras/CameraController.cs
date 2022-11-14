@@ -1,4 +1,5 @@
-﻿using MyGame.Screens;
+﻿using MyGame.Input;
+using MyGame.Screens;
 using MyGame.TWConsole;
 using MyGame.TWImGui;
 

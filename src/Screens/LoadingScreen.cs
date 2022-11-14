@@ -26,7 +26,7 @@ public class LoadingScreen
     private float _previousProgress;
 
     private float _progress = 0;
-    private readonly SceneTransition _sceneTransition = new FadeToBlack();
+    private readonly SceneTransition _sceneTransition;
     private bool _shouldCopyRender;
     private readonly float _transitionSpeed = 2.0f;
 
@@ -103,9 +103,7 @@ public class LoadingScreen
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
         if (State == TransitionState.Hidden)
-        {
             return;
-        }
 
         var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderDestination.Width, renderDestination.Height);
 
@@ -113,6 +111,7 @@ public class LoadingScreen
         {
             Logger.LogInfo("Copying render...");
             renderer.FlushBatches(renderDestination);
+            _copyRender?.Dispose();
             _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
             renderer.CommandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
@@ -134,5 +133,11 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * MathHelper.Lerp(_previousProgress, _progress, (float)alpha));
+    }
+
+    public void Unload()
+    {
+        _copyRender?.Dispose();
+        _sceneTransition.Unload();
     }
 }
