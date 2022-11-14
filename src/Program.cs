@@ -27,6 +27,7 @@ internal class Program
         var gameMain = new MyGameMain(
             windowCreateInfo,
             frameLimiterSettings,
+            // 120,
             true
         );
         gameMain.Run();

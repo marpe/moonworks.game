@@ -36,7 +36,7 @@ public class MyGameMain : Game
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
         bool debugMode
-    ) : base(windowCreateInfo, frameLimiterSettings, 120, debugMode)
+    ) : base(windowCreateInfo, frameLimiterSettings, TARGET_TIMESTEP, debugMode)
     {
         _stopwatch = Stopwatch.StartNew();
 
