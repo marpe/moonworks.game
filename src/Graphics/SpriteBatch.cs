@@ -66,8 +66,8 @@ public class SpriteBatch
             _indexBuffer = Buffer.Create<uint>(_device, BufferUsageFlags.Index, (uint)_indices.Length);
         }
 
-        _spriteInfo[_numSprites].SamplerHandle = sampler.Handle;
-        _spriteInfo[_numSprites].TextureHandle = sprite.Texture.Handle;
+        _spriteInfo[_numSprites].Sampler = sampler;
+        _spriteInfo[_numSprites].Texture = sprite.Texture;
 
         var vertexCount = _numSprites * 4;
 
@@ -225,7 +225,7 @@ public class SpriteBatch
 
     private static bool BindingsAreEqual(TextureSamplerBinding a, TextureSamplerBinding b)
     {
-        return a.TextureHandle == b.TextureHandle &&
-               a.SamplerHandle == b.SamplerHandle;
+        return a.Sampler.Handle == b.Sampler.Handle &&
+               a.Texture.Handle == b.Texture.Handle;
     }
 }

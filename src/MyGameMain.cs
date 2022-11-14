@@ -5,9 +5,24 @@ using SDL2;
 
 namespace MyGame;
 
+public class TestGame : Game
+{
+    public TestGame(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep = 60, bool debugMode = false) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
+    {
+    }
+
+    protected override void Update(TimeSpan delta)
+    {
+    }
+
+    protected override void Draw(double alpha)
+    {
+    }
+}
+
 public class MyGameMain : Game
 {
-    private const int TARGET_TIMESTEP = 120;
+    public const int TARGET_TIMESTEP = 120;
 
     public readonly InputHandler InputHandler;
 
@@ -24,8 +39,9 @@ public class MyGameMain : Game
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
+        int targetTimestep,
         bool debugMode
-    ) : base(windowCreateInfo, frameLimiterSettings, TARGET_TIMESTEP, debugMode)
+    ) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
     {
         var sw = Stopwatch.StartNew();
         Shared.Game = this;
@@ -100,11 +116,11 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, renderDestination, alpha);
 
-        _menuScreen.Draw(Renderer, renderDestination, alpha);
+        // _menuScreen.Draw(Renderer, renderDestination, alpha);
 
-        _consoleScreen.Draw(Renderer, renderDestination, alpha);
+        // _consoleScreen.Draw(Renderer, renderDestination, alpha);
 
-        LoadingScreen.Draw(Renderer, renderDestination, alpha);
+        // LoadingScreen.Draw(Renderer, renderDestination, alpha);
 
         Renderer.FlushBatches(renderDestination);
     }

@@ -27,7 +27,7 @@ internal class Program
         var gameMain = new MyGameMain(
             windowCreateInfo,
             frameLimiterSettings,
-            // 120,
+            MyGameMain.TARGET_TIMESTEP,
             true
         );
         gameMain.Run();

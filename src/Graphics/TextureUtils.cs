@@ -155,7 +155,6 @@ public static class TextureUtils
             toCopy.Height,
             toCopy.Format,
             toCopy.UsageFlags | TextureUsageFlags.Sampler,
-            toCopy.SampleCount,
             toCopy.LevelCount
         );
     }

@@ -34,8 +34,8 @@ public unsafe class MyEditorMain : MyGameMain
     private string _gameWindowName = "Game";
     private IntPtr? _gameRenderTextureId;
 
-    public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, bool debugMode) : base(windowCreateInfo,
-        frameLimiterSettings, debugMode)
+    public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(windowCreateInfo,
+        frameLimiterSettings, targetTimestep, debugMode)
     {
         _gameRender = Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
