@@ -19,6 +19,7 @@ public class MyGameMain : Game
 
     public readonly Renderer Renderer;
 
+    private float _nextTitleUpdate;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -72,7 +73,11 @@ public class MyGameMain : Game
 
     private void UpdateWindowTitle()
     {
-        SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}");
+        if (Time.TotalElapsedTime >= _nextTitleUpdate)
+        {
+            SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}");
+            _nextTitleUpdate += 1f;
+        }
     }
 
     protected override void Draw(double alpha)
@@ -82,9 +87,9 @@ public class MyGameMain : Game
 
         if (!Renderer.BeginFrame(out var swapTexture))
             return;
-        
+
         RenderGame(alpha, swapTexture);
-        
+
         Renderer.EndFrame();
     }
 
@@ -106,7 +111,7 @@ public class MyGameMain : Game
     protected override void Destroy()
     {
         Logger.LogInfo("Shutting down");
-        
+
         GameScreen.Unload();
 
         _consoleScreen.Unload();
