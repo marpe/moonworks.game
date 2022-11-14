@@ -58,14 +58,10 @@ public class MenuScreen
         var input = _game.InputHandler;
 
         if (input.IsKeyPressed(KeyCode.Escape))
-        {
             IsHidden = !IsHidden;
-        }
 
         if (IsHidden)
-        {
             return;
-        }
 
         Position = _game.MainWindow.Size / 2;
         _title.Position = Position + new Vector2(0, -60);
@@ -88,6 +84,9 @@ public class MenuScreen
                 _menuItems[_selectedIndex].Callback.Invoke();
             }
         }
+        
+        // disable input for the next screen
+        input.MouseEnabled = input.KeyboardEnabled = false;
     }
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)

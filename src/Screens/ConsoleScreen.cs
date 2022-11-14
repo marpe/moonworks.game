@@ -93,17 +93,13 @@ public class ConsoleScreen
     {
         var inputState = _game.InputHandler;
         if (inputState.IsKeyPressed(KeyCode.Grave))
-        {
             IsHidden = !IsHidden;
-        }
 
         UpdateTransition(deltaSeconds);
 
         if (IsHidden)
-        {
             return;
-        }
-
+        
         CheckResize();
 
         _caretBlinkTimer += deltaSeconds;
@@ -127,6 +123,9 @@ public class ConsoleScreen
         {
             HandleTextInput(textInput[i]);
         }
+        
+        // disable input for the next screen
+        inputState.MouseEnabled = inputState.KeyboardEnabled = false;
     }
 
     private void CheckResize()

@@ -30,6 +30,8 @@ public class LoadingScreen
     private bool _shouldCopyRender;
     private readonly float _transitionSpeed = 2.0f;
 
+    public bool IsLoading => State == TransitionState.TransitionOn || State == TransitionState.Active;
+
     public LoadingScreen(MyGameMain game)
     {
         _game = game;

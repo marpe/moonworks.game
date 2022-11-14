@@ -150,9 +150,7 @@ public class World
     {
         UpdatePrevious();
         if (isPaused)
-        {
             return;
-        }
 
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);

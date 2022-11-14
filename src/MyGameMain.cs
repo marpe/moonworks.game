@@ -7,13 +7,14 @@ namespace MyGame;
 
 public class MyGameMain : Game
 {
-    public const string ContentRoot = "Content";
     private const int TARGET_TIMESTEP = 120;
 
-    private readonly MenuScreen _menuScreen;
-
     public readonly InputHandler InputHandler;
+
+    private readonly MenuScreen _menuScreen;
+    private readonly ConsoleScreen _consoleScreen;
     public readonly LoadingScreen LoadingScreen;
+    public GameScreen GameScreen { get; }
 
     public readonly Renderer Renderer;
     private double _drawFps;
@@ -29,8 +30,6 @@ public class MyGameMain : Game
     public ulong DrawCount { get; private set; }
     public float TotalElapsedTime { get; private set; }
     public float ElapsedTime { get; private set; }
-    public ConsoleScreen ConsoleScreen { get; }
-    public GameScreen GameScreen { get; }
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -53,7 +52,7 @@ public class MyGameMain : Game
 
         GameScreen = new GameScreen(this);
         _menuScreen = new MenuScreen(this);
-        ConsoleScreen = new ConsoleScreen(this);
+        _consoleScreen = new ConsoleScreen(this);
 
         Logger.LogInfo($"Game Loaded in {_stopwatch.ElapsedMilliseconds} ms");
     }
@@ -71,22 +70,13 @@ public class MyGameMain : Game
 
         LoadingScreen.Update(ElapsedTime);
 
-        var doUpdate = LoadingScreen.State != TransitionState.TransitionOn &&
-                       LoadingScreen.State != TransitionState.Active;
-
-        if (doUpdate)
+        if (!LoadingScreen.IsLoading)
         {
-            ConsoleScreen.Update(ElapsedTime);
+            _consoleScreen.Update(ElapsedTime);
 
-            if (!ConsoleScreen.IsHidden)
-                InputHandler.MouseEnabled = InputHandler.KeyboardEnabled = false;
-            
             _menuScreen.Update(ElapsedTime);
 
-            if (!_menuScreen.IsHidden)
-                InputHandler.MouseEnabled = InputHandler.KeyboardEnabled = false;
-
-            var isPaused = !_menuScreen.IsHidden;
+            var isPaused = !_menuScreen.IsHidden || !_consoleScreen.IsHidden;
             GameScreen.Update(isPaused, ElapsedTime);
         }
 
@@ -128,7 +118,7 @@ public class MyGameMain : Game
 
         _menuScreen.Draw(Renderer, renderDestination, alpha);
 
-        ConsoleScreen.Draw(Renderer, renderDestination, alpha);
+        _consoleScreen.Draw(Renderer, renderDestination, alpha);
 
         LoadingScreen.Draw(Renderer, renderDestination, alpha);
 
@@ -141,7 +131,7 @@ public class MyGameMain : Game
         
         GameScreen.Unload();
 
-        ConsoleScreen.Unload();
+        _consoleScreen.Unload();
 
         Renderer.Unload();
 

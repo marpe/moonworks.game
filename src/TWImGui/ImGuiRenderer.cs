@@ -221,7 +221,7 @@ public unsafe class ImGuiRenderer
         var io = ImGui.GetIO();
 
         var fa6IconRanges = stackalloc ushort[] { FontAwesome6.IconMin, FontAwesome6.IconMax, 0 };
-        var fa6FontPath = Path.Combine(MyGameMain.ContentRoot, "fonts", FontAwesome6.FontIconFileName);
+        var fa6FontPath = ContentPaths.fonts.fa_6_solid_900_ttf;
 
         ImFont* CreateFont(string fontPath, int fontSize, int iconFontSize)
         {
