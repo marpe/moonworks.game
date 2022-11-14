@@ -344,45 +344,119 @@ public class World
 
     private CollisionDir HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
     {
+        if (velocity.Delta.LengthSquared() == 0)
+            return CollisionDir.None;
+
         var result = CollisionDir.None;
-
         var deltaMove = velocity * deltaSeconds / GridSize;
-        var (cell, cellRel) = GetGridCoords(entity);
+        var (cell, relativeCellPos) = GetGridCoords(entity);
 
-        var resultCellPos = cellRel + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
-        if (resultCellPos.X > 0.8f && HasCollision(cell.X + 1, cell.Y))
+        var relativeCellDelta = relativeCellPos + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
+        var cellDelta = GetCellDelta(relativeCellDelta);
+
+        var size = new Vector2(0.4f, 0.8f);
+        var halfSize = size * 0.5f;
+
+        var maxX = (1.0f - halfSize.X);
+        if (velocity.X > 0 && relativeCellDelta.X > maxX && HasCollision(cell.X + 1, cell.Y))
         {
-            // Logger.LogInfo("Collide +x");
             result |= CollisionDir.Right;
-            entity.Position.X = (cell.X + 0.8f - MathF.Epsilon) * GridSize;
+            entity.Position.X = (cell.X + maxX) * GridSize;
             velocity.X = 0;
         }
 
-        if (resultCellPos.X < 0.2f && HasCollision(cell.X - 1, cell.Y))
+        var minX = halfSize.X;
+        if (velocity.X < 0 && relativeCellDelta.X < minX && HasCollision(cell.X - 1, cell.Y))
         {
-            // Logger.LogInfo("Collide -x");
             result |= CollisionDir.Left;
-            entity.Position.X = (cell.X + 0.2f + MathF.Epsilon) * GridSize;
+            entity.Position.X = (cell.X + minX) * GridSize;
             velocity.X = 0;
         }
 
-        if (resultCellPos.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
+        if (velocity.Y > 0 && relativeCellDelta.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
         {
-            // Logger.LogInfo("Collide +y");
             result |= CollisionDir.Down;
             entity.Position.Y = (cell.Y + 1.0f) * GridSize;
             velocity.Y = 0;
         }
 
-        if (velocity.Y < 0 && resultCellPos.Y < 0.8f && HasCollision(cell.X, cell.Y - 1))
+        if (velocity.Y < 0 && relativeCellDelta.Y < size.Y && HasCollision(cell.X, cell.Y - 1))
         {
-            // Logger.LogInfo("Collide -y");
             result |= CollisionDir.Top;
-            entity.Position.Y = (cell.Y + 0.8f) * GridSize;
+            entity.Position.Y = (cell.Y + size.Y) * GridSize;
             velocity.Y = 0;
         }
 
+        if (HasCollision(cell.X + cellDelta.X, cell.Y + cellDelta.Y) && result == CollisionDir.None)
+        {
+            Logger.LogError($"Results in a collision, cellDelta: {cellDelta}, prevCell: {cell}, newCell: {cell + cellDelta}");
+
+            if (velocity.Y > 0)
+            {
+                result |= CollisionDir.Down;
+                entity.Position.Y = (cell.Y + 1.0f) * GridSize;
+                velocity.Y = 0;
+            }
+            else if (velocity.Y < 0)
+            {
+                result |= CollisionDir.Top;
+                entity.Position.Y = (cell.Y + size.Y) * GridSize;
+                velocity.Y = 0;
+            }
+
+            var collisionResolved = !HasCollision(cell.X + cellDelta.X, cell.Y);
+
+            if (collisionResolved)
+            {
+                Logger.LogInfo($"Collision was resolved at: {new Point(cell.X + cellDelta.X, cell.Y)}!");
+            }
+            
+            if (velocity.X < 0 && !collisionResolved)
+            {
+                result |= CollisionDir.Left;
+                entity.Position.X = (cell.X + minX) * GridSize;
+                velocity.X = 0;
+            }
+            else if (velocity.X > 0 && !collisionResolved)
+            {
+                result |= CollisionDir.Right;
+                entity.Position.X = (cell.X + maxX) * GridSize;
+                velocity.X = 0;
+            }
+        }
+
         return result;
+    }
+
+    private static Point GetCellDelta(Vector2 relativeCellPosition)
+    {
+        var cellDelta = Point.Zero;
+
+        while (relativeCellPosition.X < 0.0f)
+        {
+            relativeCellPosition.X++;
+            cellDelta.X--;
+        }
+
+        while (relativeCellPosition.X > 1.0f)
+        {
+            relativeCellPosition.X--;
+            cellDelta.X++;
+        }
+
+        while (relativeCellPosition.Y > 1.0f)
+        {
+            relativeCellPosition.Y--;
+            cellDelta.Y++;
+        }
+
+        while (relativeCellPosition.Y < 0.0f)
+        {
+            relativeCellPosition.Y++;
+            cellDelta.Y--;
+        }
+
+        return cellDelta;
     }
 
     public (Point, Vector2) GetGridCoords(Entity entity)

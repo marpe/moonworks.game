@@ -46,6 +46,13 @@ public unsafe class ImGuiEditorWorldWindow : ImGuiEditorWindow
 
                 _prevWorld = world;
                 _inspector.Draw();
+                
+                ImGui.Separator();
+                
+                var (cell, cellRel) = world.GetGridCoords(world.Player);
+                ImGui.TextUnformatted($"Cell {cell.ToString()}");
+                ImGui.TextUnformatted($"CellRel {cellRel.ToString()}");
+                
                 ImGui.EndTabItem();
             }
 
