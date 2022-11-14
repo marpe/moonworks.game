@@ -62,9 +62,10 @@ public class MyGameMain : Game
         {
             _consoleScreen.Update(Time.ElapsedTime);
 
-            _menuScreen.Update(Time.ElapsedTime);
+            var isPaused = !_consoleScreen.IsHidden;
+            _menuScreen.Update(isPaused, Time.ElapsedTime);
 
-            var isPaused = !_menuScreen.IsHidden || !_consoleScreen.IsHidden;
+            isPaused |= !_menuScreen.IsHidden;
             GameScreen.Update(isPaused, Time.ElapsedTime);
         }
 

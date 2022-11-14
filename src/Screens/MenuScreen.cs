@@ -53,8 +53,11 @@ public class MenuScreen
         _game.Quit();
     }
 
-    public void Update(float deltaSeconds)
+    public void Update(bool isPaused, float deltaSeconds)
     {
+        if (isPaused)
+            return;
+
         var input = _game.InputHandler;
 
         if (input.IsKeyPressed(KeyCode.Escape))
@@ -66,7 +69,6 @@ public class MenuScreen
         Position = _game.MainWindow.Size / 2;
         _title.Position = Position + new Vector2(0, -60);
         _title.Update(deltaSeconds);
-
 
         if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
         {
@@ -84,7 +86,7 @@ public class MenuScreen
                 _menuItems[_selectedIndex].Callback.Invoke();
             }
         }
-        
+
         // disable input for the next screen
         input.MouseEnabled = input.KeyboardEnabled = false;
     }
