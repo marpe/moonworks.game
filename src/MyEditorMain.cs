@@ -344,9 +344,6 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-
-            var hoveredViewport = io->MouseHoveredViewport;
-
             if (io->WantCaptureMouse)
                 InputHandler.MouseEnabled = false;
         }
