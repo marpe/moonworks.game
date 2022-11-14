@@ -29,7 +29,7 @@ public class DebugDrawItems
             Color = color,
             Text = text.ToString(),
             Rectangle = new Rectangle((int)position.X, (int)position.Y, 0, 0),
-            UpdateCountAtDraw = Shared.Game.UpdateCount,
+            UpdateCountAtDraw = Shared.Game.Time.UpdateCount,
             DrawType = DebugDrawType.Text,
         });
     }
@@ -38,7 +38,7 @@ public class DebugDrawItems
     {
         for (var i = _debugDrawCalls.Count - 1; i >= 0; i--)
         {
-            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.UpdateCount)
+            if (_debugDrawCalls[i].UpdateCountAtDraw < Shared.Game.Time.UpdateCount)
             {
                 _debugDrawCalls.RemoveAt(i);
             }

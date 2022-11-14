@@ -128,7 +128,7 @@ public class LoadingScreen
         _sceneTransition.Draw(renderer, renderDestination, _progress);
 
         ReadOnlySpan<char> loadingStr = "Loading...";
-        var offset = 3 - (int)(_game.TotalElapsedTime / 0.2f) % 4;
+        var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
         var windowSize = _game.MainWindow.Size;
 

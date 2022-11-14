@@ -451,7 +451,7 @@ public class ConsoleScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        if (((int)_game.DrawCount % ConsoleSettings.RenderRate) == 0)
+        if (((int)_game.Time.DrawCount % ConsoleSettings.RenderRate) == 0)
         {
             _hasRender = true;
             renderer.FlushBatches(renderDestination); // flush so that draw calls doesn't spill into console renderTarget

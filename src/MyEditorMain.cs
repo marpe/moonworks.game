@@ -157,8 +157,8 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
-            ImGui.TextUnformatted($"FrameCount: {UpdateCount}");
-            ImGui.TextUnformatted($"RenderCount: {DrawCount}");
+            ImGui.TextUnformatted($"FrameCount: {Time.UpdateCount}");
+            ImGui.TextUnformatted($"RenderCount: {Time.DrawCount}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
             if (ImGui.Button("Reload World", default))
@@ -332,13 +332,13 @@ public unsafe class MyEditorMain : MyGameMain
             var newState = InputState.Create(inputHandler);
             _inputStates.Add(newState);
 
-            if ((int)UpdateCount % _updateRate == 0)
+            if ((int)Time.UpdateCount % _updateRate == 0)
             {
                 var inputState = InputState.Aggregate(_inputStates);
                 _inputStates.Clear();
-                var deltaTime = TotalElapsedTime - _prevElapsedTime;
+                var deltaTime = Time.TotalElapsedTime - _prevElapsedTime;
                 _imGuiRenderer.Update(deltaTime, inputState);
-                _prevElapsedTime = TotalElapsedTime;
+                _prevElapsedTime = Time.TotalElapsedTime;
                 _doRender = true;
             }
 

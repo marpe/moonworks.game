@@ -39,8 +39,6 @@ public class InputHandler
 
     public static readonly char ControlV = (char)22;
 
-    private readonly MyGameMain _game;
-
     private readonly Inputs _inputs;
 
     private readonly Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
@@ -51,10 +49,9 @@ public class InputHandler
     public bool KeyboardEnabled = true;
     public bool MouseEnabled = true;
 
-    public InputHandler(MyGameMain game)
+    public InputHandler(Inputs inputs)
     {
-        _game = game;
-        _inputs = game.Inputs;
+        _inputs = inputs;
         Inputs.TextInput += OnTextInput;
     }
 
@@ -72,12 +69,12 @@ public class InputHandler
         _numTextInputChars += 1;
     }
 
-    public void BeginFrame()
+    public void BeginFrame(float deltaSeconds)
     {
         foreach (var (keyCode, key) in _repeatableKeys)
         {
             var isHeld = _inputs.Keyboard.IsHeld(keyCode);
-            key.Update(isHeld, _game.ElapsedTime);
+            key.Update(isHeld, deltaSeconds);
         }
     }
 
