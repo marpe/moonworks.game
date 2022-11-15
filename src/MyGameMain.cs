@@ -7,7 +7,8 @@ namespace MyGame;
 
 public class TestGame : Game
 {
-    public TestGame(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep = 60, bool debugMode = false) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
+    public TestGame(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep = 60, bool debugMode = false) : base(
+        windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
     {
     }
 
@@ -109,18 +110,18 @@ public class MyGameMain : Game
 
         Renderer.EndFrame();
     }
-
+    
     protected void RenderGame(double alpha, Texture renderDestination)
     {
         Time.UpdateDrawCount();
 
         GameScreen.Draw(Renderer, renderDestination, alpha);
 
-        // _menuScreen.Draw(Renderer, renderDestination, alpha);
+        _menuScreen.Draw(Renderer, renderDestination, alpha);
 
-        // _consoleScreen.Draw(Renderer, renderDestination, alpha);
+        _consoleScreen.Draw(Renderer, renderDestination, alpha);
 
-        // LoadingScreen.Draw(Renderer, renderDestination, alpha);
+        LoadingScreen.Draw(Renderer, renderDestination, alpha);
 
         Renderer.FlushBatches(renderDestination);
     }

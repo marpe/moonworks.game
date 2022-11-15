@@ -4,7 +4,6 @@ using MyGame.Graphics;
 using MyGame.Input;
 using MyGame.TWConsole;
 using MyGame.TWImGui;
-using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame;
 
@@ -181,8 +180,8 @@ public unsafe class MyEditorMain : MyGameMain
             if (depth == 0)
             {
                 var style = ImGui.GetStyle();
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, _mainMenuPaddingY));
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
             }
 
             var result = ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true);
@@ -231,7 +230,7 @@ public unsafe class MyEditorMain : MyGameMain
     private void DrawMenu()
     {
         var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, _mainMenuPaddingY));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
         var result = ImGui.BeginMainMenuBar();
         ImGui.PopStyleVar();
         if (!result)
@@ -249,8 +248,8 @@ public unsafe class MyEditorMain : MyGameMain
             CheckMenuShortcuts(menu);
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, _mainMenuPaddingY));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
         var windowMenu = ImGui.BeginMenu("Window");
         ImGui.PopStyleVar(2);
         if (windowMenu)
@@ -380,7 +379,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         Renderer.DrawSprite(_imGuiRenderer.RenderTarget, Matrix3x2.Identity, Color.White, 0);
-        var view = SpriteBatch.GetViewProjection(0, 0, (uint)windowSize.X, (uint)windowSize.Y);
+        var view = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, (uint)windowSize.X, (uint)windowSize.Y);
         Renderer.FlushBatches(swapTexture, view, Color.Black);
         Renderer.EndFrame();
     }

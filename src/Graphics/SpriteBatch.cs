@@ -129,18 +129,18 @@ public class SpriteBatch
         dest.Z = z;
     }
 
-    public static Matrix4x4 GetViewProjection(int x, int y, uint width, uint height)
+    public static Matrix4x4 GetViewProjection(Vector2 cameraPosition, int xOffset, int yOffset, uint width, uint height)
     {
         var view = Matrix4x4.CreateLookAt(
-            new Vector3(x, y, 1000),
-            new Vector3(x, y, 0),
+            new Vector3(cameraPosition.X, cameraPosition.Y, 1000),
+            new Vector3(cameraPosition.X, cameraPosition.Y, 0),
             Vector3.Up
         );
         var projection = Matrix4x4.CreateOrthographicOffCenter(
-            0,
-            width,
-            height,
-            0,
+            xOffset,
+            xOffset + width,
+            yOffset + height,
+            yOffset,
             0.0001f,
             4000f
         );

@@ -532,10 +532,8 @@ public class World
         return false;
     }
 
-    public void Draw(Renderer renderer, Camera camera, double alpha)
+    public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
     {
-        var cameraBounds = Bounds.Lerp(camera.PreviousBounds, camera.Bounds, alpha);
-
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
 

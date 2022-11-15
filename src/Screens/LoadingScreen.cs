@@ -107,7 +107,7 @@ public class LoadingScreen
         if (State == TransitionState.Hidden)
             return;
 
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderDestination.Width, renderDestination.Height);
+        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderDestination.Width, renderDestination.Height);
 
         if (_shouldCopyRender)
         {

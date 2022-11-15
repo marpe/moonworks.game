@@ -55,8 +55,12 @@ public class ConsoleScreen
         _game = game;
 
         var windowSize = game.MainWindow.Size;
-        _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
-            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _renderTarget = Texture.CreateTexture2D(
+            game.GraphicsDevice,
+            (uint)windowSize.X, (uint)windowSize.Y,
+            TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
+        );
 
 
         _colors = new[]
@@ -88,19 +92,21 @@ public class ConsoleScreen
     {
         _renderTarget.Dispose();
     }
-
+    
     public void Update(float deltaSeconds)
     {
         var inputState = _game.InputHandler;
         if (inputState.IsKeyPressed(KeyCode.Grave))
             IsHidden = !IsHidden;
 
-        UpdateTransition(deltaSeconds);
+        var windowSize = _game.MainWindow.Size; // TODO (marpe): What if this differes from the renderDestination supplied to Draw()
+
+        UpdateTransition(deltaSeconds, (uint)windowSize.X, (uint)windowSize.Y);
 
         if (IsHidden)
             return;
-        
-        CheckResize();
+
+        CheckResize((uint)windowSize.X, (uint)windowSize.Y);
 
         _caretBlinkTimer += deltaSeconds;
 
@@ -123,15 +129,14 @@ public class ConsoleScreen
         {
             HandleTextInput(textInput[i]);
         }
-        
+
         // disable input for the next screen
         inputState.MouseEnabled = inputState.KeyboardEnabled = false;
     }
 
-    private void CheckResize()
+    private void CheckResize(uint windowWidth, uint windowHeight)
     {
-        var windowSize = _game.MainWindow.Size;
-        var availWidthInPixels = windowSize.X - ConsoleSettings.HorizontalPadding * 2f;
+        var availWidthInPixels = windowWidth - ConsoleSettings.HorizontalPadding * 2f;
         var minWidth = 60;
         var width = Math.Max((int)(availWidthInPixels / CharSize.X), minWidth);
         if (TwConsole.ScreenBuffer.Width != width)
@@ -143,7 +148,7 @@ public class ConsoleScreen
         }
     }
 
-    private void UpdateTransition(float deltaSeconds)
+    private void UpdateTransition(float deltaSeconds, uint windowWidth, uint windowHeight)
     {
         var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
         if (ScreenState == ScreenState.TransitionOn)
@@ -163,12 +168,11 @@ public class ConsoleScreen
             }
         }
 
-        var winSize = _game.MainWindow.Size;
-        var height = winSize.Y * ConsoleSettings.RelativeConsoleHeight;
+        var height = windowHeight * ConsoleSettings.RelativeConsoleHeight;
         var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
         _backgroundRect.Y = (int)(-height + height * t);
         _backgroundRect.Height = (int)height;
-        _backgroundRect.Width = winSize.X;
+        _backgroundRect.Width = (int)windowWidth;
     }
 
     private static bool IsAllowedCharacter(char c)
@@ -451,14 +455,15 @@ public class ConsoleScreen
         if (ScreenState == ScreenState.Hidden)
             return;
 
-        if (((int)_game.Time.DrawCount % ConsoleSettings.RenderRate) == 0)
+        if ((int)_game.Time.DrawCount % ConsoleSettings.RenderRate == 0)
         {
             _hasRender = true;
             renderer.FlushBatches(renderDestination); // flush so that draw calls doesn't spill into console renderTarget
 
             DrawInternal(renderer, alpha);
 
-            var viewProjection = SpriteBatch.GetViewProjection(0, 0, _renderTarget.Width, _renderTarget.Height);
+            TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
+            var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, _renderTarget.Width, _renderTarget.Height);
             renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
         }
 
@@ -467,17 +472,10 @@ public class ConsoleScreen
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
-
-        /*var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(swap, viewProjection);*/
     }
 
     private void DrawInternal(Renderer renderer, double alpha)
     {
-        var winSize = _game.MainWindow.Size;
-        TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)winSize.X, (uint)winSize.Y);
-
         renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha);
 
         // draw line start and end

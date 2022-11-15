@@ -70,7 +70,7 @@ public class DiamondTransition : SceneTransition
     public override void Draw(Renderer renderer, Texture renderDestination, float progress)
     {
         var commandBuffer = renderer.CommandBuffer;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderDestination.Width, renderDestination.Height);
+        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderDestination.Width, renderDestination.Height);
         var swapRect = new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height);
         renderer.DrawRect(swapRect, Color.Black, 1f);
         commandBuffer.BeginRenderPass(

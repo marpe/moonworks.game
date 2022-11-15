@@ -2,17 +2,16 @@
 
 public class Camera
 {
-    public static Vector2 Scale = Vector2.One;
-
-    private float _zoom = 1.0f;
+    private float _zoom = 4.0f;
     public Vector2 BumpOffset;
 
-    public Vector2 DeadZoneInPercentOfViewport = new(0.04f, 0.1f);
+    public Vector2 DeadZoneInPercentOfViewport = new(0.004f, 0.001f);
 
     public Vector2 Position;
 
     public Vector3 Position3D = new(0, 0, -1000);
-    public Bounds PreviousBounds;
+
+    public float Rotation = 0;
 
     public Quaternion Rotation3D = Quaternion.Identity;
 
@@ -23,11 +22,10 @@ public class Camera
     /// <summary>This is the "true" position, that was used for the view projection calculation Which has shake and bump and crap applied</summary>
     public Vector2 ViewPosition;
 
-    public static Vector2 Viewport => Shared.Game.MainWindow.Size;
-    public int Width => MathF.CeilToInt(Viewport.X / Scale.X / Zoom);
-    public int Height => MathF.CeilToInt(Viewport.Y / Scale.Y / Zoom);
+    public int Width => MathF.CeilToInt(Size.X / Zoom);
+    public int Height => MathF.CeilToInt(Size.Y / Zoom);
 
-    public Point Size => new(Width, Height);
+    public Point Size = new Point(480, 270);
 
     public Bounds Bounds => new(Position.X - Width / 2f, Position.Y - Height / 2f, Width, Height);
 
@@ -37,19 +35,15 @@ public class Camera
         set => _zoom = MathF.Clamp(value, 0.001f, 10f);
     }
 
-
-    public Matrix4x4 View
+    public Matrix3x2 View
     {
         get
         {
             ViewPosition = Position + ShakeOffset + BumpOffset;
-            var view = Matrix4x4.CreateLookAt(
-                new Vector3(ViewPosition.X, ViewPosition.Y, 1000),
-                new Vector3(ViewPosition.X, ViewPosition.Y, 0),
-                Vector3.Up
-            );
-            return view * Matrix4x4.CreateScale(Zoom, Zoom, 1.0f) *
-                   Matrix4x4.CreateTranslation(Viewport.X * 0.5f, Viewport.Y * 0.5f, 0);
+            return Matrix3x2.CreateTranslation(-ViewPosition.X, -ViewPosition.Y) *
+                   Matrix3x2.CreateRotation(Rotation) *
+                   Matrix3x2.CreateScale(_zoom) *
+                   Matrix3x2.CreateTranslation(Size.X * 0.5f, Size.Y * 0.5f);
         }
     }
 
@@ -66,39 +60,15 @@ public class Camera
         }
     }
 
-    public Matrix4x4 Projection
+    public static Matrix4x4 GetProjection(uint width, uint height, bool use3D = false)
     {
-        get
+        if (!use3D)
         {
-            var viewport = Viewport;
-            return Matrix4x4.CreateOrthographicOffCenter(
-                0,
-                viewport.X,
-                viewport.Y,
-                0,
-                0.0001f,
-                4000f
-            );
+            return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 4000f);
         }
-    }
 
-    public Matrix4x4 Projection3D
-    {
-        get
-        {
-            var viewport = Viewport;
-            var targetHeight = viewport.Y; // / zoom
-            var fov = 60 * MathF.Deg2Rad; // (float)Math.Atan(targetHeight / (2f * Position3D.Z)) * 2f;
-            var aspectRatio = viewport.Y != 0 ? viewport.X / viewport.Y : 0;
-            return Matrix4x4.CreatePerspectiveFieldOfView(
-                fov,
-                aspectRatio,
-                0.0001f,
-                5000f
-            );
-        }
+        var fov = 60 * MathF.Deg2Rad; // (float)Math.Atan(targetHeight / (2f * Position3D.Z)) * 2f;
+        var aspectRatio = width / height;
+        return Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, 0.0001f, 5000f);
     }
-
-    public Matrix4x4 ViewProjection3D => View3D * Projection3D;
-    public Matrix4x4 ViewProjection => View * Projection;
 }

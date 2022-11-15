@@ -10,6 +10,10 @@ public struct Sprite
     {
     }
 
+    public Sprite(TextureSlice textureSlice) : this(textureSlice.Texture, textureSlice.Rectangle)
+    {
+    }
+
     public Sprite(Texture texture, Rectangle srcRect)
     {
         Texture = texture;

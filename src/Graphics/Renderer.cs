@@ -137,7 +137,7 @@ public class Renderer
     {
         _commandBuffer = _device.AcquireCommandBuffer();
         _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
-        
+
         if (_swapTexture == null)
         {
             Logger.LogError("Could not acquire swapchain texture");
@@ -210,10 +210,10 @@ public class Renderer
 
     public void FlushBatches(Texture renderTarget)
     {
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, renderTarget.Width, renderTarget.Height);
+        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderTarget.Width, renderTarget.Height);
         FlushBatches(renderTarget, viewProjection);
     }
-    
+
     public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
@@ -315,5 +315,30 @@ public class Renderer
             device,
             myGraphicsPipelineCreateInfo
         );
+    }
+    
+    public static (Matrix4x4, Rectangle) GetViewportTransform(uint screenWidth, uint screenHeight)
+    {
+        var designResolution = new Point(1920, 1080);
+
+        var scaleUniform = Math.Min(
+            screenWidth / (float)designResolution.X,
+            screenHeight / (float)designResolution.Y
+        );
+
+        var renderSize = new Point(
+            (int)(scaleUniform * designResolution.X),
+            (int)(scaleUniform * designResolution.Y)
+        );
+
+        var offset = new Point(
+            (int)((screenWidth - renderSize.X) * 0.5f),
+            (int)((screenHeight - renderSize.Y) * 0.5f)
+        );
+
+        var transform = Matrix3x2.CreateScale(scaleUniform, scaleUniform) *
+                        Matrix3x2.CreateTranslation(offset.X, offset.Y);
+
+        return (transform.ToMatrix4x4(), new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
     }
 }

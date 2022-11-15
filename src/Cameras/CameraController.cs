@@ -21,15 +21,12 @@ public class CameraController
     private readonly float _lerpSpeed = 1f;
     private float _lerpT = 0;
     private readonly GameScreen _parent;
-    private Matrix4x4 _previousViewProjection;
 
     private float _shakeDuration = 0;
     private float _shakePower = 4f;
     private float _shakeTime = 0;
 
     private float _timer = 0;
-
-    private Matrix4x4 _viewProjection;
 
     public float BrakeDistNearBounds = 0.1f;
     public float BumpFrict = 0.85f;
@@ -51,19 +48,11 @@ public class CameraController
 
         _parent = parent;
         _camera = camera;
-        _viewProjection = _previousViewProjection = _camera.ViewProjection;
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
-    }
-
-    private void UpdatePrevious()
-    {
-        _camera.PreviousBounds = _camera.Bounds;
-        _previousViewProjection = _viewProjection;
     }
 
     public void Update(bool isPaused, float deltaSeconds, InputHandler input)
     {
-        UpdatePrevious();
         if (isPaused)
         {
             return;
@@ -169,13 +158,16 @@ public class CameraController
         }
 
         _camera.BumpOffset *= Vector2.One * MathF.Pow(BumpFrict, deltaSeconds);
-
-        _viewProjection = Matrix4x4.Lerp(_camera.ViewProjection, _camera.ViewProjection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
-    public Matrix4x4 GetViewProjection(double alpha)
+    public Matrix4x4 GetViewProjection(double alpha, uint width, uint height)
     {
-        return Matrix4x4.Lerp(_previousViewProjection, _viewProjection, (float)alpha);
+        var projection = Camera.GetProjection(width, height, false);
+        var projection3D = Camera.GetProjection(width, height, true);
+        var view4x4 = _camera.View.ToMatrix4x4();
+        view4x4.M43 = -1000;
+        var viewProjection = Matrix4x4.Lerp(view4x4 * projection, _camera.View3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+        return viewProjection;
     }
 
     [InspectorCallable]

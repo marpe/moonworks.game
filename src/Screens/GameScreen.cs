@@ -35,11 +35,7 @@ public class GameScreen
 
     public void LoadWorld()
     {
-        _game.LoadingScreen.StartLoad(() =>
-        {
-            World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            Camera.Zoom = 4.0f;
-        });
+        _game.LoadingScreen.StartLoad(() => { World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk); });
     }
 
     public void Unload()
@@ -58,13 +54,24 @@ public class GameScreen
     {
         // not sure why but if i don't render anything here the first loading screen gets weird and renders at a small size
         // so just draw a black rectangle ¯\_(ツ)_/¯
-        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
+        var rect = new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height);
+        renderer.DrawRect(rect, Color.CornflowerBlue);
 
-        World?.Draw(renderer, Camera, alpha);
+        // draw world
+        Camera.Size = new Point(1920, 1080);
+        Camera.Zoom = 4f;
+        World?.Draw(renderer, Camera.Bounds, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        renderer.FlushBatches(renderDestination, CameraController.GetViewProjection(alpha), renderer.DefaultClearColor);
+        var view = Camera.View.ToMatrix4x4(); // CameraController.GetViewProjection(alpha, renderDestination.Width, renderDestination.Height);
+        view.M43 = -1000;
+        
+        var (viewportTransform, _) = Renderer.GetViewportTransform(renderDestination.Width, renderDestination.Height);
+
+        var projection = Camera.GetProjection(renderDestination.Width, renderDestination.Height, false);
+        
+        renderer.FlushBatches(renderDestination, (view * viewportTransform) * projection, renderer.DefaultClearColor);
     }
 }
