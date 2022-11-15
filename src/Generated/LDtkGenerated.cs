@@ -77,7 +77,7 @@ public partial class Entity
     public Vector2 Pivot;
     public Vector2 Position;
     public Vector2 Size;
-    public Color SmartColor;
+    public Color SmartColor = Color.Red;
 }
 
 public partial class Enemy

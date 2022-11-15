@@ -15,14 +15,14 @@ public class World
 
     public float Gravity = 800f;
 
-    public List<Enemy> Enemies { get; }
-
-    public Player Player { get; }
-
     private readonly LdtkJson LdtkRaw;
     private readonly Dictionary<string, Texture> Textures = new();
     private readonly Dictionary<long, Texture> TilesetTextures;
     public Point WorldSize;
+
+    public Player Player { get; }
+    public List<Enemy> Enemies { get; } = new();
+    public List<Bullet> Bullets { get; } = new();
 
     public World(GameScreen parent, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -64,7 +64,7 @@ public class World
 
         Player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
         _parent.CameraController.TrackEntity(Player);
-        Enemies = allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>().ToList();
+        Enemies.AddRange(allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
     }
 
     private static List<Entity> LoadEntitiesInLevel(Level level)
@@ -85,7 +85,6 @@ public class World
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Pivot = entityInstance.PivotVec;
                 entity.Position = level.Position + entityInstance.Position;
-                entity.InitialPosition = entity.PreviousPosition = entity.Position;
                 entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
 
@@ -113,6 +112,11 @@ public class World
             var entity = Enemies[i];
             entity.PreviousPosition = entity.Position;
         }
+
+        for (var i = 0; i < Bullets.Count; i++)
+        {
+            Bullets[i].PreviousPosition = Bullets[i].Position;
+        }
     }
 
     public void Update(bool isPaused, float deltaSeconds, InputHandler input)
@@ -123,6 +127,25 @@ public class World
 
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
+        UpdateBullets(deltaSeconds);
+    }
+
+    private void UpdateBullets(float deltaSeconds)
+    {
+        for (var i = Bullets.Count - 1; i >= 0; i--)
+        {
+            if (!Bullets[i].IsInitialized)
+                Bullets[i].Initialize(this);
+
+            Bullets[i].Update(deltaSeconds);
+            if (Bullets[i].IsDestroyed)
+            {
+                Bullets.RemoveAt(i);
+                continue;
+            }
+
+            Bullets[i].Position += Bullets[i].Velocity * deltaSeconds;
+        }
     }
 
     private void UpdatePlayer(float deltaSeconds, InputHandler input)
@@ -165,10 +188,10 @@ public class World
             var deltaMove = velocity * deltaSeconds / DefaultGridSize;
             var (cell, cellPos) = Entity.GetGridCoords(entity);
             var dx = cellPos.X + deltaMove.X; // relative cell pos ( e.g < 0 means we moved to the previous cell )
-            
+
             var maxX = (1.0f - halfSize.X);
             var minX = halfSize.X;
-            
+
             if (velocity.X > 0 && dx > maxX && HasCollision(cell.X + 1, cell.Y))
             {
                 result |= CollisionDir.Right;
@@ -185,7 +208,7 @@ public class World
             {
                 entity.Position.X += velocity.X * deltaSeconds;
             }
-            
+
             (entity.Cell, entity.CellPos) = Entity.GetGridCoords(entity);
         }
 
@@ -197,7 +220,7 @@ public class World
 
             var maxY = 1.0f;
             var minY = size.Y;
-        
+
             if (velocity.Y > 0 && dy > maxY && HasCollision(cell.X, cell.Y + 1))
             {
                 result |= CollisionDir.Down;
@@ -214,10 +237,10 @@ public class World
             {
                 entity.Position.Y += velocity.Y * deltaSeconds;
             }
-            
+
             (entity.Cell, entity.CellPos) = Entity.GetGridCoords(entity);
         }
-        
+
         return result;
     }
 
@@ -361,6 +384,16 @@ public class World
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
                 DrawDebug(renderer, entity, alpha);
+        }
+
+        for (var i = 0; i < Bullets.Count; i++)
+        {
+            var bullet = Bullets[i];
+            var srcRect = new Rectangle(4 * 16, 0, 16, 16);
+            var xform = Matrix3x2.CreateTranslation(bullet.Position.X - bullet.Origin.X, bullet.Position.Y - bullet.Origin.Y);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
+            if (Debug)
+                DrawDebug(renderer, bullet, alpha);
         }
 
         if (Debug)
@@ -537,5 +570,15 @@ public class World
         device.Submit(commandBuffer);
 
         return textures;
+    }
+
+    public void SpawnBullet(Vector2 position, int direction)
+    {
+        var bullet = new Bullet();
+        bullet.SetPositions(position + new Vector2(4 * direction, -8));
+        bullet.Velocity.X = direction * 300f;
+        bullet.Pivot = new Vector2(0.5f, 0.5f);
+        bullet.Size = new Vector2(16, 16);
+        Bullets.Add(bullet);
     }
 }

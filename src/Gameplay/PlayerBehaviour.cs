@@ -10,12 +10,14 @@ public class PlayerBehaviour
         _player = player;
     }
 
-    private void HandleInput(InputHandler input, out int movementX)
+    private void HandleInput(InputHandler input, out int movementX, out bool isFiring)
     {
         movementX = 0;
+        isFiring = false;
+        
         if (input.IsKeyPressed(KeyCode.Insert))
         {
-            Player.Position = new Vector2(100, 50);
+            Player.SetPositions(new Vector2(100, 50));
         }
 
         if (input.IsKeyDown(KeyCode.Right) ||
@@ -29,14 +31,25 @@ public class PlayerBehaviour
         {
             movementX += -1;
         }
+
+        if (input.IsKeyPressed(KeyCode.LeftControl))
+        {
+            isFiring = true;
+        }
     }
     
     public void Update(float deltaSeconds, InputHandler input)
     {
-        HandleInput(input, out var movementX);
+        HandleInput(input, out var movementX, out var isFiring);
         var isJumpDown = input.IsKeyDown(KeyCode.Space);
         var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
 
+        if (isFiring)
+        {
+            var direction = Player.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
+            Player.World.SpawnBullet(Player.Position, direction);
+        }
+        
         if (Player.Position.Y > 300)
         {
             Player.SetPositions(Player.InitialPosition);
