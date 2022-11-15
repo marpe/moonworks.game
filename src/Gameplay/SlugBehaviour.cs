@@ -18,7 +18,7 @@ public class SlugBehaviour : EnemyBehaviour
         if (!Parent.CanMove)
             return;
 
-        var collisions = Parent.World.HandleCollisions(Parent, Parent.Velocity, deltaSeconds);
+        var collisions = Parent.Mover.PerformMove(Parent.Velocity, deltaSeconds);
 
         if ((collisions & CollisionDir.Left) != 0)
         {
@@ -40,7 +40,7 @@ public class SlugBehaviour : EnemyBehaviour
             Parent.Flip = SpriteFlip.FlipHorizontally;
         }
 
-        if (!Parent.World.IsGrounded(Parent, Parent.Velocity))
+        if (!Parent.Mover.IsGrounded(Parent.Velocity))
         {
             Parent.Velocity.Y += Parent.World.Gravity * deltaSeconds;
         }
@@ -50,7 +50,7 @@ public class SlugBehaviour : EnemyBehaviour
             Parent.Velocity.X += Parent.Velocity.X;
         }
 
-        if (!Parent.World.IsGrounded(Parent, Parent.Velocity))
+        if (!Parent.Mover.IsGrounded(Parent.Velocity))
             return;
 
         var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(Parent.Cell.X + 1, Parent.Cell.Y + 1) &&

@@ -22,10 +22,12 @@ public partial class Player : Entity
     };
 
     public PlayerBehaviour Behaviour = new();
+    public Mover Mover = new();
 
     public override void Initialize(World world)
     {
         Behaviour.Initialize(this);
+        Mover.Initialize(this);
         base.Initialize(world);
     }
 

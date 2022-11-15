@@ -11,10 +11,13 @@ public partial class Enemy : Entity
     public EnemyBehaviour Behaviour => _behaviour ?? throw new InvalidOperationException();
     public bool CanMove => TotalTime >= FreezeMovementUntil;
     public float FreezeMovementUntil;
+    public Mover Mover = new();
 
     public override void Initialize(World world)
     {
         base.Initialize(world);
+
+        Mover.Initialize(this);
 
         TimeOffset = Position.X;
         

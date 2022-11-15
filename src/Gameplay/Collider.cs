@@ -22,6 +22,36 @@ public class Collider
 
     public bool HasCollision(int x, int y)
     {
-        return Parent.World.HasCollision(x, y);
+        var ldtk = Parent.World.LdtkRaw; 
+            
+        var isMultiWorld = ldtk.Worlds.Length > 0;
+        var levels = isMultiWorld ? ldtk.Worlds[0].Levels : ldtk.Levels;
+
+        foreach (var level in levels)
+        {
+            foreach (var layer in level.LayerInstances)
+            {
+                if (layer.Identifier != "Tiles" || layer.Type != "IntGrid")
+                    continue;
+
+                var layerDef = World.GetLayerDefinition(ldtk, layer.LayerDefUid);
+                var levelMin = level.Position / (int)layerDef.GridSize;
+                var levelMax = levelMin + level.Size / (int)layerDef.GridSize;
+                if (x < levelMin.X || y < levelMin.Y ||
+                    x >= levelMax.X || y >= levelMax.Y)
+                {
+                    continue;
+                }
+
+                var gridCoords = new Point(x - levelMin.X, y - levelMin.Y);
+                var value = layer.IntGridCsv[gridCoords.Y * layer.CWid + gridCoords.X];
+                if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

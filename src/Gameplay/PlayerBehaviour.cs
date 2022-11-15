@@ -58,7 +58,7 @@ public class PlayerBehaviour
         Player.TotalTime += deltaSeconds;
         Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X) ? 0 : (uint)(Player.TotalTime * 10) % 2;
 
-        if (Player.World.IsGrounded(Player, Player.Velocity))
+        if (Player.Mover.IsGrounded(Player.Velocity))
         {
             Player.LastOnGroundTime = Player.TotalTime;
         }
@@ -97,7 +97,7 @@ public class PlayerBehaviour
             }
         }
 
-        var collisions = Player.World.HandleCollisions(Player, Player.Velocity, deltaSeconds);
+        var collisions = Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
        
         if ((collisions & CollisionDir.Down) == CollisionDir.Down)
         {
@@ -120,7 +120,7 @@ public class PlayerBehaviour
             Player.Flip = SpriteFlip.FlipHorizontally;
         }
 
-        if (!Player.World.IsGrounded(Player, Player.Velocity) && !Player.IsJumping)
+        if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping)
         {
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
         }

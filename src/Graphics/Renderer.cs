@@ -155,7 +155,9 @@ public class Renderer
 
     public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
     {
-        var scale = Matrix3x2.CreateScale(size, size) * Matrix3x2.CreateTranslation(position.X, position.Y);
+        var scale = Matrix3x2.CreateTranslation(-size * 0.5f, -size * 0.5f) *
+                    Matrix3x2.CreateScale(size, size) * 
+                    Matrix3x2.CreateTranslation(position.X, position.Y);
         SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
     }
 
