@@ -68,10 +68,16 @@ public class GameScreen
         var view = Camera.View.ToMatrix4x4(); // CameraController.GetViewProjection(alpha, renderDestination.Width, renderDestination.Height);
         view.M43 = -1000;
         
-        var (viewportTransform, _) = Renderer.GetViewportTransform(renderDestination.Width, renderDestination.Height);
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(renderDestination.Width, renderDestination.Height);
 
         var projection = Camera.GetProjection(renderDestination.Width, renderDestination.Height, false);
-        
+
         renderer.FlushBatches(renderDestination, (view * viewportTransform) * projection, renderer.DefaultClearColor);
+        
+        // draw letter and pillar boxes
+        renderer.DrawRect(new Rectangle(0, 0, viewport.X, viewport.Height), Color.Black);
+        renderer.DrawRect(new Rectangle(viewport.X + viewport.Width, 0, (int)renderDestination.Width - (viewport.X + viewport.Width), (int)renderDestination.Height), Color.Black);
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, viewport.Y), Color.Black);
+        renderer.DrawRect(new Rectangle(0, viewport.Y + viewport.Height, (int)renderDestination.Width, (int)renderDestination.Height - (viewport.Y + viewport.Height)), Color.Black);
     }
 }
