@@ -6,6 +6,8 @@ public struct Bounds
     public Vector2 Size;
     public Vector2 Max => Min + Size;
 
+    public Vector2 Center => Min + Size * 0.5f;
+    
     public Bounds(float x, float y, float w, float h)
     {
         Min = new Vector2(x, y);

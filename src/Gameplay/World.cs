@@ -223,7 +223,8 @@ public class World
         {
             var bullet = Bullets[i];
             var srcRect = new Rectangle(4 * 16, 0, 16, 16);
-            var xform = Matrix3x2.CreateTranslation(bullet.Position.X - bullet.Origin.X, bullet.Position.Y - bullet.Origin.Y);
+            var position = Vector2.Lerp(bullet.PreviousPosition, bullet.Position, (float)alpha);
+            var xform = Matrix3x2.CreateTranslation(position.X - bullet.Origin.X, position.Y - bullet.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
             if (Debug)
                 DrawDebug(renderer, bullet, alpha);
@@ -371,6 +372,7 @@ public class World
         renderer.DrawPoint(e.Position, e.SmartColor, 2);
         renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
         renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
+        renderer.DrawRect(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)

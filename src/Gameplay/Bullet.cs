@@ -37,11 +37,11 @@ public class Bullet : Entity
 
         Timer += deltaSeconds;
         var collisions = Mover.PerformMove(Velocity, deltaSeconds);
-        var distance = 10;
+        var distance = 5f;
         
         for (var i = World.Enemies.Count - 1; i >= 0; i--)
         {
-            var offset = World.Enemies[i].Position - Position;
+            var offset = World.Enemies[i].Bounds.Center - Bounds.Center;
             if (offset.LengthSquared() <= distance * distance)
             {
                 IsDestroyed = true;
