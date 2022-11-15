@@ -6,7 +6,6 @@ public class SlugBehaviour : EnemyBehaviour
     public Enemy Parent => _parent ?? throw new InvalidOperationException();
 
     private float _speed = 50f;
-    private float _gravity = 800f;
     private float _turnDistanceFromEdge = 0.1f;
 
     public override void Initialize(Enemy parent)
@@ -43,7 +42,7 @@ public class SlugBehaviour : EnemyBehaviour
 
         if (!Parent.World.IsGrounded(Parent, Parent.Velocity))
         {
-            Parent.Velocity.Y += _gravity * deltaSeconds;
+            Parent.Velocity.Y += Parent.World.Gravity * deltaSeconds;
         }
 
         if (Math.Abs(Parent.Velocity.X) < _speed * 0.5f)
@@ -53,7 +52,6 @@ public class SlugBehaviour : EnemyBehaviour
 
         if (!Parent.World.IsGrounded(Parent, Parent.Velocity))
             return;
-
 
         var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(Parent.Cell.X + 1, Parent.Cell.Y + 1) &&
                          Parent.CellPos.X > (1.0f - _turnDistanceFromEdge);

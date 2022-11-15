@@ -125,6 +125,13 @@ public class World
         UpdateEnemies(deltaSeconds);
     }
 
+    private void UpdatePlayer(float deltaSeconds, InputHandler input)
+    {
+        if (!Player.IsInitialized)
+            Player.Initialize(this);
+        Player.Update(deltaSeconds, input);
+    }
+
     private void UpdateEnemies(float deltaSeconds)
     {
         for (var i = 0; i < Enemies.Count; i++)
@@ -135,114 +142,6 @@ public class World
                 entity.Initialize(this);
 
             entity.Update(deltaSeconds);
-        }
-    }
-
-
-    private void UpdatePlayer(float deltaSeconds, InputHandler input)
-    {
-        if (!Player.IsInitialized)
-            Player.Initialize(this);
-
-        HandleInput(input, out var movementX);
-        var isJumpDown = input.IsKeyDown(KeyCode.Space);
-        var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
-
-        if (Player.Position.Y > 300)
-        {
-            Player.SetPositions(Player.InitialPosition);
-        }
-
-        Player.TotalTime += deltaSeconds;
-        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X) ? 0 : (uint)(Player.TotalTime * 10) % 2;
-
-        if (IsGrounded(Player, Player.Velocity))
-        {
-            Player.LastOnGroundTime = Player.TotalTime;
-        }
-
-        if (movementX != 0)
-        {
-            Player.Velocity.X += movementX * Player.Speed;
-        }
-
-        if (!Player.IsJumping && isJumpPressed)
-        {
-            var timeSinceOnGround = Player.TotalTime - Player.LastOnGroundTime;
-            if (timeSinceOnGround < 0.1f)
-            {
-                Player.Squash = new Vector2(0.6f, 1.4f);
-                Player.LastOnGroundTime = 0;
-                Player.Velocity.Y = Player.JumpSpeed;
-                Player.LastJumpStartTime = Player.TotalTime;
-                Player.IsJumping = true;
-            }
-        }
-
-        if (Player.IsJumping)
-        {
-            if (!isJumpDown)
-            {
-                Player.IsJumping = false;
-            }
-            else
-            {
-                var timeAirborne = Player.TotalTime - Player.LastJumpStartTime;
-                if (timeAirborne > Player.JumpHoldTime)
-                {
-                    Player.IsJumping = false;
-                }
-            }
-        }
-
-        var collisions = HandleCollisions(Player, Player.Velocity, deltaSeconds);
-       
-        if ((collisions & CollisionDir.Down) == CollisionDir.Down)
-        {
-            Player.Squash = new Vector2(1.5f, 0.5f);
-        }
-
-        if ((collisions & CollisionDir.Top) == CollisionDir.Top)
-        {
-            Player.IsJumping = false;
-        }
-
-        Velocity.ApplyFriction(Player.Velocity);
-        if (Player.Velocity.X > 0)
-        {
-            Player.Flip = SpriteFlip.None;
-        }
-        else if (Player.Velocity.X < 0)
-        {
-            Player.Flip = SpriteFlip.FlipHorizontally;
-        }
-
-        if (!IsGrounded(Player, Player.Velocity) && !Player.IsJumping)
-        {
-            Player.Velocity.Y += Gravity * deltaSeconds;
-        }
-
-        Player.Squash = Vector2.SmoothStep(Player.Squash, Vector2.One, deltaSeconds * 20f);
-    }
-
-    private void HandleInput(InputHandler input, out int movementX)
-    {
-        movementX = 0;
-        if (input.IsKeyPressed(KeyCode.Insert))
-        {
-            Player.Position = new Vector2(100, 50);
-        }
-
-        if (input.IsKeyDown(KeyCode.Right) ||
-            input.IsKeyDown(KeyCode.D))
-        {
-            movementX += 1;
-        }
-
-        if (input.IsKeyDown(KeyCode.Left) ||
-            input.IsKeyDown(KeyCode.A))
-        {
-            movementX += -1;
         }
     }
 
@@ -425,17 +324,12 @@ public class World
             }
 
             if (Debug)
-            {
                 renderer.DrawRect(level.Position, level.Position + level.Size, Color.Red, 1.0f);
-            }
         }
 
         if (Debug)
-        {
             renderer.DrawRect(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
-        }
 
-        // DrawDebug(renderer, _player);
 
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         {
@@ -446,9 +340,7 @@ public class World
                         Matrix3x2.CreateTranslation(position.X, position.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
             if (Debug)
-            {
                 DrawDebug(renderer, Player, alpha);
-            }
         }
 
         for (var i = 0; i < Enemies.Count; i++)
@@ -468,15 +360,11 @@ public class World
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
-            {
                 DrawDebug(renderer, entity, alpha);
-            }
         }
 
         if (Debug)
-        {
             _debugDraw.Render(renderer);
-        }
 
         if (Debug)
         {
@@ -488,9 +376,7 @@ public class World
     private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
     {
         if (!layer.TilesetDefUid.HasValue)
-        {
             return;
-        }
 
         var texture = TilesetTextures[layer.TilesetDefUid.Value];
 

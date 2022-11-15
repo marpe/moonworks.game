@@ -80,4 +80,18 @@ public partial class Player : Entity
         Delta = Vector2.Zero,
         Friction = new Vector2(0.84f, 0.98f),
     };
+
+    public PlayerBehaviour Behaviour = new();
+
+    public override void Initialize(World world)
+    {
+        Behaviour.Initialize(this);
+        base.Initialize(world);
+    }
+
+    public void Update(float deltaSeconds, InputHandler input)
+    {
+        Behaviour.Update(deltaSeconds, input);
+        base.Update(deltaSeconds);
+    }
 }
