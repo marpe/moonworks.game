@@ -135,64 +135,6 @@ public class World
                 entity.Initialize(this);
 
             entity.Update(deltaSeconds);
-
-            if (entity.Type == EnemyType.Slug)
-            {
-                if (!entity.CanMove)
-                    continue;
-                
-                var collisions = HandleCollisions(entity, entity.Velocity, deltaSeconds);
-
-                entity.Position += entity.Velocity * deltaSeconds;
-                var slugSpeed = 50f;
-                if ((collisions & CollisionDir.Left) != 0)
-                {
-                    entity.Velocity.Delta = new Vector2(slugSpeed, 0);
-                }
-                else if ((collisions & CollisionDir.Right) != 0)
-                {
-                    entity.Velocity.Delta = new Vector2(-slugSpeed, 0);
-                }
-
-                Velocity.ApplyFriction(entity.Velocity);
-
-                if (entity.Velocity.X > 0)
-                {
-                    entity.Flip = SpriteFlip.None;
-                }
-                else if (entity.Velocity.X < 0)
-                {
-                    entity.Flip = SpriteFlip.FlipHorizontally;
-                }
-
-                if (!IsGrounded(entity, entity.Velocity))
-                {
-                    entity.Velocity.Y += Gravity * deltaSeconds;
-                }
-
-                if (Math.Abs(entity.Velocity.X) < slugSpeed * 0.5f)
-                {
-                    entity.Velocity.X += entity.Velocity.X;
-                }
-            }
-            else if (entity.Type == EnemyType.YellowBee)
-            {
-                var speed = 2f;
-                var radius = 25f;
-                var t = entity.TimeOffset + entity.TotalTime * speed;
-                var deltaMove = new Vector2(MathF.Cos(t) * 2.0f, MathF.Cos(t) * MathF.Cos(t) - MathF.Sin(t) * MathF.Sin(t)) * 2.0f * radius;
-                entity.Velocity.Delta = deltaMove;
-                entity.Position += entity.Velocity * deltaSeconds;
-
-                if (entity.Velocity.X > 0)
-                {
-                    entity.Flip = SpriteFlip.None;
-                }
-                else if (entity.Velocity.X < 0)
-                {
-                    entity.Flip = SpriteFlip.FlipHorizontally;
-                }
-            }
         }
     }
 
@@ -254,6 +196,7 @@ public class World
         }
 
         var collisions = HandleCollisions(Player, Player.Velocity, deltaSeconds);
+       
         if ((collisions & CollisionDir.Down) == CollisionDir.Down)
         {
             Player.Squash = new Vector2(1.5f, 0.5f);
@@ -263,8 +206,6 @@ public class World
         {
             Player.IsJumping = false;
         }
-
-        Player.Position += Player.Velocity * deltaSeconds;
 
         Velocity.ApplyFriction(Player.Velocity);
         if (Player.Velocity.X > 0)
@@ -311,89 +252,73 @@ public class World
         return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
     }
 
-    private CollisionDir HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
+    public CollisionDir HandleCollisions(Entity entity, Velocity velocity, float deltaSeconds)
     {
         if (velocity.Delta.LengthSquared() == 0)
             return CollisionDir.None;
 
         var result = CollisionDir.None;
-        var deltaMove = velocity * deltaSeconds / DefaultGridSize;
-        var (cell, relativeCellPos) = Entity.GetGridCoords(entity);
-
-        var relativeCellDelta = relativeCellPos + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
-        var cellDelta = GetCellDelta(relativeCellDelta);
-
         var size = new Vector2(0.4f, 0.8f);
         var halfSize = size * 0.5f;
 
-        var maxX = (1.0f - halfSize.X);
-        if (velocity.X > 0 && relativeCellDelta.X > maxX && HasCollision(cell.X + 1, cell.Y))
+        if (velocity.X != 0)
         {
-            result |= CollisionDir.Right;
-            entity.Position.X = (cell.X + maxX) * DefaultGridSize;
-            velocity.X = 0;
-        }
-
-        var minX = halfSize.X;
-        if (velocity.X < 0 && relativeCellDelta.X < minX && HasCollision(cell.X - 1, cell.Y))
-        {
-            result |= CollisionDir.Left;
-            entity.Position.X = (cell.X + minX) * DefaultGridSize;
-            velocity.X = 0;
-        }
-
-        if (velocity.Y > 0 && relativeCellDelta.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
-        {
-            result |= CollisionDir.Down;
-            entity.Position.Y = (cell.Y + 1.0f) * DefaultGridSize;
-            velocity.Y = 0;
-        }
-
-        if (velocity.Y < 0 && relativeCellDelta.Y < size.Y && HasCollision(cell.X, cell.Y - 1))
-        {
-            result |= CollisionDir.Top;
-            entity.Position.Y = (cell.Y + size.Y) * DefaultGridSize;
-            velocity.Y = 0;
-        }
-
-        if (HasCollision(cell.X + cellDelta.X, cell.Y + cellDelta.Y) && result == CollisionDir.None)
-        {
-            Logger.LogError($"Results in a collision, cellDelta: {cellDelta}, prevCell: {cell}, newCell: {cell + cellDelta}");
-
-            if (velocity.Y > 0)
-            {
-                result |= CollisionDir.Down;
-                entity.Position.Y = (cell.Y + 1.0f) * DefaultGridSize;
-                velocity.Y = 0;
-            }
-            else if (velocity.Y < 0)
-            {
-                result |= CollisionDir.Top;
-                entity.Position.Y = (cell.Y + size.Y) * DefaultGridSize;
-                velocity.Y = 0;
-            }
-
-            var collisionResolved = !HasCollision(cell.X + cellDelta.X, cell.Y);
-
-            if (collisionResolved)
-            {
-                Logger.LogInfo($"Collision was resolved at: {new Point(cell.X + cellDelta.X, cell.Y)}!");
-            }
-
-            if (velocity.X < 0 && !collisionResolved)
-            {
-                result |= CollisionDir.Left;
-                entity.Position.X = (cell.X + minX) * DefaultGridSize;
-                velocity.X = 0;
-            }
-            else if (velocity.X > 0 && !collisionResolved)
+            var deltaMove = velocity * deltaSeconds / DefaultGridSize;
+            var (cell, cellPos) = Entity.GetGridCoords(entity);
+            var dx = cellPos.X + deltaMove.X; // relative cell pos ( e.g < 0 means we moved to the previous cell )
+            
+            var maxX = (1.0f - halfSize.X);
+            var minX = halfSize.X;
+            
+            if (velocity.X > 0 && dx > maxX && HasCollision(cell.X + 1, cell.Y))
             {
                 result |= CollisionDir.Right;
                 entity.Position.X = (cell.X + maxX) * DefaultGridSize;
                 velocity.X = 0;
             }
+            else if (velocity.X < 0 && dx < minX && HasCollision(cell.X - 1, cell.Y))
+            {
+                result |= CollisionDir.Left;
+                entity.Position.X = (cell.X + minX) * DefaultGridSize;
+                velocity.X = 0;
+            }
+            else
+            {
+                entity.Position.X += velocity.X * deltaSeconds;
+            }
+            
+            (entity.Cell, entity.CellPos) = Entity.GetGridCoords(entity);
         }
 
+        if (velocity.Y != 0)
+        {
+            var deltaMove = velocity * deltaSeconds / DefaultGridSize;
+            var (cell, cellPos) = Entity.GetGridCoords(entity);
+            var dy = cellPos.Y + deltaMove.Y; // relative cell pos ( e.g < 0 means we moved to the previous cell )
+
+            var maxY = 1.0f;
+            var minY = size.Y;
+        
+            if (velocity.Y > 0 && dy > maxY && HasCollision(cell.X, cell.Y + 1))
+            {
+                result |= CollisionDir.Down;
+                entity.Position.Y = (cell.Y + maxY) * DefaultGridSize;
+                velocity.Y = 0;
+            }
+            else if (velocity.Y < 0 && dy < minY && HasCollision(cell.X, cell.Y - 1))
+            {
+                result |= CollisionDir.Top;
+                entity.Position.Y = (cell.Y + minY) * DefaultGridSize;
+                velocity.Y = 0;
+            }
+            else
+            {
+                entity.Position.Y += velocity.Y * deltaSeconds;
+            }
+            
+            (entity.Cell, entity.CellPos) = Entity.GetGridCoords(entity);
+        }
+        
         return result;
     }
 

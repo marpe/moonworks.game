@@ -17,7 +17,6 @@ global using System.Text;
 global using System.Threading.Tasks;
 global using System;
 global using MyGame.Coroutines;
-global using MyGame.Gameplay;
 global using MyGame.Graphics;
 global using MyGame.Input;
 global using MyGame.Screens;

@@ -11,18 +11,18 @@ public partial class Entity
     public Vector2 Origin => Pivot * Size;
     public Bounds Bounds => new(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
     public Vector2 Center => new(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
-    
+
     private World? _world;
     public World World => _world ?? throw new InvalidOperationException();
 
     public CoroutineManager CoroutineManager = new();
-    public Collider Collider = new(); 
+    public Collider Collider = new();
 
     public virtual void Initialize(World world)
     {
         _world = world;
         Collider.Initialize(this);
-        GetGridCoords(this);
+        (Cell, CellPos) = GetGridCoords(this);
         IsInitialized = true;
     }
 
@@ -30,12 +30,13 @@ public partial class Entity
     {
         CoroutineManager.Update(deltaSeconds);
     }
-    
+
     public void SetPositions(Vector2 position)
     {
         PreviousPosition = Position = position;
+        (Cell, CellPos) = GetGridCoords(this);
     }
-    
+
     public static (Point, Vector2) GetGridCoords(Entity entity, int gridSize = World.DefaultGridSize)
     {
         var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
@@ -47,8 +48,6 @@ public partial class Entity
             (entity.Position.X + adjustX) % gridSize / gridSize,
             (entity.Position.Y + adjustY) % gridSize / gridSize
         );
-        entity.Cell = cell;
-        entity.CellPos = relativeCell;
         return (cell, relativeCell);
     }
 }

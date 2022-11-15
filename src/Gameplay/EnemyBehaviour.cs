@@ -1,4 +1,4 @@
-namespace MyGame.Gameplay;
+namespace MyGame;
 
 public abstract class EnemyBehaviour
 {

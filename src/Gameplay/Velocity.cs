@@ -1,4 +1,4 @@
-﻿namespace MyGame.Gameplay;
+﻿namespace MyGame;
 
 [CustomInspector(typeof(GroupInspector))]
 public class Velocity
