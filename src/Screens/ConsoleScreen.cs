@@ -1,4 +1,3 @@
-using MyGame.Graphics;
 using MyGame.Input;
 using MyGame.TWConsole;
 using MyGame.Utils;

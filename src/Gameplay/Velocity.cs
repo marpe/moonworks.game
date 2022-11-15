@@ -1,7 +1,4 @@
-﻿using MyGame.TWImGui;
-using MyGame.TWImGui.Inspectors;
-
-namespace MyGame;
+﻿namespace MyGame.Gameplay;
 
 [CustomInspector(typeof(GroupInspector))]
 public class Velocity

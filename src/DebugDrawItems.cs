@@ -1,5 +1,4 @@
-﻿using MyGame.Graphics;
-using MyGame.Utils;
+﻿using MyGame.Utils;
 
 namespace MyGame;
 

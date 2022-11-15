@@ -1,6 +1,4 @@
 using MoonWorks.Graphics.Font;
-using MyGame.Graphics;
-using MyGame.TWImGui;
 using MyGame.Utils;
 using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
 using AlignV = WellspringCS.Wellspring.VerticalAlignment;

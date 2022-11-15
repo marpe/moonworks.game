@@ -1,5 +1,4 @@
 ﻿using MyGame.Cameras;
-using MyGame.Graphics;
 using MyGame.TWConsole;
 
 namespace MyGame.Screens;

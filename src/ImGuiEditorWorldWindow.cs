@@ -1,6 +1,4 @@
 ﻿using Mochi.DearImGui;
-using MyGame.TWImGui;
-using MyGame.TWImGui.Inspectors;
 
 namespace MyGame;
 
@@ -49,7 +47,7 @@ public unsafe class ImGuiEditorWorldWindow : ImGuiEditorWindow
                 
                 ImGui.Separator();
                 
-                var (cell, cellRel) = world.GetGridCoords(world.Player);
+                var (cell, cellRel) = Entity.GetGridCoords(world.Player);
                 ImGui.TextUnformatted($"Cell {cell.ToString()}");
                 ImGui.TextUnformatted($"CellRel {cellRel.ToString()}");
                 

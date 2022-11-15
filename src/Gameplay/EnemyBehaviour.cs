@@ -1,0 +1,7 @@
+namespace MyGame.Gameplay;
+
+public abstract class EnemyBehaviour
+{
+    public abstract void Initialize(Enemy parent);
+    public abstract void Update(float deltaSeconds);
+}

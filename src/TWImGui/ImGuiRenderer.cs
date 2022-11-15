@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
-using MyGame.Graphics;
 using MyGame.Input;
 using SDL2;
 using Buffer = MoonWorks.Graphics.Buffer;

@@ -1,6 +1,4 @@
-﻿using MyGame.Graphics;
-
-namespace MyGame.Screens;
+﻿namespace MyGame.Screens;
 
 public abstract class SceneTransition
 {

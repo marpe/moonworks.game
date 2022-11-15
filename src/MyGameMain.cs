@@ -1,6 +1,4 @@
-using MyGame.Graphics;
 using MyGame.Input;
-using MyGame.Screens;
 using SDL2;
 
 namespace MyGame;

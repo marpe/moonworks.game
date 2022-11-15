@@ -1,26 +1,9 @@
-﻿using MyGame.Cameras;
-using MyGame.Graphics;
-using MyGame.Input;
-using MyGame.Screens;
-using MyGame.TWConsole;
-using MyGame.Utils;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-namespace MyGame;
-
-[Flags]
-public enum CollisionDir
-{
-    None = 0,
-    Top = 1 << 0,
-    Right = 1 << 1,
-    Down = 1 << 2,
-    Left = 1 << 3,
-}
+﻿namespace MyGame;
 
 public class World
 {
+    public const int DefaultGridSize = 16;
+
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
@@ -35,8 +18,6 @@ public class World
     public List<Enemy> Enemies { get; }
 
     public Player Player { get; }
-
-    public long GridSize => LdtkRaw.DefaultGridSize;
 
     private readonly LdtkJson LdtkRaw;
     private readonly Dictionary<string, Texture> Textures = new();
@@ -66,20 +47,6 @@ public class World
             allEntities.AddRange(entities);
         }
 
-        foreach (var ent in allEntities)
-        {
-            if (ent is Enemy enemy)
-            {
-                enemy.TimeOffset = enemy.Position.X;
-                if (enemy.Type == EnemyType.Slug)
-                {
-                    var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
-                    enemy.Velocity.Delta = new Vector2(randomDirection * 50f, 0);
-                    enemy.Velocity.Friction = new Vector2(0.99f, 0.99f);
-                }
-            }
-        }
-
         var textures = new[] { ContentPaths.ldtk.Example.Characters_png };
         foreach (var texturePath in textures)
         {
@@ -106,9 +73,7 @@ public class World
         foreach (var layer in level.LayerInstances)
         {
             if (layer.Type != "Entities")
-            {
                 continue;
-            }
 
             foreach (var entityInstance in layer.EntityInstances)
             {
@@ -166,21 +131,16 @@ public class World
         {
             var entity = Enemies[i];
 
-            entity.TotalTime += deltaSeconds;
+            if (!entity.IsInitialized)
+                entity.Initialize(this);
+
+            entity.Update(deltaSeconds);
 
             if (entity.Type == EnemyType.Slug)
             {
-                var (cell, cellRel) = GetGridCoords(entity);
-                var turnDistanceFromEdge = 0.1f;
-                if (entity.Velocity.X > 0 && !HasCollision(cell.X + 1, cell.Y + 1) && cellRel.X > (1.0f - turnDistanceFromEdge))
-                {
-                    entity.Velocity.X *= -1;
-                }
-                else if (entity.Velocity.X < 0 && !HasCollision(cell.X - 1, cell.Y + 1) && cellRel.X < turnDistanceFromEdge)
-                {
-                    entity.Velocity.X *= -1;
-                }
-
+                if (!entity.CanMove)
+                    continue;
+                
                 var collisions = HandleCollisions(entity, entity.Velocity, deltaSeconds);
 
                 entity.Position += entity.Velocity * deltaSeconds;
@@ -239,6 +199,9 @@ public class World
 
     private void UpdatePlayer(float deltaSeconds, InputHandler input)
     {
+        if (!Player.IsInitialized)
+            Player.Initialize(this);
+
         HandleInput(input, out var movementX);
         var isJumpDown = input.IsKeyDown(KeyCode.Space);
         var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
@@ -344,7 +307,7 @@ public class World
 
     public bool IsGrounded(Entity entity, Vector2 velocity)
     {
-        var (cell, _) = GetGridCoords(entity);
+        var (cell, _) = Entity.GetGridCoords(entity);
         return velocity.Y == 0 && HasCollision(cell.X, cell.Y + 1);
     }
 
@@ -354,8 +317,8 @@ public class World
             return CollisionDir.None;
 
         var result = CollisionDir.None;
-        var deltaMove = velocity * deltaSeconds / GridSize;
-        var (cell, relativeCellPos) = GetGridCoords(entity);
+        var deltaMove = velocity * deltaSeconds / DefaultGridSize;
+        var (cell, relativeCellPos) = Entity.GetGridCoords(entity);
 
         var relativeCellDelta = relativeCellPos + deltaMove; // relative cell pos ( e.g < 0 means we moved to the previous cell ) 
         var cellDelta = GetCellDelta(relativeCellDelta);
@@ -367,7 +330,7 @@ public class World
         if (velocity.X > 0 && relativeCellDelta.X > maxX && HasCollision(cell.X + 1, cell.Y))
         {
             result |= CollisionDir.Right;
-            entity.Position.X = (cell.X + maxX) * GridSize;
+            entity.Position.X = (cell.X + maxX) * DefaultGridSize;
             velocity.X = 0;
         }
 
@@ -375,21 +338,21 @@ public class World
         if (velocity.X < 0 && relativeCellDelta.X < minX && HasCollision(cell.X - 1, cell.Y))
         {
             result |= CollisionDir.Left;
-            entity.Position.X = (cell.X + minX) * GridSize;
+            entity.Position.X = (cell.X + minX) * DefaultGridSize;
             velocity.X = 0;
         }
 
         if (velocity.Y > 0 && relativeCellDelta.Y > 1.0f && HasCollision(cell.X, cell.Y + 1))
         {
             result |= CollisionDir.Down;
-            entity.Position.Y = (cell.Y + 1.0f) * GridSize;
+            entity.Position.Y = (cell.Y + 1.0f) * DefaultGridSize;
             velocity.Y = 0;
         }
 
         if (velocity.Y < 0 && relativeCellDelta.Y < size.Y && HasCollision(cell.X, cell.Y - 1))
         {
             result |= CollisionDir.Top;
-            entity.Position.Y = (cell.Y + size.Y) * GridSize;
+            entity.Position.Y = (cell.Y + size.Y) * DefaultGridSize;
             velocity.Y = 0;
         }
 
@@ -400,13 +363,13 @@ public class World
             if (velocity.Y > 0)
             {
                 result |= CollisionDir.Down;
-                entity.Position.Y = (cell.Y + 1.0f) * GridSize;
+                entity.Position.Y = (cell.Y + 1.0f) * DefaultGridSize;
                 velocity.Y = 0;
             }
             else if (velocity.Y < 0)
             {
                 result |= CollisionDir.Top;
-                entity.Position.Y = (cell.Y + size.Y) * GridSize;
+                entity.Position.Y = (cell.Y + size.Y) * DefaultGridSize;
                 velocity.Y = 0;
             }
 
@@ -420,13 +383,13 @@ public class World
             if (velocity.X < 0 && !collisionResolved)
             {
                 result |= CollisionDir.Left;
-                entity.Position.X = (cell.X + minX) * GridSize;
+                entity.Position.X = (cell.X + minX) * DefaultGridSize;
                 velocity.X = 0;
             }
             else if (velocity.X > 0 && !collisionResolved)
             {
                 result |= CollisionDir.Right;
-                entity.Position.X = (cell.X + maxX) * GridSize;
+                entity.Position.X = (cell.X + maxX) * DefaultGridSize;
                 velocity.X = 0;
             }
         }
@@ -465,20 +428,6 @@ public class World
         return cellDelta;
     }
 
-    public (Point, Vector2) GetGridCoords(Entity entity)
-    {
-        var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
-        var cell = new Point(
-            (int)((entity.Position.X + adjustX) / GridSize),
-            (int)((entity.Position.Y + adjustY) / GridSize)
-        );
-        var relativeCell = new Vector2(
-            (entity.Position.X + adjustX) % GridSize / GridSize,
-            (entity.Position.Y + adjustY) % GridSize / GridSize
-        );
-        return (cell, relativeCell);
-    }
-
     private LayerDefinition GetLayerDefinition(long layerDefUid)
     {
         for (var i = 0; i < LdtkRaw.Defs.Layers.Length; i++)
@@ -492,7 +441,7 @@ public class World
         throw new InvalidOperationException();
     }
 
-    private bool HasCollision(int x, int y)
+    public bool HasCollision(int x, int y)
     {
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
@@ -712,8 +661,8 @@ public class World
 
         renderer.DrawRect(lerpMin, lerpMin + e.Size, e.SmartColor, 1.0f);
         renderer.DrawRect(new Rectangle((int)lerpMin.X, (int)lerpMin.Y, 1, 1), e.SmartColor);
-        var (cell, cellRel) = GetGridCoords(e);
-        var cellInScreen = cell * (int)GridSize;
+        var (cell, cellRel) = Entity.GetGridCoords(e);
+        var cellInScreen = cell * DefaultGridSize;
         renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
         renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
     }

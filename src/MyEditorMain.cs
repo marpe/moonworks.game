@@ -1,9 +1,7 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
-using MyGame.Graphics;
 using MyGame.Input;
 using MyGame.TWConsole;
-using MyGame.TWImGui;
 
 namespace MyGame;
 
