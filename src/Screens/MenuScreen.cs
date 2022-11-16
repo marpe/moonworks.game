@@ -6,6 +6,7 @@ public class MenuItem
 {
     public Action Callback;
     public string Text;
+    public bool IsVisible = true;
 
     public MenuItem(string text, Action callback)
     {
@@ -23,16 +24,18 @@ public class MenuScreen
 
     private int _selectedIndex;
     private Point Position;
-    public bool IsHidden { get; set; } = true;
+    private readonly MenuItem _resumeItem;
+    public bool IsHidden { get; private set; } = true;
 
     public MenuScreen(MyGameMain game)
     {
         _game = game;
 
         _title = new FancyTextComponent("<~>Menu</~>");
+        _resumeItem = new MenuItem("Resume", () => { IsHidden = !IsHidden; });
         _menuItems = new List<MenuItem>(new[]
         {
-            new MenuItem("Resume", () => { IsHidden = !IsHidden; }),
+            _resumeItem,
             new MenuItem("New Game", OnPlay),
             new MenuItem("Options", () => { }),
             new MenuItem("Quit", OnQuit),
@@ -60,10 +63,7 @@ public class MenuScreen
         var input = _game.InputHandler;
 
         if (input.IsKeyPressed(KeyCode.Escape))
-        {
-            IsHidden = !IsHidden;
-            _selectedIndex = 0;
-        }
+            SetVisible();
 
         if (IsHidden)
             return;
@@ -74,11 +74,11 @@ public class MenuScreen
 
         if (input.IsKeyPressed(KeyCode.Down) || input.IsKeyPressed(KeyCode.S))
         {
-            _selectedIndex = (_selectedIndex + 1) % _menuItems.Count;
+            NextItem();
         }
         else if (input.IsKeyPressed(KeyCode.Up) || input.IsKeyPressed(KeyCode.W))
         {
-            _selectedIndex = (_menuItems.Count + _selectedIndex - 1) % _menuItems.Count;
+            PreviousItem();
         }
 
         if (input.IsKeyPressed(KeyCode.Return) || input.IsKeyPressed(KeyCode.Space))
@@ -91,6 +91,46 @@ public class MenuScreen
 
         // disable input for the next screen
         input.MouseEnabled = input.KeyboardEnabled = false;
+    }
+
+    public void SetVisible()
+    {
+        IsHidden = !IsHidden;
+        _resumeItem.IsVisible = _game.GameScreen.World != null;
+
+        // select first item
+        _selectedIndex = -1;
+        NextItem();
+    }
+
+    private void NextItem()
+    {
+        var startIndex = _selectedIndex;
+        var numItems = _menuItems.Count;
+        for (var i = 1; i < numItems; i++)
+        {
+            var j = (_menuItems.Count + startIndex + i) % _menuItems.Count;
+            if (_menuItems[j].IsVisible)
+            {
+                _selectedIndex = j;
+                return;
+            }
+        }
+    }
+
+    private void PreviousItem()
+    {
+        var startIndex = _selectedIndex;
+        var numItems = _menuItems.Count;
+        for (var i = 1; i < numItems; i++)
+        {
+            var j = (_menuItems.Count + startIndex - i) % _menuItems.Count;
+            if (_menuItems[j].IsVisible)
+            {
+                _selectedIndex = j;
+                return;
+            }
+        }
     }
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
@@ -109,6 +149,9 @@ public class MenuScreen
 
         for (var i = 0; i < _menuItems.Count; i++)
         {
+            if (!_menuItems[i].IsVisible)
+                continue;
+            
             var color = _selectedIndex == i ? Color.Red : Color.White;
             renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center,
                 VerticalAlignment.Middle);

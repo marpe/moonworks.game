@@ -61,7 +61,7 @@ public class MyGameMain : Game
         {
             Shared.Console.Initialize();
             Thread.Sleep(3000);
-            MenuScreen.IsHidden = false;
+            MenuScreen.SetVisible();
         });
 
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
