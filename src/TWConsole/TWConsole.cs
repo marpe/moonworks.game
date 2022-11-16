@@ -22,9 +22,11 @@ public class TWConsole
 
     public void Initialize()
     {
+        var sw = Stopwatch.StartNew();
         ProcessConsoleHandlerAttributes();
         ProcessCVarAttributes();
         Execute("exec " + kCvarsFilename, false);
+        Logger.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
     }
 
     private void ProcessCVarAttributes()

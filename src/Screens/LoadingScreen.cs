@@ -13,31 +13,27 @@ public enum TransitionState
 
 public class LoadingScreen
 {
+    public TransitionState State { get; private set; } = TransitionState.Hidden;
+    public bool IsLoading => State == TransitionState.TransitionOn || State == TransitionState.Active;
+
     private readonly Sprite _backgroundSprite;
     private readonly Sprite _blankSprite;
 
-    private Action? _callback;
+    private Action? _loadMethod;
 
     private Texture? _copyRender;
     private readonly SceneTransition _diamondTransition;
 
     private readonly MyGameMain _game;
-    private float _previousProgress;
 
-    private float _progress = 0;
+    private float _alpha = 0;
     private readonly SceneTransition _sceneTransition;
     private bool _shouldCopyRender;
     private readonly float _transitionSpeed = 2.0f;
 
-    public bool IsLoading => State == TransitionState.TransitionOn || State == TransitionState.Active;
-
     public LoadingScreen(MyGameMain game)
     {
         _game = game;
-
-        /*var asepritePath = Path.Combine(MyGameMain.ContentRoot, ContentPaths.Ldtk.Tileset1Aseprite);
-        var asepriteTexture = TextureUtils.LoadAseprite(game.GraphicsDevice, asepritePath);
-        var backgroundSprite = new Sprite(asepriteTexture);*/
 
         var backgroundTexture = TextureUtils.LoadPngTexture(game.GraphicsDevice, ContentPaths.Textures.menu_background_png);
         var blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
@@ -47,9 +43,8 @@ public class LoadingScreen
         _sceneTransition = _diamondTransition;
     }
 
-    public TransitionState State { get; private set; } = TransitionState.Hidden;
 
-    [ConsoleHandler("load", "Load a level")]
+    [ConsoleHandler("test_load", "Test loading screen")]
     public static void TestLoad()
     {
         Shared.Game.LoadingScreen.StartLoad(() => { Thread.Sleep(1000); });
@@ -65,38 +60,52 @@ public class LoadingScreen
 
         _shouldCopyRender = true;
         State = TransitionState.TransitionOn;
-        _callback = loadMethod;
+        _loadMethod = loadMethod;
     }
 
+    public void LoadImmediate(Action loadMethod)
+    {
+        if (State != TransitionState.Hidden)
+        {
+            Logger.LogError("Loading is already in progress");
+            return;
+        }
+
+        SetActive(loadMethod);
+    }
+
+    private void SetActive(Action? loadMethod)
+    {
+        _alpha = 1.0f;
+        State = TransitionState.Active;
+        Task.Run(() =>
+        {
+            var sw = Stopwatch.StartNew();
+            loadMethod?.Invoke();
+            State = TransitionState.TransitionOff;
+            Logger.LogInfo($"Loading finished in {sw.ElapsedMilliseconds} ms");
+        });
+    }
+    
     public void Update(float deltaSeconds)
     {
-        _previousProgress = _progress;
         if (State == TransitionState.TransitionOn)
         {
-            _progress += _transitionSpeed * deltaSeconds;
+            _alpha += _transitionSpeed * deltaSeconds;
 
-            if (_progress >= 1.0f)
+            if (_alpha >= 1.0f)
             {
-                _progress = 1.0f;
-                State = TransitionState.Active;
-
-                Task.Run(() =>
-                {
-                    _callback?.Invoke();
-                    State = TransitionState.TransitionOff;
-                });
+                SetActive(_loadMethod);
             }
         }
         else if (State == TransitionState.TransitionOff)
         {
-            _progress -= _transitionSpeed * deltaSeconds;
-            if (_progress <= 0)
+            _alpha -= _transitionSpeed * deltaSeconds;
+            if (_alpha <= 0)
             {
-                _progress = 0;
+                _alpha = 0;
                 State = TransitionState.Hidden;
-
-                _copyRender = null;
-                _callback = null;
+                _loadMethod = null;
             }
         }
     }
@@ -106,34 +115,33 @@ public class LoadingScreen
         if (State == TransitionState.Hidden)
             return;
 
-        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderDestination.Width, renderDestination.Height);
-
         if (_shouldCopyRender)
         {
             Logger.LogInfo("Copying render...");
             renderer.FlushBatches(renderDestination);
-            _copyRender?.Dispose();
-            _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+            if (_copyRender == null)
+                _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+            else
+                TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
             renderer.CommandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
         }
 
-        if (_copyRender != null && State is TransitionState.TransitionOn or TransitionState.Active)
+        if (_copyRender != null && IsLoading)
         {
             renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
         }
 
         renderer.FlushBatches(renderDestination);
-        _sceneTransition.Draw(renderer, renderDestination, _progress);
+        _sceneTransition.Draw(renderer, renderDestination, _alpha);
 
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
-        var windowSize = _game.MainWindow.Size;
 
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
-        var position = new Vector2(windowSize.X, windowSize.Y) - textSize;
-        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * MathHelper.Lerp(_previousProgress, _progress, (float)alpha));
+        var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
+        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _alpha);
     }
 
     public void Unload()

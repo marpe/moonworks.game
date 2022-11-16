@@ -64,11 +64,11 @@ public class Camera
     {
         if (!use3D)
         {
-            return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 4000f);
+            return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
         }
 
         var fov = 60 * MathF.Deg2Rad; // (float)Math.Atan(targetHeight / (2f * Position3D.Z)) * 2f;
         var aspectRatio = width / height;
-        return Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, 0.0001f, 5000f);
+        return Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, 0.0001f, 10000f);
     }
 }

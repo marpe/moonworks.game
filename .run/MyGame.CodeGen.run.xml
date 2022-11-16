@@ -1,7 +1,7 @@
 ﻿<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="MyGame.CodeGen ContentPaths" type="DotNetProject" factoryName=".NET Project">
+  <configuration default="false" name="MyGame.CodeGen" type="DotNetProject" factoryName=".NET Project">
     <option name="EXE_PATH" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net6.0/MyGame.CodeGen.exe" />
-    <option name="PROGRAM_PARAMETERS" value="--content-root &quot;../../../../../../Content&quot; --content-out &quot;../../../../../../src/Generated/ContentPaths.cs&quot; --verbose" />
+    <option name="PROGRAM_PARAMETERS" value="" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net6.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />

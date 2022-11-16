@@ -101,19 +101,15 @@ public static class TextureUtils
         }
     }
 
-    public static unsafe Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)
+    public static Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)
     {
         var texture = Texture.CreateTexture2D(device, 1, 1, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
         Span<Color> data = new Color[width * height];
         data.Fill(color);
-        fixed (Color* dataPtr = data)
-        {
-            var command = device.AcquireCommandBuffer();
-            var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
-            command.SetTextureData(texture, (IntPtr)dataPtr, width * height * bytesPerPixel);
-            device.Submit(command);
-        }
-
+        var command = device.AcquireCommandBuffer();
+        command.SetTextureData(texture, data.ToArray());
+        device.Submit(command);
+        device.Wait();
         return texture;
     }
 

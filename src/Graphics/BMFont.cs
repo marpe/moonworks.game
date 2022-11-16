@@ -10,7 +10,7 @@ public class BMFont : IDisposable
 
     public BMFont(GraphicsDevice device, string filename)
     {
-        using var stream = File.OpenRead(filename); // TitleContainer.OpenStream(filename);
+        using var stream = File.OpenRead(filename);
         using var reader = new StreamReader(stream);
         Font = BitmapFont.LoadXml(reader);
         var directoryName = Path.GetDirectoryName(filename);

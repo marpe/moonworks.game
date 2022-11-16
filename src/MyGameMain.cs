@@ -1,3 +1,4 @@
+using System.Threading;
 using MyGame.Input;
 using SDL2;
 
@@ -25,15 +26,15 @@ public class MyGameMain : Game
 
     public readonly InputHandler InputHandler;
 
-    private readonly MenuScreen _menuScreen;
-    private readonly ConsoleScreen _consoleScreen;
+    public MenuScreen MenuScreen;
+    public ConsoleScreen ConsoleScreen;
     public readonly LoadingScreen LoadingScreen;
-    public GameScreen GameScreen { get; }
-    public Time Time { get; }
+    public GameScreen GameScreen;
+    public readonly Time Time;
 
     public readonly Renderer Renderer;
 
-    private float _nextTitleUpdate;
+    private float _nextWindowTitleUpdate;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -43,22 +44,27 @@ public class MyGameMain : Game
     ) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
     {
         var sw = Stopwatch.StartNew();
+        
+        Time = new Time();
+        InputHandler = new InputHandler(Inputs);
+        
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
-        Task.Run(() => { Shared.Console.Initialize(); });
-
-        LoadingScreen = new LoadingScreen(this);
-
-        InputHandler = new InputHandler(Inputs);
-
+        
         Renderer = new Renderer(this);
-
+        LoadingScreen = new LoadingScreen(this);
+        ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
-        _menuScreen = new MenuScreen(this);
-        _consoleScreen = new ConsoleScreen(this);
-        Time = new Time();
+        MenuScreen = new MenuScreen(this);
+        
+        LoadingScreen.LoadImmediate(() =>
+        {
+            Shared.Console.Initialize();
+            Thread.Sleep(3000);
+            MenuScreen.IsHidden = false;
+        });
 
-        Logger.LogInfo($"Game Loaded in {sw.ElapsedMilliseconds} ms");
+        Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
     }
 
 
@@ -74,12 +80,12 @@ public class MyGameMain : Game
 
         if (!LoadingScreen.IsLoading)
         {
-            _consoleScreen.Update(Time.ElapsedTime);
+            ConsoleScreen.Update(Time.ElapsedTime);
 
-            var isPaused = !_consoleScreen.IsHidden;
-            _menuScreen.Update(isPaused, Time.ElapsedTime);
+            var isPaused = !ConsoleScreen.IsHidden;
+            MenuScreen.Update(isPaused, Time.ElapsedTime);
 
-            isPaused |= !_menuScreen.IsHidden;
+            isPaused |= !MenuScreen.IsHidden;
             GameScreen.Update(isPaused, Time.ElapsedTime);
         }
 
@@ -88,10 +94,10 @@ public class MyGameMain : Game
 
     private void UpdateWindowTitle()
     {
-        if (Time.TotalElapsedTime >= _nextTitleUpdate)
+        if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {
             SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}");
-            _nextTitleUpdate += 1f;
+            _nextWindowTitleUpdate += 1f;
         }
     }
 
@@ -114,9 +120,9 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, renderDestination, alpha);
 
-        _menuScreen.Draw(Renderer, renderDestination, alpha);
+        MenuScreen.Draw(Renderer, renderDestination, alpha);
 
-        _consoleScreen.Draw(Renderer, renderDestination, alpha);
+        ConsoleScreen.Draw(Renderer, renderDestination, alpha);
 
         LoadingScreen.Draw(Renderer, renderDestination, alpha);
 
@@ -129,7 +135,7 @@ public class MyGameMain : Game
 
         GameScreen.Unload();
 
-        _consoleScreen.Unload();
+        ConsoleScreen.Unload();
 
         Renderer.Unload();
 

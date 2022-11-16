@@ -68,15 +68,15 @@ public class DiamondTransition : SceneTransition
     public override void Draw(Renderer renderer, Texture renderDestination, float progress)
     {
         var commandBuffer = renderer.CommandBuffer;
-        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderDestination.Width, renderDestination.Height);
-        var swapRect = new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height);
-        renderer.DrawRect(swapRect, Color.Black, 1f);
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black, 1f);
+        renderer.SpriteBatch.UpdateBuffers(commandBuffer);
         commandBuffer.BeginRenderPass(
             new DepthStencilAttachmentInfo(renderer.DepthStencilAttachmentInfo.Texture, LoadOp.Load),
             new ColorAttachmentInfo(renderDestination, LoadOp.Load));
         commandBuffer.BindGraphicsPipeline(Pipeline);
         Uniform.Progress = progress;
-        commandBuffer.PushFragmentShaderUniforms(Uniform);
+        var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(Uniform);
+        var viewProjection = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
         renderer.SpriteBatch.Flush(commandBuffer, viewProjection);
         commandBuffer.EndRenderPass();
     }

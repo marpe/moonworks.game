@@ -24,12 +24,26 @@ internal class Program
         Logger.LogInfo = LogInfo;
         Logger.LogWarn = LogWarn;
         Logger.LogError = LogError;
-        var gameMain = new MyGameMain(
-            windowCreateInfo,
-            frameLimiterSettings,
-            MyGameMain.TARGET_TIMESTEP,
-            true
-        );
+        Game gameMain;
+        if (args.Length > 0 && args[0] == "--editor")
+        {
+            gameMain = new MyEditorMain(
+                windowCreateInfo,
+                frameLimiterSettings,
+                MyGameMain.TARGET_TIMESTEP,
+                true
+            );
+        }
+        else
+        {
+            gameMain = new MyGameMain(
+                windowCreateInfo,
+                frameLimiterSettings,
+                MyGameMain.TARGET_TIMESTEP,
+                true
+            );
+        }
+            
         gameMain.Run();
     }
 

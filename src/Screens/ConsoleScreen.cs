@@ -462,7 +462,7 @@ public class ConsoleScreen
             DrawInternal(renderer, alpha);
 
             TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
-            var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, _renderTarget.Width, _renderTarget.Height);
+            var viewProjection = Renderer.GetViewProjection(_renderTarget.Width, _renderTarget.Height);
             renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
         }
 

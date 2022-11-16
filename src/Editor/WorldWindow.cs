@@ -1,8 +1,8 @@
 ﻿using Mochi.DearImGui;
 
-namespace MyGame;
+namespace MyGame.Editor;
 
-public unsafe class ImGuiEditorWorldWindow : ImGuiEditorWindow
+public unsafe class WorldWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "World";
     private GroupInspector? _cameraControllerInspector;
@@ -10,7 +10,7 @@ public unsafe class ImGuiEditorWorldWindow : ImGuiEditorWindow
     private GroupInspector? _inspector;
     private World? _prevWorld;
 
-    public ImGuiEditorWorldWindow() : base(WindowTitle)
+    public WorldWindow() : base(WindowTitle)
     {
         KeyboardShortcut = "^W";
         IsOpen = true;

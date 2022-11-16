@@ -21,8 +21,9 @@ public class MenuScreen
     private readonly MyGameMain _game;
     private readonly List<MenuItem> _menuItems;
 
-    private int _selectedIndex = -1;
+    private int _selectedIndex;
     private Point Position;
+    public bool IsHidden { get; set; } = true;
 
     public MenuScreen(MyGameMain game)
     {
@@ -40,11 +41,10 @@ public class MenuScreen
         _selectedIndex = 0;
     }
 
-    public bool IsHidden { get; private set; } = true;
-
-
     private void OnPlay()
     {
+        _game.GameScreen.LoadWorld();
+        IsHidden = true;
     }
 
     private void OnQuit()
@@ -60,7 +60,10 @@ public class MenuScreen
         var input = _game.InputHandler;
 
         if (input.IsKeyPressed(KeyCode.Escape))
+        {
             IsHidden = !IsHidden;
+            _selectedIndex = 0;
+        }
 
         if (IsHidden)
             return;
@@ -92,32 +95,29 @@ public class MenuScreen
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
-        if (!IsHidden)
+        if (IsHidden)
+            return;
+
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * 0.5f);
+
+        var font = BMFontType.ConsolasMonoHuge;
+        // var font = renderer.TextBatcher.GetFont(FontType.ConsolasMonoLarge);
+        _title.Render(font, renderer, alpha);
+
+        var position = Position;
+        var lineHeight = 50;
+
+        for (var i = 0; i < _menuItems.Count; i++)
         {
-            renderer.DrawRect(renderer.RenderRect, Color.Black * 0.5f);
-
-            var font = BMFontType.ConsolasMonoHuge;
-            // var font = renderer.TextBatcher.GetFont(FontType.ConsolasMonoLarge);
-            _title.Render(font, renderer, alpha);
-
-            var position = Position;
-            var lineHeight = 50;
-
-            for (var i = 0; i < _menuItems.Count; i++)
-            {
-                var color = _selectedIndex == i ? Color.Red : Color.White;
-                renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center,
-                    VerticalAlignment.Middle);
-                position.Y += lineHeight;
-            }
-
-            // TODO (marpe): Flush text batcher to sprite batch here, otherwise if console screen isnt being redrawn,
-            // these text draw calls will be submitted after prev console render has been drawn 
-            renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
+            var color = _selectedIndex == i ? Color.Red : Color.White;
+            renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center,
+                VerticalAlignment.Middle);
+            position.Y += lineHeight;
         }
 
-        /*var swap = renderer.SwapTexture;
-        var viewProjection = SpriteBatch.GetViewProjection(0, 0, swap.Width, swap.Height);
-        renderer.FlushBatches(swap, viewProjection);*/
+        // TODO (marpe): fix this ugliness
+        // Flush text batcher to sprite batch here, otherwise if console screen isnt being redrawn,
+        // these text draw calls will be submitted after prev console render has been drawn 
+        renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
     }
 }

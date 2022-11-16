@@ -16,6 +16,11 @@ public enum BlendState
 
 public class Renderer
 {
+    public CommandBuffer CommandBuffer =>
+        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
+
+    public BMFont[] BMFonts { get; }
+    
     public static Sampler PointClamp = null!;
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
@@ -51,7 +56,6 @@ public class Renderer
 
     public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
     public Texture DepthTexture;
-    public Point RenderSize = new(1920, 1080);
 
     public Renderer(MyGameMain game)
     {
@@ -114,45 +118,11 @@ public class Renderer
         };
     }
 
-    public CommandBuffer CommandBuffer =>
-        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
-
-    /*public Texture SwapTexture =>
-        _swapTexture ?? throw new InvalidOperationException("SwapTexture is null, did you forget to call BeginFrame?");*/
-
-    public Rectangle RenderRect => new(0, 0, RenderSize.X, RenderSize.Y);
-    public BMFont[] BMFonts { get; }
-
     public BMFont GetFont(BMFontType fontType)
     {
         return BMFonts[(int)fontType];
     }
-
-    public void UpdateCustomBlendPipeline()
-    {
-        _pipelines[(int)BlendState.Custom] = CreateGraphicsPipeline(_device, CustomBlendState);
-    }
-
-    public bool BeginFrame([NotNullWhen(true)] out Texture? swapTexture)
-    {
-        _commandBuffer = _device.AcquireCommandBuffer();
-        _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
-
-        if (_swapTexture == null)
-        {
-            Logger.LogError("Could not acquire swapchain texture");
-            swapTexture = null;
-            return false;
-        }
-
-        swapTexture = _swapTexture;
-        var windowSize = _game.MainWindow.Size;
-        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
-        DepthStencilAttachmentInfo.Texture = DepthTexture;
-
-        return true;
-    }
-
+    
     public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
     {
         var scale = Matrix3x2.CreateTranslation(-size * 0.5f, -size * 0.5f) *
@@ -209,17 +179,31 @@ public class Renderer
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
-
-    public void FlushBatches(Texture renderTarget)
+    
+    public bool BeginFrame([NotNullWhen(true)] out Texture? swapTexture)
     {
-        var viewProjection = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, renderTarget.Width, renderTarget.Height);
-        FlushBatches(renderTarget, viewProjection);
+        _commandBuffer = _device.AcquireCommandBuffer();
+        _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
+
+        if (_swapTexture == null)
+        {
+            Logger.LogError("Could not acquire swapchain texture");
+            swapTexture = null;
+            return false;
+        }
+
+        swapTexture = _swapTexture;
+        var windowSize = _game.MainWindow.Size;
+        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
+        DepthStencilAttachmentInfo.Texture = DepthTexture;
+
+        return true;
     }
 
-    public void FlushBatches(Texture renderTarget, Matrix4x4 viewProjection, Color? clearColor = null)
+    public void FlushBatches(Texture renderTarget, Matrix4x4? viewProjection = null, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
-
+        
         ColorAttachmentInfo.Texture = renderTarget;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
         ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
@@ -229,7 +213,7 @@ public class Renderer
 
         commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
-        SpriteBatch.Flush(commandBuffer, viewProjection);
+        SpriteBatch.Flush(commandBuffer, viewProjection ?? GetViewProjection(renderTarget.Width, renderTarget.Height));
         commandBuffer.EndRenderPass();
     }
 
@@ -319,13 +303,11 @@ public class Renderer
         );
     }
     
-    public static (Matrix4x4, Rectangle) GetViewportTransform(uint screenWidth, uint screenHeight)
+    public static (Matrix4x4, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)
     {
-        var designResolution = new Point(1920, 1080);
-
         var scaleUniform = Math.Min(
-            screenWidth / (float)designResolution.X,
-            screenHeight / (float)designResolution.Y
+            screenResolution.X / (float)designResolution.X,
+            screenResolution.Y / (float)designResolution.Y
         );
 
         var renderSize = new Point(
@@ -334,13 +316,20 @@ public class Renderer
         );
 
         var offset = new Point(
-            (int)((screenWidth - renderSize.X) * 0.5f),
-            (int)((screenHeight - renderSize.Y) * 0.5f)
+            (int)((screenResolution.X - renderSize.X) * 0.5f),
+            (int)((screenResolution.Y - renderSize.Y) * 0.5f)
         );
 
         var transform = Matrix3x2.CreateScale(scaleUniform, scaleUniform) *
                         Matrix3x2.CreateTranslation(offset.X, offset.Y);
 
         return (transform.ToMatrix4x4(), new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
+    }
+    
+    public static Matrix4x4 GetViewProjection(uint width, uint height)
+    {
+        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
+        var projection = Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
+        return view * projection;
     }
 }

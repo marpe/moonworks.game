@@ -20,6 +20,12 @@ public enum ImGuiFont
 
 public unsafe class ImGuiRenderer
 {
+    public bool IsDisposed { get; private set; }
+
+    public Texture RenderTarget => _renderTarget;
+
+    public ColorAttachmentBlendState BlendState { get; private set; }
+    
     private static KeyCode[] _keys = Enum.GetValues<KeyCode>();
     private readonly Dictionary<ImGuiFont, Pointer<ImFont>> _fonts = new();
 
@@ -113,12 +119,6 @@ public unsafe class ImGuiRenderer
         _handle = GCHandle.Alloc(this, GCHandleType.Weak);
         io->BackendPlatformUserData = (void*)GCHandle.ToIntPtr(_handle);
     }
-
-    public bool IsDisposed { get; private set; }
-
-    public Texture RenderTarget => _renderTarget;
-
-    public ColorAttachmentBlendState BlendState { get; private set; }
 
     #region Setup
 
@@ -348,9 +348,7 @@ public unsafe class ImGuiRenderer
     public void Begin()
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         ImGui.NewFrame();
     }
@@ -358,9 +356,7 @@ public unsafe class ImGuiRenderer
     public void End()
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         ImGui.Render();
 
@@ -560,9 +556,7 @@ public unsafe class ImGuiRenderer
     public void Update(float deltaTimeInSeconds, in InputState inputState)
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         var io = ImGui.GetIO();
         var mainWindowSize = _game.MainWindow.Size;
@@ -697,8 +691,10 @@ public unsafe class ImGuiRenderer
 
         for (var i = 0; i < _keys.Length; i++)
         {
-            var imGuiKey = MapKey(_keys[i]);
-            io->AddKeyEvent(imGuiKey, InputState.IsKeyDown(input, _keys[i]));
+            var keyCode = _keys[i];
+            if (!_keyMap.ContainsKey(keyCode))
+                continue;
+            io->AddKeyEvent(_keyMap[keyCode], InputState.IsKeyDown(input, keyCode));
         }
 
         io->AddKeyEvent(ImGuiKey.ModCtrl, InputState.IsAnyKeyDown(input, InputHandler.ControlKeys));
@@ -719,6 +715,9 @@ public unsafe class ImGuiRenderer
 
     public void SetBlendState(ColorAttachmentBlendState blendState)
     {
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(ImGuiRenderer));
+
         _pipeline.Dispose();
         BlendState = blendState;
         _pipeline = SetupPipeline(_game.GraphicsDevice, blendState);
@@ -727,9 +726,7 @@ public unsafe class ImGuiRenderer
     public Pointer<ImFont> GetFont(ImGuiFont font)
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         return _fonts[font];
     }
@@ -737,9 +734,7 @@ public unsafe class ImGuiRenderer
     public IntPtr BindTexture(Texture texture)
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         var id = new IntPtr(++_textureIdCounter);
 
@@ -751,9 +746,7 @@ public unsafe class ImGuiRenderer
     public void UnbindTexture(IntPtr textureId)
     {
         if (IsDisposed)
-        {
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-        }
 
         _textures.Remove(textureId);
     }
@@ -1036,13 +1029,6 @@ public unsafe class ImGuiRenderer
         { KeyCode.KeypadPlus, ImGuiKey.KeypadAdd },
         { KeyCode.KeypadEnter, ImGuiKey.Enter },
     };
-
-    private static ImGuiKey MapKey(KeyCode key)
-    {
-        if (_keyMap.ContainsKey(key))
-            return _keyMap[key];
-        return ImGuiKey.None;
-    }
 
     #endregion
 }

@@ -129,24 +129,6 @@ public class SpriteBatch
         dest.Z = z;
     }
 
-    public static Matrix4x4 GetViewProjection(Vector2 cameraPosition, int xOffset, int yOffset, uint width, uint height)
-    {
-        var view = Matrix4x4.CreateLookAt(
-            new Vector3(cameraPosition.X, cameraPosition.Y, 1000),
-            new Vector3(cameraPosition.X, cameraPosition.Y, 0),
-            Vector3.Up
-        );
-        var projection = Matrix4x4.CreateOrthographicOffCenter(
-            xOffset,
-            xOffset + width,
-            yOffset + height,
-            yOffset,
-            0.0001f,
-            4000f
-        );
-        return view * projection;
-    }
-
     public void UpdateBuffers(CommandBuffer commandBuffer)
     {
         if (_numSprites == 0)
@@ -223,7 +205,7 @@ public class SpriteBatch
         return result;
     }
 
-    private static bool BindingsAreEqual(TextureSamplerBinding a, TextureSamplerBinding b)
+    private static bool BindingsAreEqual(in TextureSamplerBinding a, in TextureSamplerBinding b)
     {
         return a.Sampler.Handle == b.Sampler.Handle &&
                a.Texture.Handle == b.Texture.Handle;

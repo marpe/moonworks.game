@@ -1,5 +1,6 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using MyGame.Editor;
 using MyGame.Input;
 using MyGame.TWConsole;
 
@@ -86,7 +87,7 @@ public unsafe class MyEditorMain : MyGameMain
                 IsOpen = true,
                 KeyboardShortcut = "^F3",
             },
-            new ImGuiEditorWorldWindow(),
+            new WorldWindow(),
         };
         foreach (var window in windows)
         {
@@ -286,7 +287,7 @@ public unsafe class MyEditorMain : MyGameMain
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             var dockDown = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
             ImGuiInternal.DockBuilderDockWindow(_debugWindowName, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow(ImGuiEditorWorldWindow.WindowTitle, dockDown);
+            ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockDown);
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;
         }
@@ -377,7 +378,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         Renderer.DrawSprite(_imGuiRenderer.RenderTarget, Matrix3x2.Identity, Color.White, 0);
-        var view = SpriteBatch.GetViewProjection(Vector2.Zero, 0, 0, (uint)windowSize.X, (uint)windowSize.Y);
+        var view = Renderer.GetViewProjection((uint)windowSize.X, (uint)windowSize.Y);
         Renderer.FlushBatches(swapTexture, view, Color.Black);
         Renderer.EndFrame();
     }
