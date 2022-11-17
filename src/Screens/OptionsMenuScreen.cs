@@ -23,6 +23,6 @@ public class OptionsMenuScreen : MenuScreen
 
     private void Back()
     {
-        IsHidden = true;
+        _menuManager.SetActiveMenu((Menus)_menuManager.PrevFocused);
     }
 }

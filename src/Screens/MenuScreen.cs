@@ -5,6 +5,7 @@ namespace MyGame.Screens;
 public abstract class MenuScreen
 {
     public ScreenState State = ScreenState.Hidden;
+    private ScreenState _lastState = ScreenState.Hidden;
     private float _transitionPercentage;
 
     public bool IsHidden
@@ -88,16 +89,6 @@ public abstract class MenuScreen
         }
     }
 
-    public virtual void OnScreenShown()
-    {
-        // select first item
-        _selectedIndex = 0;
-        if (!_menuItems[_selectedIndex].IsSelectable)
-        {
-            NextItem();
-        }
-    }
-
     public virtual void OnCancelled()
     {
     }
@@ -108,6 +99,17 @@ public abstract class MenuScreen
 
         UpdateTransition(deltaSeconds, MyGameMain.DesignResolution.Y);
 
+        if ((State == ScreenState.TransitionOn && _lastState != ScreenState.TransitionOn))
+        {
+            // select first item
+            _selectedIndex = 0;
+            if (!_menuItems[_selectedIndex].IsSelectable)
+            {
+                NextItem();
+            }
+        }
+        _lastState = State;
+        
         if (IsHidden)
             return;
 

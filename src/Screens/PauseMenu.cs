@@ -8,7 +8,7 @@ public class PauseMenu : MenuScreen
         {
             new MenuItem("Resume", OnResume),
             new MenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
-            new MenuItem("Quit To Main Menu", OnQuitToMain),
+            new MenuItem("Quit", OnQuitToMain),
         });
     }
 
@@ -26,5 +26,6 @@ public class PauseMenu : MenuScreen
     private void OnQuitToMain()
     {
         _menuManager.SetActiveMenu(Menus.Main);
+        Shared.Game.GameScreen.Unload();
     }
 }

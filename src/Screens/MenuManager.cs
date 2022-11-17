@@ -12,7 +12,8 @@ public class MenuManager
     public MyGameMain Game { get; }
     public MenuScreen[] _menuScreens;
 
-    private int _focusedMenu = 0;
+    public int FocusedMenu = 0;
+    public int PrevFocused;
 
     public bool IsHidden
     {
@@ -70,17 +71,17 @@ public class MenuManager
         }
 
         renderer.DrawRect(RectangleExt.FromTexture(renderDestination), Color.Black * 0.5f);
-        var i = _focusedMenu;
+        var i = FocusedMenu;
         _menuScreens[i].Draw(renderer, commandBuffer, renderDestination, alpha);
         renderer.End(commandBuffer, renderDestination, Color.Transparent, null);
     }
 
     public void SetActiveMenu(Menus menu)
     {
-        var _prevFocused = _focusedMenu;
-        _focusedMenu = (int)menu;
+        PrevFocused = FocusedMenu;
+        FocusedMenu = (int)menu;
 
-        _menuScreens[_prevFocused].IsHidden = true;
-        _menuScreens[_focusedMenu].IsHidden = false;
+        _menuScreens[PrevFocused].IsHidden = true;
+        _menuScreens[FocusedMenu].IsHidden = false;
     }
 }
