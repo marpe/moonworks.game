@@ -205,7 +205,7 @@ public class World
             var srcRect = new Rectangle(4 * 16, 0, 16, 16);
             var position = bullet.Position.Lerp(alpha);
             var xform = Matrix3x2.CreateTranslation(position.X - bullet.Origin.X, position.Y - bullet.Origin.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, bullet.Flip);
             if (Debug)
                 DrawDebug(renderer, bullet, alpha);
         }
@@ -219,7 +219,7 @@ public class World
                     Matrix3x2.CreateScale(Player.EnableSquash ? Player.Squash : Vector2.One) *
                     Matrix3x2.CreateTranslation(position.X, position.Y);
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
+        renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, Player.Flip);
         if (Debug)
             DrawDebug(renderer, Player, alpha);
     }
@@ -242,7 +242,7 @@ public class World
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var position = entity.Position.Lerp(alpha);
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, entity.Flip);
             if (Debug)
                 DrawDebug(renderer, entity, alpha);
         }
@@ -326,7 +326,7 @@ public class World
         var srcRect = new Rectangle((int)tile.Src[0], (int)tile.Src[1], (int)layer.GridSize, (int)layer.GridSize);
         var sprite = new Sprite(texture, srcRect);
         var transform = Matrix3x2.CreateTranslation(position.X, position.Y);
-        renderer.DrawSprite(sprite, transform, Color.White, 0);
+        renderer.DrawSprite(sprite, transform.ToMatrix4x4(), Color.White, 0);
     }
 
     public void Dispose()

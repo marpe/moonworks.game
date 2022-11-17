@@ -128,7 +128,7 @@ public class LoadingScreen
 
         if (_copyRender != null && IsLoading)
         {
-            renderer.DrawSprite(new Sprite(_copyRender), Matrix3x2.Identity, Color.White, 0);
+            renderer.DrawSprite(new Sprite(_copyRender), Matrix4x4.Identity, Color.White, 0);
         }
 
         renderer.FlushBatches(renderDestination);

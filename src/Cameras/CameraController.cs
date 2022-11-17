@@ -153,11 +153,6 @@ public class CameraController
 
     public Matrix4x4 GetViewProjection(uint width, uint height)
     {
-        var (viewportTransform, viewport) = Renderer.GetViewportTransform(
-            new Point((int)width, (int)height),
-            new Point(1920, 1080)
-        );
-        
         var cameraView = _camera.View.ToMatrix4x4();
         cameraView.M43 = -1000;
         var cameraView3D = _camera.View3D;
@@ -165,7 +160,7 @@ public class CameraController
         var projection = _camera.GetProjection(width, height, false);
         var projection3D = _camera.GetProjection(width, height, true);
         
-        return Matrix4x4.Lerp((cameraView * viewportTransform) * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+        return Matrix4x4.Lerp(cameraView * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
     [InspectorCallable]

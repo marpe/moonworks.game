@@ -36,6 +36,8 @@ public class MyGameMain : Game
 
     private float _nextWindowTitleUpdate;
 
+    private Texture _gameRender;
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -50,6 +52,8 @@ public class MyGameMain : Game
 
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
+
+        _gameRender = Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         Renderer = new Renderer(this);
         LoadingScreen = new LoadingScreen(this);
@@ -98,7 +102,7 @@ public class MyGameMain : Game
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {
-            SDL.SDL_SetWindowTitle(MainWindow.Handle, $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}");
+            MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
             _nextWindowTitleUpdate += 1f;
         }
     }
@@ -107,12 +111,43 @@ public class MyGameMain : Game
     {
         if (MainWindow.IsMinimized)
             return;
+        
+        Renderer.BeginFrame(_gameRender, 1920, 1080);
+        RenderGame(alpha, _gameRender);
+        Renderer.EndFrame();
 
-        if (!Renderer.BeginFrame(out var swapTexture))
-            return;
+        var windowSize = MainWindow.Size;
+        var swapTexture = Renderer.BeginFrame(null, (uint)windowSize.X, (uint)windowSize.Y);
+        
+        var swapSize = new Point((int)swapTexture.Width, (int)swapTexture.Height);
+        var designSize = new Point(1920, 1080);
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(
+            swapSize,
+            designSize
+        );
+        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
+        var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
+        var scale = Vector2.One;
 
-        RenderGame(alpha, swapTexture);
+        if (swapTexture.Width < _gameRender.Width)
+        {
+            scale.X = _gameRender.Width / (float)swapTexture.Width;
+        }
+        
+        if (swapTexture.Height < _gameRender.Height)
+        {
+            scale.Y = _gameRender.Height / (float)swapTexture.Height;
+        }
 
+        Matrix4x4 mat = Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f);
+        // Renderer.DrawRect(new Rectangle(0, 0, (int)swapTexture.Width, (int)swapTexture.Height), Color.Black);
+        Renderer.DrawSprite(_gameRender, mat, Color.White, 0, SpriteFlip.None);
+        Renderer.FlushBatches(swapTexture, view * viewportTransform * projection, Color.Black);
+        
+        //var rect = new Rectangle(0, 0, (int)swapTexture.Width, (int)swapTexture.Height);
+        //Renderer.DrawRect(rect, Color.Black);
+        //Renderer.FlushBatches(swapTexture, view * projection);
+        
         Renderer.EndFrame();
     }
 

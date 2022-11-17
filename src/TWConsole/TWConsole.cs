@@ -289,7 +289,7 @@ public class TWConsole
     [ConsoleHandler("res", "Print display resolution")]
     private void PrintDisplayResolution()
     {
-        var size = Shared.Game.MainWindow.Size;
+        var size = new Point(-1, -1); // TODO (marpe): Fix //Shared.Game.MainWindow.Size;
         Print($"Current resolution: {size.X}x{size.Y}");
     }
 

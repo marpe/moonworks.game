@@ -102,7 +102,7 @@ public class BMFont : IDisposable
                 );
 
             var sprite = new Sprite(bmFont.Textures[currentChar.TexturePage], currentChar.Bounds);
-            renderer.DrawSprite(sprite, characterTransform * transform, color, depth);
+            renderer.DrawSprite(sprite, (characterTransform * transform).ToMatrix4x4(), color, depth);
 
             previousCharacter = c;
         }

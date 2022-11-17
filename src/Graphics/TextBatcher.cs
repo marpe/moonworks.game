@@ -138,7 +138,7 @@ public class TextBatcher
                     sprite.SrcRect = srcRect;
                     Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, sprite.SrcRect);
                     var color = topLeftVert.Color;
-                    spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform, Renderer.PointClamp);
+                    spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform.ToMatrix4x4(), Renderer.PointClamp);
                 }
             }
 

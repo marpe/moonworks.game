@@ -21,8 +21,6 @@ public unsafe class ImGuiRenderer : IDisposable
 {
     public bool IsDisposed { get; private set; }
 
-    public Texture RenderTarget => _renderTarget;
-
     public ColorAttachmentBlendState BlendState { get; private set; }
 
     private static KeyCode[] _keys = Enum.GetValues<KeyCode>();
@@ -42,8 +40,6 @@ public unsafe class ImGuiRenderer : IDisposable
     private uint _indexBufferSize;
     private ImGuiMouseCursor _lastCursor = ImGuiMouseCursor.None;
     private GraphicsPipeline _pipeline;
-
-    private Texture _renderTarget;
 
     private int _textureIdCounter;
 
@@ -105,9 +101,6 @@ public unsafe class ImGuiRenderer : IDisposable
         };
         _pipeline = SetupPipeline(game.GraphicsDevice, BlendState);
 
-        var windowSize = game.MainWindow.Size;
-        var textureFlags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
-        _renderTarget = Texture.CreateTexture2D(game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8, textureFlags);
 
         BuildFontAtlas();
 
@@ -331,8 +324,6 @@ public unsafe class ImGuiRenderer : IDisposable
 
             _mouseCursors.Clear();
 
-            _renderTarget.Dispose();
-
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
             _sampler.Dispose();
@@ -354,22 +345,17 @@ public unsafe class ImGuiRenderer : IDisposable
         ImGui.NewFrame();
     }
 
-    public void End()
+    public void End(Texture renderDestination)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
         ImGui.Render();
 
-        var windowSize = _game.MainWindow.Size;
-        // SDL.SDL_Vulkan_GetDrawableSize(_game.MainWindow.Handle, out var width, out var height);
-        TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
-
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-        Render(commandBuffer, _renderTarget, ImGui.GetDrawData());
+        Render(commandBuffer, renderDestination, ImGui.GetDrawData());
         _game.GraphicsDevice.Submit(commandBuffer);
 
-        // Update and Render additional Platform Windows
         var io = ImGui.GetIO();
         if ((io->ConfigFlags & ImGuiConfigFlags.ViewportsEnable) != 0)
         {
@@ -554,16 +540,15 @@ public unsafe class ImGuiRenderer : IDisposable
 
     #region Update
 
-    public void Update(float deltaTimeInSeconds, in InputState inputState)
+    public void Update(float deltaTimeInSeconds, Point displaySize, in InputState inputState)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
         var io = ImGui.GetIO();
-        var mainWindowSize = _game.MainWindow.Size;
         io->DisplaySize = new Num.Vector2(
-            mainWindowSize.X / _scaleFactor.X,
-            mainWindowSize.Y / _scaleFactor.Y
+            displaySize.X / _scaleFactor.X,
+            displaySize.Y / _scaleFactor.Y
         );
         io->DisplayFramebufferScale = _scaleFactor;
 

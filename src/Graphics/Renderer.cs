@@ -20,7 +20,7 @@ public class Renderer
         _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
 
     public BMFont[] BMFonts { get; }
-    
+
     public static Sampler PointClamp = null!;
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
@@ -34,8 +34,6 @@ public class Renderer
     public readonly TextBatcher TextBatcher;
 
     private CommandBuffer? _commandBuffer;
-
-    private Texture? _swapTexture;
 
     public BlendState BlendState = BlendState.AlphaBlend;
     public ColorAttachmentInfo ColorAttachmentInfo;
@@ -122,19 +120,19 @@ public class Renderer
     {
         return BMFonts[(int)fontType];
     }
-    
+
     public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
     {
         var scale = Matrix3x2.CreateTranslation(-size * 0.5f, -size * 0.5f) *
-                    Matrix3x2.CreateScale(size, size) * 
+                    Matrix3x2.CreateScale(size, size) *
                     Matrix3x2.CreateTranslation(position.X, position.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
 
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale, PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
 
     public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness)
@@ -145,7 +143,7 @@ public class Renderer
         var rotation = Matrix3x2.CreateRotation(MathF.AngleBetweenVectors(from, to));
         var translation = Matrix3x2.CreateTranslation(from);
         var tAll = origin * scale * rotation * translation;
-        SpriteBatch.Draw(_blankSprite, color, 0, tAll, PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4(), PointClamp);
     }
 
     public void DrawRect(Vector2 min, Vector2 max, Color color, float thickness)
@@ -163,7 +161,7 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth, SpriteFlip flip = SpriteFlip.None)
     {
         SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
@@ -179,31 +177,27 @@ public class Renderer
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
-    
-    public bool BeginFrame([NotNullWhen(true)] out Texture? swapTexture)
+
+    public Texture BeginFrame(Texture? swapTexture, uint width, uint height)
     {
-        _commandBuffer = _device.AcquireCommandBuffer();
-        _swapTexture = _commandBuffer?.AcquireSwapchainTexture(_game.MainWindow);
+        var commandBuffer = _device.AcquireCommandBuffer();
+        if (swapTexture == null)
+            swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow);
+        if (swapTexture == null)
+            throw new InvalidOperationException("Could not acquire swapchain texture");
 
-        if (_swapTexture == null)
-        {
-            Logger.LogError("Could not acquire swapchain texture");
-            swapTexture = null;
-            return false;
-        }
-
-        swapTexture = _swapTexture;
-        var windowSize = _game.MainWindow.Size;
-        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, (uint)windowSize.X, (uint)windowSize.Y);
+        TextureUtils.EnsureTextureSize(ref swapTexture, _device, width, height);
+        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, width, height);
         DepthStencilAttachmentInfo.Texture = DepthTexture;
+        _commandBuffer = commandBuffer;
 
-        return true;
+        return swapTexture;
     }
 
     public void FlushBatches(Texture renderTarget, Matrix4x4? viewProjection = null, Color? clearColor = null)
     {
         var commandBuffer = CommandBuffer;
-        
+
         ColorAttachmentInfo.Texture = renderTarget;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
         ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
@@ -221,7 +215,6 @@ public class Renderer
     {
         _device.Submit(CommandBuffer);
         _commandBuffer = null;
-        _swapTexture = null;
     }
 
     public void Unload()
@@ -302,7 +295,7 @@ public class Renderer
             myGraphicsPipelineCreateInfo
         );
     }
-    
+
     public static (Matrix4x4, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)
     {
         var scaleUniform = Math.Min(
@@ -325,11 +318,30 @@ public class Renderer
 
         return (transform.ToMatrix4x4(), new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
     }
-    
+
     public static Matrix4x4 GetViewProjection(uint width, uint height)
     {
         var view = Matrix4x4.CreateTranslation(0, 0, -1000);
         var projection = Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
         return view * projection;
+    }
+
+    private static void DrawLetterAndPillarBoxes(Renderer renderer, Point screenSize, Rectangle viewport, Color color)
+    {
+        if (screenSize.X != viewport.Width)
+        {
+            var left = new Rectangle(0, 0, viewport.X, viewport.Height);
+            var right = new Rectangle(viewport.X + viewport.Width, 0, screenSize.X - (viewport.X + viewport.Width), screenSize.Y);
+            renderer.DrawRect(left, color);
+            renderer.DrawRect(right, color);
+        }
+
+        if (screenSize.Y != viewport.Height)
+        {
+            var top = new Rectangle(0, 0, screenSize.X, viewport.Y);
+            var bottom = new Rectangle(0, viewport.Y + viewport.Height, screenSize.X, screenSize.Y - (viewport.Y + viewport.Height));
+            renderer.DrawRect(top, color);
+            renderer.DrawRect(bottom, color);
+        }
     }
 }

@@ -3,6 +3,7 @@ using Mochi.DearImGui.Internal;
 using MyGame.Editor;
 using MyGame.Input;
 using MyGame.TWConsole;
+using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame;
 
@@ -31,11 +32,16 @@ public unsafe class MyEditorMain : MyGameMain
     private static string _imguiDemoWindowName = "ImGui Demo Window";
     private string _gameWindowName = "Game";
     private IntPtr? _gameRenderTextureId;
+    private Texture _imGuiRenderTarget;
+    private bool _saveRender;
 
-    public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(windowCreateInfo,
+    public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
+        windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
     {
         _gameRender = Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _imGuiRenderTarget =
+            Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         var timer = Stopwatch.StartNew();
         _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
@@ -103,7 +109,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
         if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen), flags))
         {
@@ -330,12 +336,15 @@ public unsafe class MyEditorMain : MyGameMain
             var newState = InputState.Create(inputHandler);
             _inputStates.Add(newState);
 
+            if (InputHandler.IsKeyPressed(KeyCode.P))
+                _saveRender = true;
+
             if ((int)Time.UpdateCount % _updateRate == 0)
             {
                 var inputState = InputState.Aggregate(_inputStates);
                 _inputStates.Clear();
                 var deltaTime = Time.TotalElapsedTime - _prevElapsedTime;
-                _imGuiRenderer.Update(deltaTime, inputState);
+                _imGuiRenderer.Update(deltaTime, _imGuiRenderTarget.Size(), inputState);
                 _prevElapsedTime = Time.TotalElapsedTime;
                 _doRender = true;
             }
@@ -361,26 +370,49 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
-        if (!Renderer.BeginFrame(out var swapTexture))
-            return;
-
+        if (_saveRender)
+        {
+            SaveRender(GraphicsDevice, _gameRender);
+            Logger.LogInfo("Render saved!");
+            _saveRender = false;
+        }
+        
         var windowSize = MainWindow.Size;
+
         if (_doRender)
         {
-            TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
+            Renderer.BeginFrame(_gameRender, 1920, 1080);
+            // TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
             RenderGame(alpha, _gameRender);
-
+            Renderer.EndFrame();
+            
+            Renderer.BeginFrame(_imGuiRenderTarget, (uint)windowSize.X, (uint)windowSize.Y);
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
             DrawInternal();
-            _imGuiRenderer.End();
+            TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
+            _imGuiRenderer.End(_imGuiRenderTarget);
             _doRender = false;
+            Renderer.EndFrame();
         }
-
-        Renderer.DrawSprite(_imGuiRenderer.RenderTarget, Matrix3x2.Identity, Color.White, 0);
+        
+        var swapTexture = Renderer.BeginFrame(null, (uint)windowSize.X, (uint)windowSize.Y);
+        Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
         var view = Renderer.GetViewProjection((uint)windowSize.X, (uint)windowSize.Y);
         Renderer.FlushBatches(swapTexture, view, Color.Black);
         Renderer.EndFrame();
+    }
+
+    private static void SaveRender(GraphicsDevice device, Texture render)
+    {
+        var commandBuffer = device.AcquireCommandBuffer();
+        var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, render.Width * render.Height * sizeof(uint));
+        commandBuffer.CopyTextureToBuffer(render, buffer);
+        device.Submit(commandBuffer);
+        device.Wait();
+        var pixels = new byte[buffer.Size];
+        buffer.GetData(pixels, (uint)pixels.Length);
+        Texture.SavePNG("test.png", (int)render.Width, (int)render.Height, render.Format, pixels);
     }
 
     protected override void Destroy()

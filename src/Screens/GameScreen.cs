@@ -70,36 +70,14 @@ public class GameScreen
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
-
-        var screenResolution = new Point((int)renderDestination.Width, (int)renderDestination.Height);
-        var (viewportTransform, viewport) = Renderer.GetViewportTransform(
-            screenResolution,
-            new Point(1920, 1080)
-        );
-
-        var viewProjection = CameraController.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        
+        var viewProjection = CameraController.GetViewProjection(1920, 1080);
 
         renderer.FlushBatches(renderDestination, viewProjection, renderer.DefaultClearColor);
-
-        DrawLetterAndPillarBoxes(renderer, screenResolution, viewport, Color.Black);
-    }
-
-    private static void DrawLetterAndPillarBoxes(Renderer renderer, Point screenSize, Rectangle viewport, Color color)
-    {
-        if (screenSize.X != viewport.Width)
-        {
-            var left = new Rectangle(0, 0, viewport.X, viewport.Height);
-            var right = new Rectangle(viewport.X + viewport.Width, 0, screenSize.X - (viewport.X + viewport.Width), screenSize.Y);
-            renderer.DrawRect(left, color);
-            renderer.DrawRect(right, color);
-        }
-
-        if (screenSize.Y != viewport.Height)
-        {
-            var top = new Rectangle(0, 0, screenSize.X, viewport.Y);
-            var bottom = new Rectangle(0, viewport.Y + viewport.Height, screenSize.X, screenSize.Y - (viewport.Y + viewport.Height));
-            renderer.DrawRect(top, color);
-            renderer.DrawRect(bottom, color);
-        }
+        
+        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
+        var projection = Matrix4x4.CreateOrthographicOffCenter(0, 1920, 1080, 0, 0.0001f, 10000f);
+        renderer.DrawRect(new Vector2(0, 0), new Vector2(1920, 1080), Color.LimeGreen, 4f);
+        renderer.FlushBatches(renderDestination, view * projection);
     }
 }

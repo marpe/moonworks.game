@@ -48,19 +48,27 @@ public class ConsoleScreen
     private float _transitionPercentage;
     private readonly KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
     private bool _hasRender;
+    private Point _lastRenderSize;
+
+    public bool IsHidden
+    {
+        get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
+        set => ScreenState = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
+    }
+
+    private TWConsole.TWConsole TwConsole => Shared.Console;
+
+    public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
 
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
 
-        var windowSize = game.MainWindow.Size;
+        _lastRenderSize = new Point(1920, 1080);
         _renderTarget = Texture.CreateTexture2D(
-            game.GraphicsDevice,
-            (uint)windowSize.X, (uint)windowSize.Y,
-            TextureFormat.B8G8R8A8,
+            game.GraphicsDevice, (uint)_lastRenderSize.X, (uint)_lastRenderSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
-
 
         _colors = new[]
         {
@@ -77,35 +85,23 @@ public class ConsoleScreen
         };
     }
 
-    public bool IsHidden
-    {
-        get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
-        set => ScreenState = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
-    }
-
-    private TWConsole.TWConsole TwConsole => Shared.Console;
-
-    public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
-
     public void Unload()
     {
         _renderTarget.Dispose();
     }
-    
+
     public void Update(float deltaSeconds)
     {
         var inputState = _game.InputHandler;
         if (inputState.IsKeyPressed(KeyCode.Grave))
             IsHidden = !IsHidden;
 
-        var windowSize = _game.MainWindow.Size; // TODO (marpe): What if this differes from the renderDestination supplied to Draw()
-
-        UpdateTransition(deltaSeconds, (uint)windowSize.X, (uint)windowSize.Y);
+        UpdateTransition(deltaSeconds, (uint)_lastRenderSize.X, (uint)_lastRenderSize.Y);
 
         if (IsHidden)
             return;
 
-        CheckResize((uint)windowSize.X, (uint)windowSize.Y);
+        CheckResize((uint)_lastRenderSize.X, (uint)_lastRenderSize.Y);
 
         _caretBlinkTimer += deltaSeconds;
 
@@ -451,6 +447,8 @@ public class ConsoleScreen
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
+        _lastRenderSize = new Point((int)renderDestination.Width, (int)renderDestination.Height);
+        
         if (ScreenState == ScreenState.Hidden)
             return;
 
@@ -470,7 +468,7 @@ public class ConsoleScreen
             return;
 
         var sprite = new Sprite(_renderTarget);
-        renderer.DrawSprite(sprite, Matrix3x2.Identity, Color.White * _transitionPercentage, 0);
+        renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage, 0);
     }
 
     private void DrawInternal(Renderer renderer, double alpha)

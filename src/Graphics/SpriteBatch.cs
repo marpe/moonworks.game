@@ -45,7 +45,7 @@ public class SpriteBatch
         _indexBuffer.Dispose();
     }
 
-    public void Draw(Sprite sprite, Color color, float depth, Matrix3x2 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
+    public void Draw(Sprite sprite, Color color, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
     {
         if (sprite.Texture.IsDisposed)
             throw new ObjectDisposedException(nameof(sprite.Texture));
