@@ -15,36 +15,7 @@ public class FadeToBlack : SceneTransition
     public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
         Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
     {
-        renderer.DrawRect(RectangleExt.FromTexture(compositeNewCopy), Color.Black * 0.5f);
-        renderer.End(commandBuffer, renderDestination, null, null);
-
-        if (state == TransitionState.Hidden)
-        {
-            renderer.DrawRect(new Rectangle(300, 200, 100, 100), Color.Yellow, 0);
-        }
-        else if (state == TransitionState.TransitionOn || state == TransitionState.Active)
-        {
-            if (copyOldGameRender != null && copyOldMenuRender != null)
-            {
-                renderer.DrawSprite(new Sprite(copyOldGameRender), Matrix4x4.Identity, Color.White, 0);
-                var y = progress * 2000f;
-                var translation = Matrix4x4.CreateTranslation(-y, 0, 0);
-                renderer.DrawSprite(new Sprite(copyOldMenuRender), translation, Color.White, 0);
-                renderer.DrawRect(new Rectangle(300, 200, 100, 100), Color.Blue, 0);
-                renderer.End(commandBuffer, renderDestination, null, null);
-            }
-        }
-        else if (state == TransitionState.TransitionOff)
-        {
-            renderer.DrawRect(RectangleExt.FromTexture(gameRender), Color.Black);
-
-            var y = progress * 2000f;
-            var translation = Matrix4x4.CreateTranslation(-y, 0, 0);
-            renderer.DrawSprite(new Sprite(gameRender), Matrix4x4.Identity, Color.White, 0);
-            renderer.DrawSprite(new Sprite(menuRender), translation, Color.White, 0);
-            renderer.DrawRect(new Rectangle(300, 200, 100, 100), Color.Red, 0);
-            renderer.End(commandBuffer, renderDestination, null, null);
-        }
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * progress);
     }
 }
 

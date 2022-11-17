@@ -7,14 +7,14 @@ public class PauseMenu : MenuScreen
         _menuItems.AddRange(new[]
         {
             new MenuItem("Resume", OnResume),
-            new MenuItem("Options", () => { menuManager.QueuePushScreen(Menus.Options); }),
+            new MenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
             new MenuItem("Quit To Main Menu", OnQuitToMain),
         });
     }
 
     private void OnResume()
     {
-        _menuManager.QueuePopScreen();
+        IsHidden = true;
         Logger.LogInfo("Resuming..");
     }
 
@@ -25,6 +25,6 @@ public class PauseMenu : MenuScreen
 
     private void OnQuitToMain()
     {
-        _menuManager.QueuePopAllAndPush(Menus.Main);
+        _menuManager.SetActiveMenu(Menus.Main);
     }
 }

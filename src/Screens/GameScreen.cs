@@ -48,7 +48,7 @@ public class GameScreen
 
         if (input.IsKeyPressed(KeyCode.Escape))
         {
-            _game.MenuManager.QueuePushScreen(Menus.Pause);
+            _game.MenuManager.SetActiveMenu(Menus.Pause);
             return;
         }
 

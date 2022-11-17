@@ -23,6 +23,6 @@ public class OptionsMenuScreen : MenuScreen
 
     private void Back()
     {
-        _menuManager.QueuePopScreen();
+        IsHidden = true;
     }
 }

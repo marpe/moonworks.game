@@ -4,22 +4,59 @@ namespace MyGame.Screens;
 
 public abstract class MenuScreen
 {
+    public ScreenState State = ScreenState.Hidden;
+    private float _transitionPercentage;
+
+    public bool IsHidden
+    {
+        get => State is ScreenState.Hidden or ScreenState.TransitionOff;
+        set => State = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
+    }
+
+    private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
+
     public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
     public static Color HighlightColor = Color.Yellow;
     public static Color DisabledColor = Color.Black * 0.66f;
     public static Color NormalColor = Color.White;
 
-    protected Point Position = MyGameMain.DesignResolution / 2;
-
     protected readonly List<MenuItem> _menuItems = new();
     protected readonly MenuManager _menuManager;
 
     protected int _selectedIndex = 0;
+    public Vector2 Position = MyGameMain.DesignResolution / 2;
+    private Vector2 _previousPosition;
 
     public MenuScreen(MenuManager menuManager)
     {
         _menuManager = menuManager;
     }
+
+    private void UpdateTransition(float deltaSeconds, uint windowHeight)
+    {
+        var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
+        if (State == ScreenState.TransitionOn)
+        {
+            _transitionPercentage = MathF.Clamp01(_transitionPercentage + deltaSeconds * speed);
+            if (_transitionPercentage >= 1.0f)
+            {
+                State = ScreenState.Active;
+            }
+        }
+        else if (State == ScreenState.TransitionOff)
+        {
+            _transitionPercentage = MathF.Clamp01(_transitionPercentage - deltaSeconds * speed);
+            if (_transitionPercentage <= 0)
+            {
+                State = ScreenState.Hidden;
+            }
+        }
+
+        var height = windowHeight * 0.5f;
+        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
+        Position.Y = (int)(height * t);
+    }
+
 
     protected void NextItem()
     {
@@ -67,6 +104,13 @@ public abstract class MenuScreen
 
     public virtual void Update(float deltaSeconds)
     {
+        _previousPosition = Position;
+
+        UpdateTransition(deltaSeconds, MyGameMain.DesignResolution.Y);
+
+        if (IsHidden)
+            return;
+
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
         {
             NextItem();
@@ -93,7 +137,7 @@ public abstract class MenuScreen
 
     public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        var position = Position;
+        var position = Vector2.Lerp(_previousPosition, Position, (float)alpha);
         var lineHeight = 50;
 
         for (var i = 0; i < _menuItems.Count; i++)

@@ -12,16 +12,16 @@ public class MainMenuScreen : MenuScreen
             new MenuItem("New Game", OnPlay),
             new MenuItem("Options", () =>
             {
-                menuManager.QueuePushScreen(Menus.Options);
+                menuManager.SetActiveMenu(Menus.Options);
             }),
-            // new MenuItem("Quit", OnQuit),
+            new MenuItem("Quit", OnQuit),
         });
     }
 
     private void OnPlay()
     {
         _menuManager.Game.GameScreen.LoadWorld();
-        _menuManager.QueuePopScreen();
+        IsHidden = true;
     }
 
     private void OnQuit()
