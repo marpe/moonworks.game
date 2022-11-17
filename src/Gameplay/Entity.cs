@@ -6,13 +6,9 @@ public partial class Entity
     public bool IsInitialized;
     public bool IsDestroyed;
     
-    public Point Cell;
-    public Vector2 CellPos;
-    public Vector2 InitialPosition;
-    public Vector2 PreviousPosition;
     public Vector2 Origin => Pivot * Size;
-    public Bounds Bounds => new(Position.X - Origin.X, Position.Y - Origin.Y, Size.X, Size.Y);
-    public Vector2 Center => new(Position.X + (0.5f - Pivot.X) * Size.X, Position.Y + (0.5f - Pivot.Y) * Size.Y);
+    public Bounds Bounds => new(Position.Current.X - Origin.X, Position.Current.Y - Origin.Y, Size.X, Size.Y);
+    public Vector2 Center => new(Position.Current.X + (0.5f - Pivot.X) * Size.X, Position.Current.Y + (0.5f - Pivot.Y) * Size.Y);
 
     private World? _world;
     public World World => _world ?? throw new InvalidOperationException();
@@ -20,12 +16,17 @@ public partial class Entity
     public CoroutineManager CoroutineManager = new();
     public Collider Collider = new();
 
+    public Position Position = new();
+    
+    /*public Point Cell;
+    /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
+    public Vector2 CellPos;*/
+
     public virtual void Initialize(World world)
     {
         _world = world;
         Collider.Initialize(this);
-        (Cell, CellPos) = GetGridCoords(this);
-        InitialPosition = PreviousPosition = Position;
+        Position.Initialize();
         IsInitialized = true;
     }
 
@@ -34,22 +35,21 @@ public partial class Entity
         CoroutineManager.Update(deltaSeconds);
     }
 
-    public void SetPositions(Vector2 position)
+    public static (Point, Vector2) GetGridCoords(Entity entity)
     {
-        PreviousPosition = Position = position;
-        (Cell, CellPos) = GetGridCoords(this);
+        return GetGridCoords(entity.Position.Current, entity.Pivot, World.DefaultGridSize);
     }
-
-    public static (Point, Vector2) GetGridCoords(Entity entity, int gridSize = World.DefaultGridSize)
+    
+    public static (Point, Vector2) GetGridCoords(Vector2 position, Vector2 pivot, float gridSize)
     {
-        var (adjustX, adjustY) = (MathF.Approx(entity.Pivot.X, 1) ? -1 : 0, MathF.Approx(entity.Pivot.Y, 1) ? -1 : 0);
+        var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);
         var cell = new Point(
-            (int)((entity.Position.X + adjustX) / gridSize),
-            (int)((entity.Position.Y + adjustY) / gridSize)
+            (int)((position.X + adjustX) / gridSize),
+            (int)((position.Y + adjustY) / gridSize)
         );
         var relativeCell = new Vector2(
-            (entity.Position.X + adjustX) % gridSize / gridSize,
-            (entity.Position.Y + adjustY) % gridSize / gridSize
+            (position.X + adjustX) % gridSize / gridSize,
+            (position.Y + adjustY) % gridSize / gridSize
         );
         return (cell, relativeCell);
     }

@@ -19,7 +19,7 @@ public partial class Enemy : Entity
 
         Mover.Initialize(this);
 
-        TimeOffset = Position.X;
+        TimeOffset = Position.Current.X;
         
         if (Type == EnemyType.Slug)
         {

@@ -17,7 +17,7 @@ public class PlayerBehaviour
         
         if (input.IsKeyPressed(KeyCode.Insert))
         {
-            Player.SetPositions(new Vector2(100, 50));
+            Player.Position.SetPrevAndCurrent(new Vector2(100, 50));
         }
 
         if (input.IsKeyDown(KeyCode.Right) ||
@@ -47,12 +47,12 @@ public class PlayerBehaviour
         if (isFiring)
         {
             var direction = Player.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
-            Player.World.SpawnBullet(Player.Position, direction);
+            Player.World.SpawnBullet(Player.Position.Current, direction);
         }
         
-        if (Player.Position.Y > 300)
+        if (Player.Position.Current.Y > 300)
         {
-            Player.SetPositions(Player.InitialPosition);
+            Player.Position.SetPrevAndCurrent(Player.Position.Initial);
         }
 
         Player.TotalTime += deltaSeconds;

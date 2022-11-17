@@ -44,19 +44,19 @@ public class MyGameMain : Game
     ) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
     {
         var sw = Stopwatch.StartNew();
-        
+
         Time = new Time();
         InputHandler = new InputHandler(Inputs);
-        
+
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
-        
+
         Renderer = new Renderer(this);
         LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
         MenuManager = new MenuManager(this);
-        
+
         LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
@@ -84,7 +84,7 @@ public class MyGameMain : Game
 
             if (ConsoleScreen.IsHidden)
             {
-                if(MenuManager.IsHidden)
+                if (MenuManager.IsHidden)
                     GameScreen.Update(Time.ElapsedTime);
                 else
                     MenuManager.Update(Time.ElapsedTime);
@@ -115,7 +115,7 @@ public class MyGameMain : Game
 
         Renderer.EndFrame();
     }
-    
+
     protected void RenderGame(double alpha, Texture renderDestination)
     {
         Time.UpdateDrawCount();

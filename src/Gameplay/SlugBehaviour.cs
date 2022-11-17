@@ -53,13 +53,13 @@ public class SlugBehaviour : EnemyBehaviour
         if (!Parent.Mover.IsGrounded(Parent.Velocity))
             return;
 
-        var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(Parent.Cell.X + 1, Parent.Cell.Y + 1) &&
-                         Parent.CellPos.X > (1.0f - _turnDistanceFromEdge);
+        var (cell, cellPos) = Entity.GetGridCoords(Parent);
+
+        var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(cell.X + 1, cell.Y + 1) && cellPos.X > (1.0f - _turnDistanceFromEdge);
 
         if (!shouldTurn)
         {
-            shouldTurn |= Parent.Velocity.X < 0 && !Parent.Collider.HasCollision(Parent.Cell.X - 1, Parent.Cell.Y + 1) &&
-                          Parent.CellPos.X < _turnDistanceFromEdge;
+            shouldTurn |= Parent.Velocity.X < 0 && !Parent.Collider.HasCollision(cell.X - 1, cell.Y + 1) && cellPos.X < _turnDistanceFromEdge;
         }
 
         if (shouldTurn)

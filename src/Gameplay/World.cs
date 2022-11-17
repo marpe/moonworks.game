@@ -84,7 +84,7 @@ public class World
                 entity.EntityType = parsedType;
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Pivot = entityInstance.PivotVec;
-                entity.Position = level.Position + entityInstance.Position;
+                entity.Position = new Position(level.Position + entityInstance.Position);
                 entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
 
@@ -103,25 +103,8 @@ public class World
         return entities;
     }
 
-    private void UpdatePrevious()
-    {
-        Player.PreviousPosition = Player.Position;
-
-        for (var i = 0; i < Enemies.Count; i++)
-        {
-            var entity = Enemies[i];
-            entity.PreviousPosition = entity.Position;
-        }
-
-        for (var i = 0; i < Bullets.Count; i++)
-        {
-            Bullets[i].PreviousPosition = Bullets[i].Position;
-        }
-    }
-
     public void Update(float deltaSeconds, InputHandler input)
     {
-        UpdatePrevious();
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
@@ -220,7 +203,7 @@ public class World
         {
             var bullet = Bullets[i];
             var srcRect = new Rectangle(4 * 16, 0, 16, 16);
-            var position = Vector2.Lerp(bullet.PreviousPosition, bullet.Position, (float)alpha);
+            var position = bullet.Position.Lerp(alpha);
             var xform = Matrix3x2.CreateTranslation(position.X - bullet.Origin.X, position.Y - bullet.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
             if (Debug)
@@ -231,7 +214,7 @@ public class World
     private void DrawPlayer(Renderer renderer, double alpha)
     {
         var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
-        var position = Vector2.Lerp(Player.PreviousPosition, Player.Position, (float)alpha);
+        var position = Player.Position.Lerp(alpha);
         var xform = Matrix3x2.CreateTranslation(-Player.Origin.X, -Player.Origin.Y) *
                     Matrix3x2.CreateScale(Player.EnableSquash ? Player.Squash : Vector2.One) *
                     Matrix3x2.CreateTranslation(position.X, position.Y);
@@ -257,7 +240,7 @@ public class World
 
             var frameIndex = (int)(entity.TotalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-            var position = Vector2.Lerp(entity.PreviousPosition, entity.Position, (float)alpha);
+            var position = entity.Position.Lerp(alpha);
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
@@ -358,17 +341,16 @@ public class World
 
     public void DrawDebug(Renderer renderer, Entity e, double alpha)
     {
-        var prevMin = e.PreviousPosition - e.Origin;
-        var min = e.Position - e.Origin;
-        var lerpMin = Vector2.Lerp(prevMin, min, (float)alpha);
-
-        renderer.DrawRect(lerpMin, lerpMin + e.Size, e.SmartColor, 1.0f);
-        renderer.DrawRect(new Rectangle((int)lerpMin.X, (int)lerpMin.Y, 1, 1), e.SmartColor);
         var (cell, cellRel) = Entity.GetGridCoords(e);
         var cellInScreen = cell * DefaultGridSize;
-        renderer.DrawPoint(e.Position, e.SmartColor, 2);
-        renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
-        renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
+        renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);
+
+        // draw small crosshair
+        {
+            renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
+            renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
+        }
+        
         renderer.DrawRect(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
     }
 
@@ -436,7 +418,7 @@ public class World
     public void SpawnBullet(Vector2 position, int direction)
     {
         var bullet = new Bullet();
-        bullet.SetPositions(position + new Vector2(4 * direction, -8));
+        bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, -8));
         bullet.Velocity.X = direction * 300f;
         bullet.Pivot = new Vector2(0.5f, 0.5f);
         bullet.Size = new Vector2(16, 16);

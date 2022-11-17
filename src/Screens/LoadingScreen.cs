@@ -1,5 +1,4 @@
 ﻿using System.Threading;
-using MyGame.TWConsole;
 
 namespace MyGame.Screens;
 
@@ -52,7 +51,7 @@ public class LoadingScreen
 
     public void StartLoad(Action loadMethod)
     {
-        if (State != TransitionState.Hidden)
+        if (IsLoading)
         {
             Logger.LogError("Loading is already in progress");
             return;
@@ -65,7 +64,7 @@ public class LoadingScreen
 
     public void LoadImmediate(Action loadMethod)
     {
-        if (State != TransitionState.Hidden)
+        if (IsLoading)
         {
             Logger.LogError("Loading is already in progress");
             return;

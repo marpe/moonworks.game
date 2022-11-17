@@ -18,7 +18,7 @@ public class BeeBehaviour : EnemyBehaviour
         var t = Parent.TimeOffset + Parent.TotalTime * _speed;
         var deltaMove = new Vector2(MathF.Cos(t) * 2.0f, MathF.Cos(t) * MathF.Cos(t) - MathF.Sin(t) * MathF.Sin(t)) * 2.0f * _radius;
         Parent.Velocity.Delta = deltaMove;
-        Parent.Position += Parent.Velocity * deltaSeconds;
+        Parent.Position.DeltaMove(Parent.Velocity * deltaSeconds);
 
         if (Parent.Velocity.X > 0)
         {

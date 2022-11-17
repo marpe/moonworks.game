@@ -37,21 +37,19 @@ public class Mover
             if (velocity.X > 0 && dx > maxX && Parent.Collider.HasCollision(cell.X + 1, cell.Y))
             {
                 result |= CollisionDir.Right;
-                Parent.Position.X = (cell.X + maxX) * World.DefaultGridSize;
+                Parent.Position.SetX((cell.X + maxX) * World.DefaultGridSize);
                 velocity.X = 0;
             }
             else if (velocity.X < 0 && dx < minX && Parent.Collider.HasCollision(cell.X - 1, cell.Y))
             {
                 result |= CollisionDir.Left;
-                Parent.Position.X = (cell.X + minX) * World.DefaultGridSize;
+                Parent.Position.SetX((cell.X + minX) * World.DefaultGridSize);
                 velocity.X = 0;
             }
             else
             {
-                Parent.Position.X += velocity.X * deltaSeconds;
+                Parent.Position.DeltaMoveX(velocity.X * deltaSeconds);
             }
-
-            (Parent.Cell, Parent.CellPos) = Entity.GetGridCoords(Parent);
         }
 
         if (velocity.Y != 0)
@@ -66,21 +64,19 @@ public class Mover
             if (velocity.Y > 0 && dy > maxY && Parent.Collider.HasCollision(cell.X, cell.Y + 1))
             {
                 result |= CollisionDir.Down;
-                Parent.Position.Y = (cell.Y + maxY) * World.DefaultGridSize;
+                Parent.Position.SetY((cell.Y + maxY) * World.DefaultGridSize);
                 velocity.Y = 0;
             }
             else if (velocity.Y < 0 && dy < minY && Parent.Collider.HasCollision(cell.X, cell.Y - 1))
             {
                 result |= CollisionDir.Top;
-                Parent.Position.Y = (cell.Y + minY) * World.DefaultGridSize;
+                Parent.Position.SetY((cell.Y + minY) * World.DefaultGridSize);
                 velocity.Y = 0;
             }
             else
             {
-                Parent.Position.Y += velocity.Y * deltaSeconds;
+                Parent.Position.DeltaMoveY(velocity.Y * deltaSeconds);
             }
-
-            (Parent.Cell, Parent.CellPos) = Entity.GetGridCoords(Parent);
         }
 
         return result;

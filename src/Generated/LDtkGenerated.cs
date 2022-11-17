@@ -75,7 +75,6 @@ public partial class Entity
     public EntityType EntityType;
     public Guid Iid;
     public Vector2 Pivot;
-    public Vector2 Position;
     public Vector2 Size;
     public Color SmartColor = Color.Red;
 }
