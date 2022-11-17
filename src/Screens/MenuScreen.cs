@@ -113,6 +113,15 @@ public abstract class MenuScreen
 
         _lastState = State;
 
+        // TODO (marpe): Add mouse input?
+        for (var i = 0; i < _menuItems.Count; i++)
+        {
+            if (_menuItems[i] is FancyMenuItem ft)
+            {
+                ft.Update(deltaSeconds);
+            }
+        }
+        
         if (IsHidden)
             return;
 
@@ -134,14 +143,6 @@ public abstract class MenuScreen
         {
             Logger.LogInfo("Cancelling screen");
             OnCancelled();
-        }
-
-        for (var i = 0; i < _menuItems.Count; i++)
-        {
-            if (_menuItems[i] is FancyMenuItem ft)
-            {
-                ft.Update(deltaSeconds);
-            }
         }
 
         // disable input for the next screen
