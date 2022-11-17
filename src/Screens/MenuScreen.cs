@@ -133,6 +133,14 @@ public abstract class MenuScreen
             OnCancelled();
         }
 
+        for (var i = 0; i < _menuItems.Count; i++)
+        {
+            if (_menuItems[i] is FancyMenuItem ft)
+            {
+                ft.Update(deltaSeconds);
+            }
+        }
+
         // disable input for the next screen
         _menuManager.Game.InputHandler.MouseEnabled = _menuManager.Game.InputHandler.KeyboardEnabled = false;
     }
@@ -144,10 +152,8 @@ public abstract class MenuScreen
 
         for (var i = 0; i < _menuItems.Count; i++)
         {
-            if (!_menuItems[i].IsVisible)
-                continue;
             var color = _selectedIndex == i ? HighlightColor : _menuItems[i].IsEnabled ? NormalColor : DisabledColor;
-            renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center, VerticalAlignment.Middle);
+            _menuItems[i].Draw(renderer, position, HorizontalAlignment.Center, VerticalAlignment.Top, color);
             position.Y += lineHeight;
         }
     }

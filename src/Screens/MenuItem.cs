@@ -1,3 +1,5 @@
+using MoonWorks.Graphics.Font;
+
 namespace MyGame.Screens;
 
 public class MenuItem
@@ -12,5 +14,12 @@ public class MenuItem
     {
         Text = text;
         Callback = callback;
+    }
+
+    public virtual void Draw(Renderer renderer, Vector2 position,  HorizontalAlignment alignH, VerticalAlignment alignV, Color color)
+    {
+        if (!IsVisible)
+            return;
+        renderer.DrawText(FontType.RobotoLarge, Text, position, 0, color, alignH, alignV);
     }
 }

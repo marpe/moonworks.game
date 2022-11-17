@@ -6,10 +6,7 @@ public class OptionsMenuScreen : MenuScreen
     {
         _menuItems.AddRange(new []
         {
-            new MenuItem("Options", () => {})
-            {
-                IsEnabled = false,
-            },
+            new FancyMenuItem("Options", () => {}){ IsEnabled =  false },
             new MenuItem("Volume", () => {}),
             new MenuItem("Resolution", () => {}),
             new MenuItem("Back", Back)

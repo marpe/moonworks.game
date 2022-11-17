@@ -6,6 +6,7 @@ public class PauseMenu : MenuScreen
     {
         _menuItems.AddRange(new[]
         {
+            new FancyMenuItem("Pause", () => {}){ IsEnabled =  false },
             new MenuItem("Resume", OnResume),
             new MenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
             new MenuItem("Quit", OnQuitToMain),
