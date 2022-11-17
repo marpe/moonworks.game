@@ -58,17 +58,23 @@ public class GameScreen
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
+        var sz = MyGameMain.DesignResolution;
         if (World == null || World.IsDisposed)
+        {
+            renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
+            // render view bounds
+            renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
+            renderer.End(commandBuffer, renderDestination, Color.Black, null);
             return;
+        }
 
         Camera.Size = MyGameMain.DesignResolution;
         Camera.Zoom = 4f;
         World.Draw(renderer, Camera.Bounds, alpha);
 
-        var sz = MyGameMain.DesignResolution;
         var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);
 
-        renderer.End(commandBuffer, renderDestination, Color.Magenta, viewProjection);
+        renderer.End(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // render view bounds
         renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);

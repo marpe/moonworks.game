@@ -83,6 +83,7 @@ public abstract class MenuScreen
 
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
         {
+            Logger.LogInfo("Cancelling screen");
             OnCancelled();
         }
 

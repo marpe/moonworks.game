@@ -36,7 +36,9 @@ public class MyGameMain : Game
 
     private float _nextWindowTitleUpdate;
 
-    private Texture _gameRender;
+    private Texture _compositeRender;
+    private readonly Texture _menuRender;
+    private readonly Texture _gameRender;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -53,9 +55,10 @@ public class MyGameMain : Game
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
 
-        _gameRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8,
-            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
-
+        _compositeRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _gameRender = TextureUtils.CreateTexture(GraphicsDevice, _compositeRender);
+        _menuRender = TextureUtils.CreateTexture(GraphicsDevice, _compositeRender);
+        
         Renderer = new Renderer(this);
         Shared.LoadingScreen = LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
@@ -113,7 +116,7 @@ public class MyGameMain : Game
             return;
 
         {
-            RenderGame(alpha, _gameRender);
+            RenderGame(alpha, _compositeRender);
         }
 
         {
@@ -127,7 +130,7 @@ public class MyGameMain : Game
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(_gameRender, viewportTransform, Color.White, 0, SpriteFlip.None);
+            Renderer.DrawSprite(_compositeRender, viewportTransform, Color.White, 0, SpriteFlip.None);
             Renderer.End(commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(commandBuffer);
         }
@@ -139,13 +142,17 @@ public class MyGameMain : Game
 
         var commandBuffer = Renderer.Begin();
 
-        GameScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
+        GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
 
-        MenuManager.Draw(Renderer, commandBuffer, renderDestination, alpha);
+        MenuManager.Draw(Renderer, commandBuffer, _menuRender, alpha);
+
+        Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
+        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None );
+        Renderer.End(commandBuffer, renderDestination, Color.Cyan, null);
 
         ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
-        LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
+        LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
 
         Renderer.Submit(commandBuffer);
     }

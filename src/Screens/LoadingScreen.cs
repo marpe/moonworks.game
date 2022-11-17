@@ -31,17 +31,23 @@ public class LoadingScreen
     private ConcurrentQueue<Action> _taskWork = new();
     private Queue<Action> _work = new();
 
-    private Texture? _copyRender;
+    private Texture? _compositeOldCopy;
+    private Texture? _compositeNewCopy;
+    private Texture? _gameOldCopy;
+    private Texture? _menuOldCopy;
 
     private readonly MyGameMain _game;
 
-    private float _alpha = 0;
+    private float _progress = 0;
     private bool _shouldCopyRender;
 
     private Dictionary<TransitionType, SceneTransition> _sceneTransitions = new();
 
     public static TransitionType Type = TransitionType.FadeToBlack;
+    
+    [CVar("load_transition_speed", "Toggle transition speed")]
     public static float TransitionSpeed = 5.0f;
+
 
     public LoadingScreen(MyGameMain game)
     {
@@ -77,7 +83,7 @@ public class LoadingScreen
 
     private void SetActive()
     {
-        _alpha = 1.0f;
+        _progress = 1.0f;
         State = TransitionState.Active;
 
         void Load()
@@ -110,9 +116,9 @@ public class LoadingScreen
         }
         else if (State == TransitionState.TransitionOn)
         {
-            _alpha += TransitionSpeed * deltaSeconds;
+            _progress += TransitionSpeed * deltaSeconds;
 
-            if (_alpha >= 1.0f)
+            if (_progress >= 1.0f)
             {
                 SetActive();
             }
@@ -125,6 +131,7 @@ public class LoadingScreen
             {
                 work.Invoke();
             }
+
             Logger.LogInfo($"--- Loading finished, ({workCount} items in {sw.ElapsedMilliseconds} ms)");
 
             if (_taskWork.IsEmpty)
@@ -134,43 +141,53 @@ public class LoadingScreen
         }
         else if (State == TransitionState.TransitionOff)
         {
-            _alpha -= TransitionSpeed * deltaSeconds;
-            if (_alpha <= 0)
+            _progress -= TransitionSpeed * deltaSeconds;
+            if (_progress <= 0)
             {
-                _alpha = 0;
+                _progress = 0;
                 State = TransitionState.Hidden;
             }
         }
     }
-
-    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    
+    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
     {
-        if (State == TransitionState.Hidden)
-            return;
-
         if (_shouldCopyRender)
         {
-            _copyRender ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
-            TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
-            commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
+            _gameOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, gameRender);
+            _menuOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, menuRender);
+            _compositeOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+            commandBuffer.CopyTextureToTexture(gameRender, _gameOldCopy, Filter.Nearest);
+            commandBuffer.CopyTextureToTexture(menuRender, _menuOldCopy, Filter.Nearest);
+            commandBuffer.CopyTextureToTexture(renderDestination, _compositeOldCopy, Filter.Nearest);
+            // _game.GraphicsDevice.Submit(commandBuffer);
+            // _game.GraphicsDevice.Wait();
             _shouldCopyRender = false;
         }
+        
+        _compositeNewCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+        commandBuffer.CopyTextureToTexture(renderDestination, _compositeNewCopy, Filter.Nearest);
 
-        _sceneTransitions[Type].Draw(renderer, commandBuffer, renderDestination, _alpha, State, _copyRender);
+        _sceneTransitions[Type].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
 
+        DrawLoadingText(renderer, commandBuffer, renderDestination);
+    }
+
+    private void DrawLoadingText(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
+    {
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
 
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
-        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _alpha);
+        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _progress);
         renderer.End(commandBuffer, renderDestination, null, null);
     }
 
     public void Unload()
     {
-        _copyRender?.Dispose();
+        _gameOldCopy?.Dispose();
 
         foreach (var (key, value) in _sceneTransitions)
         {
@@ -181,4 +198,6 @@ public class LoadingScreen
         _work.Clear();
         _sceneTransitions.Clear();
     }
+
+
 }

@@ -36,4 +36,9 @@ public static class RectangleExt
     {
         return new Vector2(rect.X + rect.Width, rect.Y + rect.Height);
     }
+
+    public static Rectangle FromTexture(Texture texture)
+    {
+        return new Rectangle(0, 0, (int)texture.Width, (int)texture.Height);
+    }
 }

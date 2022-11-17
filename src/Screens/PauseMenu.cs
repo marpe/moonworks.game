@@ -15,6 +15,7 @@ public class PauseMenu : MenuScreen
     private void OnResume()
     {
         _menuManager.QueuePopScreen();
+        Logger.LogInfo("Resuming..");
     }
 
     public override void OnCancelled()
@@ -25,17 +26,5 @@ public class PauseMenu : MenuScreen
     private void OnQuitToMain()
     {
         _menuManager.QueuePopAllAndPush(Menus.Main);
-    }
-
-    public override void Update(float deltaSeconds)
-    {
-        var input = _menuManager.Game.InputHandler;
-        if (input.IsKeyPressed(KeyCode.Escape))
-        {
-            OnResume();
-            return;
-        }
-
-        base.Update(deltaSeconds);
     }
 }

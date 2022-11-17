@@ -71,13 +71,17 @@ public class MenuManager
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (_menuStack.Count == 0)
+        {
+            renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Transparent);
+            renderer.End(commandBuffer, renderDestination, Color.Transparent, null);
             return;
+        }
 
-        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), MenuScreen.BackgroundColor);
-
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Transparent);
+            
         var topMenu = _menuStack.Peek();
         topMenu.Draw(renderer, commandBuffer, renderDestination, alpha);
 
-        renderer.End(commandBuffer, renderDestination, null, null);
+        renderer.End(commandBuffer, renderDestination, Color.Transparent, null);
     }
 }
