@@ -38,6 +38,8 @@ public class CameraController
         Friction = new Vector2(0.9f, 0.9f),
     };
 
+    private float _freezeCameraTimer;
+
     public CameraController(GameScreen parent, Camera camera)
     {
         InitialFriction = Velocity.Friction;
@@ -52,6 +54,19 @@ public class CameraController
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
+        if (IsMouseAndKeyboardControlEnabled)
+        {
+            HandleInput(deltaSeconds, input);
+        }
+        
+        if (_freezeCameraTimer > 0)
+        {
+            _freezeCameraTimer -= deltaSeconds;
+            return;
+        }
+
+        _freezeCameraTimer = 0;
+        
         if (TrackingEntity != null)
         {
             var trackSpeed = TrackingSpeed * _camera.Zoom;
@@ -71,11 +86,6 @@ public class CameraController
             {
                 Velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
             }
-        }
-
-        if (IsMouseAndKeyboardControlEnabled)
-        {
-            HandleInput(deltaSeconds, input);
         }
 
         Velocity.Friction = InitialFriction;
@@ -230,6 +240,7 @@ public class CameraController
             
             if (input.IsMouseButtonHeld(MouseButtonCode.Right))
             {
+                _freezeCameraTimer = 1f;
                 _camera.Position += new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }
             

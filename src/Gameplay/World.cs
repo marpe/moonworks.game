@@ -4,6 +4,8 @@ public class World
 {
     public const int DefaultGridSize = 16;
 
+    public bool IsDisposed { get; private set; }
+
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
@@ -331,12 +333,17 @@ public class World
 
     public void Dispose()
     {
+        if (IsDisposed)
+            return;
+
         foreach (var (key, texture) in TilesetTextures)
         {
             texture.Dispose();
         }
 
         TilesetTextures.Clear();
+
+        IsDisposed = true;
     }
 
     public void DrawDebug(Renderer renderer, Entity e, double alpha)
@@ -350,7 +357,7 @@ public class World
             renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
             renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
         }
-        
+
         renderer.DrawRect(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
     }
 

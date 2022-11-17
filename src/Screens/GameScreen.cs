@@ -33,11 +33,16 @@ public class GameScreen
 
     public void LoadWorld()
     {
-        _game.LoadingScreen.StartLoad(() => { World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk); });
+        _game.LoadingScreen.StartLoad(() =>
+        {
+            World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            Logger.LogInfo("World loaded...");
+        });
     }
 
     public void Unload()
     {
+        Logger.LogInfo("Unloading world...");
         World?.Dispose();
         World = null;
     }
@@ -56,11 +61,16 @@ public class GameScreen
         World?.Update(deltaSeconds, input);
     }
 
-    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (World == null)
+            return;
+
+        if (World.IsDisposed)
         {
-            renderer.FlushBatches(renderDestination, Matrix4x4.Identity, renderer.DefaultClearColor);
+            // TODO (marpe): Not able to replicate this issue
+            Logger.LogError("World is disposed");
+            World = null;
             return;
         }
 
@@ -68,18 +78,13 @@ public class GameScreen
         Camera.Zoom = 4f;
         World.Draw(renderer, Camera.Bounds, alpha);
 
-        renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
-        renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
-
         var sz = MyGameMain.DesignResolution;
         var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);
 
-        renderer.FlushBatches(renderDestination, viewProjection, renderer.DefaultClearColor);
-        
+        renderer.End(commandBuffer, renderDestination, Color.Magenta, viewProjection);
+
         // render view bounds
-        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-        var projection = Matrix4x4.CreateOrthographicOffCenter(0, sz.X, sz.Y, 0, 0.0001f, 10000f);
-        renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 4f);
-        renderer.FlushBatches(renderDestination, view * projection);
+        renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
+        renderer.End(commandBuffer, renderDestination, null, null);
     }
 }

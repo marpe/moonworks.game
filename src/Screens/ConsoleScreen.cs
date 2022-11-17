@@ -445,7 +445,7 @@ public class ConsoleScreen
         }
     }
 
-    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (ScreenState == ScreenState.Hidden)
             return;
@@ -453,13 +453,8 @@ public class ConsoleScreen
         if ((int)_game.Time.DrawCount % ConsoleSettings.RenderRate == 0)
         {
             _hasRender = true;
-            renderer.FlushBatches(renderDestination); // flush so that draw calls doesn't spill into console renderTarget
-
             DrawInternal(renderer, alpha);
-
-            TextureUtils.EnsureTextureSize(ref _renderTarget, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
-            var viewProjection = Renderer.GetViewProjection(_renderTarget.Width, _renderTarget.Height);
-            renderer.FlushBatches(_renderTarget, viewProjection, Color.Transparent);
+            renderer.End(commandBuffer, _renderTarget, Color.Transparent, null);
         }
 
         if (!_hasRender)
@@ -467,6 +462,7 @@ public class ConsoleScreen
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage, 0);
+        renderer.End(commandBuffer, renderDestination, null, null);
     }
 
     private void DrawInternal(Renderer renderer, double alpha)

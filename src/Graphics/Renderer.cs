@@ -16,9 +16,6 @@ public enum BlendState
 
 public class Renderer
 {
-    public CommandBuffer CommandBuffer =>
-        _commandBuffer ?? throw new InvalidOperationException("CommandBuffer is null, did you forget to call BeginFrame?");
-
     public BMFont[] BMFonts { get; }
 
     public static Sampler PointClamp = null!;
@@ -33,10 +30,8 @@ public class Renderer
     public readonly SpriteBatch SpriteBatch;
     public readonly TextBatcher TextBatcher;
 
-    private CommandBuffer? _commandBuffer;
-
-    public BlendState BlendState = BlendState.AlphaBlend;
-    public ColorAttachmentInfo ColorAttachmentInfo;
+    private BlendState BlendState = BlendState.AlphaBlend;
+    private ColorAttachmentInfo ColorAttachmentInfo;
 
     public ColorAttachmentBlendState CustomBlendState = new()
     {
@@ -109,6 +104,7 @@ public class Renderer
             StencilLoadOp = LoadOp.Clear,
             StencilStoreOp = StoreOp.Store,
         };
+
         ColorAttachmentInfo = new ColorAttachmentInfo()
         {
             ClearColor = Color.CornflowerBlue,
@@ -178,43 +174,41 @@ public class Renderer
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
 
-    public Texture BeginFrame(Texture? swapTexture, uint width, uint height)
+    public CommandBuffer Begin()
     {
-        var commandBuffer = _device.AcquireCommandBuffer();
-        if (swapTexture == null)
-            swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow);
-        if (swapTexture == null)
-            throw new InvalidOperationException("Could not acquire swapchain texture");
-
-        TextureUtils.EnsureTextureSize(ref swapTexture, _device, width, height);
-        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, width, height);
-        DepthStencilAttachmentInfo.Texture = DepthTexture;
-        _commandBuffer = commandBuffer;
-
-        return swapTexture;
+        return _device.AcquireCommandBuffer();
     }
 
-    public void FlushBatches(Texture renderTarget, Matrix4x4? viewProjection = null, Color? clearColor = null)
+    public (CommandBuffer, Texture) Begin(UPoint? swapchainSize)
     {
-        var commandBuffer = CommandBuffer;
+        var commandBuffer = _device.AcquireCommandBuffer();
+        var swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow) ?? throw new InvalidOperationException("Could not acquire swapchain texture");
+        if (swapchainSize.HasValue)
+            TextureUtils.EnsureTextureSize(ref swapTexture, _device, swapchainSize.Value.X, swapchainSize.Value.Y);
+        return (commandBuffer, swapTexture);
+    }
 
-        ColorAttachmentInfo.Texture = renderTarget;
-        ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
-        ColorAttachmentInfo.LoadOp = clearColor != null ? LoadOp.Clear : LoadOp.Load;
-
+    public void End(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
+    {
         TextBatcher.FlushToSpriteBatch(SpriteBatch);
         SpriteBatch.UpdateBuffers(commandBuffer);
 
+        ColorAttachmentInfo.Texture = renderTarget;
+        ColorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
+        ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
+        
+        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height);
+        DepthStencilAttachmentInfo.Texture = DepthTexture;
+        
         commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
-        SpriteBatch.Flush(commandBuffer, viewProjection ?? GetViewProjection(renderTarget.Width, renderTarget.Height));
+        SpriteBatch.Flush(commandBuffer, viewProjection ?? GetViewProjection(ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height));
         commandBuffer.EndRenderPass();
     }
 
-    public void EndFrame()
+    public void Submit(CommandBuffer commandBuffer)
     {
-        _device.Submit(CommandBuffer);
-        _commandBuffer = null;
+        _device.Submit(commandBuffer);
     }
 
     public void Unload()

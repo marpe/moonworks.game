@@ -33,9 +33,9 @@ public class MainMenuScreen : MenuScreen
         base.Update(deltaSeconds);
     }
 
-    public override void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        base.Draw(renderer, renderDestination, alpha);
+        base.Draw(renderer, commandBuffer, renderDestination, alpha);
         _title.Render(BMFontType.ConsolasMonoHuge, renderer, alpha);
     }
 }

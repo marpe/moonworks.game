@@ -26,6 +26,8 @@ public class SpriteBatch
 
     private Position3DTextureColorVertex[] _vertices;
 
+    public uint DrawCalls { get; private set; }
+    
     public SpriteBatch(GraphicsDevice device)
     {
         _device = device;
@@ -36,8 +38,6 @@ public class SpriteBatch
         _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
         _indexBuffer = Buffer.Create<uint>(device, BufferUsageFlags.Index, (uint)_indices.Length);
     }
-
-    public uint DrawCalls { get; private set; }
 
     public void Unload()
     {
@@ -132,22 +132,19 @@ public class SpriteBatch
     public void UpdateBuffers(CommandBuffer commandBuffer)
     {
         if (_numSprites == 0)
-        {
             return;
-        }
 
         commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
     }
 
+    /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
     public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
         DrawCalls = 0;
 
         if (_numSprites == 0)
-        {
             return;
-        }
 
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 

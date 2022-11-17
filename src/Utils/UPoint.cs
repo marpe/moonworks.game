@@ -21,6 +21,11 @@ public struct UPoint
         return new Point((int)p.X, (int)p.Y);
     }
     
+    public static implicit operator UPoint(Point p)
+    {
+        return new UPoint((uint)p.X, (uint)p.Y);
+    }
+    
     public static implicit operator Vector2(UPoint p)
     {
         return new Vector2(p.X, p.Y);

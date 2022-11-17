@@ -52,12 +52,14 @@ public class MenuManager
         topMenu.Update(deltaSeconds);
     }
 
-    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (_menuStack.Count == 0)
             return;
 
         var topMenu = _menuStack.Peek();
-        topMenu.Draw(renderer, renderDestination, alpha);
+        topMenu.Draw(renderer, commandBuffer, renderDestination, alpha);
+        
+        renderer.End(commandBuffer, renderDestination, null, null);
     }
 }

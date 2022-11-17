@@ -6,12 +6,12 @@ public abstract class SceneTransition
     {
     }
     
-    public abstract void Draw(Renderer renderer, Texture renderDestination, float progress);
+    public abstract void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress);
 }
 
 public class FadeToBlack : SceneTransition
 {
-    public override void Draw(Renderer renderer, Texture renderDestination, float progress)
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress)
     {
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * progress);
     }
@@ -65,9 +65,8 @@ public class DiamondTransition : SceneTransition
         Pipeline.Dispose();
     }
 
-    public override void Draw(Renderer renderer, Texture renderDestination, float progress)
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress)
     {
-        var commandBuffer = renderer.CommandBuffer;
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black, 1f);
         renderer.SpriteBatch.UpdateBuffers(commandBuffer);
         commandBuffer.BeginRenderPass(

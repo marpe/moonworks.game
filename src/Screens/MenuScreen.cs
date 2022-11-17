@@ -5,7 +5,7 @@ namespace MyGame.Screens;
 public abstract class MenuScreen
 {
     protected readonly List<MenuItem> _menuItems = new();
-    protected Point Position = Point.Zero;
+    protected Point Position = MyGameMain.DesignResolution / 2;
     protected int _selectedIndex = 0;
     protected readonly MenuManager _menuManager;
 
@@ -65,8 +65,6 @@ public abstract class MenuScreen
 
     public virtual void Update(float deltaSeconds)
     {
-        Position = MyGameMain.DesignResolution / 2;
-
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
         {
             NextItem();
@@ -88,7 +86,7 @@ public abstract class MenuScreen
         _menuManager.Game.InputHandler.MouseEnabled = _menuManager.Game.InputHandler.KeyboardEnabled = false;
     }
 
-    public virtual void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * 0.5f);
 
@@ -104,10 +102,5 @@ public abstract class MenuScreen
             renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center, VerticalAlignment.Middle);
             position.Y += lineHeight;
         }
-
-        // TODO (marpe): fix this ugliness
-        // Flush text batcher to sprite batch here, otherwise if console screen isnt being redrawn,
-        // these text draw calls will be submitted after prev console render has been drawn 
-        renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
     }
 }

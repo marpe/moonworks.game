@@ -383,27 +383,21 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (_doRender)
         {
-            var sz = MyGameMain.DesignResolution;
-            Renderer.BeginFrame(_gameRender, sz.X, sz.Y);
-            // TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
             RenderGame(alpha, _gameRender);
-            Renderer.EndFrame();
-            
-            Renderer.BeginFrame(_imGuiRenderTarget, (uint)windowSize.X, (uint)windowSize.Y);
+
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
             DrawInternal();
             TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
             _imGuiRenderer.End(_imGuiRenderTarget);
             _doRender = false;
-            Renderer.EndFrame();
         }
         
-        var swapTexture = Renderer.BeginFrame(null, (uint)windowSize.X, (uint)windowSize.Y);
+        var (commandBuffer, swapTexture) = Renderer.Begin(windowSize);
         Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
         var view = Renderer.GetViewProjection((uint)windowSize.X, (uint)windowSize.Y);
-        Renderer.FlushBatches(swapTexture, view, Color.Black);
-        Renderer.EndFrame();
+        Renderer.End(commandBuffer, swapTexture, Color.Black, view);
+        Renderer.Submit(commandBuffer);
     }
 
     private static void SaveRender(GraphicsDevice device, Texture render)

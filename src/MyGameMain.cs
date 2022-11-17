@@ -110,39 +110,43 @@ public class MyGameMain : Game
     {
         if (MainWindow.IsMinimized)
             return;
-        
-        Renderer.BeginFrame(_gameRender, DesignResolution.X, DesignResolution.Y);
-        RenderGame(alpha, _gameRender);
-        Renderer.EndFrame();
 
-        var windowSize = MainWindow.Size;
-        var swapTexture = Renderer.BeginFrame(null, (uint)windowSize.X, (uint)windowSize.Y);
+        {
+            RenderGame(alpha, _gameRender);
+        }
 
-        var (viewportTransform, viewport) = Renderer.GetViewportTransform(
-            swapTexture.Size(),
-            DesignResolution
-        );
-        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-        var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
+        {
+            var windowSize = MainWindow.Size;
+            var (commandBuffer, swapTexture) = Renderer.Begin(windowSize);
 
-        Renderer.DrawSprite(_gameRender, viewportTransform, Color.White, 0, SpriteFlip.None);
-        Renderer.FlushBatches(swapTexture, view * projection, Color.Black);
-        Renderer.EndFrame();
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(
+                swapTexture.Size(),
+                DesignResolution
+            );
+            var view = Matrix4x4.CreateTranslation(0, 0, -1000);
+            var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
+
+            Renderer.DrawSprite(_gameRender, viewportTransform, Color.White, 0, SpriteFlip.None);
+            Renderer.End(commandBuffer, swapTexture, Color.Black, view * projection);
+            Renderer.Submit(commandBuffer);
+        }
     }
 
     protected void RenderGame(double alpha, Texture renderDestination)
     {
         Time.UpdateDrawCount();
 
-        GameScreen.Draw(Renderer, renderDestination, alpha);
+        var commandBuffer = Renderer.Begin();
+        
+        GameScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
-        MenuManager.Draw(Renderer, renderDestination, alpha);
+        MenuManager.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
-        ConsoleScreen.Draw(Renderer, renderDestination, alpha);
+        ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
-        LoadingScreen.Draw(Renderer, renderDestination, alpha);
-
-        Renderer.FlushBatches(renderDestination);
+        LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
+        
+        Renderer.Submit(commandBuffer);
     }
 
     protected override void Destroy()

@@ -85,7 +85,7 @@ public class LoadingScreen
             Logger.LogInfo($"Loading finished in {sw.ElapsedMilliseconds} ms");
         });
     }
-    
+
     public void Update(float deltaSeconds)
     {
         if (State == TransitionState.TransitionOn)
@@ -109,7 +109,7 @@ public class LoadingScreen
         }
     }
 
-    public void Draw(Renderer renderer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (State == TransitionState.Hidden)
             return;
@@ -117,12 +117,10 @@ public class LoadingScreen
         if (_shouldCopyRender)
         {
             Logger.LogInfo("Copying render...");
-            renderer.FlushBatches(renderDestination);
-            if (_copyRender == null)
-                _copyRender = TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
-            else
-                TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
-            renderer.CommandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
+            renderer.End(commandBuffer, renderDestination, null, null);
+            _copyRender ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
+            TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Width, renderDestination.Height);
+            commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);
             _shouldCopyRender = false;
         }
 
@@ -130,9 +128,9 @@ public class LoadingScreen
         {
             renderer.DrawSprite(new Sprite(_copyRender), Matrix4x4.Identity, Color.White, 0);
         }
-
-        renderer.FlushBatches(renderDestination);
-        _sceneTransition.Draw(renderer, renderDestination, _alpha);
+        
+        renderer.End(commandBuffer, renderDestination, null, null);
+        _sceneTransition.Draw(renderer, commandBuffer, renderDestination, _alpha);
 
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
@@ -141,6 +139,7 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _alpha);
+        renderer.End(commandBuffer, renderDestination, null, null);
     }
 
     public void Unload()
