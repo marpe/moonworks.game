@@ -19,6 +19,7 @@ public class FancyMenuItem : MenuItem
     public override void Draw(Renderer renderer, Vector2 position, HorizontalAlignment alignH, VerticalAlignment alignV, Color color)
     {
         _textComponent.Position = position;
+        _textComponent.Alpha = color.A / 255f;
         _textComponent.Render(BMFontType.ConsolasMonoHuge, renderer, 1.0f);
     }
 }

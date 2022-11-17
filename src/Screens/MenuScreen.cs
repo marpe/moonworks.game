@@ -28,6 +28,9 @@ public abstract class MenuScreen
     public Vector2 Position = MyGameMain.DesignResolution / 2;
     private Vector2 _previousPosition;
 
+    [CVar("menu_transition_duration", "")]
+    public static float TransitionDuration = 1.0f;
+
     public MenuScreen(MenuManager menuManager)
     {
         _menuManager = menuManager;
@@ -35,7 +38,7 @@ public abstract class MenuScreen
 
     private void UpdateTransition(float deltaSeconds, uint windowHeight)
     {
-        var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
+        var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
         if (State == ScreenState.TransitionOn)
         {
             _transitionPercentage = MathF.Clamp01(_transitionPercentage + deltaSeconds * speed);
@@ -153,7 +156,7 @@ public abstract class MenuScreen
         for (var i = 0; i < _menuItems.Count; i++)
         {
             var color = _selectedIndex == i ? HighlightColor : _menuItems[i].IsEnabled ? NormalColor : DisabledColor;
-            _menuItems[i].Draw(renderer, position, HorizontalAlignment.Center, VerticalAlignment.Top, color);
+            _menuItems[i].Draw(renderer, position, HorizontalAlignment.Center, VerticalAlignment.Top, color * _transitionPercentage);
             position.Y += lineHeight;
         }
     }
