@@ -2,6 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/MoonWorks" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/FAudio" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/RefreshCS" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/SDL2-CS" vcs="Git" />
