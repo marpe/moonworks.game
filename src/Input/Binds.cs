@@ -81,13 +81,24 @@ public static class Binds
             return;
         }
 
+        var isValidKeyStr = Enum.TryParse<KeyCode>(keyStr, true, out var result) ||
+                            keyStr == "mb1";
+
+        if (!isValidKeyStr)
+        {
+            Shared.Console.Print($"\"{keyStr}\" is not a valid key");
+        }
+
         _binds[keyStr] = cmdStr;
     }
 
     [ConsoleHandler("unbind", "Unbind a key")]
     public static void Unbind(string keyStr)
     {
-        _binds.Remove(keyStr);
+        if (_binds.Keys.Contains(keyStr))
+            _binds.Remove(keyStr);
+        else
+            Shared.Console.Print($"Button {keyStr} is unbound");
     }
 
     private static StringBuilder GetBindsAsText()

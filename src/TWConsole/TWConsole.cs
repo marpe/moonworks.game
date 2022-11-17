@@ -575,6 +575,7 @@ public class TWConsole
     public void SaveCVars()
     {
         Execute("cfg.save " + kCvarsFilename, false);
+        Logger.LogInfo($"cfg saved to {kCvarsFilename}");
     }
 
     [ConsoleHandler("con.fill", "Fill console with data (for debugging console rendering)")]

@@ -5,13 +5,15 @@ public abstract class SceneTransition
     public virtual void Unload()
     {
     }
-    
-    public abstract void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress);
+
+    public abstract void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
+        Texture? copyRender);
 }
 
 public class FadeToBlack : SceneTransition
 {
-    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress)
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
+        Texture? copyRender)
     {
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * progress);
     }
@@ -65,8 +67,16 @@ public class DiamondTransition : SceneTransition
         Pipeline.Dispose();
     }
 
-    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress)
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
+        Texture? copyRender)
     {
+        var isLoading = state is TransitionState.TransitionOn or TransitionState.Active;
+        if (copyRender != null && isLoading)
+        {
+            renderer.DrawSprite(new Sprite(copyRender), Matrix4x4.Identity, Color.White, 0);
+            renderer.End(commandBuffer, renderDestination, null, null);
+        }
+
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black, 1f);
         renderer.SpriteBatch.UpdateBuffers(commandBuffer);
         commandBuffer.BeginRenderPass(

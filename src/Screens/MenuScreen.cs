@@ -4,10 +4,17 @@ namespace MyGame.Screens;
 
 public abstract class MenuScreen
 {
-    protected readonly List<MenuItem> _menuItems = new();
+    public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
+    public static Color HighlightColor = Color.Yellow;
+    public static Color DisabledColor = Color.Black * 0.66f;
+    public static Color NormalColor = Color.White;
+
     protected Point Position = MyGameMain.DesignResolution / 2;
-    protected int _selectedIndex = 0;
+
+    protected readonly List<MenuItem> _menuItems = new();
     protected readonly MenuManager _menuManager;
+
+    protected int _selectedIndex = 0;
 
     public MenuScreen(MenuManager menuManager)
     {
@@ -21,7 +28,7 @@ public abstract class MenuScreen
         for (var i = 1; i < numItems; i++)
         {
             var j = (_menuItems.Count + startIndex + i) % _menuItems.Count;
-            if (_menuItems[j].IsVisible)
+            if (_menuItems[j].IsSelectable)
             {
                 _selectedIndex = j;
                 return;
@@ -36,7 +43,7 @@ public abstract class MenuScreen
         for (var i = 1; i < numItems; i++)
         {
             var j = (_menuItems.Count + startIndex - i) % _menuItems.Count;
-            if (_menuItems[j].IsVisible)
+            if (_menuItems[j].IsSelectable)
             {
                 _selectedIndex = j;
                 return;
@@ -44,23 +51,18 @@ public abstract class MenuScreen
         }
     }
 
-    public virtual void OnPush()
+    public virtual void OnScreenShown()
     {
         // select first item
         _selectedIndex = 0;
-        if (!_menuItems[_selectedIndex].IsVisible)
+        if (!_menuItems[_selectedIndex].IsSelectable)
         {
             NextItem();
         }
     }
 
-    public virtual void OnPop()
+    public virtual void OnCancelled()
     {
-    }
-
-    protected void ExitScreen()
-    {
-        _menuManager.Pop();
     }
 
     public virtual void Update(float deltaSeconds)
@@ -76,10 +78,12 @@ public abstract class MenuScreen
 
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Return) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Space))
         {
-            if (_selectedIndex != -1)
-            {
-                _menuItems[_selectedIndex].Callback.Invoke();
-            }
+            _menuItems[_selectedIndex].Callback.Invoke();
+        }
+
+        if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
+        {
+            OnCancelled();
         }
 
         // disable input for the next screen
@@ -88,8 +92,6 @@ public abstract class MenuScreen
 
     public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * 0.5f);
-
         var position = Position;
         var lineHeight = 50;
 
@@ -97,8 +99,7 @@ public abstract class MenuScreen
         {
             if (!_menuItems[i].IsVisible)
                 continue;
-
-            var color = _selectedIndex == i ? Color.Red : Color.White;
+            var color = _selectedIndex == i ? HighlightColor : _menuItems[i].IsEnabled ? NormalColor : DisabledColor;
             renderer.DrawText(FontType.RobotoLarge, _menuItems[i].Text, position, 0, color, HorizontalAlignment.Center, VerticalAlignment.Middle);
             position.Y += lineHeight;
         }

@@ -27,22 +27,17 @@ public class GameScreen
     [ConsoleHandler("restart")]
     public static void Restart()
     {
-        Shared.Game.ConsoleScreen.IsHidden = true;
         Shared.Game.GameScreen.LoadWorld();
+        Shared.LoadingScreen.QueueLoad(() => { Shared.Game.ConsoleScreen.IsHidden = true; });
     }
 
     public void LoadWorld()
     {
-        _game.LoadingScreen.StartLoad(() =>
-        {
-            World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            Logger.LogInfo("World loaded...");
-        });
+        Shared.LoadingScreen.QueueLoad(() => { World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk); });
     }
 
     public void Unload()
     {
-        Logger.LogInfo("Unloading world...");
         World?.Dispose();
         World = null;
     }
@@ -53,7 +48,7 @@ public class GameScreen
 
         if (input.IsKeyPressed(KeyCode.Escape))
         {
-            _game.MenuManager.Push(Menus.Pause);
+            _game.MenuManager.QueuePushScreen(Menus.Pause);
             return;
         }
 
@@ -63,16 +58,8 @@ public class GameScreen
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        if (World == null)
+        if (World == null || World.IsDisposed)
             return;
-
-        if (World.IsDisposed)
-        {
-            // TODO (marpe): Not able to replicate this issue
-            Logger.LogError("World is disposed");
-            World = null;
-            return;
-        }
 
         Camera.Size = MyGameMain.DesignResolution;
         Camera.Zoom = 4f;

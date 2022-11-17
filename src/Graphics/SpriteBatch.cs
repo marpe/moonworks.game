@@ -21,6 +21,9 @@ public class SpriteBatch
     private uint[] _indices;
     private uint _numSprites = 0;
 
+    public uint NumAddedSprites => _numSprites;
+    public uint LastNumAddedSprites { get; private set; }
+
     private TextureSamplerBinding[] _spriteInfo;
     private Buffer _vertexBuffer;
 
@@ -132,7 +135,10 @@ public class SpriteBatch
     public void UpdateBuffers(CommandBuffer commandBuffer)
     {
         if (_numSprites == 0)
+        {
+            Logger.LogWarn("Buffers are empty");
             return;
+        }
 
         commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
@@ -144,8 +150,11 @@ public class SpriteBatch
         DrawCalls = 0;
 
         if (_numSprites == 0)
+        {
+            Logger.LogWarn("Flushing empty SpriteBatch");
             return;
-
+        }
+        
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 
         commandBuffer.BindVertexBuffers(_vertexBuffer);
@@ -183,6 +192,7 @@ public class SpriteBatch
         );
         DrawCalls++;
 
+        LastNumAddedSprites = _numSprites;
         _numSprites = 0;
     }
 

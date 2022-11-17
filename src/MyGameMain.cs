@@ -1,4 +1,5 @@
 using System.Threading;
+using MyGame.Logs;
 
 namespace MyGame;
 
@@ -56,7 +57,7 @@ public class MyGameMain : Game
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         Renderer = new Renderer(this);
-        LoadingScreen = new LoadingScreen(this);
+        Shared.LoadingScreen = LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
         MenuManager = new MenuManager(this);
@@ -64,8 +65,7 @@ public class MyGameMain : Game
         LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
-            Thread.Sleep(3000);
-            MenuManager.Push(Menus.Main);
+            Logs.Logs.Loggers.Add(new TWConsoleLogger());
         });
 
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");

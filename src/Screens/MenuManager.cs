@@ -21,33 +21,49 @@ public class MenuManager
         _allMenus.Add(Menus.Main, new MainMenuScreen(this));
         _allMenus.Add(Menus.Options, new OptionsMenuScreen(this));
         _allMenus.Add(Menus.Pause, new PauseMenu(this));
+
+        PushImmediate(Menus.Main);
     }
 
-    public void Pop()
+    private void PushImmediate(Menus menu)
+    {
+        _menuStack.Push(_allMenus[menu]);
+        _allMenus[menu].OnScreenShown();
+    }
+
+    public void QueuePushScreen(Menus menu)
+    {
+        Game.LoadingScreen.QueueLoad(() => { }, () => { PushImmediate(menu); });
+    }
+
+    public void PopImmediate()
     {
         var menuScreen = _menuStack.Pop();
-        menuScreen.OnPop();
-    }
-    
-    public void PopAllAndPush(Menus menu)
-    {
-        while (_menuStack.Count > 0)
-            _menuStack.Pop();
-        Push(menu);
     }
 
-    public void Push(Menus menu)
+    public void QueuePopScreen()
     {
-        var menuScreen = _allMenus[menu];
-        menuScreen.OnPush();
-        _menuStack.Push(menuScreen);
+        Game.LoadingScreen.QueueLoad(() => { }, PopImmediate);
+    }
+
+    public void QueuePopAllAndPush(Menus menu)
+    {
+        Game.LoadingScreen.QueueLoad(() => { }, () =>
+        {
+            while (_menuStack.Count > 0)
+                _menuStack.Pop();
+
+            Game.GameScreen.Unload();
+
+            PushImmediate(menu);
+        });
     }
 
     public void Update(float deltaSeconds)
     {
         if (_menuStack.Count == 0)
             return;
-        
+
         var topMenu = _menuStack.Peek();
         topMenu.Update(deltaSeconds);
     }
@@ -57,9 +73,11 @@ public class MenuManager
         if (_menuStack.Count == 0)
             return;
 
+        renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), MenuScreen.BackgroundColor);
+
         var topMenu = _menuStack.Peek();
         topMenu.Draw(renderer, commandBuffer, renderDestination, alpha);
-        
+
         renderer.End(commandBuffer, renderDestination, null, null);
     }
 }

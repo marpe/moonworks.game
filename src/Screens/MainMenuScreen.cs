@@ -10,15 +10,18 @@ public class MainMenuScreen : MenuScreen
         _menuItems.AddRange(new[]
         {
             new MenuItem("New Game", OnPlay),
-            new MenuItem("Options", () => { menuManager.Push(Menus.Options); }),
-            new MenuItem("Quit", OnQuit),
+            new MenuItem("Options", () =>
+            {
+                menuManager.QueuePushScreen(Menus.Options);
+            }),
+            // new MenuItem("Quit", OnQuit),
         });
     }
 
     private void OnPlay()
     {
         _menuManager.Game.GameScreen.LoadWorld();
-        _menuManager.Pop();
+        _menuManager.QueuePopScreen();
     }
 
     private void OnQuit()

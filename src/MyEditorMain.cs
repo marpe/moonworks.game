@@ -165,7 +165,9 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.TextUnformatted($"FrameCount: {Time.UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {Time.DrawCount}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-
+            
+            ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.DrawCalls}, AddedSprites: {Renderer.SpriteBatch.LastNumAddedSprites}");
+            
             if (ImGui.Button("Reload World", default))
             {
                 GameScreen.LoadWorld();

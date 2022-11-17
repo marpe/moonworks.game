@@ -77,25 +77,63 @@ public class InputHandler
             key.Update(isHeld, deltaSeconds);
         }
 
+        HandleBoundKeys();
+    }
+
+    private void HandleBoundKeys()
+    {
         for (var i = 0; i < 232; i++)
         {
             var keyCode = (KeyCode)i;
-            if (Enum.IsDefined(keyCode) && _inputs.Keyboard.IsPressed(keyCode))
+            if (!Enum.IsDefined(keyCode) || !_inputs.Keyboard.IsPressed(keyCode))
+                continue;
+
+            // escape separately
+            if (keyCode == KeyCode.Escape)
+                continue;
+
+            // console key handled separately
+            if (keyCode == KeyCode.Grave)
             {
-                var keyStr = keyCode.ToString();
-                if (Binds.TryGetBind(keyStr, out var bind))
+                ConsoleScreen.ToggleConsole();
+                continue;
+            }
+
+            if (keyCode is >= KeyCode.A and <= KeyCode.Space && !Shared.Game.ConsoleScreen.IsHidden)
+            {
+                // ignore most characters when console is open
+                return;
+            }
+
+            var keyStr = keyCode.ToString();
+            if (!Binds.TryGetBind(keyStr, out var bind))
+            {
+                Logger.LogWarn($"Key {keyStr} is unbound.");
+                continue;
+            }
+
+            var split = ConsoleUtils.SplitArgs(bind);
+            var cmdKey = split[0];
+
+            var con = Shared.Console;
+            if (con.CVars.ContainsKey(cmdKey))
+            {
+                var cvar = con.CVars[cmdKey];
+                if (cvar.VarType == typeof(bool))
                 {
-                    var split = ConsoleUtils.SplitArgs(bind);
-                    var cmdKey = split[0];
-                    if (Shared.Console.Commands.ContainsKey(cmdKey))
-                    {
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
-                    }
-                    else
-                    {
-                        Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
-                    }
+                    var curr = cvar.GetValue<bool>();
+                    con.ExecuteCommand(con.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
+                    continue;
                 }
+            }
+
+            if (con.Commands.ContainsKey(cmdKey))
+            {
+                con.ExecuteCommand(con.Commands[cmdKey], split);
+            }
+            else
+            {
+                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
             }
         }
     }

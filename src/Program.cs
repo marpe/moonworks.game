@@ -6,7 +6,10 @@ internal class Program
 {
     private static void Main(string[] args)
     {
+        Logs.Logs.Initialize();
+
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+        
         var sz = MyGameMain.DesignResolution;
         var windowCreateInfo = new WindowCreateInfo
         {
@@ -22,9 +25,7 @@ internal class Program
             Mode = FrameLimiterMode.Uncapped,
             Cap = 120,
         };
-        Logger.LogInfo = LogInfo;
-        Logger.LogWarn = LogWarn;
-        Logger.LogError = LogError;
+
         Game gameMain;
         if (args.Length > 0 && args[0] == "--editor")
         {
@@ -53,24 +54,4 @@ internal class Program
         gameMain.Run();
     }
 
-    private static void LogInfo(string text)
-    {
-        Console.ForegroundColor = ConsoleColor.DarkCyan;
-        Console.WriteLine(text);
-        Console.ResetColor();
-    }
-
-    private static void LogWarn(string text)
-    {
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine(text);
-        Console.ResetColor();
-    }
-
-    private static void LogError(string text)
-    {
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine(text);
-        Console.ResetColor();
-    }
 }

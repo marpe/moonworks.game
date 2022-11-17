@@ -11,6 +11,9 @@ public class CameraController
     [CVar("camera.trackspeed", "Camera tracking speed")]
     public static Vector2 TrackingSpeed = new(5f, 5f);
 
+    [CVar("camera.use3d", "Use 3D Camera")]
+    public static bool Use3D;
+    
     private readonly Camera _camera;
     [Inspectable] private Vector2 _cameraRotation = new(0, MathHelper.Pi);
     private readonly float _lerpSpeed = 1f;
@@ -30,8 +33,6 @@ public class CameraController
     public Vector2 ShakeFequencies = new(50, 40);
 
     public Entity? TrackingEntity;
-
-    public static bool Use3D;
 
     public Velocity Velocity = new()
     {

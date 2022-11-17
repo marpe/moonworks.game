@@ -84,6 +84,12 @@ public class ConsoleScreen
         };
     }
 
+    [ConsoleHandler("console", "Toggles the console")]
+    public static void ToggleConsole()
+    {
+        Shared.Game.ConsoleScreen.IsHidden = !Shared.Game.ConsoleScreen.IsHidden;
+    }
+
     public void Unload()
     {
         _renderTarget.Dispose();
@@ -92,8 +98,6 @@ public class ConsoleScreen
     public void Update(float deltaSeconds)
     {
         var inputState = _game.InputHandler;
-        if (inputState.IsKeyPressed(KeyCode.Grave))
-            IsHidden = !IsHidden;
 
         var sz = MyGameMain.DesignResolution;
         UpdateTransition(deltaSeconds, sz.X, sz.Y);

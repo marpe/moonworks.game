@@ -4,4 +4,5 @@ public static class Shared
 {
     public static MyGameMain Game = null!;
     public static TWConsole.TWConsole Console = null!;
+    public static LoadingScreen LoadingScreen = null!;
 }

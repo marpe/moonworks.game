@@ -6,7 +6,23 @@ public class OptionsMenuScreen : MenuScreen
     {
         _menuItems.AddRange(new []
         {
-            new MenuItem("Back", () => ExitScreen())
+            new MenuItem("Options", () => {})
+            {
+                IsEnabled = false,
+            },
+            new MenuItem("Volume", () => {}),
+            new MenuItem("Resolution", () => {}),
+            new MenuItem("Back", Back)
         });
+    }
+
+    public override void OnCancelled()
+    {
+        Back();
+    }
+
+    private void Back()
+    {
+        _menuManager.QueuePopScreen();
     }
 }

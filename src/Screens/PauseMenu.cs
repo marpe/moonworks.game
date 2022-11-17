@@ -7,25 +7,26 @@ public class PauseMenu : MenuScreen
         _menuItems.AddRange(new[]
         {
             new MenuItem("Resume", OnResume),
-            new MenuItem("Options", () => { menuManager.Push(Menus.Options); }),
+            new MenuItem("Options", () => { menuManager.QueuePushScreen(Menus.Options); }),
             new MenuItem("Quit To Main Menu", OnQuitToMain),
         });
     }
 
     private void OnResume()
     {
-        _menuManager.Pop();
+        _menuManager.QueuePopScreen();
     }
-    
+
+    public override void OnCancelled()
+    {
+        OnResume();
+    }
+
     private void OnQuitToMain()
     {
-        _menuManager.Game.LoadingScreen.StartLoad(() =>
-        {
-            _menuManager.Game.GameScreen.Unload();
-            _menuManager.PopAllAndPush(Menus.Main);
-        });
+        _menuManager.QueuePopAllAndPush(Menus.Main);
     }
-    
+
     public override void Update(float deltaSeconds)
     {
         var input = _menuManager.Game.InputHandler;
