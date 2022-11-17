@@ -1,10 +1,10 @@
-﻿using MyGame.TWConsole;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace MyGame.Input;
 
 public static class Binds
 {
-    private static Dictionary<string, string> _binds = new();
+    private static Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
 
     static Binds()
     {
@@ -14,6 +14,19 @@ public static class Binds
             var sb = GetBindsAsText();
             builder.Append(sb);
         };
+    }
+
+    public static bool TryGetBind(ReadOnlySpan<char> key, [NotNullWhen(true)] out string? bind)
+    {
+        var keyStr = key.ToString();
+        if (_binds.ContainsKey(keyStr))
+        {
+            bind = _binds[keyStr];
+            return true;
+        }
+
+        bind = null;
+        return false;
     }
 
     [ConsoleHandler("unbindall", "Removes all binds")]
@@ -38,7 +51,7 @@ public static class Binds
         var keyNames = Enum.GetNames<KeyCode>();
         Shared.Console.Print($"Available key names are:\n{string.Join('\n', keyNames)}");
     }
-    
+
     [ConsoleHandler("list_binds", "List all binds")]
     private static void PrintBinds()
     {
@@ -77,7 +90,7 @@ public static class Binds
         _binds.Remove(keyStr);
     }
 
-    public static StringBuilder GetBindsAsText()
+    private static StringBuilder GetBindsAsText()
     {
         var sb = new StringBuilder();
 

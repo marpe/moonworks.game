@@ -60,15 +60,18 @@ public class Camera
         }
     }
 
-    public static Matrix4x4 GetProjection(uint width, uint height, bool use3D = false)
+    public int HorizontalFovDegrees = 60;
+
+    public Matrix4x4 GetProjection(uint width, uint height, bool use3D)
     {
         if (!use3D)
         {
             return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
         }
 
-        var fov = 60 * MathF.Deg2Rad; // (float)Math.Atan(targetHeight / (2f * Position3D.Z)) * 2f;
-        var aspectRatio = width / height;
-        return Matrix4x4.CreatePerspectiveFieldOfView(fov, aspectRatio, 0.0001f, 10000f);
+        var aspectRatio = width / (float)height;
+        var hFov = HorizontalFovDegrees * MathF.Deg2Rad;
+        var vFov = MathF.Atan(MathF.Tan(hFov / 2.0f) / aspectRatio) * 2.0f;
+        return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
     }
 }

@@ -63,7 +63,7 @@ public class InputHandler
     /// <param name="c"></param>
     private void OnTextInput(char c)
     {
-        if(_numTextInputChars >= _textInput.Length)
+        if (_numTextInputChars >= _textInput.Length)
             Array.Resize(ref _textInput, _textInput.Length * 2);
         _textInput[_numTextInputChars] = c;
         _numTextInputChars += 1;
@@ -75,6 +75,28 @@ public class InputHandler
         {
             var isHeld = _inputs.Keyboard.IsHeld(keyCode);
             key.Update(isHeld, deltaSeconds);
+        }
+
+        for (var i = 0; i < 232; i++)
+        {
+            var keyCode = (KeyCode)i;
+            if (Enum.IsDefined(keyCode) && _inputs.Keyboard.IsPressed(keyCode))
+            {
+                var keyStr = keyCode.ToString();
+                if (Binds.TryGetBind(keyStr, out var bind))
+                {
+                    var split = ConsoleUtils.SplitArgs(bind);
+                    var cmdKey = split[0];
+                    if (Shared.Console.Commands.ContainsKey(cmdKey))
+                    {
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
+                    }
+                    else
+                    {
+                        Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                    }
+                }
+            }
         }
     }
 

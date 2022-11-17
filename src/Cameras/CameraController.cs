@@ -1,11 +1,8 @@
-﻿using MyGame.Input;
-using MyGame.TWConsole;
-
-namespace MyGame.Cameras;
+﻿namespace MyGame.Cameras;
 
 public class CameraController
 {
-    [CVar("camera.input", "Toggle camera controls")]
+    [CVar("noclip", "Toggle camera controls")]
     public static bool IsMouseAndKeyboardControlEnabled;
 
     [CVar("camera.clamp", "Toggle clamping of camera to level bounds")]
@@ -15,7 +12,7 @@ public class CameraController
     public static Vector2 TrackingSpeed = new(5f, 5f);
 
     private readonly Camera _camera;
-    private Vector2 _cameraRotation = new(0, MathHelper.Pi);
+    [Inspectable] private Vector2 _cameraRotation = new(0, MathHelper.Pi);
     private readonly float _lerpSpeed = 1f;
     private float _lerpT = 0;
     private readonly GameScreen _parent;
@@ -33,7 +30,8 @@ public class CameraController
     public Vector2 ShakeFequencies = new(50, 40);
 
     public Entity? TrackingEntity;
-    public bool Use3D;
+
+    public static bool Use3D;
 
     public Velocity Velocity = new()
     {
@@ -153,14 +151,21 @@ public class CameraController
         _camera.BumpOffset *= Vector2.One * MathF.Pow(BumpFrict, deltaSeconds);
     }
 
-    public Matrix4x4 GetViewProjection(double alpha, uint width, uint height)
+    public Matrix4x4 GetViewProjection(uint width, uint height)
     {
-        var projection = Camera.GetProjection(width, height, false);
-        var projection3D = Camera.GetProjection(width, height, true);
-        var view4x4 = _camera.View.ToMatrix4x4();
-        view4x4.M43 = -1000;
-        var viewProjection = Matrix4x4.Lerp(view4x4 * projection, _camera.View3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
-        return viewProjection;
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(
+            new Point((int)width, (int)height),
+            new Point(1920, 1080)
+        );
+        
+        var cameraView = _camera.View.ToMatrix4x4();
+        cameraView.M43 = -1000;
+        var cameraView3D = _camera.View3D;
+
+        var projection = _camera.GetProjection(width, height, false);
+        var projection3D = _camera.GetProjection(width, height, true);
+        
+        return Matrix4x4.Lerp((cameraView * viewportTransform) * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
     [InspectorCallable]
@@ -170,13 +175,15 @@ public class CameraController
         _shakePower = shakePower;
     }
 
+    [ConsoleHandler("toggle_camera", "Toggle camera 2D/3D")]
+    [InspectorCallable]
+    public static void ToggleCamera()
+    {
+        Use3D = !Use3D;
+    }
+
     private void HandleInput(float deltaSeconds, InputHandler input)
     {
-        if (input.IsKeyPressed(KeyCode.F1))
-        {
-            Use3D = !Use3D;
-        }
-
         if (Use3D)
         {
             if (input.IsMouseButtonHeld(MouseButtonCode.Right))

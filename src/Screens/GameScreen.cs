@@ -45,13 +45,13 @@ public class GameScreen
     public void Update(float deltaSeconds)
     {
         var input = _game.InputHandler;
-        
+
         if (input.IsKeyPressed(KeyCode.Escape))
         {
             _game.MenuManager.Push(Menus.Pause);
             return;
         }
-        
+
         CameraController.Update(deltaSeconds, input);
         World?.Update(deltaSeconds, input);
     }
@@ -71,19 +71,15 @@ public class GameScreen
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
 
-        var cameraView = Camera.View.ToMatrix4x4(); // CameraController.GetViewProjection(alpha, renderDestination.Width, renderDestination.Height);
-        cameraView.M43 = -1000;
-
         var screenResolution = new Point((int)renderDestination.Width, (int)renderDestination.Height);
         var (viewportTransform, viewport) = Renderer.GetViewportTransform(
             screenResolution,
             new Point(1920, 1080)
         );
 
-        var projection = Camera.GetProjection(renderDestination.Width, renderDestination.Height, false);
-        var view = cameraView * viewportTransform;
+        var viewProjection = CameraController.GetViewProjection(renderDestination.Width, renderDestination.Height);
 
-        renderer.FlushBatches(renderDestination, view * projection, renderer.DefaultClearColor);
+        renderer.FlushBatches(renderDestination, viewProjection, renderer.DefaultClearColor);
 
         DrawLetterAndPillarBoxes(renderer, screenResolution, viewport, Color.Black);
     }

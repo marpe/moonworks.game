@@ -35,6 +35,18 @@ public static class MathF
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Atan(float d)
+    {
+        return (float)Math.Atan(d);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Tan(float d)
+    {
+        return (float)Math.Tan(d);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MinOf(float a, float b, float c)
     {
         return Math.Min(a, Math.Min(b, c));

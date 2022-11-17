@@ -1,5 +1,3 @@
-using MyGame.Utils;
-
 namespace MyGame.TWConsole;
 
 public class TWConsole
@@ -516,16 +514,21 @@ public class TWConsole
 
         if (Commands.ContainsKey(commandPart))
         {
-            Commands[commandPart].Handler.Invoke(this, Commands[commandPart], args);
+            ExecuteCommand(Commands[commandPart], args);
         }
         else if (Aliases.ContainsKey(commandPart))
         {
-            Aliases[commandPart].Handler.Invoke(this, Aliases[commandPart], args);
+            ExecuteCommand(Aliases[commandPart], args);
         }
         else
         {
             Print($"^4Command not found: {commandPart}");
         }
+    }
+
+    public void ExecuteCommand(ConsoleCommand command, ReadOnlySpan<string> args)
+    {
+        command.Handler.Invoke(this, command, args);
     }
 
     [ConsoleHandler("quit", "Quit the game", new[] { "exit" })]

@@ -203,7 +203,7 @@ public static class ConsoleUtils
         return Convert.ChangeType(strValue, type, CultureInfo.InvariantCulture);
     }
 
-    public static string[] SplitArgs(ReadOnlySpan<char> text)
+    public static Span<string> SplitArgs(ReadOnlySpan<char> text)
     {
         var args = new List<string>();
         var inQuotes = false;

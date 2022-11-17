@@ -18,7 +18,7 @@ public struct ConsoleCommandArg
 
 public class ConsoleCommand : IComparable<ConsoleCommand>
 {
-    public delegate void ConsoleCommandHandler(TWConsole console, ConsoleCommand cmd, string[] args);
+    public delegate void ConsoleCommandHandler(TWConsole console, ConsoleCommand cmd, ReadOnlySpan<string> args);
 
     public string[] Aliases;
     public ConsoleCommandArg[] Arguments;
