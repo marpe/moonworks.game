@@ -20,7 +20,7 @@ public class TestGame : Game
 
 public class MyGameMain : Game
 {
-    public static readonly UPoint DesignResolution = new UPoint(1920, 1080); 
+    public static readonly UPoint DesignResolution = new UPoint(1920, 1080);
     public const int TARGET_TIMESTEP = 120;
 
     public readonly InputHandler InputHandler;
@@ -52,7 +52,8 @@ public class MyGameMain : Game
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
 
-        _gameRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _gameRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         Renderer = new Renderer(this);
         LoadingScreen = new LoadingScreen(this);
@@ -84,7 +85,7 @@ public class MyGameMain : Game
         if (!LoadingScreen.IsLoading)
         {
             ConsoleScreen.Update(Time.ElapsedTime);
-
+            // TODO (marpe): eewww
             if (ConsoleScreen.IsHidden)
             {
                 if (MenuManager.IsHidden)
@@ -137,7 +138,7 @@ public class MyGameMain : Game
         Time.UpdateDrawCount();
 
         var commandBuffer = Renderer.Begin();
-        
+
         GameScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
         MenuManager.Draw(Renderer, commandBuffer, renderDestination, alpha);
@@ -145,7 +146,7 @@ public class MyGameMain : Game
         ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
         LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
-        
+
         Renderer.Submit(commandBuffer);
     }
 
