@@ -28,8 +28,7 @@ public abstract class MenuScreen
     public Vector2 Position = MyGameMain.DesignResolution / 2;
     private Vector2 _previousPosition;
 
-    [CVar("menu_transition_duration", "")]
-    public static float TransitionDuration = 1.0f;
+    [CVar("menu_transition_duration", "")] public static float TransitionDuration = 1.0f;
 
     public MenuScreen(MenuManager menuManager)
     {
@@ -111,8 +110,9 @@ public abstract class MenuScreen
                 NextItem();
             }
         }
+
         _lastState = State;
-        
+
         if (IsHidden)
             return;
 
@@ -155,7 +155,16 @@ public abstract class MenuScreen
 
         for (var i = 0; i < _menuItems.Count; i++)
         {
-            var color = _selectedIndex == i ? HighlightColor : _menuItems[i].IsEnabled ? NormalColor : DisabledColor;
+            var isSelected = _selectedIndex == i;
+            var isEnabled = _menuItems[i].IsEnabled;
+            var isFancy = _menuItems[i] is FancyMenuItem;
+            var color = (isSelected, isEnabled, isFancy) switch
+            {
+                (true, _, _) => HighlightColor,
+                (_, false, _) => DisabledColor,
+                (_, _, true) => Color.White,
+                (_, _, _) => NormalColor
+            };
             _menuItems[i].Draw(renderer, position, HorizontalAlignment.Center, VerticalAlignment.Top, color * _transitionPercentage);
             position.Y += lineHeight;
         }

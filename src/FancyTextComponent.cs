@@ -254,11 +254,12 @@ public class FancyTextComponent
 
     private static Color MultiplyAlpha(Color color, float partAlpha, float mainAlpha)
     {
-        return color * (partAlpha * mainAlpha);
-        var a = Convert.ToByte(mainAlpha * partAlpha * 255);
-        var r = (byte)(color.R * color.A / 255f);
-        var g = (byte)(color.G * color.A / 255f);
-        var b = (byte)(color.B * color.A / 255f);
+        // return color * (partAlpha * mainAlpha);
+        var finalAlpha = mainAlpha * partAlpha * (color.A / 255f);
+        var a = (byte)(finalAlpha * 255f);
+        var r = (byte)(color.R * finalAlpha);
+        var g = (byte)(color.G * finalAlpha);
+        var b = (byte)(color.B * finalAlpha);
         return new Color(r, g, b, a);
     }
 
