@@ -48,7 +48,6 @@ public class ConsoleScreen
     private float _transitionPercentage;
     private readonly KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
     private bool _hasRender;
-    private Point _lastRenderSize;
 
     public bool IsHidden
     {
@@ -64,9 +63,9 @@ public class ConsoleScreen
     {
         _game = game;
 
-        _lastRenderSize = new Point(1920, 1080);
+        var sz = MyGameMain.DesignResolution;
         _renderTarget = Texture.CreateTexture2D(
-            game.GraphicsDevice, (uint)_lastRenderSize.X, (uint)_lastRenderSize.Y, TextureFormat.B8G8R8A8,
+            game.GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
 
@@ -96,12 +95,13 @@ public class ConsoleScreen
         if (inputState.IsKeyPressed(KeyCode.Grave))
             IsHidden = !IsHidden;
 
-        UpdateTransition(deltaSeconds, (uint)_lastRenderSize.X, (uint)_lastRenderSize.Y);
+        var sz = MyGameMain.DesignResolution;
+        UpdateTransition(deltaSeconds, sz.X, sz.Y);
 
         if (IsHidden)
             return;
 
-        CheckResize((uint)_lastRenderSize.X, (uint)_lastRenderSize.Y);
+        CheckResize(sz.X, sz.Y);
 
         _caretBlinkTimer += deltaSeconds;
 
@@ -447,8 +447,6 @@ public class ConsoleScreen
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
     {
-        _lastRenderSize = new Point((int)renderDestination.Width, (int)renderDestination.Height);
-        
         if (ScreenState == ScreenState.Hidden)
             return;
 

@@ -64,20 +64,22 @@ public class GameScreen
             return;
         }
 
-        Camera.Size = new Point(1920, 1080);
+        Camera.Size = MyGameMain.DesignResolution;
         Camera.Zoom = 4f;
         World.Draw(renderer, Camera.Bounds, alpha);
 
         renderer.DepthStencilAttachmentInfo.LoadOp = LoadOp.Clear;
         renderer.DepthStencilAttachmentInfo.StencilLoadOp = LoadOp.Clear;
-        
-        var viewProjection = CameraController.GetViewProjection(1920, 1080);
+
+        var sz = MyGameMain.DesignResolution;
+        var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);
 
         renderer.FlushBatches(renderDestination, viewProjection, renderer.DefaultClearColor);
         
+        // render view bounds
         var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-        var projection = Matrix4x4.CreateOrthographicOffCenter(0, 1920, 1080, 0, 0.0001f, 10000f);
-        renderer.DrawRect(new Vector2(0, 0), new Vector2(1920, 1080), Color.LimeGreen, 4f);
+        var projection = Matrix4x4.CreateOrthographicOffCenter(0, sz.X, sz.Y, 0, 0.0001f, 10000f);
+        renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 4f);
         renderer.FlushBatches(renderDestination, view * projection);
     }
 }

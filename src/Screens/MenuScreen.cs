@@ -8,12 +8,10 @@ public abstract class MenuScreen
     protected Point Position = Point.Zero;
     protected int _selectedIndex = 0;
     protected readonly MenuManager _menuManager;
-    private Point _lastRenderSize;
 
     public MenuScreen(MenuManager menuManager)
     {
         _menuManager = menuManager;
-        _lastRenderSize = new Point(1920, 1080);
     }
 
     protected void NextItem()
@@ -67,7 +65,7 @@ public abstract class MenuScreen
 
     public virtual void Update(float deltaSeconds)
     {
-        Position = _lastRenderSize / 2;
+        Position = MyGameMain.DesignResolution / 2;
 
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
         {

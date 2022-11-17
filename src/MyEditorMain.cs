@@ -39,9 +39,10 @@ public unsafe class MyEditorMain : MyGameMain
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
     {
-        _gameRender = Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        var sz = MyGameMain.DesignResolution;
+        _gameRender = Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
         _imGuiRenderTarget =
-            Texture.CreateTexture2D(GraphicsDevice, 1920, 1080, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+            Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         var timer = Stopwatch.StartNew();
         _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
@@ -329,6 +330,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (inputHandler.IsKeyPressed(KeyCode.F2))
         {
             IsHidden = !IsHidden;
+            // TODO (marpe): Hide child windows created by ImGui?
         }
 
         if (!IsHidden)
@@ -381,7 +383,8 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (_doRender)
         {
-            Renderer.BeginFrame(_gameRender, 1920, 1080);
+            var sz = MyGameMain.DesignResolution;
+            Renderer.BeginFrame(_gameRender, sz.X, sz.Y);
             // TextureUtils.EnsureTextureSize(ref _gameRender, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
             RenderGame(alpha, _gameRender);
             Renderer.EndFrame();

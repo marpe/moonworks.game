@@ -225,9 +225,14 @@ public class CameraController
             {
                 _camera.Zoom += 0.1f * _camera.Zoom * input.MouseWheelDelta;
             }
-
-
+            
             var cameraSpeed = 500f;
+            
+            if (input.IsMouseButtonHeld(MouseButtonCode.Right))
+            {
+                _camera.Position += new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
+            }
+            
             var moveDelta = cameraSpeed * deltaSeconds;
 
             if (input.IsKeyPressed(KeyCode.Home))
