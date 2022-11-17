@@ -119,12 +119,9 @@ public class World
         }
     }
 
-    public void Update(bool isPaused, float deltaSeconds, InputHandler input)
+    public void Update(float deltaSeconds, InputHandler input)
     {
         UpdatePrevious();
-        if (isPaused)
-            return;
-
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);

@@ -49,13 +49,8 @@ public class CameraController
         _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
     }
 
-    public void Update(bool isPaused, float deltaSeconds, InputHandler input)
+    public void Update(float deltaSeconds, InputHandler input)
     {
-        if (isPaused)
-        {
-            return;
-        }
-
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 

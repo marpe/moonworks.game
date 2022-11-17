@@ -26,7 +26,7 @@ public class MyGameMain : Game
 
     public readonly InputHandler InputHandler;
 
-    public MenuScreen MenuScreen;
+    public MenuManager MenuManager;
     public ConsoleScreen ConsoleScreen;
     public readonly LoadingScreen LoadingScreen;
     public GameScreen GameScreen;
@@ -55,13 +55,13 @@ public class MyGameMain : Game
         LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
-        MenuScreen = new MenuScreen(this);
+        MenuManager = new MenuManager(this);
         
         LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Thread.Sleep(3000);
-            MenuScreen.SetVisible();
+            MenuManager.Push(Menus.Main);
         });
 
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
@@ -82,11 +82,13 @@ public class MyGameMain : Game
         {
             ConsoleScreen.Update(Time.ElapsedTime);
 
-            var isPaused = !ConsoleScreen.IsHidden;
-            MenuScreen.Update(isPaused, Time.ElapsedTime);
-
-            isPaused |= !MenuScreen.IsHidden;
-            GameScreen.Update(isPaused, Time.ElapsedTime);
+            if (ConsoleScreen.IsHidden)
+            {
+                if(MenuManager.IsHidden)
+                    GameScreen.Update(Time.ElapsedTime);
+                else
+                    MenuManager.Update(Time.ElapsedTime);
+            }
         }
 
         InputHandler.EndFrame();
@@ -120,7 +122,7 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, renderDestination, alpha);
 
-        MenuScreen.Draw(Renderer, renderDestination, alpha);
+        MenuManager.Draw(Renderer, renderDestination, alpha);
 
         ConsoleScreen.Draw(Renderer, renderDestination, alpha);
 

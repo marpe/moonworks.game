@@ -39,13 +39,21 @@ public class GameScreen
     public void Unload()
     {
         World?.Dispose();
+        World = null;
     }
 
-    public void Update(bool isPaused, float deltaSeconds)
+    public void Update(float deltaSeconds)
     {
         var input = _game.InputHandler;
-        CameraController.Update(isPaused, deltaSeconds, input);
-        World?.Update(isPaused, deltaSeconds, input);
+        
+        if (input.IsKeyPressed(KeyCode.Escape))
+        {
+            _game.MenuManager.Push(Menus.Pause);
+            return;
+        }
+        
+        CameraController.Update(deltaSeconds, input);
+        World?.Update(deltaSeconds, input);
     }
 
     public void Draw(Renderer renderer, Texture renderDestination, double alpha)
