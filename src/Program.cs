@@ -36,6 +36,11 @@ internal class Program
         }
         else
         {
+            /*gameMain = new TestGame(windowCreateInfo,
+                frameLimiterSettings,
+                MyGameMain.TARGET_TIMESTEP,
+                true
+            );*/
             gameMain = new MyGameMain(
                 windowCreateInfo,
                 frameLimiterSettings,
@@ -43,7 +48,7 @@ internal class Program
                 true
             );
         }
-            
+
         gameMain.Run();
     }
 

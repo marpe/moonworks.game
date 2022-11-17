@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
-using MyGame.Input;
 using SDL2;
 using Buffer = MoonWorks.Graphics.Buffer;
 
@@ -18,14 +17,14 @@ public enum ImGuiFont
     Default,
 }
 
-public unsafe class ImGuiRenderer
+public unsafe class ImGuiRenderer : IDisposable
 {
     public bool IsDisposed { get; private set; }
 
     public Texture RenderTarget => _renderTarget;
 
     public ColorAttachmentBlendState BlendState { get; private set; }
-    
+
     private static KeyCode[] _keys = Enum.GetValues<KeyCode>();
     private readonly Dictionary<ImGuiFont, Pointer<ImFont>> _fonts = new();
 
@@ -301,6 +300,8 @@ public unsafe class ImGuiRenderer
 
         if (isDisposing)
         {
+            Logger.LogInfo("Disposing ImGuiRenderer");
+            
             ImGui.DestroyPlatformWindows();
 
             var io = ImGui.GetIO();
@@ -600,13 +601,15 @@ public unsafe class ImGuiRenderer
                 break;
             case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
             {
+                Logger.LogInfo($"Window \"{window.Title}\" received close event");
+                
                 var viewport = ImGui.FindViewportByPlatformHandle((void*)window.Handle);
                 viewport->PlatformRequestClose = true;
 
                 var backend = GetPlatformBackend();
-
                 if (window == backend._game.MainWindow)
                 {
+                    Logger.LogInfo("MainWindow close...");
                     backend._game.Quit();
                 }
             }
@@ -620,9 +623,7 @@ public unsafe class ImGuiRenderer
     {
         var userData = (IntPtr)ImGui.GetIO()->BackendPlatformUserData;
         if (userData == IntPtr.Zero)
-        {
             throw new InvalidOperationException("The current ImGui context has no associated platform backend");
-        }
 
         var backend = (ImGuiRenderer)(GCHandle.FromIntPtr(userData).Target ?? throw new InvalidOperationException("Platform backend target was null"));
         return backend;
@@ -786,17 +787,10 @@ public unsafe class ImGuiRenderer
             ScreenMode = ScreenMode.Windowed,
             SystemResizable = true,
         };
-        var window = new Window(windowCreateInfo, flags);
+        var game = GetPlatformBackend()._game;
+        var window = new Window(game.GraphicsDevice, windowCreateInfo, flags);
         window.WindowEvent += HandleWindowEvent;
         window.SetWindowPosition((int)viewport->Pos.X, (int)viewport->Pos.Y);
-
-        var game = GetPlatformBackend()._game;
-
-        // claim window calls SDL_Vulkan_CreateSurface
-        if (!game.GraphicsDevice.ClaimWindow(window, window.PresentMode))
-        {
-            throw new SystemException("Could not claim window!");
-        }
 
         var gcHandle = GCHandle.Alloc(window);
         viewport->PlatformHandle = (void*)window.Handle;
@@ -817,21 +811,9 @@ public unsafe class ImGuiRenderer
         if (gcHandle.Target != null)
         {
             var window = (Window)gcHandle.Target;
-            var title = SDL.SDL_GetWindowTitle(window.Handle);
-            Logger.LogInfo($"Destroying window: {title}");
+            Logger.LogInfo($"ImGui destroying window: {window.Title}");
             window.WindowEvent -= HandleWindowEvent;
-
-            var game = GetPlatformBackend()._game;
-
-            if (window.Claimed)
-            {
-                game.GraphicsDevice.UnclaimWindow(window);
-            }
-
-            if (!window.IsDisposed)
-            {
-                window.Dispose();
-            }
+            window.Dispose();
         }
 
         gcHandle.Free();
