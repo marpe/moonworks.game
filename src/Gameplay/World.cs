@@ -22,6 +22,9 @@ public class World
     private readonly Dictionary<long, Texture> TilesetTextures;
     public Point WorldSize;
 
+    public Point Start = new Point(10, 10);
+    public Point End = new Point(40, 30);
+
     public Player Player { get; }
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
@@ -196,6 +199,12 @@ public class World
 
         if (Debug)
             renderer.DrawRect(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
+
+        foreach (var (x, y) in Bresenham.Line(Start.X, Start.Y, End.X, End.Y))
+        {
+            var min = new Vector2(x, y) * DefaultGridSize;
+            renderer.DrawRect(min, min + Vector2.One * DefaultGridSize, Color.Red, 4f);
+        }
     }
 
     private void DrawBullets(Renderer renderer, double alpha)

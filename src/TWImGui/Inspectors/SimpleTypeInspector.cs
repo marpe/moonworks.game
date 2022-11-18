@@ -8,7 +8,7 @@ public unsafe class SimpleTypeInspector : Inspector
     public static Type[] SupportedTypes =
     {
         typeof(bool), typeof(Color), typeof(int), typeof(uint), typeof(long), typeof(ulong), typeof(float), typeof(string),
-        typeof(Vector2), typeof(Vector3), typeof(Vector4), typeof(Num.Vector2), typeof(Num.Vector3), typeof(Num.Vector4),
+        typeof(Point), typeof(UPoint), typeof(Vector2), typeof(Vector3), typeof(Vector4), typeof(Num.Vector2), typeof(Num.Vector3), typeof(Num.Vector4),
         typeof(Rectangle),
     };
 
@@ -113,6 +113,26 @@ public unsafe class SimpleTypeInspector : Inspector
             if (ImGui.InputText(_name, inputBuffer.Data, inputBuffer.Length))
             {
                 SetValue(value);
+            }
+        }
+        else if (_valueType == typeof(Point))
+        {
+            var value = GetValue<Point>();
+            var tuple = new ValueTuple<int, int>(value.X, value.Y);
+            var xy = &tuple;
+            if (ImGui.DragInt2(_name, xy, 1.0f, 0, 0, "%11d"))
+            {
+                SetValue(new Point(xy->Item1, xy->Item2));
+            }
+        }
+        else if (_valueType == typeof(UPoint))
+        {
+            var value = GetValue<UPoint>();
+            var tuple = new ValueTuple<int, int>((int)value.X, (int)value.Y);
+            var xy = &tuple;
+            if (ImGui.DragInt2(_name, xy, 1.0f, 0, 0, "%u"))
+            {
+                SetValue(new UPoint((uint)xy->Item1, (uint)xy->Item2));
             }
         }
         else if (_valueType == typeof(Vector2))

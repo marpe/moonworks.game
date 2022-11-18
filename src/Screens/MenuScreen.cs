@@ -125,16 +125,6 @@ public abstract class MenuScreen
         if (IsHidden)
             return;
 
-        if (_menuManager.Game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
-        {
-            Logger.LogInfo("Pressed!");
-        }
-        
-        if (_menuManager.Game.Inputs.Mouse.AnyPressed)
-        {
-            Logger.LogInfo("AnyPressed!");
-        }
-
         var itemClicked = false;
         for (var i = 0; i < _menuItems.Count; i++)
         {
