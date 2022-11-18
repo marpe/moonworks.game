@@ -209,6 +209,8 @@ public class InputHandler
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsDown,
             MouseButtonCode.Right => _inputs.Mouse.RightButton.IsDown,
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsDown,
+            MouseButtonCode.X1 => _inputs.Mouse.X1Button.IsDown,
+            MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsDown,
             _ => throw new InvalidOperationException(),
         };
     }
@@ -223,6 +225,8 @@ public class InputHandler
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsHeld,
             MouseButtonCode.Right => _inputs.Mouse.RightButton.IsHeld,
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsHeld,
+            MouseButtonCode.X1 => _inputs.Mouse.X1Button.IsHeld,
+            MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsHeld,
             _ => throw new InvalidOperationException(),
         };
     }
@@ -232,5 +236,21 @@ public class InputHandler
         if (!KeyboardEnabled)
             return Array.Empty<char>();
         return new ReadOnlySpan<char>(_textInput, 0, _numTextInputChars);
+    }
+
+    public bool IsMouseButtonPressed(MouseButtonCode mouseButton)
+    {
+        if (!MouseEnabled)
+            return false;
+        
+        return mouseButton switch
+        {
+            MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsPressed,
+            MouseButtonCode.Right => _inputs.Mouse.RightButton.IsPressed,
+            MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsPressed,
+            MouseButtonCode.X1 => _inputs.Mouse.X1Button.IsPressed,
+            MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsPressed,
+            _ => throw new InvalidOperationException(),
+        };
     }
 }

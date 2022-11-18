@@ -138,12 +138,12 @@ public unsafe class MyEditorMain : MyGameMain
             // var offset = ImGui.GetCursorScreenPos() - ImGui.GetMainViewport()->Pos;
             var offset = ImGui.GetCursorScreenPos() - ImGui.GetWindowPos();
             
-            var updatedMousePosition = new Vector2(Shared.Game.InputHandler.MousePosition.X - offset.X, Shared.Game.InputHandler.MousePosition.Y - offset.Y);
-            var scale = new Vector2(imageSize.X / _gameRender.Width, imageSize.Y / _gameRender.Height);
-            updatedMousePosition /= scale;
-
-            Logger.LogInfo($"XY: {updatedMousePosition}");
+            // TODO (marpe): Fix mouse input when game is i window mode
             
+            /*var updatedMousePosition = new Vector2(Shared.Game.InputHandler.MousePosition.X - offset.X, Shared.Game.InputHandler.MousePosition.Y - offset.Y);
+            var scale = new Vector2(imageSize.X / _gameRender.Width, imageSize.Y / _gameRender.Height);
+            updatedMousePosition /= scale;*/
+
             ImGui.Image((void*)_gameRenderTextureId.Value, imageSize, Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, new Num.Vector4(1.0f, 0, 0, 1.0f));
 
             if (ImGui.IsItemHovered())

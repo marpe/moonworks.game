@@ -120,37 +120,66 @@ public abstract class MenuScreen
             {
                 ft.Update(deltaSeconds);
             }
-
-            if (_menuItems[i].Bounds.Contains(_menuManager.Game.InputHandler.MousePosition) && _menuItems[i].IsSelectable)
-            {
-                _selectedIndex = i;
-            }
         }
 
         if (IsHidden)
             return;
 
-        if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
+        if (_menuManager.Game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
         {
-            NextItem();
+            Logger.LogInfo("Pressed!");
         }
-        else if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Up) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.W))
+        
+        if (_menuManager.Game.Inputs.Mouse.AnyPressed)
         {
-            PreviousItem();
+            Logger.LogInfo("AnyPressed!");
         }
 
-        if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Return) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Space))
+        var itemClicked = false;
+        for (var i = 0; i < _menuItems.Count; i++)
         {
-            if (_menuItems[_selectedIndex] is TextMenuItem tmi)
+            if (_menuItems[i].Bounds.Contains(_menuManager.Game.InputHandler.MousePosition) && _menuItems[i].IsSelectable)
             {
-                tmi.Callback.Invoke();
+                _selectedIndex = i;
+
+                if (_menuManager.Game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
+                {
+                    if (_menuItems[i] is TextMenuItem tmi)
+                    {
+                        tmi.Callback.Invoke();
+                        itemClicked = true;
+                        break;
+                    }
+
+                    Logger.LogInfo("Clicked item!");
+                }
             }
         }
 
-        if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
+        if (!itemClicked)
         {
-            Logger.LogInfo("Cancelling screen");
-            OnCancelled();
+            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
+            {
+                NextItem();
+            }
+            else if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Up) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.W))
+            {
+                PreviousItem();
+            }
+
+            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Return) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Space))
+            {
+                if (_menuItems[_selectedIndex] is TextMenuItem tmi)
+                {
+                    tmi.Callback.Invoke();
+                }
+            }
+
+            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
+            {
+                Logger.LogInfo("Cancelling screen");
+                OnCancelled();
+            }
         }
 
         // disable input for the next screen
