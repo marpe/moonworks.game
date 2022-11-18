@@ -1,10 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using MoonWorks.Graphics.Font;
-using WellspringCS;
-using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
-using AlignV = WellspringCS.Wellspring.VerticalAlignment;
-
-namespace MyGame.Graphics;
+﻿namespace MyGame.Graphics;
 
 public class TextBatcher
 {

@@ -71,12 +71,14 @@ public class MenuManager
         }
 
         renderer.DrawRect(RectangleExt.FromTexture(renderDestination), Color.Black * 0.5f);
-
-        if (PrevFocused != FocusedMenu && _menuScreens[PrevFocused].IsHidden)
-            _menuScreens[PrevFocused].Draw(renderer, commandBuffer, renderDestination, alpha);
-        
-        _menuScreens[FocusedMenu].Draw(renderer, commandBuffer, renderDestination, alpha);
         renderer.End(commandBuffer, renderDestination, Color.Transparent, null);
+
+        for (var i = 0; i < _menuScreens.Length; i++)
+        {
+            _menuScreens[i].Draw(renderer, commandBuffer, renderDestination, alpha);
+        }
+
+        renderer.End(commandBuffer, renderDestination, null, null);
     }
 
     public void SetActiveMenu(Menus menu)

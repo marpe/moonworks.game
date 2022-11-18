@@ -26,3 +26,8 @@ global using MyGame.TWImGui;
 global using MyGame.Utils;
 global using Newtonsoft.Json.Linq;
 global using Newtonsoft.Json;
+global using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
+global using AlignV = WellspringCS.Wellspring.VerticalAlignment;
+global using System.Runtime.InteropServices;
+global using MoonWorks.Graphics.Font;
+global using WellspringCS;

@@ -1,4 +1,5 @@
-﻿using MyGame.Cameras;
+﻿using System.Threading;
+using MyGame.Cameras;
 
 namespace MyGame.Screens;
 
@@ -8,7 +9,7 @@ public class GameScreen
 
     public CameraController CameraController { get; }
 
-    public World? World { get; private set; }
+    public World? World { get; internal set; }
 
     private GraphicsDevice _device;
 
@@ -27,13 +28,11 @@ public class GameScreen
     [ConsoleHandler("restart")]
     public static void Restart()
     {
-        Shared.Game.GameScreen.LoadWorld();
-        Shared.LoadingScreen.QueueLoad(() => { Shared.Game.ConsoleScreen.IsHidden = true; });
-    }
-
-    public void LoadWorld()
-    {
-        Shared.LoadingScreen.QueueLoad(() => { World = new World(this, _game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk); });
+        Shared.LoadingScreen.QueueLoad(() =>
+        {
+            Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            Shared.Game.ConsoleScreen.IsHidden = true;
+        });
     }
 
     public void Unload()

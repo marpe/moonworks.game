@@ -55,10 +55,11 @@ public class MyGameMain : Game
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
 
-        _compositeRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _compositeRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
         _gameRender = TextureUtils.CreateTexture(GraphicsDevice, _compositeRender);
         _menuRender = TextureUtils.CreateTexture(GraphicsDevice, _compositeRender);
-        
+
         Renderer = new Renderer(this);
         Shared.LoadingScreen = LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
@@ -83,22 +84,27 @@ public class MyGameMain : Game
 
         InputHandler.BeginFrame(Time.ElapsedTime);
 
-        LoadingScreen.Update(Time.ElapsedTime);
-
-        if (!LoadingScreen.IsLoading)
-        {
-            ConsoleScreen.Update(Time.ElapsedTime);
-            // TODO (marpe): eewww
-            if (ConsoleScreen.IsHidden)
-            {
-                if (MenuManager.IsHidden)
-                    GameScreen.Update(Time.ElapsedTime);
-                else
-                    MenuManager.Update(Time.ElapsedTime);
-            }
-        }
+        UpdateScreens();
 
         InputHandler.EndFrame();
+    }
+
+    private void UpdateScreens()
+    {
+        LoadingScreen.Update(Time.ElapsedTime);
+
+        if (LoadingScreen.IsLoading)
+            return;
+
+        ConsoleScreen.Update(Time.ElapsedTime);
+        if (!ConsoleScreen.IsHidden)
+            return;
+
+        MenuManager.Update(Time.ElapsedTime);
+        if (!MenuManager.IsHidden)
+            return;
+
+        GameScreen.Update(Time.ElapsedTime);
     }
 
     private void UpdateWindowTitle()
@@ -131,6 +137,12 @@ public class MyGameMain : Game
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
             Renderer.DrawSprite(_compositeRender, viewportTransform, Color.White, 0, SpriteFlip.None);
+            
+            var mousePosition = InputHandler.MousePosition;
+            var mouseRelative = Vector2.Transform(mousePosition, viewportTransform);
+            Renderer.DrawPoint(mouseRelative, Color.Magenta, 10f);
+            Renderer.DrawPoint(mousePosition, Color.Blue, 5f);
+            
             Renderer.End(commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(commandBuffer);
         }
@@ -147,7 +159,7 @@ public class MyGameMain : Game
         MenuManager.Draw(Renderer, commandBuffer, _menuRender, alpha);
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
-        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None );
+        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
         Renderer.End(commandBuffer, renderDestination, Color.Cyan, null);
 
         ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);

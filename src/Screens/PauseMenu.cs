@@ -4,12 +4,12 @@ public class PauseMenu : MenuScreen
 {
     public PauseMenu(MenuManager menuManager) : base(menuManager)
     {
-        _menuItems.AddRange(new[]
+        _menuItems.AddRange(new MenuItem[]
         {
-            new FancyMenuItem("Pause", () => {}){ IsEnabled =  false },
-            new MenuItem("Resume", OnResume),
-            new MenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
-            new MenuItem("Quit", OnQuitToMain),
+            new FancyTextMenuItem("Pause") { IsEnabled = false },
+            new TextMenuItem("Resume", OnResume),
+            new TextMenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
+            new TextMenuItem("Quit", OnQuitToMain),
         });
     }
 
@@ -26,7 +26,6 @@ public class PauseMenu : MenuScreen
 
     private void OnQuitToMain()
     {
-        _menuManager.SetActiveMenu(Menus.Main);
-        Shared.Game.GameScreen.Unload();
+        Shared.LoadingScreen.QueueLoad(() => { Shared.Game.GameScreen.Unload(); }, () => { _menuManager.SetActiveMenu(Menus.Main); });
     }
 }

@@ -56,6 +56,7 @@ public class InputHandler
     }
 
     public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;
+    public Point MousePosition => MouseEnabled ? new(_inputs.Mouse.X, _inputs.Mouse.Y) : Point.Zero; // TODO (marpe): Maybe use a better default?
 
     public int MouseWheelDelta => MouseEnabled ? _inputs.Mouse.Wheel : 0;
 
@@ -80,6 +81,7 @@ public class InputHandler
         HandleBoundKeys();
     }
 
+    // TODO (marpe): Cleanup and optimize
     private void HandleBoundKeys()
     {
         for (var i = 0; i < 232; i++)

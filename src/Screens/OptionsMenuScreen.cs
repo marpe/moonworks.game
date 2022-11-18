@@ -2,15 +2,19 @@
 
 public class OptionsMenuScreen : MenuScreen
 {
+    private readonly DisplayMode[] _displayModes;
+
     public OptionsMenuScreen(MenuManager menuManager) : base(menuManager)
     {
-        _menuItems.AddRange(new []
+        _menuItems.AddRange(new MenuItem[]
         {
-            new FancyMenuItem("Options", () => {}){ IsEnabled =  false },
-            new MenuItem("Volume", () => {}),
-            new MenuItem("Resolution", () => {}),
-            new MenuItem("Back", Back)
+            new FancyTextMenuItem("Options") { IsEnabled = false },
+            new TextMenuItem("Volume", () => { }),
+            new TextMenuItem("Resolution", () => { }),
+            new TextMenuItem("Back", Back)
         });
+
+        _displayModes = DisplayModes.GetDisplayModes(Shared.Game.MainWindow.Handle);
     }
 
     public override void OnCancelled()

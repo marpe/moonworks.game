@@ -1,6 +1,4 @@
-﻿using MoonWorks.Graphics.Font;
-
-namespace MyGame.Screens;
+﻿namespace MyGame.Screens;
 
 public abstract class MenuScreen
 {
@@ -25,17 +23,16 @@ public abstract class MenuScreen
     protected readonly MenuManager _menuManager;
 
     protected int _selectedIndex = 0;
-    public Vector2 Position = MyGameMain.DesignResolution / 2;
-    private Vector2 _previousPosition;
 
     [CVar("menu_transition_duration", "")] public static float TransitionDuration = 1.0f;
+    private int ItemSpacingY = 20;
 
     public MenuScreen(MenuManager menuManager)
     {
         _menuManager = menuManager;
     }
 
-    private void UpdateTransition(float deltaSeconds, uint windowHeight)
+    private void UpdateTransition(float deltaSeconds)
     {
         var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
         if (State == ScreenState.TransitionOn)
@@ -54,10 +51,6 @@ public abstract class MenuScreen
                 State = ScreenState.Hidden;
             }
         }
-
-        var height = windowHeight * 0.5f;
-        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
-        Position.Y = (int)(height * t);
     }
 
 
@@ -97,31 +90,43 @@ public abstract class MenuScreen
 
     public virtual void Update(float deltaSeconds)
     {
-        _previousPosition = Position;
-
-        UpdateTransition(deltaSeconds, MyGameMain.DesignResolution.Y);
+        UpdateTransition(deltaSeconds);
 
         if ((State == ScreenState.TransitionOn && _lastState != ScreenState.TransitionOn))
         {
             // select first item
             _selectedIndex = 0;
+
             if (!_menuItems[_selectedIndex].IsSelectable)
             {
                 NextItem();
             }
         }
 
+        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
+        var xPos = MyGameMain.DesignResolution.X * 0.5f * t;
+        var p = new Vector2(xPos, MyGameMain.DesignResolution.Y * 0.5f);
+
         _lastState = State;
 
-        // TODO (marpe): Add mouse input?
         for (var i = 0; i < _menuItems.Count; i++)
         {
-            if (_menuItems[i] is FancyMenuItem ft)
+            _menuItems[i].PreviousPosition = _menuItems[i].Position;
+            _menuItems[i].Position = p;
+
+            p.Y += _menuItems[i].Height + ItemSpacingY;
+
+            if (_menuItems[i] is FancyTextMenuItem ft)
             {
                 ft.Update(deltaSeconds);
             }
+
+            if (_menuItems[i].Bounds.Contains(_menuManager.Game.InputHandler.MousePosition) && _menuItems[i].IsSelectable)
+            {
+                _selectedIndex = i;
+            }
         }
-        
+
         if (IsHidden)
             return;
 
@@ -136,7 +141,10 @@ public abstract class MenuScreen
 
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Return) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Space))
         {
-            _menuItems[_selectedIndex].Callback.Invoke();
+            if (_menuItems[_selectedIndex] is TextMenuItem tmi)
+            {
+                tmi.Callback.Invoke();
+            }
         }
 
         if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
@@ -151,23 +159,23 @@ public abstract class MenuScreen
 
     public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        var position = Vector2.Lerp(_previousPosition, Position, (float)alpha);
-        var lineHeight = 50;
-
         for (var i = 0; i < _menuItems.Count; i++)
         {
             var isSelected = _selectedIndex == i;
-            var isEnabled = _menuItems[i].IsEnabled;
-            var isFancy = _menuItems[i] is FancyMenuItem;
+            var menuItem = _menuItems[i];
+            var isEnabled = menuItem.IsEnabled;
+            var isFancy = menuItem is FancyTextMenuItem;
             var color = (isSelected, isEnabled, isFancy) switch
             {
                 (true, _, _) => HighlightColor,
-                (_, false, _) => DisabledColor,
+                (_, false, false) => DisabledColor,
                 (_, _, true) => Color.White,
                 (_, _, _) => NormalColor
             };
-            _menuItems[i].Draw(renderer, position, HorizontalAlignment.Center, VerticalAlignment.Top, color * _transitionPercentage);
-            position.Y += lineHeight;
+            var p = Vector2.Lerp(menuItem.PreviousPosition, menuItem.Position, (float)alpha);
+            menuItem.Draw(p, renderer, color * _transitionPercentage);
+            var bounds = menuItem.Bounds;
+            renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
         }
     }
 }

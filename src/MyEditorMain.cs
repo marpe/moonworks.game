@@ -132,7 +132,18 @@ public unsafe class MyEditorMain : MyGameMain
             var imageSize = new Num.Vector2(width, height);
             var padding = (avail - imageSize) / 2;
 
+
             ImGui.SetCursorPos(padding);
+
+            // var offset = ImGui.GetCursorScreenPos() - ImGui.GetMainViewport()->Pos;
+            var offset = ImGui.GetCursorScreenPos() - ImGui.GetWindowPos();
+            
+            var updatedMousePosition = new Vector2(Shared.Game.InputHandler.MousePosition.X - offset.X, Shared.Game.InputHandler.MousePosition.Y - offset.Y);
+            var scale = new Vector2(imageSize.X / _gameRender.Width, imageSize.Y / _gameRender.Height);
+            updatedMousePosition /= scale;
+
+            Logger.LogInfo($"XY: {updatedMousePosition}");
+            
             ImGui.Image((void*)_gameRenderTextureId.Value, imageSize, Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, new Num.Vector4(1.0f, 0, 0, 1.0f));
 
             if (ImGui.IsItemHovered())
@@ -165,12 +176,12 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.TextUnformatted($"FrameCount: {Time.UpdateCount}");
             ImGui.TextUnformatted($"RenderCount: {Time.DrawCount}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-            
+
             ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.DrawCalls}, AddedSprites: {Renderer.SpriteBatch.LastNumAddedSprites}");
-            
+
             if (ImGui.Button("Reload World", default))
             {
-                GameScreen.LoadWorld();
+                GameScreen.Restart();
             }
 
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
@@ -380,7 +391,7 @@ public unsafe class MyEditorMain : MyGameMain
             Logger.LogInfo("Render saved!");
             _saveRender = false;
         }
-        
+
         var windowSize = MainWindow.Size;
 
         if (_doRender)
@@ -394,7 +405,7 @@ public unsafe class MyEditorMain : MyGameMain
             _imGuiRenderer.End(_imGuiRenderTarget);
             _doRender = false;
         }
-        
+
         var (commandBuffer, swapTexture) = Renderer.Begin(windowSize);
         Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
         var view = Renderer.GetViewProjection((uint)windowSize.X, (uint)windowSize.Y);

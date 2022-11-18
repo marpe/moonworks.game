@@ -1,7 +1,6 @@
 using MoonWorks.Graphics.Font;
 using MyGame.Utils;
-using AlignH = WellspringCS.Wellspring.HorizontalAlignment;
-using AlignV = WellspringCS.Wellspring.VerticalAlignment;
+
 
 namespace MyGame;
 
@@ -47,10 +46,10 @@ public class FancyTextComponent
     public static float ShakeAmount = 1f;
 
     private readonly char[] _strippedText;
-    [Inspectable] public readonly FancyTextPart[] Parts = Array.Empty<FancyTextPart>();
+    public char[] StrippedText => _strippedText;
+    [Inspectable] public readonly FancyTextPart[] Parts;
 
     [Range(0f, 1f, .01f)] public float Alpha = 1f;
-    public Vector2 Position;
 
     public float Rotation;
     public Vector2 Scale = Vector2.One;
@@ -210,7 +209,7 @@ public class FancyTextComponent
         Timer += deltaSeconds;
     }
 
-    public void Render(BMFontType fontType, Renderer renderer, double alpha)
+    public void Render(BMFontType fontType, Renderer renderer, Vector2 position, Color color, double alpha)
     {
         var font = renderer.GetFont(fontType);
         var textSize = font.MeasureString(_strippedText);
@@ -226,15 +225,14 @@ public class FancyTextComponent
             var part = Parts[i];
             var waveOffset = part.IsWaving ? GetWaveOffset(part, Timer) : Vector2.Zero;
             var shakeOffset = part.IsShaking ? GetShakeOffset(0, ShakeSpeed, ShakeAmount, Timer) : Vector2.Zero;
-            var color = MultiplyAlpha(part.Color, Alpha, part.Alpha);
+            var finalColor = MultiplyAlpha(color, part.Color, Alpha, part.Alpha);
 
             var partOffset = part.Offset * charSize;
             var partPos = -origin + shakeOffset + waveOffset + partOffset;
             var partOrigin = charSize / 2;
-            var finalPos = partOrigin + Position + Vector2.Transform(partPos * Scale, rotation);
+            var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
-            renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, color);
-            // renderer.DrawPoint(finalPos, Color.Blue, 4f);
+            renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColor);
         }
     }
 
@@ -252,14 +250,14 @@ public class FancyTextComponent
         return numLines;
     }
 
-    private static Color MultiplyAlpha(Color color, float partAlpha, float mainAlpha)
+    private static Color MultiplyAlpha(Color colorA, Color colorB, float partAlpha, float mainAlpha)
     {
         // return color * (partAlpha * mainAlpha);
-        var finalAlpha = mainAlpha * partAlpha * (color.A / 255f);
+        var finalAlpha = mainAlpha * partAlpha * (colorA.A / 255f) * (colorB.A / 255f);
         var a = (byte)(finalAlpha * 255f);
-        var r = (byte)(color.R * finalAlpha);
-        var g = (byte)(color.G * finalAlpha);
-        var b = (byte)(color.B * finalAlpha);
+        var r = (byte)(255 * (colorA.R / 255f * colorB.R / 255f * finalAlpha));
+        var g = (byte)(255 * (colorA.G / 255f * colorB.G / 255f * finalAlpha));
+        var b = (byte)(255 * (colorA.B / 255f * colorB.B / 255f * finalAlpha));
         return new Color(r, g, b, a);
     }
 
