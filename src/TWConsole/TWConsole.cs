@@ -289,11 +289,11 @@ public class TWConsole
     [ConsoleHandler("res", "Print display resolution")]
     private void PrintDisplayResolution()
     {
-        var size = new Point(-1, -1); // TODO (marpe): Fix //Shared.Game.MainWindow.Size;
+        var size = Shared.Game.MainWindow.Size;
         Print($"Current resolution: {size.X}x{size.Y}");
     }
 
-    private void RegisterCommand(ConsoleCommand command)
+    public void RegisterCommand(ConsoleCommand command)
     {
         Commands.Add(command.Key, command);
         foreach (var alias in command.Aliases)
@@ -302,16 +302,13 @@ public class TWConsole
         }
     }
 
-    private void UnregisterCommand(string key)
+    public void UnregisterCommand(string key)
     {
-        if (Commands.ContainsKey(key))
+        var command = Commands[key];
+        Commands.Remove(key);
+        foreach (var alias in command.Aliases)
         {
-            var command = Commands[key];
-            Commands.Remove(key);
-            foreach (var alias in command.Aliases)
-            {
-                Aliases.Remove(alias);
-            }
+            Aliases.Remove(alias);
         }
     }
 

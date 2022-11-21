@@ -5,9 +5,8 @@ namespace MyGame.Editor;
 public unsafe class WorldWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "World";
-    private GroupInspector? _cameraControllerInspector;
     private GroupInspector? _cameraInspector;
-    private GroupInspector? _inspector;
+    private GroupInspector? _worldInspector;
     private World? _prevWorld;
 
     public WorldWindow() : base(WindowTitle)
@@ -37,13 +36,13 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         {
             if (ImGui.BeginTabItem("World"))
             {
-                if (_prevWorld != world || _inspector == null)
+                if (_prevWorld != world || _worldInspector == null)
                 {
-                    _inspector ??= InspectorExt.GetInspectorForTarget(world);
+                    _worldInspector = InspectorExt.GetInspectorForTarget(world);
                 }
 
                 _prevWorld = world;
-                _inspector.Draw();
+                _worldInspector.Draw();
                 
                 ImGui.Separator();
                 
@@ -56,19 +55,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
             if (ImGui.BeginTabItem("Camera"))
             {
-                if (ImGuiExt.BeginCollapsingHeader("Controller", Color.Blue))
-                {
-                    _cameraControllerInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.CameraController);
-                    _cameraControllerInspector.Draw();
-                    ImGuiExt.EndCollapsingHeader();
-                }
-
-                if (ImGuiExt.BeginCollapsingHeader("Camera", Color.Blue))
-                {
-                    _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
-                    _cameraInspector.Draw();
-                    ImGuiExt.EndCollapsingHeader();
-                }
+                _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
+                _cameraInspector.Draw();
 
                 ImGui.EndTabItem();
             }

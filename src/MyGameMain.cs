@@ -48,10 +48,10 @@ public class MyGameMain : Game
         var sw = Stopwatch.StartNew();
 
         Time = new Time();
-        InputHandler = new InputHandler(Inputs);
 
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
+        InputHandler = new InputHandler(Inputs);
 
         _compositeRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
@@ -199,7 +199,7 @@ public class MyGameMain : Game
     {
         Logger.LogInfo("Shutting down");
 
-        GameScreen.Unload();
+        GameScreen.SetWorld(null);
 
         ConsoleScreen.Unload();
 

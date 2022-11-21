@@ -4,11 +4,8 @@ namespace MyGame.Screens;
 
 public class GameScreen
 {
-    public Camera Camera { get; }
-
-    public CameraController CameraController { get; }
-
-    public World? World { get; internal set; }
+    public Camera Camera { get; private set; }
+    public World? World { get; private set; }
 
     private GraphicsDevice _device;
 
@@ -22,10 +19,7 @@ public class GameScreen
 
         _pauseCallback = pauseCallback;
 
-        Camera = new Camera();
-        Camera.Size = MyGameMain.DesignResolution;
-        Camera.Zoom = 4f;
-        CameraController = new CameraController(this, Camera);
+        Camera = new Camera(this);
     }
 
 
@@ -39,10 +33,10 @@ public class GameScreen
         }, () => { Shared.Game.SetMenu(null); });
     }
 
-    public void Unload()
+    public void SetWorld(World? world)
     {
         World?.Dispose();
-        World = null;
+        World = world;
     }
 
     public void Update(float deltaSeconds)
@@ -55,8 +49,9 @@ public class GameScreen
             return;
         }
 
-        CameraController.Update(deltaSeconds, input);
         World?.Update(deltaSeconds, input);
+
+        Camera.Update(deltaSeconds, input);
     }
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
@@ -71,10 +66,10 @@ public class GameScreen
             renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
             return;
         }
-  
+
         World.Draw(renderer, Camera.Bounds, alpha);
 
-        var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);
+        var viewProjection = Camera.GetViewProjection(sz.X, sz.Y);
 
         renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 

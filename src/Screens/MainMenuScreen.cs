@@ -26,10 +26,7 @@ public class MainMenuScreen : MenuScreen
     private void OnPlay()
     {
         Shared.LoadingScreen.QueueLoad(
-            () =>
-            {
-                Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            },
+            () => { Shared.Game.GameScreen.SetWorld(new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk)); },
             () => { Shared.Game.SetMenu(null); }
         );
     }

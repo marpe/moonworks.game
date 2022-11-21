@@ -11,7 +11,7 @@ public class World
 
     private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
-    private readonly GameScreen _parent;
+    private readonly GameScreen _gameScreen;
 
     private readonly DebugDrawItems _debugDraw;
 
@@ -29,9 +29,9 @@ public class World
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
 
-    public World(GameScreen parent, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
+    public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
-        _parent = parent;
+        _gameScreen = gameScreen;
         var jsonString = File.ReadAllText(ldtkPath.ToString());
         LdtkRaw = LdtkJson.FromJson(jsonString);
         TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
@@ -68,7 +68,7 @@ public class World
         }
 
         Player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
-        _parent.CameraController.TrackEntity(Player);
+        _gameScreen.Camera.TrackEntity(Player);
         Enemies.AddRange(allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
     }
 
@@ -132,7 +132,9 @@ public class World
     {
         if (!Player.IsInitialized)
             Player.Initialize(this);
-        Player.Update(deltaSeconds, input);
+        
+        var command = PlayerBinds.ToPlayerCommand();
+        Player.Update(deltaSeconds, command);
     }
 
     private void UpdateEnemies(float deltaSeconds)
@@ -351,6 +353,7 @@ public class World
         }
 
         TilesetTextures.Clear();
+        _gameScreen.Camera.TrackEntity(null);
 
         IsDisposed = true;
     }

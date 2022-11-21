@@ -31,9 +31,9 @@ public partial class Player : Entity
         base.Initialize(world);
     }
 
-    public void Update(float deltaSeconds, InputHandler input)
+    public void Update(float deltaSeconds, PlayerCommand command)
     {
-        Behaviour.Update(deltaSeconds, input);
+        Behaviour.Update(deltaSeconds, command);
         base.Update(deltaSeconds);
     }
 }

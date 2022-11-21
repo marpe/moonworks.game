@@ -1,5 +1,41 @@
 ﻿namespace MyGame;
 
+public static class PlayerBinds
+{
+    public static ButtonBind Right = new();
+    public static ButtonBind Left = new();
+    public static ButtonBind Jump = new();
+    public static ButtonBind Fire1 = new();
+    public static ButtonBind Respawn = new();
+
+    public static PlayerCommand ToPlayerCommand()
+    {
+        var cmd = new PlayerCommand();
+
+        if (Right.Active)
+            cmd.MovementX += 1;
+
+        if (Left.Active)
+            cmd.MovementX += -1;
+
+        cmd.IsFiring = Fire1.WasPressed;
+        cmd.Respawn = Respawn.WasPressed;
+        cmd.IsJumpDown = Jump.Active;
+        cmd.IsJumpPressed = Jump.WasPressed;
+
+        return cmd;
+    }
+}
+
+public struct PlayerCommand
+{
+    public float MovementX;
+    public bool IsFiring;
+    public bool IsJumpPressed;
+    public bool IsJumpDown;
+    public bool Respawn;
+}
+
 public class PlayerBehaviour
 {
     private Player? _player;
@@ -10,46 +46,19 @@ public class PlayerBehaviour
         _player = player;
     }
 
-    private void HandleInput(InputHandler input, out int movementX, out bool isFiring)
+    public void Update(float deltaSeconds, PlayerCommand command)
     {
-        movementX = 0;
-        isFiring = false;
-        
-        if (input.IsKeyPressed(KeyCode.Insert))
+        if (command.Respawn)
         {
             Player.Position.SetPrevAndCurrent(new Vector2(100, 50));
         }
 
-        if (input.IsKeyDown(KeyCode.Right) ||
-            input.IsKeyDown(KeyCode.D))
-        {
-            movementX += 1;
-        }
-
-        if (input.IsKeyDown(KeyCode.Left) ||
-            input.IsKeyDown(KeyCode.A))
-        {
-            movementX += -1;
-        }
-
-        if (input.IsKeyPressed(KeyCode.LeftControl))
-        {
-            isFiring = true;
-        }
-    }
-    
-    public void Update(float deltaSeconds, InputHandler input)
-    {
-        HandleInput(input, out var movementX, out var isFiring);
-        var isJumpDown = input.IsKeyDown(KeyCode.Space);
-        var isJumpPressed = input.IsKeyPressed(KeyCode.Space);
-
-        if (isFiring)
+        if (command.IsFiring)
         {
             var direction = Player.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
             Player.World.SpawnBullet(Player.Position.Current, direction);
         }
-        
+
         if (Player.Position.Current.Y > 300)
         {
             Player.Position.SetPrevAndCurrent(Player.Position.Initial);
@@ -63,12 +72,12 @@ public class PlayerBehaviour
             Player.LastOnGroundTime = Player.TotalTime;
         }
 
-        if (movementX != 0)
+        if (command.MovementX != 0)
         {
-            Player.Velocity.X += movementX * Player.Speed;
+            Player.Velocity.X += command.MovementX * Player.Speed;
         }
 
-        if (!Player.IsJumping && isJumpPressed)
+        if (!Player.IsJumping && command.IsJumpPressed)
         {
             var timeSinceOnGround = Player.TotalTime - Player.LastOnGroundTime;
             if (timeSinceOnGround < 0.1f)
@@ -83,7 +92,7 @@ public class PlayerBehaviour
 
         if (Player.IsJumping)
         {
-            if (!isJumpDown)
+            if (!command.IsJumpDown)
             {
                 Player.IsJumping = false;
             }
@@ -98,7 +107,7 @@ public class PlayerBehaviour
         }
 
         var collisions = Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
-       
+
         if ((collisions & CollisionDir.Down) == CollisionDir.Down)
         {
             Player.Squash = new Vector2(1.5f, 0.5f);
@@ -110,7 +119,7 @@ public class PlayerBehaviour
         }
 
         Velocity.ApplyFriction(Player.Velocity);
-        
+
         if (Player.Velocity.X > 0)
         {
             Player.Flip = SpriteFlip.None;

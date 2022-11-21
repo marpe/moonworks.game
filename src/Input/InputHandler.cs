@@ -1,5 +1,16 @@
 ﻿namespace MyGame.Input;
 
+public class ButtonBind
+{
+    public int[] Sources = { 0, 0 };
+    public float Timestamp;
+    public float TimeHeld;
+    public bool Active;
+    public bool WasActive;
+    public ulong Frame;
+    public bool WasPressed => Active && !WasActive && Frame == Shared.Game.Time.UpdateCount;
+}
+
 public class InputHandler
 {
     /// <summary>Number of seconds between each registered keypress when a key is being held down</summary>
@@ -37,6 +48,15 @@ public class InputHandler
 
     public static readonly char ControlV = (char)22;
 
+    public static KeyCode[] KeyCodes = Enum.GetValues<KeyCode>();
+    public static Dictionary<KeyCode, string> KeyStrings = new();
+
+    static InputHandler()
+    {
+        foreach (var keyCode in KeyCodes)
+            KeyStrings.Add(keyCode, keyCode.ToString());
+    }
+
     private readonly Inputs _inputs;
 
     private readonly Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
@@ -48,10 +68,51 @@ public class InputHandler
     public bool MouseEnabled = true;
     private Matrix4x4 _viewportInvert = Matrix4x4.Identity;
 
+    private Dictionary<string, ButtonBind> _inputBinds = new();
+
     public InputHandler(Inputs inputs)
     {
         _inputs = inputs;
         Inputs.TextInput += OnTextInput;
+
+        var inputCommands = new[]
+        {
+            ("right", "Move right", KeyCode.D, PlayerBinds.Right),
+            ("left", "Move left", KeyCode.A, PlayerBinds.Left),
+            ("jump", "Jump", KeyCode.Space, PlayerBinds.Jump),
+            ("fire1", "Fire", KeyCode.LeftControl, PlayerBinds.Fire1),
+            ("respawn", "Respawn", KeyCode.Insert, PlayerBinds.Respawn)
+        };
+
+        for (var i = 0; i < inputCommands.Length; i++)
+        {
+            var (cmd, description, defaultBind, bind) = inputCommands[i];
+
+            Binds.Bind(defaultBind.ToString(), $"+{cmd}");
+
+            var args = new ConsoleCommandArg[] { new("Source", true, -1, typeof(int)) };
+            ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
+            {
+                var wasActive = bind.Active;
+                bind.Active = true;
+                bind.WasActive = wasActive;
+                bind.Sources[0] = (int)ConsoleUtils.Parse<KeyCode>(args[1]);
+                bind.Frame = Shared.Game.Time.UpdateCount;
+                bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
+            };
+            ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
+            {
+                bind.Active = false;
+                bind.WasActive = false;
+                bind.Sources[0] = (int)ConsoleUtils.Parse<KeyCode>(args[1]);
+                bind.Frame = Shared.Game.Time.UpdateCount;
+                bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
+            };
+            var downCmd = new ConsoleCommand($"+{cmd}", description, downHandler, args, Array.Empty<string>(), false);
+            var upCmd = new ConsoleCommand($"-{cmd}", description, upHandler, args, Array.Empty<string>(), false);
+            Shared.Console.RegisterCommand(downCmd);
+            Shared.Console.RegisterCommand(upCmd);
+        }
     }
 
     public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;
@@ -97,58 +158,83 @@ public class InputHandler
     // TODO (marpe): Cleanup and optimize
     private void HandleBoundKeys()
     {
-        for (var i = 0; i < 232; i++)
+        for (var i = 0; i < KeyCodes.Length; i++)
         {
-            var keyCode = (KeyCode)i;
-            if (!Enum.IsDefined(keyCode) || !_inputs.Keyboard.IsPressed(keyCode))
-                continue;
-
-            // escape separately
-            if (keyCode == KeyCode.Escape)
-                continue;
+            var keyCode = KeyCodes[i];
 
             // console key handled separately
-            if (keyCode == KeyCode.Grave)
+            if (keyCode == KeyCode.Grave && IsKeyPressed(keyCode))
             {
                 ConsoleScreen.ToggleConsole();
                 continue;
             }
 
-            if (keyCode is >= KeyCode.A and <= KeyCode.Space && !Shared.Game.ConsoleScreen.IsHidden)
+            var keyStr = KeyStrings[keyCode];
+            if (!IsKeyDown(keyCode))
             {
-                // ignore most characters when console is open
-                return;
-            }
-
-            var keyStr = keyCode.ToString();
-            if (!Binds.TryGetBind(keyStr, out var bind))
-            {
-                Logger.LogWarn($"Key {keyStr} is unbound.");
-                continue;
-            }
-
-            var split = ConsoleUtils.SplitArgs(bind);
-            var cmdKey = split[0];
-
-            var con = Shared.Console;
-            if (con.CVars.ContainsKey(cmdKey))
-            {
-                var cvar = con.CVars[cmdKey];
-                if (cvar.VarType == typeof(bool))
-                {
-                    var curr = cvar.GetValue<bool>();
-                    con.ExecuteCommand(con.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
+                if (!IsKeyReleased(keyCode))
                     continue;
-                }
-            }
 
-            if (con.Commands.ContainsKey(cmdKey))
-            {
-                con.ExecuteCommand(con.Commands[cmdKey], split);
+                if (!Binds.TryGetBind(keyStr, out var bind))
+                    continue;
+
+                var split = ConsoleUtils.SplitArgs(bind);
+                var cmdKey = split[0];
+
+                if (!cmdKey.StartsWith('+'))
+                    continue;
+
+                var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
+                if (Shared.Console.Commands.ContainsKey(upCmdKey))
+                {
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, keyCode.ToString() });
+                }
+                else
+                {
+                    Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                }
             }
             else
             {
-                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                if (!IsKeyPressed(keyCode))
+                    continue;
+                
+                // ignore if console is down
+                if (!Shared.Game.ConsoleScreen.IsHidden)
+                    continue;
+
+                if (!Binds.TryGetBind(keyStr, out var bind))
+                    continue;
+
+                var split = ConsoleUtils.SplitArgs(bind);
+                var cmdKey = split[0];
+
+                if (Shared.Console.CVars.ContainsKey(cmdKey))
+                {
+                    var cvar = Shared.Console.CVars[cmdKey];
+                    if (cvar.VarType == typeof(bool))
+                    {
+                        var curr = cvar.GetValue<bool>();
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
+                        continue;
+                    }
+                }
+
+                if (Shared.Console.Commands.ContainsKey(cmdKey))
+                {
+                    if (cmdKey.StartsWith('+') || cmdKey.StartsWith('-'))
+                    {
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, keyCode.ToString() });
+                    }
+                    else
+                    {
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
+                    }
+                }
+                else
+                {
+                    Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                }
             }
         }
     }
@@ -212,6 +298,11 @@ public class InputHandler
         return KeyboardEnabled && _inputs.Keyboard.IsDown(key);
     }
 
+    public bool IsKeyReleased(KeyCode key)
+    {
+        return KeyboardEnabled && _inputs.Keyboard.IsReleased(key);
+    }
+
     public bool IsMouseButtonDown(MouseButtonCode mouseButton)
     {
         if (!MouseEnabled)
@@ -255,7 +346,7 @@ public class InputHandler
     {
         if (!MouseEnabled)
             return false;
-        
+
         return mouseButton switch
         {
             MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsPressed,

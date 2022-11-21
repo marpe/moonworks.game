@@ -29,7 +29,7 @@ public class PauseMenu : MenuScreen
     private void Quit()
     {
         Shared.LoadingScreen.QueueLoad(
-            () => { Shared.Game.GameScreen.Unload(); },
+            () => { Shared.Game.GameScreen.SetWorld(null); },
             () => { _game.SetMenu(Shared.Menus.MainMenuScreen); }
         );
     }
