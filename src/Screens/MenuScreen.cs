@@ -10,6 +10,9 @@ public enum MenuScreenState
 
 public abstract class MenuScreen
 {
+    [CVar("menu.debug", "Toggle menu debugging")]
+    public static bool Debug;
+
     public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
     private float _transitionPercentage;
 
@@ -101,7 +104,7 @@ public abstract class MenuScreen
     {
         _transitionPercentage = 0;
         _child = null;
-        
+
         // select first item
         _selectedIndex = 0;
 
@@ -241,7 +244,9 @@ public abstract class MenuScreen
             var p = Vector2.Lerp(menuItem.PreviousPosition, menuItem.Position, (float)alpha);
             menuItem.Draw(p, renderer, color * _transitionPercentage);
             var bounds = menuItem.Bounds;
-            renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
+
+            if (Debug)
+                renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
         }
 
         if (_child != null)
