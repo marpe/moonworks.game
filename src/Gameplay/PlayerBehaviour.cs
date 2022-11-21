@@ -50,7 +50,7 @@ public class PlayerBehaviour
     {
         if (command.Respawn)
         {
-            Player.Position.SetPrevAndCurrent(new Vector2(100, 50));
+            Player.Position.SetPrevAndCurrent(Player.Position.Initial);
         }
 
         if (command.IsFiring)

@@ -5,8 +5,8 @@ namespace MyGame.Input;
 public struct InputState
 {
     public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
-    public bool[] KeyboardState = new bool[232];
-    public bool[] MouseState = new bool[3];
+    public HashSet<KeyCode> KeyboardState = new();
+    public HashSet<MouseButtonCode> MouseState = new();
     public Vector2 GlobalMousePosition = DefaultMousePosition;
     public int MouseWheelDelta = 0;
     public char[] TextInput = Array.Empty<char>();
@@ -18,8 +18,8 @@ public struct InputState
 
     public static void Clear(ref InputState inputState)
     {
-        inputState.KeyboardState.AsSpan().Fill(false);
-        inputState.MouseState.AsSpan().Fill(false);
+        inputState.KeyboardState.Clear();
+        inputState.MouseState.Clear();
         inputState.GlobalMousePosition = DefaultMousePosition;
         inputState.MouseWheelDelta = 0;
         inputState.TextInput.AsSpan().Fill('\0');
@@ -28,41 +28,24 @@ public struct InputState
 
     public static bool IsKeyDown(in InputState inpuState, KeyCode keyCode)
     {
-        return inpuState.KeyboardState[(int)keyCode];
+        return inpuState.KeyboardState.Contains(keyCode);
     }
 
     public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
     {
-        for (var i = 0; i < keyCodes.Length; i++)
-        {
-            if (inputState.KeyboardState[(int)keyCodes[i]])
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return inputState.KeyboardState.Count > 0;
     }
 
     public static bool IsMouseButtonDown(in InputState inputState, MouseButtonCode mouseButton)
     {
-        return inputState.MouseState[(int)mouseButton];
+        return inputState.MouseState.Contains(mouseButton);
     }
 
     public void Print(string label)
     {
-        List<KeyCode> codes = new();
-        for (var i = 0; i < KeyboardState.Length; i++)
+        if (NumTextInputChars > 0 || KeyboardState.Count > 0)
         {
-            if (KeyboardState[i])
-            {
-                codes.Add((KeyCode)i);
-            }
-        }
-
-        if (NumTextInputChars > 0 || codes.Count > 0)
-        {
-            Logger.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", codes.Select(x => x.ToString()))}");
+            Logger.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeyboardState.Select(x => x.ToString()))}");
         }
     }
 
@@ -84,16 +67,17 @@ public struct InputState
                 result.TextInput[oldNumChars + i] = state.TextInput[i];
             }
 
-            for (var i = 0; i < state.KeyboardState.Length; i++)
+            foreach (var keyDown in state.KeyboardState)
             {
-                result.KeyboardState[i] |= state.KeyboardState[i];
+                result.KeyboardState.Add(keyDown);
             }
 
             result.GlobalMousePosition = state.GlobalMousePosition;
             result.MouseWheelDelta += state.MouseWheelDelta;
-            for (var i = 0; i < 3; i++)
+
+            foreach (var mouseDown in state.MouseState)
             {
-                result.MouseState[i] |= state.MouseState[i];
+                result.MouseState.Add(mouseDown);
             }
         }
 
@@ -112,20 +96,21 @@ public struct InputState
             state.TextInput[i] = textInput[i];
         }
 
-        for (var i = 0; i < state.KeyboardState.Length; i++)
+        for (var i = 0; i < InputHandler.KeyCodes.Length; i++)
         {
-            if (Enum.IsDefined((KeyCode)i))
-            {
-                state.KeyboardState[i] = input.IsKeyDown((KeyCode)i);
-            }
+            var keyCode = InputHandler.KeyCodes[i];
+            if (input.IsKeyDown(keyCode))
+                state.KeyboardState.Add(keyCode);
         }
 
         SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
         state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
         state.MouseWheelDelta = input.MouseWheelDelta;
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < InputHandler.MouseButtonsCodes.Length; i++)
         {
-            state.MouseState[i] = input.IsMouseButtonDown((MouseButtonCode)i);
+            var mouseButton = InputHandler.MouseButtonsCodes[i];
+            if (input.IsMouseButtonDown(mouseButton))
+                state.MouseState.Add(mouseButton);
         }
 
         return state;

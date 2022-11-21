@@ -19,7 +19,10 @@ public class GameScreen
 
         _pauseCallback = pauseCallback;
 
-        Camera = new Camera(this);
+        Camera = new Camera(this)
+        {
+            ClampToLevelBounds = true,
+        };
     }
 
 
