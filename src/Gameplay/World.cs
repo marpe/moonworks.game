@@ -218,7 +218,7 @@ public class World
             var xform = Matrix3x2.CreateTranslation(position.X - bullet.Origin.X, position.Y - bullet.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, bullet.Flip);
             if (Debug)
-                DrawDebug(renderer, bullet, alpha);
+                DrawDebug(renderer, bullet, false, alpha);
         }
     }
 
@@ -232,7 +232,7 @@ public class World
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, Player.Flip);
         if (Debug)
-            DrawDebug(renderer, Player, alpha);
+            DrawDebug(renderer, Player, true, alpha);
     }
 
     private void DrawEnemies(Renderer renderer, double alpha)
@@ -255,7 +255,7 @@ public class World
             var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, entity.Flip);
             if (Debug)
-                DrawDebug(renderer, entity, alpha);
+                DrawDebug(renderer, entity, false, alpha);
         }
     }
 
@@ -355,7 +355,7 @@ public class World
         IsDisposed = true;
     }
 
-    public void DrawDebug(Renderer renderer, Entity e, double alpha)
+    public void DrawDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
         var (cell, cellRel) = Entity.GetGridCoords(e);
         var cellInScreen = cell * DefaultGridSize;
@@ -365,6 +365,14 @@ public class World
         {
             renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
             renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
+        }
+
+        if (drawCoords)
+        {
+            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({(cellRel.X * 100):0.#}, {(cellRel.Y * 100):0.#})";
+            var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
+            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 0), Vector2.One * 0.25f, 0, 0, Color.Black);
+            // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
         }
 
         renderer.DrawRect(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);

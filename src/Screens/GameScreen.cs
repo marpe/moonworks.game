@@ -34,7 +34,7 @@ public class GameScreen
         {
             Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
             Shared.Game.ConsoleScreen.IsHidden = true;
-        });
+        }, () => { Shared.Game.SetMenu(null); });
     }
 
     public void Unload()

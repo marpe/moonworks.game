@@ -12,8 +12,24 @@ public class Mover
 
     public bool IsGrounded(Vector2 velocity)
     {
-        var (cell, _) = Entity.GetGridCoords(Parent);
-        return velocity.Y == 0 && Parent.Collider.HasCollision(cell.X, cell.Y + 1);
+        if (velocity.Y != 0)
+            return false;
+
+        var (cell, cellPos) = Entity.GetGridCoords(Parent);
+
+        var size = new Vector2(0.4f, 0.8f);
+        var halfSize = size * 0.5f;
+        var maxX = (1.0f - halfSize.X);
+        var minX = halfSize.X;
+
+        var collisionBelow = Parent.Collider.HasCollision(cell.X, cell.Y + 1);
+
+        if (cellPos.X < minX)
+            collisionBelow |= Parent.Collider.HasCollision(cell.X - 1, cell.Y + 1);
+        else if (cellPos.X > maxX)
+            collisionBelow |= Parent.Collider.HasCollision(cell.X + 1, cell.Y + 1);
+
+        return collisionBelow;
     }
 
     public CollisionDir PerformMove(Velocity velocity, float deltaSeconds)
@@ -24,15 +40,14 @@ public class Mover
         var result = CollisionDir.None;
         var size = new Vector2(0.4f, 0.8f);
         var halfSize = size * 0.5f;
+        var maxX = (1.0f - halfSize.X);
+        var minX = halfSize.X;
 
         if (velocity.X != 0)
         {
             var deltaMove = velocity * deltaSeconds / World.DefaultGridSize;
             var (cell, cellPos) = Entity.GetGridCoords(Parent);
             var dx = cellPos.X + deltaMove.X; // relative cell pos ( e.g < 0 means we moved to the previous cell )
-
-            var maxX = (1.0f - halfSize.X);
-            var minX = halfSize.X;
 
             if (velocity.X > 0 && dx > maxX && Parent.Collider.HasCollision(cell.X + 1, cell.Y))
             {
@@ -61,13 +76,27 @@ public class Mover
             var maxY = 1.0f;
             var minY = size.Y;
 
-            if (velocity.Y > 0 && dy > maxY && Parent.Collider.HasCollision(cell.X, cell.Y + 1))
+            var collisionBelow = Parent.Collider.HasCollision(cell.X, cell.Y + 1);
+            var collisionAbove = Parent.Collider.HasCollision(cell.X, cell.Y - 1);
+            
+            if (cellPos.X < minX)
+            {
+                collisionBelow |= Parent.Collider.HasCollision(cell.X - 1, cell.Y + 1);
+                collisionAbove |= Parent.Collider.HasCollision(cell.X - 1, cell.Y - 1);
+            }
+            else if (cellPos.X > maxX)
+            {
+                collisionBelow |= Parent.Collider.HasCollision(cell.X + 1, cell.Y + 1);
+                collisionAbove |= Parent.Collider.HasCollision(cell.X + 1, cell.Y - 1);
+            }
+
+            if (velocity.Y > 0 && dy > maxY && collisionBelow)
             {
                 result |= CollisionDir.Down;
                 Parent.Position.SetY((cell.Y + maxY) * World.DefaultGridSize);
                 velocity.Y = 0;
             }
-            else if (velocity.Y < 0 && dy < minY && Parent.Collider.HasCollision(cell.X, cell.Y - 1))
+            else if (velocity.Y < 0 && dy < minY && collisionAbove)
             {
                 result |= CollisionDir.Top;
                 Parent.Position.SetY((cell.Y + minY) * World.DefaultGridSize);
