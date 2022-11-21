@@ -17,7 +17,7 @@ public unsafe class MyEditorMain : MyGameMain
     private readonly ImGuiRenderer _imGuiRenderer;
     private readonly Sampler _sampler;
     private readonly float _alpha = 1.0f;
-    private bool _doRender = true;
+    private bool _doRender = false;
     private ulong _imGuiDrawCount;
     private readonly List<InputState> _inputStates = new();
     private readonly float _mainMenuPaddingY = 6f;
@@ -122,10 +122,14 @@ public unsafe class MyEditorMain : MyGameMain
             {
                 _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
                 _gameRenderTextureId = null;
+                Logger.LogInfo("Unbinding gameRender texture");
             }
 
             if (_gameRenderTextureId == null)
+            {
+                Logger.LogInfo("Binding gameRender texture");
                 _gameRenderTextureId = _imGuiRenderer.BindTexture(_gameRender);
+            }
 
             var windowSize = ImGui.GetWindowSize();
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(new Point((int)windowSize.X, (int)windowSize.Y), DesignResolution);
@@ -133,7 +137,8 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
             var cursorScreenPos = ImGui.GetCursorScreenPos();
             var borderColor = new Num.Vector4(1.0f, 0, 0, 0.0f);
-            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, borderColor);
+            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One,
+                borderColor);
 
             ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 
@@ -338,12 +343,6 @@ public unsafe class MyEditorMain : MyGameMain
     {
         var inputHandler = InputHandler;
 
-        if (inputHandler.IsKeyPressed(KeyCode.F2))
-        {
-            IsHidden = !IsHidden;
-            // TODO (marpe): Hide child windows created by ImGui?
-        }
-
         if (!IsHidden)
         {
             var newState = InputState.Create(inputHandler);
@@ -410,7 +409,10 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
-        Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
+        if (_imGuiDrawCount > 0)
+            Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
+        else
+            Renderer.DrawPoint(swapTexture.Size() / 2, Color.Transparent, 10f);
         Renderer.Flush(commandBuffer, swapTexture, Color.Black, null);
         Renderer.Submit(commandBuffer);
     }

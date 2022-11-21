@@ -293,7 +293,7 @@ public unsafe class ImGuiRenderer : IDisposable
         if (isDisposing)
         {
             Logger.LogInfo("Disposing ImGuiRenderer");
-            
+
             ImGui.DestroyPlatformWindows();
 
             var io = ImGui.GetIO();
@@ -545,6 +545,7 @@ public unsafe class ImGuiRenderer : IDisposable
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
         var io = ImGui.GetIO();
+
         io->DisplaySize = new Num.Vector2(
             displaySize.X / _scaleFactor.X,
             displaySize.Y / _scaleFactor.Y
@@ -586,7 +587,7 @@ public unsafe class ImGuiRenderer : IDisposable
             case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
             {
                 Logger.LogInfo($"Window \"{window.Title}\" received close event");
-                
+
                 var viewport = ImGui.FindViewportByPlatformHandle((void*)window.Handle);
                 viewport->PlatformRequestClose = true;
 

@@ -13,8 +13,7 @@ public class Camera
 
     public float Rotation = 0;
 
-    public Quaternion Rotation3D = Quaternion.Identity;
-
+    public Quaternion Rotation3D = new Quaternion(1, 0, 0, 0);
     public Vector2 ShakeOffset;
     public Vector2 TargetOffset;
     public Vector2 TargetPosition;

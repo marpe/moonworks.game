@@ -23,6 +23,8 @@ public class GameScreen
         _pauseCallback = pauseCallback;
 
         Camera = new Camera();
+        Camera.Size = MyGameMain.DesignResolution;
+        Camera.Zoom = 4f;
         CameraController = new CameraController(this, Camera);
     }
 
@@ -69,9 +71,7 @@ public class GameScreen
             renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
             return;
         }
-
-        Camera.Size = MyGameMain.DesignResolution;
-        Camera.Zoom = 4f;
+  
         World.Draw(renderer, Camera.Bounds, alpha);
 
         var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);

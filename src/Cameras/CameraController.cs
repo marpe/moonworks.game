@@ -13,7 +13,7 @@ public class CameraController
 
     [CVar("camera.use3d", "Use 3D Camera")]
     public static bool Use3D;
-    
+
     private readonly Camera _camera;
     [Inspectable] private Vector2 _cameraRotation = new(0, MathHelper.Pi);
     private readonly float _lerpSpeed = 1f;
@@ -47,7 +47,7 @@ public class CameraController
 
         _parent = parent;
         _camera = camera;
-        _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+        // _camera.Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
     }
 
     public void Update(float deltaSeconds, InputHandler input)
@@ -55,11 +55,14 @@ public class CameraController
         _timer += deltaSeconds;
         _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
-        if (IsMouseAndKeyboardControlEnabled)
+        if (Use3D || IsMouseAndKeyboardControlEnabled)
         {
             HandleInput(deltaSeconds, input);
         }
-        
+
+        if (IsMouseAndKeyboardControlEnabled)
+            return;
+
         if (_freezeCameraTimer > 0)
         {
             _freezeCameraTimer -= deltaSeconds;
@@ -67,7 +70,7 @@ public class CameraController
         }
 
         _freezeCameraTimer = 0;
-        
+
         if (TrackingEntity != null)
         {
             var trackSpeed = TrackingSpeed * _camera.Zoom;
@@ -170,7 +173,7 @@ public class CameraController
 
         var projection = _camera.GetProjection(width, height, false);
         var projection3D = _camera.GetProjection(width, height, true);
-        
+
         return Matrix4x4.Lerp(cameraView * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
@@ -236,15 +239,14 @@ public class CameraController
             {
                 _camera.Zoom += 0.1f * _camera.Zoom * input.MouseWheelDelta;
             }
-            
+
             var cameraSpeed = 500f;
-            
+
             if (input.IsMouseButtonHeld(MouseButtonCode.Right))
             {
-                _freezeCameraTimer = 1f;
                 _camera.Position += new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }
-            
+
             var moveDelta = cameraSpeed * deltaSeconds;
 
             if (input.IsKeyPressed(KeyCode.Home))
@@ -283,6 +285,8 @@ public class CameraController
                 _camera.Position.X += moveDelta;
             }
         }
+
+        input.KeyboardEnabled = input.MouseEnabled = false;
     }
 
     public void TrackEntity(Entity? target)
