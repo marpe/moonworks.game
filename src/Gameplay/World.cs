@@ -203,7 +203,7 @@ public class World
         foreach (var (x, y) in Bresenham.Line(Start.X, Start.Y, End.X, End.Y))
         {
             var min = new Vector2(x, y) * DefaultGridSize;
-            renderer.DrawRect(min, min + Vector2.One * DefaultGridSize, Color.Red, 4f);
+            renderer.DrawRect(min, min + Vector2.One * DefaultGridSize, Color.Red, 1f);
         }
     }
 
