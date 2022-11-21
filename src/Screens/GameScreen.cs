@@ -19,7 +19,7 @@ public class GameScreen
     {
         _game = game;
         _device = _game.GraphicsDevice;
-        
+
         _pauseCallback = pauseCallback;
 
         Camera = new Camera();
@@ -64,7 +64,8 @@ public class GameScreen
         {
             renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
             // render view bounds
-            renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
+            if (World.Debug)
+                renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
             renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
             return;
         }
@@ -78,7 +79,10 @@ public class GameScreen
         renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // render view bounds
-        renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
-        renderer.Flush(commandBuffer, renderDestination, null, null);
+        if (World.Debug)
+        {
+            renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
+            renderer.Flush(commandBuffer, renderDestination, null, null);
+        }
     }
 }

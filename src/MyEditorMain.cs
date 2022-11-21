@@ -132,8 +132,8 @@ public unsafe class MyEditorMain : MyGameMain
 
             ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
             var cursorScreenPos = ImGui.GetCursorScreenPos();
-            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One,
-                new Num.Vector4(1.0f, 0, 0, 1.0f));
+            var borderColor = new Num.Vector4(1.0f, 0, 0, 0.0f);
+            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, borderColor);
 
             ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 

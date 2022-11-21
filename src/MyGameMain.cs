@@ -180,7 +180,7 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
 
-        Renderer.DrawPoint(renderDestination.Size() / 2, Color.Magenta, 10f, 0);
+        Renderer.DrawPoint(renderDestination.Size() / 2, Color.Transparent, 10f, 0);
         MenuScreen?.Draw(Renderer, commandBuffer, _menuRender, alpha);
         Renderer.Flush(commandBuffer, _menuRender, Color.Transparent, null);
 
@@ -191,11 +191,6 @@ public class MyGameMain : Game
         ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
         Shared.LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
-
-        Renderer.DrawPoint(InputHandler.MousePosition, Color.Magenta, 10f);
-        Renderer.DrawText(FontType.RobotoLarge, $"{InputHandler.MousePosition.X}, {InputHandler.MousePosition.Y}", new Vector2(1920, 0), 0, Color.White,
-            HorizontalAlignment.Right, VerticalAlignment.Top);
-        Renderer.Flush(commandBuffer, renderDestination, null, null);
 
         Renderer.Submit(commandBuffer);
     }
