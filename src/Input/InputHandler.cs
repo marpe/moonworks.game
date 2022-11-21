@@ -1,6 +1,4 @@
-﻿using MyGame.Utils;
-
-namespace MyGame.Input;
+﻿namespace MyGame.Input;
 
 public class InputHandler
 {
@@ -48,6 +46,7 @@ public class InputHandler
 
     public bool KeyboardEnabled = true;
     public bool MouseEnabled = true;
+    private Matrix4x4 _viewportInvert = Matrix4x4.Identity;
 
     public InputHandler(Inputs inputs)
     {
@@ -56,7 +55,21 @@ public class InputHandler
     }
 
     public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;
-    public Point MousePosition => MouseEnabled ? new(_inputs.Mouse.X, _inputs.Mouse.Y) : Point.Zero; // TODO (marpe): Maybe use a better default?
+
+    public Point MousePosition
+    {
+        get
+        {
+            if (!MouseEnabled)
+                return Point.Zero;
+
+            var mousePosition = new Vector2(_inputs.Mouse.X, _inputs.Mouse.Y);
+            Vector2.Transform(ref mousePosition, ref _viewportInvert, out var mouseInViewport);
+            return mouseInViewport.ToPoint();
+        }
+    }
+
+    public Point MousePositionRaw => new Point(_inputs.Mouse.X, _inputs.Mouse.Y);
 
     public int MouseWheelDelta => MouseEnabled ? _inputs.Mouse.Wheel : 0;
 
@@ -252,5 +265,10 @@ public class InputHandler
             MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsPressed,
             _ => throw new InvalidOperationException(),
         };
+    }
+
+    public void SetViewportTransform(Matrix4x4 viewportTransform)
+    {
+        Matrix4x4.Invert(ref viewportTransform, out _viewportInvert);
     }
 }

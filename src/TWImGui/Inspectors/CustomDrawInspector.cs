@@ -1,5 +1,3 @@
-using MyGame.Utils;
-
 namespace MyGame.TWImGui.Inspectors;
 
 public class CustomDrawInspector : Inspector

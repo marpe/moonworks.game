@@ -1,5 +1,3 @@
-using MoonWorks.Graphics.Font;
-
 namespace MyGame.Screens;
 
 public abstract class MenuItem

@@ -1,6 +1,3 @@
-using MoonWorks.Graphics.Font;
-using WellspringCS;
-
 namespace MyGame.Graphics;
 
 public class FontData

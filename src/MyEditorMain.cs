@@ -1,8 +1,6 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Editor;
-using MyGame.Input;
-using MyGame.TWConsole;
 using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame;
@@ -102,6 +100,12 @@ public unsafe class MyEditorMain : MyGameMain
         }
     }
 
+    protected override void SetInputViewport()
+    {
+        if (IsHidden)
+            base.SetInputViewport();
+    }
+
     private void DrawGameWindow(ImGuiEditorWindow window)
     {
         if (!window.IsOpen)
@@ -114,37 +118,32 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
         if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen), flags))
         {
-            if (_gameRenderTextureId != null)
-                _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
-            _gameRenderTextureId = _imGuiRenderer.BindTexture(_gameRender);
-
-            var avail = ImGui.GetContentRegionAvail();
-            var width = ImGui.GetContentRegionAvail().X;
-            var ar = (float)_gameRender.Height / _gameRender.Width;
-            var height = width * ar;
-
-            if (height > avail.Y)
+            if (_gameRenderTextureId != null && _gameRenderTextureId != _gameRender.Handle)
             {
-                height = avail.Y;
-                width = avail.Y * 1.0f / ar;
+                _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
+                _gameRenderTextureId = null;
             }
 
-            var imageSize = new Num.Vector2(width, height);
-            var padding = (avail - imageSize) / 2;
+            if (_gameRenderTextureId == null)
+                _gameRenderTextureId = _imGuiRenderer.BindTexture(_gameRender);
 
+            var windowSize = ImGui.GetWindowSize();
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(new Point((int)windowSize.X, (int)windowSize.Y), DesignResolution);
 
-            ImGui.SetCursorPos(padding);
+            ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
+            var cursorScreenPos = ImGui.GetCursorScreenPos();
+            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One,
+                new Num.Vector4(1.0f, 0, 0, 1.0f));
 
-            // var offset = ImGui.GetCursorScreenPos() - ImGui.GetMainViewport()->Pos;
-            var offset = ImGui.GetCursorScreenPos() - ImGui.GetWindowPos();
-            
-            // TODO (marpe): Fix mouse input when game is i window mode
-            
-            /*var updatedMousePosition = new Vector2(Shared.Game.InputHandler.MousePosition.X - offset.X, Shared.Game.InputHandler.MousePosition.Y - offset.Y);
-            var scale = new Vector2(imageSize.X / _gameRender.Width, imageSize.Y / _gameRender.Height);
-            updatedMousePosition /= scale;*/
+            ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 
-            ImGui.Image((void*)_gameRenderTextureId.Value, imageSize, Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One, new Num.Vector4(1.0f, 0, 0, 1.0f));
+            var viewportPos = ImGui.GetWindowViewport()->Pos;
+            var renderOffset = cursorScreenPos - viewportPos;
+            viewportTransform.Decompose(out var scale, out _, out _);
+            viewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
+                                 Matrix3x2.CreateTranslation(renderOffset.X, renderOffset.Y)).ToMatrix4x4();
+
+            InputHandler.SetViewportTransform(viewportTransform);
 
             if (ImGui.IsItemHovered())
             {
@@ -156,7 +155,6 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.PopStyleVar();
         ImGui.End();
     }
-
 
     private void DrawDebugWindow(ImGuiEditorWindow window)
     {
@@ -392,8 +390,6 @@ public unsafe class MyEditorMain : MyGameMain
             _saveRender = false;
         }
 
-        var windowSize = MainWindow.Size;
-
         if (_doRender)
         {
             RenderGame(alpha, _gameRender);
@@ -401,15 +397,21 @@ public unsafe class MyEditorMain : MyGameMain
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
             DrawInternal();
-            TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y);
+            TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size);
             _imGuiRenderer.End(_imGuiRenderTarget);
             _doRender = false;
         }
 
-        var (commandBuffer, swapTexture) = Renderer.Begin(windowSize);
+        var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
+
+        if (swapTexture == null)
+        {
+            Logger.LogError("Could not acquire swapchain texture");
+            return;
+        }
+
         Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
-        var view = Renderer.GetViewProjection((uint)windowSize.X, (uint)windowSize.Y);
-        Renderer.End(commandBuffer, swapTexture, Color.Black, view);
+        Renderer.Flush(commandBuffer, swapTexture, Color.Black, null);
         Renderer.Submit(commandBuffer);
     }
 

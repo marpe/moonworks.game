@@ -1,17 +1,17 @@
-﻿using System.Runtime.InteropServices;
-using Buffer = MoonWorks.Graphics.Buffer;
+﻿using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame.Graphics;
 
 public static class TextureUtils
 {
-    public static void EnsureTextureSize(ref Texture texture, GraphicsDevice device, uint width, uint height)
+    public static bool EnsureTextureSize(ref Texture texture, GraphicsDevice device, Point size)
     {
-        if (width == texture.Width && height == texture.Height)
-            return;
+        if (size.X == texture.Width && size.Y == texture.Height)
+            return false;
 
         texture.Dispose();
-        texture = Texture.CreateTexture2D(device, width, height, texture.Format, texture.UsageFlags);
+        texture = Texture.CreateTexture2D(device, (uint)size.X, (uint)size.Y, texture.Format, texture.UsageFlags);
+        return true;
     }
 
     public static Span<byte> ConvertSingleChannelTextureToRGBA(GraphicsDevice device, Texture texture)

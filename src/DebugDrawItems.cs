@@ -1,6 +1,4 @@
-﻿using MyGame.Utils;
-
-namespace MyGame;
+﻿namespace MyGame;
 
 public enum DebugDrawType
 {

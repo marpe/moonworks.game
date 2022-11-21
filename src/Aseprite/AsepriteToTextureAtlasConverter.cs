@@ -1,5 +1,3 @@
-using MyGame.Utils;
-
 namespace MyGame.Aseprite;
 
 public static class AsepriteToTextureAtlasConverter

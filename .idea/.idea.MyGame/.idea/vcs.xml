@@ -8,5 +8,7 @@
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/SDL2-CS" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/Theorafile" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/lib/MoonWorks/lib/WellspringCS" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/codegen" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/lib/ldtk" vcs="Git" />
   </component>
 </project>

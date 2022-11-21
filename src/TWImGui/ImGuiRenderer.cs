@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
 using SDL2;
@@ -722,11 +721,8 @@ public unsafe class ImGuiRenderer : IDisposable
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        var id = new IntPtr(++_textureIdCounter);
-
-        _textures.Add(id, texture);
-
-        return id;
+        _textures.Add(texture.Handle, texture);
+        return texture.Handle;
     }
 
     public void UnbindTexture(IntPtr textureId)

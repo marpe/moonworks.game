@@ -2,30 +2,35 @@
 
 public class PauseMenu : MenuScreen
 {
-    public PauseMenu(MenuManager menuManager) : base(menuManager)
+    private readonly ConfirmScreen _confirmQuit;
+
+    public PauseMenu(MyGameMain game) : base(game)
     {
         _menuItems.AddRange(new MenuItem[]
         {
             new FancyTextMenuItem("Pause") { IsEnabled = false },
-            new TextMenuItem("Resume", OnResume),
-            new TextMenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
-            new TextMenuItem("Quit", OnQuitToMain),
+            new TextMenuItem("Resume", OnCancelled),
+            new TextMenuItem("Options", () => { SetChild(Shared.Menus.OptionsScreen); }),
+            new TextMenuItem("Quit", ConfirmQuitToMain),
         });
-    }
-
-    private void OnResume()
-    {
-        IsHidden = true;
-        Logger.LogInfo("Resuming..");
+        _confirmQuit = new ConfirmScreen(game, Quit, () => { });
     }
 
     public override void OnCancelled()
     {
-        OnResume();
+        Exit();
     }
 
-    private void OnQuitToMain()
+    private void ConfirmQuitToMain()
     {
-        Shared.LoadingScreen.QueueLoad(() => { Shared.Game.GameScreen.Unload(); }, () => { _menuManager.SetActiveMenu(Menus.Main); });
+        SetChild(_confirmQuit);
+    }
+    
+    private void Quit()
+    {
+        Shared.LoadingScreen.QueueLoad(
+            () => { Shared.Game.GameScreen.Unload(); },
+            () => { _game.SetMenu(Shared.Menus.MainMenuScreen); }
+        );
     }
 }

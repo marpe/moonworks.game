@@ -1,7 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using MoonWorks.Graphics.Font;
-
-namespace MyGame.Graphics;
+﻿namespace MyGame.Graphics;
 
 public enum BlendState
 {
@@ -119,7 +116,7 @@ public class Renderer
 
     public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
     {
-        var scale = Matrix3x2.CreateTranslation(-size * 0.5f, -size * 0.5f) *
+        var scale = Matrix3x2.CreateTranslation(-0.5f, -0.5f) *
                     Matrix3x2.CreateScale(size, size) *
                     Matrix3x2.CreateTranslation(position.X, position.Y);
         SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
@@ -174,21 +171,20 @@ public class Renderer
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
 
-    public CommandBuffer Begin()
-    {
-        return _device.AcquireCommandBuffer();
-    }
-
-    public (CommandBuffer, Texture) Begin(UPoint? swapchainSize)
+    public (CommandBuffer, Texture?) AcquireSwapchainTexture()
     {
         var commandBuffer = _device.AcquireCommandBuffer();
-        var swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow) ?? throw new InvalidOperationException("Could not acquire swapchain texture");
-        if (swapchainSize.HasValue)
-            TextureUtils.EnsureTextureSize(ref swapTexture, _device, swapchainSize.Value.X, swapchainSize.Value.Y);
+        var windowSize = _game.MainWindow.Size;
+        var swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow);
+        if (swapTexture != null && TextureUtils.EnsureTextureSize(ref swapTexture, _device, windowSize))
+        {
+            Logger.LogInfo("SwapTexture resized");
+        }
+
         return (commandBuffer, swapTexture);
     }
 
-    public void End(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
+    public void Flush(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
     {
         TextBatcher.FlushToSpriteBatch(SpriteBatch);
         SpriteBatch.UpdateBuffers(commandBuffer);
@@ -196,10 +192,10 @@ public class Renderer
         ColorAttachmentInfo.Texture = renderTarget;
         ColorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
-        
-        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height);
+
+        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, ColorAttachmentInfo.Texture.Size());
         DepthStencilAttachmentInfo.Texture = DepthTexture;
-        
+
         commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
         SpriteBatch.Flush(commandBuffer, viewProjection ?? GetViewProjection(ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height));

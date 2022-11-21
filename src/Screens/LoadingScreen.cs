@@ -65,7 +65,7 @@ public class LoadingScreen
     [ConsoleHandler("test_load", "Test loading screen")]
     public static void TestLoad()
     {
-        Shared.Game.LoadingScreen.QueueLoad(() => { Thread.Sleep(1000); });
+        Shared.LoadingScreen.QueueLoad(() => { Thread.Sleep(1000); });
     }
 
     public void QueueLoad(Action runInTask, Action? otherWork = null)
@@ -73,6 +73,11 @@ public class LoadingScreen
         _taskWork.Enqueue(runInTask);
         if (otherWork != null)
             _work.Enqueue(otherWork);
+
+        if (!IsLoading)
+        {
+            TransitionOn();
+        }
     }
 
     public void LoadImmediate(Action runInTask, Action? otherWork = null)
@@ -104,14 +109,19 @@ public class LoadingScreen
             Load();
     }
 
+    private void TransitionOn()
+    {
+        State = TransitionState.TransitionOn;
+        _shouldCopyRender = true;
+    }
+
     public void Update(float deltaSeconds)
     {
         if (State == TransitionState.Hidden)
         {
             if (!_taskWork.IsEmpty || _work.Count > 0)
             {
-                State = TransitionState.TransitionOn;
-                _shouldCopyRender = true;
+                TransitionOn();
             }
         }
         else if (State == TransitionState.TransitionOn)
@@ -182,7 +192,7 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _progress);
-        renderer.End(commandBuffer, renderDestination, null, null);
+        renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 
     public void Unload()

@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using MyGame.Cameras;
+﻿using MyGame.Cameras;
 
 namespace MyGame.Screens;
 
@@ -14,11 +13,14 @@ public class GameScreen
     private GraphicsDevice _device;
 
     private readonly MyGameMain _game;
+    private Action _pauseCallback;
 
-    public GameScreen(MyGameMain game)
+    public GameScreen(MyGameMain game, Action pauseCallback)
     {
         _game = game;
         _device = _game.GraphicsDevice;
+        
+        _pauseCallback = pauseCallback;
 
         Camera = new Camera();
         CameraController = new CameraController(this, Camera);
@@ -47,7 +49,7 @@ public class GameScreen
 
         if (input.IsKeyPressed(KeyCode.Escape))
         {
-            _game.MenuManager.SetActiveMenu(Menus.Pause);
+            _pauseCallback.Invoke();
             return;
         }
 
@@ -63,7 +65,7 @@ public class GameScreen
             renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
             // render view bounds
             renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
-            renderer.End(commandBuffer, renderDestination, Color.Black, null);
+            renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
             return;
         }
 
@@ -73,10 +75,10 @@ public class GameScreen
 
         var viewProjection = CameraController.GetViewProjection(sz.X, sz.Y);
 
-        renderer.End(commandBuffer, renderDestination, Color.Black, viewProjection);
+        renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // render view bounds
         renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
-        renderer.End(commandBuffer, renderDestination, null, null);
+        renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 }

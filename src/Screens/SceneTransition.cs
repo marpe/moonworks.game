@@ -83,7 +83,7 @@ public class DiamondTransition : SceneTransition
         if (compositeOldCopy != null && isLoading)
         {
             renderer.DrawSprite(new Sprite(compositeOldCopy), Matrix4x4.Identity, Color.White, 0);
-            renderer.End(commandBuffer, renderDestination, null, null);
+            renderer.Flush(commandBuffer, renderDestination, null, null);
         }
 
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black, 1f);

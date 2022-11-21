@@ -1,11 +1,8 @@
-using MyGame.Input;
-using MyGame.TWConsole;
-using MyGame.Utils;
 using SDL2;
 
 namespace MyGame.Screens;
 
-public enum ScreenState
+public enum ConsoleScreenState
 {
     TransitionOn,
     Active,
@@ -51,13 +48,13 @@ public class ConsoleScreen
 
     public bool IsHidden
     {
-        get => ScreenState is ScreenState.Hidden or ScreenState.TransitionOff;
-        set => ScreenState = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
+        get => ConsoleScreenState is ConsoleScreenState.Hidden or ConsoleScreenState.TransitionOff;
+        set => ConsoleScreenState = value ? ConsoleScreenState.TransitionOff : ConsoleScreenState.TransitionOn;
     }
 
     private TWConsole.TWConsole TwConsole => Shared.Console;
 
-    public ScreenState ScreenState { get; private set; } = ScreenState.Hidden;
+    public ConsoleScreenState ConsoleScreenState { get; private set; } = ConsoleScreenState.Hidden;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -150,20 +147,20 @@ public class ConsoleScreen
     private void UpdateTransition(float deltaSeconds, uint windowWidth, uint windowHeight)
     {
         var speed = 1.0f / MathF.Clamp(ConsoleSettings.TransitionDuration, MathF.Epsilon, float.MaxValue);
-        if (ScreenState == ScreenState.TransitionOn)
+        if (ConsoleScreenState == ConsoleScreenState.TransitionOn)
         {
             _transitionPercentage = MathF.Clamp01(_transitionPercentage + deltaSeconds * speed);
             if (_transitionPercentage >= 1.0f)
             {
-                ScreenState = ScreenState.Active;
+                ConsoleScreenState = ConsoleScreenState.Active;
             }
         }
-        else if (ScreenState == ScreenState.TransitionOff)
+        else if (ConsoleScreenState == ConsoleScreenState.TransitionOff)
         {
             _transitionPercentage = MathF.Clamp01(_transitionPercentage - deltaSeconds * speed);
             if (_transitionPercentage <= 0)
             {
-                ScreenState = ScreenState.Hidden;
+                ConsoleScreenState = ConsoleScreenState.Hidden;
             }
         }
 
@@ -451,14 +448,14 @@ public class ConsoleScreen
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        if (ScreenState == ScreenState.Hidden)
+        if (ConsoleScreenState == ConsoleScreenState.Hidden)
             return;
 
         if ((int)_game.Time.DrawCount % ConsoleSettings.RenderRate == 0)
         {
             _hasRender = true;
             DrawInternal(renderer, alpha);
-            renderer.End(commandBuffer, _renderTarget, Color.Transparent, null);
+            renderer.Flush(commandBuffer, _renderTarget, Color.Transparent, null);
         }
 
         if (!_hasRender)
@@ -466,7 +463,7 @@ public class ConsoleScreen
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage, 0);
-        renderer.End(commandBuffer, renderDestination, null, null);
+        renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 
     private void DrawInternal(Renderer renderer, double alpha)

@@ -1,4 +1,3 @@
-using System.Threading;
 using MyGame.Logs;
 
 namespace MyGame;
@@ -26,9 +25,8 @@ public class MyGameMain : Game
 
     public readonly InputHandler InputHandler;
 
-    public MenuManager MenuManager;
+    public MenuScreen? MenuScreen { get; private set; }
     public ConsoleScreen ConsoleScreen;
-    public readonly LoadingScreen LoadingScreen;
     public GameScreen GameScreen;
     public readonly Time Time;
 
@@ -61,12 +59,14 @@ public class MyGameMain : Game
         _menuRender = TextureUtils.CreateTexture(GraphicsDevice, _compositeRender);
 
         Renderer = new Renderer(this);
-        Shared.LoadingScreen = LoadingScreen = new LoadingScreen(this);
+        Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
-        GameScreen = new GameScreen(this);
-        MenuManager = new MenuManager(this);
+        GameScreen = new GameScreen(this, () => SetMenu(Shared.Menus.PauseScreen));
 
-        LoadingScreen.LoadImmediate(() =>
+        Shared.Menus = new MenuHandler(this);
+        SetMenu(Shared.Menus.MainMenuScreen);
+
+        Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Logs.Logs.Loggers.Add(new TWConsoleLogger());
@@ -76,6 +76,18 @@ public class MyGameMain : Game
     }
 
 
+    public void SetMenu(MenuScreen? menu)
+    {
+        var prevMenu = MenuScreen;
+        MenuScreen = menu;
+        if (menu != null)
+        {
+            menu.SetState(MenuScreenState.Active);
+            if (prevMenu != MenuScreen)
+                menu.OnBecameVisible();
+        }
+    }
+
     protected override void Update(TimeSpan dt)
     {
         Time.Update(dt);
@@ -83,26 +95,39 @@ public class MyGameMain : Game
         UpdateWindowTitle();
 
         InputHandler.BeginFrame(Time.ElapsedTime);
+        SetInputViewport();
 
         UpdateScreens();
 
         InputHandler.EndFrame();
     }
 
+    protected virtual void SetInputViewport()
+    {
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(MainWindow.Size, DesignResolution);
+        InputHandler.SetViewportTransform(viewportTransform);
+    }
+
     private void UpdateScreens()
     {
-        LoadingScreen.Update(Time.ElapsedTime);
+        Shared.LoadingScreen.Update(Time.ElapsedTime);
 
-        if (LoadingScreen.IsLoading)
+        if (Shared.LoadingScreen.IsLoading)
             return;
 
         ConsoleScreen.Update(Time.ElapsedTime);
         if (!ConsoleScreen.IsHidden)
             return;
 
-        MenuManager.Update(Time.ElapsedTime);
-        if (!MenuManager.IsHidden)
-            return;
+        if (MenuScreen != null)
+        {
+            MenuScreen.Update(Time.ElapsedTime);
+
+            if (MenuScreen.State == MenuScreenState.Exited)
+                SetMenu(null);
+            else if (MenuScreen.State != MenuScreenState.Exiting)
+                return;
+        }
 
         GameScreen.Update(Time.ElapsedTime);
     }
@@ -126,8 +151,13 @@ public class MyGameMain : Game
         }
 
         {
-            var windowSize = MainWindow.Size;
-            var (commandBuffer, swapTexture) = Renderer.Begin(windowSize);
+            var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
+
+            if (swapTexture == null)
+            {
+                Logger.LogError("Could not acquire swapchain texture");
+                return;
+            }
 
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(
                 swapTexture.Size(),
@@ -137,13 +167,7 @@ public class MyGameMain : Game
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
             Renderer.DrawSprite(_compositeRender, viewportTransform, Color.White, 0, SpriteFlip.None);
-            
-            var mousePosition = InputHandler.MousePosition;
-            var mouseRelative = Vector2.Transform(mousePosition, viewportTransform);
-            Renderer.DrawPoint(mouseRelative, Color.Magenta, 10f);
-            Renderer.DrawPoint(mousePosition, Color.Blue, 5f);
-            
-            Renderer.End(commandBuffer, swapTexture, Color.Black, view * projection);
+            Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(commandBuffer);
         }
     }
@@ -152,19 +176,26 @@ public class MyGameMain : Game
     {
         Time.UpdateDrawCount();
 
-        var commandBuffer = Renderer.Begin();
+        var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
 
-        MenuManager.Draw(Renderer, commandBuffer, _menuRender, alpha);
+        Renderer.DrawPoint(renderDestination.Size() / 2, Color.Magenta, 10f, 0);
+        MenuScreen?.Draw(Renderer, commandBuffer, _menuRender, alpha);
+        Renderer.Flush(commandBuffer, _menuRender, Color.Transparent, null);
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
-        Renderer.End(commandBuffer, renderDestination, Color.Cyan, null);
+        Renderer.Flush(commandBuffer, renderDestination, Color.Cyan, null);
 
         ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
 
-        LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
+        Shared.LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
+
+        Renderer.DrawPoint(InputHandler.MousePosition, Color.Magenta, 10f);
+        Renderer.DrawText(FontType.RobotoLarge, $"{InputHandler.MousePosition.X}, {InputHandler.MousePosition.Y}", new Vector2(1920, 0), 0, Color.White,
+            HorizontalAlignment.Right, VerticalAlignment.Top);
+        Renderer.Flush(commandBuffer, renderDestination, null, null);
 
         Renderer.Submit(commandBuffer);
     }
@@ -179,7 +210,7 @@ public class MyGameMain : Game
 
         Renderer.Unload();
 
-        LoadingScreen.Unload();
+        Shared.LoadingScreen.Unload();
 
         Shared.Console.SaveCVars();
     }

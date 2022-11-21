@@ -1,16 +1,17 @@
 ﻿namespace MyGame.Screens;
 
+public enum MenuScreenState
+{
+    Active,
+    Covered,
+    Exiting,
+    Exited
+}
+
 public abstract class MenuScreen
 {
-    public ScreenState State = ScreenState.Hidden;
-    private ScreenState _lastState = ScreenState.Hidden;
+    public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
     private float _transitionPercentage;
-
-    public bool IsHidden
-    {
-        get => State is ScreenState.Hidden or ScreenState.TransitionOff;
-        set => State = value ? ScreenState.TransitionOff : ScreenState.TransitionOn;
-    }
 
     private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
 
@@ -20,39 +21,18 @@ public abstract class MenuScreen
     public static Color NormalColor = Color.White;
 
     protected readonly List<MenuItem> _menuItems = new();
-    protected readonly MenuManager _menuManager;
-
     protected int _selectedIndex = 0;
 
     [CVar("menu_transition_duration", "")] public static float TransitionDuration = 1.0f;
     private int ItemSpacingY = 20;
 
-    public MenuScreen(MenuManager menuManager)
-    {
-        _menuManager = menuManager;
-    }
+    protected MenuScreen? _child;
+    protected MyGameMain _game;
 
-    private void UpdateTransition(float deltaSeconds)
+    public MenuScreen(MyGameMain game)
     {
-        var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
-        if (State == ScreenState.TransitionOn)
-        {
-            _transitionPercentage = MathF.Clamp01(_transitionPercentage + deltaSeconds * speed);
-            if (_transitionPercentage >= 1.0f)
-            {
-                State = ScreenState.Active;
-            }
-        }
-        else if (State == ScreenState.TransitionOff)
-        {
-            _transitionPercentage = MathF.Clamp01(_transitionPercentage - deltaSeconds * speed);
-            if (_transitionPercentage <= 0)
-            {
-                State = ScreenState.Hidden;
-            }
-        }
+        _game = game;
     }
-
 
     protected void NextItem()
     {
@@ -84,30 +64,150 @@ public abstract class MenuScreen
         }
     }
 
+    public void SetChild(MenuScreen? menu)
+    {
+        var prevMenu = _child;
+        _child = menu;
+
+        if (_child != null)
+        {
+            _child.SetState(MenuScreenState.Active);
+            SetState(MenuScreenState.Covered);
+
+            if (_child != prevMenu)
+                _child.OnBecameVisible();
+        }
+        else
+        {
+            SetState(MenuScreenState.Active);
+        }
+    }
+
     public virtual void OnCancelled()
     {
+    }
+
+    public void Exit()
+    {
+        SetState(MenuScreenState.Exiting);
+    }
+
+    public void SetState(MenuScreenState newState)
+    {
+        State = newState;
+    }
+
+    public virtual void OnBecameVisible()
+    {
+        _transitionPercentage = 0;
+        _child = null;
+        
+        // select first item
+        _selectedIndex = 0;
+
+        if (!_menuItems[_selectedIndex].IsSelectable)
+        {
+            NextItem();
+        }
     }
 
     public virtual void Update(float deltaSeconds)
     {
         UpdateTransition(deltaSeconds);
+        UpdateMenuItems(deltaSeconds);
 
-        if ((State == ScreenState.TransitionOn && _lastState != ScreenState.TransitionOn))
+        if (State == MenuScreenState.Active)
         {
-            // select first item
-            _selectedIndex = 0;
-
-            if (!_menuItems[_selectedIndex].IsSelectable)
-            {
-                NextItem();
-            }
+            HandleInput();
         }
 
+        if (_child != null)
+        {
+            _child.Update(deltaSeconds);
+            if (_child.State == MenuScreenState.Exiting)
+                SetState(MenuScreenState.Active);
+            else if (_child.State == MenuScreenState.Exited)
+                SetChild(null);
+        }
+    }
+
+    private void HandleInput()
+    {
+        var inputHandled = false;
+        if (!inputHandled)
+            inputHandled = HandleMouse();
+        if (!inputHandled)
+            inputHandled = HandleKeyboard();
+        // disable input for the next screen
+        _game.InputHandler.MouseEnabled = _game.InputHandler.KeyboardEnabled = false;
+    }
+
+    private void UpdateTransition(float deltaSeconds)
+    {
+        var transitionDirection = State == MenuScreenState.Active ? 1 : -1;
+        var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
+        _transitionPercentage = MathF.Clamp01(_transitionPercentage + transitionDirection * deltaSeconds * speed);
+
+        if (_transitionPercentage == 0 && State == MenuScreenState.Exiting)
+            SetState(MenuScreenState.Exited);
+    }
+
+    private bool HandleKeyboard()
+    {
+        if (_game.InputHandler.IsKeyPressed(KeyCode.Down) || _game.InputHandler.IsKeyPressed(KeyCode.S))
+        {
+            NextItem();
+            return true;
+        }
+
+        if (_game.InputHandler.IsKeyPressed(KeyCode.Up) || _game.InputHandler.IsKeyPressed(KeyCode.W))
+        {
+            PreviousItem();
+            return true;
+        }
+
+        if (_game.InputHandler.IsKeyPressed(KeyCode.Return) || _game.InputHandler.IsKeyPressed(KeyCode.Space))
+        {
+            if (_menuItems[_selectedIndex] is TextMenuItem tmi)
+                tmi.Callback.Invoke();
+            return true;
+        }
+
+        if (_game.InputHandler.IsKeyPressed(KeyCode.Escape) || _game.InputHandler.IsKeyPressed(KeyCode.Backspace))
+        {
+            OnCancelled();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool HandleMouse()
+    {
+        for (var i = 0; i < _menuItems.Count; i++)
+        {
+            if (!_menuItems[i].Bounds.Contains(_game.InputHandler.MousePosition) || !_menuItems[i].IsSelectable)
+                continue;
+
+            _selectedIndex = i;
+
+            if (!_game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
+                continue;
+
+            if (_menuItems[i] is TextMenuItem tmi)
+                tmi.Callback.Invoke();
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void UpdateMenuItems(float deltaSeconds)
+    {
         var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
         var xPos = MyGameMain.DesignResolution.X * 0.5f * t;
         var p = new Vector2(xPos, MyGameMain.DesignResolution.Y * 0.5f);
-
-        _lastState = State;
 
         for (var i = 0; i < _menuItems.Count; i++)
         {
@@ -121,59 +221,6 @@ public abstract class MenuScreen
                 ft.Update(deltaSeconds);
             }
         }
-
-        if (IsHidden)
-            return;
-
-        var itemClicked = false;
-        for (var i = 0; i < _menuItems.Count; i++)
-        {
-            if (_menuItems[i].Bounds.Contains(_menuManager.Game.InputHandler.MousePosition) && _menuItems[i].IsSelectable)
-            {
-                _selectedIndex = i;
-
-                if (_menuManager.Game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
-                {
-                    if (_menuItems[i] is TextMenuItem tmi)
-                    {
-                        tmi.Callback.Invoke();
-                        itemClicked = true;
-                        break;
-                    }
-
-                    Logger.LogInfo("Clicked item!");
-                }
-            }
-        }
-
-        if (!itemClicked)
-        {
-            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Down) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.S))
-            {
-                NextItem();
-            }
-            else if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Up) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.W))
-            {
-                PreviousItem();
-            }
-
-            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Return) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Space))
-            {
-                if (_menuItems[_selectedIndex] is TextMenuItem tmi)
-                {
-                    tmi.Callback.Invoke();
-                }
-            }
-
-            if (_menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Escape) || _menuManager.Game.InputHandler.IsKeyPressed(KeyCode.Backspace))
-            {
-                Logger.LogInfo("Cancelling screen");
-                OnCancelled();
-            }
-        }
-
-        // disable input for the next screen
-        _menuManager.Game.InputHandler.MouseEnabled = _menuManager.Game.InputHandler.KeyboardEnabled = false;
     }
 
     public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
@@ -196,5 +243,8 @@ public abstract class MenuScreen
             var bounds = menuItem.Bounds;
             renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
         }
+
+        if (_child != null)
+            _child.Draw(renderer, commandBuffer, renderDestination, alpha);
     }
 }

@@ -3,8 +3,9 @@
 public class MainMenuScreen : MenuScreen
 {
     private readonly Texture _background;
+    private readonly ConfirmScreen _confirmScreen;
 
-    public MainMenuScreen(MenuManager menuManager) : base(menuManager)
+    public MainMenuScreen(MyGameMain game) : base(game)
     {
         _menuItems.AddRange(new MenuItem[]
         {
@@ -13,39 +14,40 @@ public class MainMenuScreen : MenuScreen
                 IsEnabled = false
             },
             new TextMenuItem("New Game", OnPlay),
-            new TextMenuItem("Options", () => { menuManager.SetActiveMenu(Menus.Options); }),
+            new TextMenuItem("Options", () => { SetChild(Shared.Menus.OptionsScreen); }),
             new TextMenuItem("Quit", OnQuit),
         });
 
-        _background = TextureUtils.LoadPngTexture(menuManager.Game.GraphicsDevice, ContentPaths.Textures.menu_background_png);
-    }
+        _confirmScreen = new ConfirmScreen(game, () => Shared.Game.Quit(), () => { });
 
-    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
-    {
-        if (_menuManager.Game.GameScreen.World == null)
-        {
-            var scale = new Vector2(
-                renderDestination.Width / (float)_background.Width,
-                renderDestination.Height / (float)_background.Height
-            );
-
-            renderer.DrawSprite(_background, Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f), Color.White, 0);
-        }
-
-        base.Draw(renderer, commandBuffer, renderDestination, alpha);
+        _background = TextureUtils.LoadPngTexture(game.GraphicsDevice, ContentPaths.Textures.menu_background_png);
     }
 
     private void OnPlay()
     {
-        Shared.LoadingScreen.QueueLoad(() =>
-        {
-            Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            IsHidden = true;
-        });
+        Shared.LoadingScreen.QueueLoad(
+            () =>
+            {
+                Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            },
+            () => { Shared.Game.SetMenu(null); }
+        );
     }
 
     private void OnQuit()
     {
-        _menuManager.Game.Quit();
+        SetChild(_confirmScreen);
+    }
+
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        var scale = new Vector2(
+            renderDestination.Width / (float)_background.Width,
+            renderDestination.Height / (float)_background.Height
+        );
+
+        renderer.DrawSprite(_background, Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f), Color.White, 0);
+
+        base.Draw(renderer, commandBuffer, renderDestination, alpha);
     }
 }
