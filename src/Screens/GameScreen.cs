@@ -60,7 +60,7 @@ public class GameScreen
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         var sz = MyGameMain.DesignResolution;
-        if (World == null || World.IsDisposed)
+        if (World == null)
         {
             renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
             // render view bounds
