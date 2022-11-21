@@ -242,7 +242,13 @@ public abstract class MenuScreen
                 (_, _, _) => NormalColor
             };
             var p = Vector2.Lerp(menuItem.PreviousPosition, menuItem.Position, (float)alpha);
-            menuItem.Draw(p, renderer, color * _transitionPercentage);
+
+            if (isFancy)
+                color.A = (byte)(color.A * _transitionPercentage);
+            else
+                color *= _transitionPercentage;
+
+            menuItem.Draw(p, renderer, color);
             var bounds = menuItem.Bounds;
 
             if (Debug)
