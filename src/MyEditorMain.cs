@@ -36,6 +36,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
     private GroupInspector? _loadingScreenInspector;
+    private string _loadingDebugWindowName = "LoadingDebug";
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -96,7 +97,7 @@ public unsafe class MyEditorMain : MyGameMain
                 IsOpen = true,
                 KeyboardShortcut = "^F3",
             },
-            new ImGuiEditorCallbackWindow("LoadingDebug", DrawLoadingDebugWindow)
+            new ImGuiEditorCallbackWindow(_loadingDebugWindowName, DrawLoadingDebugWindow)
             {
                 IsOpen = true,
                 KeyboardShortcut = "^F4",
@@ -129,11 +130,11 @@ public unsafe class MyEditorMain : MyGameMain
             if (BlendStateEditor.ComboStep("TransitionType", ref transitionType, _transitionTypeNames))
             {
                 LoadingScreen.TransitionType = (TransitionType)transitionType;
-                
+
                 _loadingScreenInspector = InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
             }
 
-            
+
             _loadingScreenInspector ??= InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
             _loadingScreenInspector?.Draw();
         }
@@ -359,6 +360,7 @@ public unsafe class MyEditorMain : MyGameMain
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             var dockDown = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
             ImGuiInternal.DockBuilderDockWindow(_debugWindowName, dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(_loadingDebugWindowName, dockLeft);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockDown);
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;

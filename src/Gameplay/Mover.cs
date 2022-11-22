@@ -5,6 +5,8 @@ public class Mover
     private Entity? _parent;
     public Entity Parent => _parent ?? throw new InvalidOperationException();
 
+    public Vector2 Size = new Vector2(0.4f, 0.8f);
+    
     public void Initialize(Entity parent)
     {
         _parent = parent;
@@ -17,8 +19,7 @@ public class Mover
 
         var (cell, cellPos) = Entity.GetGridCoords(Parent);
 
-        var size = new Vector2(0.4f, 0.8f);
-        var halfSize = size * 0.5f;
+        var halfSize = Size * 0.5f;
         var maxX = (1.0f - halfSize.X);
         var minX = halfSize.X;
 
@@ -38,8 +39,7 @@ public class Mover
             return CollisionDir.None;
 
         var result = CollisionDir.None;
-        var size = new Vector2(0.4f, 0.8f);
-        var halfSize = size * 0.5f;
+        var halfSize = Size * 0.5f;
         var maxX = (1.0f - halfSize.X);
         var minX = halfSize.X;
 
@@ -74,7 +74,7 @@ public class Mover
             var dy = cellPos.Y + deltaMove.Y; // relative cell pos ( e.g < 0 means we moved to the previous cell )
 
             var maxY = 1.0f;
-            var minY = size.Y;
+            var minY = Size.Y;
 
             var collisionBelow = Parent.Collider.HasCollision(cell.X, cell.Y + 1);
             var collisionAbove = Parent.Collider.HasCollision(cell.X, cell.Y - 1);

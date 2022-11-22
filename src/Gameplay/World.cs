@@ -68,7 +68,6 @@ public class World
         }
 
         Player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
-        _gameScreen.Camera.TrackEntity(Player);
         Enemies.AddRange(allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
     }
 
@@ -131,7 +130,10 @@ public class World
     private void UpdatePlayer(float deltaSeconds, InputHandler input)
     {
         if (!Player.IsInitialized)
+        {
+            _gameScreen.Camera.TrackEntity(Player);
             Player.Initialize(this);
+        }
         
         var command = PlayerBinds.ToPlayerCommand();
         Player.Update(deltaSeconds, command);
