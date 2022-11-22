@@ -23,6 +23,12 @@ public class MenuHandler
 
     public void AddScreen(MenuScreen screen)
     {
+        if (Menus.Contains(screen))
+        {
+            Menus.Remove(screen);
+            Logger.LogError("Screen already added, removing and readding");
+        }
+
         Menus.Add(screen);
         screen.OnScreenAdded();
     }
