@@ -15,17 +15,24 @@ public class MenuHandler
     public MenuHandler(MyGameMain game)
     {
         MainMenuScreen = new MainMenuScreen(game);
+        AddScreen(MainMenuScreen);
+
         PauseScreen = new PauseMenu(game);
         OptionsScreen = new OptionsMenuScreen(game);
     }
 
-    public void PushMenu(MenuScreen menu)
+    public void AddScreen(MenuScreen screen)
     {
-        Menus.Add(menu);
-        menu.OnBecameVisible();
+        Menus.Add(screen);
+        screen.OnScreenAdded();
     }
 
-    public void PopAll()
+    public void RemoveScreen(MenuScreen screen)
+    {
+        Menus.Remove(screen);
+    }
+
+    public void RemoveAll()
     {
         Menus.Clear();
     }
@@ -38,21 +45,10 @@ public class MenuHandler
         var isCoveredByOtherScreen = false;
         for (var i = _menusToUpdate.Count - 1; i >= 0; i--)
         {
-            if (isCoveredByOtherScreen)
-                _menusToUpdate[i].SetState(MenuScreenState.Covered);
-
-            _menusToUpdate[i].Update(deltaSeconds);
-
-            if (_menusToUpdate[i].State == MenuScreenState.Exited)
-            {
-                Menus.RemoveAt(i);
-                if (i > 0)
-                    Menus[i - 1].SetState(MenuScreenState.Active);
-                continue;
-            }
+            _menusToUpdate[i].Update(deltaSeconds, isCoveredByOtherScreen);
 
             if (!isCoveredByOtherScreen)
-                isCoveredByOtherScreen = (_menusToUpdate[i].State == MenuScreenState.Active);
+                isCoveredByOtherScreen = _menusToUpdate[i].State == MenuScreenState.Active || _menusToUpdate[i].State == MenuScreenState.TransitionOn;
         }
     }
 

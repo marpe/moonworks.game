@@ -12,7 +12,7 @@ public class PauseMenu : MenuScreen
         {
             new FancyTextMenuItem("Pause") { IsEnabled = false },
             new TextMenuItem("Resume", OnCancelled),
-            new TextMenuItem("Options", () => { Shared.Menus.PushMenu(Shared.Menus.OptionsScreen); }),
+            new TextMenuItem("Options", () => { Shared.Menus.AddScreen(Shared.Menus.OptionsScreen); }),
             new TextMenuItem("Quit", ConfirmQuitToMain),
         });
         _confirmQuit = new ConfirmScreen(game, Quit, () => { });
@@ -25,7 +25,7 @@ public class PauseMenu : MenuScreen
 
     private void ConfirmQuitToMain()
     {
-        Shared.Menus.PushMenu(_confirmQuit);
+        Shared.Menus.AddScreen(_confirmQuit);
     }
 
     private void Quit()
@@ -34,7 +34,7 @@ public class PauseMenu : MenuScreen
             () => { Shared.Game.GameScreen.SetWorld(null); },
             () =>
             {
-                Shared.Menus.PushMenu(Shared.Menus.MainMenuScreen);
+                Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);
                 while (Shared.Game.GameScreen.World != null)
                 {
                     Thread.Sleep(1);
@@ -45,7 +45,7 @@ public class PauseMenu : MenuScreen
 
     public override void Draw(Renderer renderer, double alpha)
     {
-        var bgAlpha = State == MenuScreenState.Covered ? 1.0f : (1.0f - MathF.Abs(_spring.Position));
+        var bgAlpha = State == MenuScreenState.Active ? 1.0f : _transitionPercentage; 
         renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * bgAlpha * 0.5f);
         base.Draw(renderer, alpha);
     }

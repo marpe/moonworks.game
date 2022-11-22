@@ -36,7 +36,7 @@ public class GameScreen
             },
             () =>
             {
-                Shared.Menus.PopAll();
+                Shared.Menus.RemoveAll();
                 while (Shared.Game.GameScreen.World == null)
                 {
                     Thread.Sleep(1);
@@ -63,7 +63,7 @@ public class GameScreen
 
             if (_game.InputHandler.IsKeyPressed(KeyCode.Escape))
             {
-                Shared.Menus.PushMenu(Shared.Menus.PauseScreen);
+                Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
                 return;
             }
 

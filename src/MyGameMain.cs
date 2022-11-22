@@ -64,7 +64,6 @@ public class MyGameMain : Game
         GameScreen = new GameScreen(this);
 
         Shared.Menus = new MenuHandler(this);
-        Shared.Menus.PushMenu(Shared.Menus.MainMenuScreen);
 
         Shared.LoadingScreen.LoadImmediate(() =>
         {

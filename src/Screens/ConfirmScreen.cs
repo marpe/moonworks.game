@@ -29,9 +29,9 @@ public class ConfirmScreen : MenuScreen
         _cancel.Invoke();
     }
 
-    public override void OnBecameVisible()
+    public override void OnScreenAdded()
     {
-        base.OnBecameVisible();
+        base.OnScreenAdded();
         _selectedIndex = 2;
     }
 }

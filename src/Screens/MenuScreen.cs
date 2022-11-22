@@ -2,10 +2,10 @@
 
 public enum MenuScreenState
 {
+    TransitionOn,
     Active,
-    Covered,
-    Exiting,
-    Exited
+    TransitionOff,
+    Hidden
 }
 
 public abstract class MenuScreen
@@ -14,14 +14,16 @@ public abstract class MenuScreen
     public static Color HighlightColor = Color.Yellow;
     public static Color DisabledColor = Color.Black * 0.66f;
     public static Color NormalColor = Color.White;
-    
+
     [CVar("menu.debug", "Toggle menu debugging")]
     public static bool Debug;
 
-    public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
+    public MenuScreenState State { get; private set; } = MenuScreenState.Hidden;
+    private MenuScreenState _previousState = MenuScreenState.Hidden;
+
     protected float _transitionPercentage;
     public static float TransitionDuration = 0.25f;
-    
+
     protected readonly List<MenuItem> _menuItems = new();
     protected int _selectedIndex = 0;
 
@@ -76,20 +78,21 @@ public abstract class MenuScreen
     {
     }
 
-    public void Exit()
+    protected void Exit()
     {
-        SetState(MenuScreenState.Exiting);
+        SetState(MenuScreenState.TransitionOff);
     }
 
-    public void SetState(MenuScreenState newState)
+    private void SetState(MenuScreenState newState)
     {
+        _previousState = State;
         State = newState;
     }
 
-    public virtual void OnBecameVisible()
+    public virtual void OnScreenAdded()
     {
-        SetState(MenuScreenState.Active);
-        
+        SetState(MenuScreenState.TransitionOn);
+
         _transitionPercentage = 0;
         // select first item
         _selectedIndex = 0;
@@ -100,14 +103,44 @@ public abstract class MenuScreen
         }
     }
 
-    public virtual void Update(float deltaSeconds)
+    public virtual void Update(float deltaSeconds, bool isCoveredByOtherScreen)
     {
-        UpdateTransition(deltaSeconds);
-        UpdateMenuItems(deltaSeconds);
+        UpdateTransition(deltaSeconds, isCoveredByOtherScreen);
 
-        if (State == MenuScreenState.Active)
+        UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
+
+        if (State == MenuScreenState.TransitionOn)
         {
-            HandleInput();
+            if (!isCoveredByOtherScreen)
+                HandleInput();
+
+            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
+
+            if (_transitionPercentage >= 1)
+            {
+                SetState(MenuScreenState.Active);
+            }
+        }
+        else if (State == MenuScreenState.Active)
+        {
+            if (!isCoveredByOtherScreen)
+                HandleInput();
+
+            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
+        }
+        else if (State == MenuScreenState.TransitionOff)
+        {
+            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
+
+            if (_transitionPercentage == 0)
+            {
+                Shared.Menus.RemoveScreen(this);
+                SetState(MenuScreenState.Hidden);
+            }
+        }
+        else if (State == MenuScreenState.Hidden)
+        {
+            // noop
         }
     }
 
@@ -122,14 +155,11 @@ public abstract class MenuScreen
         _game.InputHandler.MouseEnabled = _game.InputHandler.KeyboardEnabled = false;
     }
 
-    private void UpdateTransition(float deltaSeconds)
+    private void UpdateTransition(float deltaSeconds, bool isCoveredByOtherScreen)
     {
-        var transitionDirection = State == MenuScreenState.Active ? 1 : -1;
+        var transitionDirection = State is MenuScreenState.Active or MenuScreenState.TransitionOn && !isCoveredByOtherScreen ? 1 : -1;
         var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
         _transitionPercentage = MathF.Clamp01(_transitionPercentage + transitionDirection * deltaSeconds * speed);
-
-        if (_transitionPercentage == 0 && State == MenuScreenState.Exiting)
-            SetState(MenuScreenState.Exited);
     }
 
     private bool HandleKeyboard()
@@ -183,18 +213,17 @@ public abstract class MenuScreen
         return false;
     }
 
-    private void UpdateMenuItems(float deltaSeconds)
+    private void UpdateMenuItems(float deltaSeconds, bool isCoveredByOtherScreen)
     {
         var targetPosition = State switch
         {
-            MenuScreenState.Active => 0,
-            MenuScreenState.Covered => -1,
-            _ => 1
+            (MenuScreenState.Active or MenuScreenState.TransitionOn) => isCoveredByOtherScreen ? -1 : 0,
+            _ => 1,
         };
 
         _spring.EquilibriumPosition = targetPosition;
         _spring.Update(deltaSeconds);
-        
+
         // var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
         var position = new Vector2(InitialPosition.X + _spring.Position * XOffset, InitialPosition.Y);
 
