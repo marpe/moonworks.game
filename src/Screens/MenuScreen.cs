@@ -19,7 +19,7 @@ public abstract class MenuScreen
     public static bool Debug;
 
     public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
-    private float _transitionPercentage;
+    protected float _transitionPercentage;
     public static float TransitionDuration = 0.25f;
     private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
     
@@ -30,7 +30,7 @@ public abstract class MenuScreen
 
     protected MenuScreen? _child;
     protected MyGameMain _game;
-    private Spring _spring;
+    protected Spring _spring;
 
     private float XOffset = 500f;
     private Vector2 InitialPosition = MyGameMain.DesignResolution.ToVec2() * 0.5f;
@@ -39,6 +39,9 @@ public abstract class MenuScreen
     {
         _game = game;
         _spring = new Spring();
+
+        _spring.EquilibriumPosition = -1;
+        _spring.Position = -1;
     }
 
     protected void NextItem()
@@ -106,9 +109,6 @@ public abstract class MenuScreen
 
     public virtual void OnBecameVisible()
     {
-        _spring.Position = -1;
-        _spring.Velocity = 0;
-        _spring.EquilibriumPosition = -1f;
         _transitionPercentage = 0;
         _child = null;
 

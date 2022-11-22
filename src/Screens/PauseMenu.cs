@@ -45,7 +45,8 @@ public class PauseMenu : MenuScreen
 
     public override void Draw(Renderer renderer, double alpha)
     {
-        renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * 0.5f);
+        var bgAlpha = State == MenuScreenState.Covered ? 1.0f : (1.0f - MathF.Abs(_spring.Position));
+        renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * bgAlpha * 0.5f);
         base.Draw(renderer, alpha);
     }
 }

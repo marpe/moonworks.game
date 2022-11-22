@@ -37,7 +37,6 @@ public unsafe class MyEditorMain : MyGameMain
     private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
     private GroupInspector? _loadingScreenInspector;
     private string _loadingDebugWindowName = "LoadingDebug";
-    private GroupInspector? _mainMenuInspector;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -253,9 +252,16 @@ public unsafe class MyEditorMain : MyGameMain
             
             ImGui.Separator();
 
-            _mainMenuInspector ??= InspectorExt.GetInspectorForTarget(Shared.Menus.MainMenuScreen);
+            /*_mainMenuInspector ??= InspectorExt.GetInspectorForTarget(Shared.Menus.MainMenuScreen);
             _mainMenuInspector.Draw();
             ImGui.SliderFloat("GoalPosition", ImGuiExt.RefPtr(ref Shared.Menus.MainMenuScreen.Spring.EquilibriumPosition), -1, 1, default);
+            public Spring Spring = new();
+            public Vector2 Position;
+            public Vector2 Scale = Vector2.One;
+            public float MoveOffset = 500;
+            public Vector2 Size = new Vector2(50, 25);
+            public float ScaleFactor = 2f;
+            public Vector2 InitialPosition = new Vector2(960, 100);*/
         }
 
         ImGui.End();
