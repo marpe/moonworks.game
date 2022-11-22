@@ -19,9 +19,6 @@ public enum TransitionType
 
 public class LoadingScreen
 {
-    [CVar("load_in_task", "Toggle using tasks for loading")]
-    public static bool RunInTask;
-
     public TransitionState State { get; private set; } = TransitionState.Hidden;
     public bool IsLoading => State == TransitionState.TransitionOn || State == TransitionState.Active;
 
@@ -103,10 +100,7 @@ public class LoadingScreen
             Logger.LogInfo($"*** Loading in task finished ({taskWorkCount} items in {sw.ElapsedMilliseconds} ms)");
         }
 
-        if (RunInTask)
-            Task.Run(Load);
-        else
-            Load();
+        Task.Run(Load);
     }
 
     private void TransitionOn()

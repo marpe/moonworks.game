@@ -22,7 +22,6 @@ public class ConsoleScreen
     public static readonly Point CharSize = new(10, 18);
 
     private readonly List<string> _autoCompleteHits = new();
-    private readonly Color[] _colors;
     private readonly MyGameMain _game;
     private int _autoCompleteIndex = -1;
     private readonly KeyCode[] _autoCompleteKeys = { KeyCode.Tab, KeyCode.LeftShift };
@@ -65,20 +64,6 @@ public class ConsoleScreen
             game.GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
-
-        _colors = new[]
-        {
-            ConsoleSettings.Color0,
-            ConsoleSettings.Color1,
-            ConsoleSettings.Color2,
-            ConsoleSettings.Color3,
-            ConsoleSettings.Color4,
-            ConsoleSettings.Color5,
-            ConsoleSettings.Color6,
-            ConsoleSettings.Color7,
-            ConsoleSettings.Color8,
-            ConsoleSettings.Color9,
-        };
     }
 
     [ConsoleHandler("console", "Toggles the console")]
@@ -429,11 +414,6 @@ public class ConsoleScreen
         _autoCompleteIndex = -1;
     }
 
-    private Color GetColor(int colorIndex)
-    {
-        return _colors[colorIndex];
-    }
-
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
         if (ConsoleSettings.UseBMFont)
@@ -466,6 +446,8 @@ public class ConsoleScreen
         renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 
+    public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';
+    
     private void DrawInternal(Renderer renderer, double alpha)
     {
         renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha);
@@ -527,17 +509,11 @@ public class ConsoleScreen
             for (var j = 0; j < TwConsole.ScreenBuffer.Width; j++)
             {
                 TwConsole.ScreenBuffer.GetChar(j, lineIndex, out var c, out var color);
-                if (c < 0x20 || c > 0x7e)
-                {
+                if (c == '\0')
+                    break;
+                if (CanSkipChar(c))
                     continue;
-                }
-
-                if (c == ' ')
-                {
-                    continue;
-                }
-
-                var charColor = GetColor(color);
+                var charColor = ConsoleSettings.Colors[color];
                 var position = displayPosition + new Vector2(CharSize.X * j, -CharSize.Y * i);
                 _tmpArr[0] = c;
                 DrawText(renderer, _tmpArr, position, 0, charColor);

@@ -82,7 +82,7 @@ public class ConsoleScreenBuffer
     {
         for (var i = 0; i < Width; i++)
         {
-            _buffer[_wrappedY + i] = Pack(' ', 0);
+            _buffer[_wrappedY + i] = Pack('\0', 0);
         }
     }
 

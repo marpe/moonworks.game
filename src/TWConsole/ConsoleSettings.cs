@@ -22,6 +22,19 @@ public static class ConsoleSettings
     public static Color Color8 = Color.Yellow;
     public static Color Color9 = Color.Orange;
 
+    public static Color[] Colors = {
+        Color0,
+        Color1,
+        Color2,
+        Color3,
+        Color4,
+        Color5,
+        Color6,
+        Color7,
+        Color8,
+        Color9,
+    };
+    
     public static float CaretBlinkSpeed = 5f;
     public static int ScrollSpeed = 3;
     public static int HorizontalPadding = 30;

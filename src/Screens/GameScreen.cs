@@ -1,4 +1,5 @@
 ﻿using MyGame.Cameras;
+using MyGame.Debug;
 
 namespace MyGame.Screens;
 
@@ -82,5 +83,7 @@ public class GameScreen
             renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
             renderer.Flush(commandBuffer, renderDestination, null, null);
         }
+        
+        ConsoleToast.Draw(renderer);
     }
 }

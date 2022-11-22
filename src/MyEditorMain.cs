@@ -161,6 +161,20 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.End();
     }
 
+    private static string LoadingIndicator(bool isLoading)
+    {
+        if (!isLoading)
+            return "";
+        var n = (int)(Shared.Game.Time.TotalElapsedTime * 4 % 4);
+        return " " + n switch
+        {
+            0 => FontAwesome6.ArrowRight,
+            1 => FontAwesome6.ArrowDown,
+            2 => FontAwesome6.ArrowLeft,
+            _ => FontAwesome6.ArrowUp,
+        };
+    }
+
     private void DrawDebugWindow(ImGuiEditorWindow window)
     {
         if (!window.IsOpen)
@@ -176,16 +190,19 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
-            ImGui.TextUnformatted($"FrameCount: {Time.UpdateCount}");
-            ImGui.TextUnformatted($"RenderCount: {Time.DrawCount}");
+            ImGui.TextUnformatted($"DrawFps: {Time.DrawFps}");
+            ImGui.TextUnformatted($"UpdateFps: {Time.UpdateFps}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
             ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.DrawCalls}, AddedSprites: {Renderer.SpriteBatch.LastNumAddedSprites}");
 
-            if (ImGui.Button("Reload World", default))
+            ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
+            if (ImGui.Button("Reload World" + LoadingIndicator(Shared.LoadingScreen.IsLoading), default))
             {
                 GameScreen.Restart();
             }
+
+            ImGui.EndDisabled();
 
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
             ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
@@ -289,15 +306,6 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void DrawInternal()
     {
-        if (ImGui.IsAnyItemHovered())
-        {
-            var cursor = ImGui.GetMouseCursor();
-            if (cursor == ImGuiMouseCursor.Arrow)
-            {
-                ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            }
-        }
-
         var mainViewport = ImGui.GetMainViewport();
         var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
 
@@ -320,6 +328,25 @@ public unsafe class MyEditorMain : MyGameMain
         var drawList = ImGui.GetBackgroundDrawList();
 
         DrawWindows(dockId);
+
+        SetMouseCursor();
+    }
+
+    private void SetMouseCursor()
+    {
+        if (!ImGui.IsAnyItemHovered())
+            return;
+
+        if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
+            return;
+
+        var cursor = ImGui.GetCurrentContext()->HoveredIdDisabled switch
+        {
+            true => ImGuiMouseCursor.NotAllowed,
+            _ => ImGuiMouseCursor.Hand
+        };
+
+        ImGui.SetMouseCursor(cursor);
     }
 
     private void DrawWindows(uint dockId)
