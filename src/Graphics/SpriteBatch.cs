@@ -27,7 +27,7 @@ public class SpriteBatch
     private Position3DTextureColorVertex[] _vertices;
 
     public uint DrawCalls { get; private set; }
-    
+
     public SpriteBatch(GraphicsDevice device)
     {
         _device = device;
@@ -69,48 +69,7 @@ public class SpriteBatch
         _spriteInfo[_numSprites].Sampler = sampler;
         _spriteInfo[_numSprites].Texture = sprite.Texture;
 
-        var vertexCount = _numSprites * 4;
-
-        var topLeft = Vector2.Zero;
-        var bottomLeft = new Vector2(0, sprite.SrcRect.Height);
-        var topRight = new Vector2(sprite.SrcRect.Width, 0);
-        var bottomRight = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);
-
-        // var offset = Vector2.Zero;
-        /*SubtractVector(ref topLeft, ref offset);
-        SubtractVector(ref bottomLeft, ref offset);
-        SubtractVector(ref topRight, ref offset);
-        SubtractVector(ref bottomRight, ref offset);*/
-
-        Vector2.Transform(ref topLeft, ref transform, out topLeft);
-        Vector2.Transform(ref bottomLeft, ref transform, out bottomLeft);
-        Vector2.Transform(ref topRight, ref transform, out topRight);
-        Vector2.Transform(ref bottomRight, ref transform, out bottomRight);
-
-        SetVector(ref _vertices[vertexCount].Position, topLeft, depth);
-        SetVector(ref _vertices[vertexCount + 1].Position, bottomLeft, depth);
-        SetVector(ref _vertices[vertexCount + 2].Position, topRight, depth);
-        SetVector(ref _vertices[vertexCount + 3].Position, bottomRight, depth);
-
-        _vertices[vertexCount].TexCoord = sprite.UV.TopLeft;
-        _vertices[vertexCount + 1].TexCoord = sprite.UV.BottomLeft;
-        _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
-        _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
-
-        var effects = (byte)(flip & (SpriteFlip.FlipVertically | SpriteFlip.FlipHorizontally));
-        _vertices[vertexCount].TexCoord.X = CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount].TexCoord.Y = CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 1].TexCoord.X = CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 1].TexCoord.Y = CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 2].TexCoord.X = CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 2].TexCoord.Y = CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 3].TexCoord.X = CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 3].TexCoord.Y = CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-
-        _vertices[vertexCount].Color = color;
-        _vertices[vertexCount + 1].Color = color;
-        _vertices[vertexCount + 2].Color = color;
-        _vertices[vertexCount + 3].Color = color;
+        PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, color, flip);
 
         _numSprites += 1;
     }
@@ -151,28 +110,22 @@ public class SpriteBatch
             Logger.LogWarn("Flushing empty SpriteBatch");
             return;
         }
-        
+
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 
         commandBuffer.BindVertexBuffers(_vertexBuffer);
         commandBuffer.BindIndexBuffer(_indexBuffer, IndexElementSize.ThirtyTwo);
 
         var currSprite = _spriteInfo[0];
-        var offset = 0;
-        for (var i = 1; i < _numSprites; i += 1)
+        var offset = 0u;
+        for (var i = 1u; i < _numSprites; i += 1)
         {
             var spriteInfo = _spriteInfo[i];
 
             if (!BindingsAreEqual(currSprite, spriteInfo))
             {
                 commandBuffer.BindFragmentSamplers(currSprite);
-                commandBuffer.DrawIndexedPrimitives(
-                    (uint)(offset * 4),
-                    0u,
-                    (uint)((i - offset) * 2),
-                    vertexParamOffset,
-                    0u
-                );
+                DrawIndexedQuads(commandBuffer, offset, i - offset, vertexParamOffset);
                 DrawCalls++;
                 currSprite = spriteInfo;
                 offset = i;
@@ -180,13 +133,7 @@ public class SpriteBatch
         }
 
         commandBuffer.BindFragmentSamplers(currSprite);
-        commandBuffer.DrawIndexedPrimitives(
-            (uint)(offset * 4),
-            0u,
-            (uint)((_numSprites - offset) * 2),
-            vertexParamOffset,
-            0u
-        );
+        DrawIndexedQuads(commandBuffer, offset, _numSprites - offset, vertexParamOffset);
         DrawCalls++;
 
         LastNumAddedSprites = _numSprites;
@@ -209,6 +156,50 @@ public class SpriteBatch
         return result;
     }
 
+    public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, uint vertexOffset, in Sprite sprite, Matrix4x4 transform, float depth,
+        Color color, SpriteFlip flip)
+    {
+        var topLeft = Vector2.Zero;
+        var bottomLeft = new Vector2(0, sprite.SrcRect.Height);
+        var topRight = new Vector2(sprite.SrcRect.Width, 0);
+        var bottomRight = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);
+
+        Vector2.Transform(ref topLeft, ref transform, out topLeft);
+        Vector2.Transform(ref bottomLeft, ref transform, out bottomLeft);
+        Vector2.Transform(ref topRight, ref transform, out topRight);
+        Vector2.Transform(ref bottomRight, ref transform, out bottomRight);
+
+        SetVector(ref vertices[vertexOffset].Position, topLeft, depth);
+        SetVector(ref vertices[vertexOffset + 1].Position, bottomLeft, depth);
+        SetVector(ref vertices[vertexOffset + 2].Position, topRight, depth);
+        SetVector(ref vertices[vertexOffset + 3].Position, bottomRight, depth);
+
+        vertices[vertexOffset].TexCoord = sprite.UV.TopLeft;
+        vertices[vertexOffset + 1].TexCoord = sprite.UV.BottomLeft;
+        vertices[vertexOffset + 2].TexCoord = sprite.UV.TopRight;
+        vertices[vertexOffset + 3].TexCoord = sprite.UV.BottomRight;
+
+        var effects = (byte)(flip & (SpriteFlip.FlipVertically | SpriteFlip.FlipHorizontally));
+        vertices[vertexOffset].TexCoord.X = CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        vertices[vertexOffset].TexCoord.Y = CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        vertices[vertexOffset + 1].TexCoord.X = CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        vertices[vertexOffset + 1].TexCoord.Y = CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        vertices[vertexOffset + 2].TexCoord.X = CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        vertices[vertexOffset + 2].TexCoord.Y = CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        vertices[vertexOffset + 3].TexCoord.X = CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        vertices[vertexOffset + 3].TexCoord.Y = CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+
+        vertices[vertexOffset].Color = color;
+        vertices[vertexOffset + 1].Color = color;
+        vertices[vertexOffset + 2].Color = color;
+        vertices[vertexOffset + 3].Color = color;
+    }
+
+    public static void DrawIndexedQuads(CommandBuffer commandBuffer, uint offset, uint numSprites, uint vertexParamOffset)
+    {
+        commandBuffer.DrawIndexedPrimitives(offset * 4u, 0u, numSprites * 2u, vertexParamOffset, 0u);
+    }
+    
     public static bool BindingsAreEqual(in TextureSamplerBinding a, in TextureSamplerBinding b)
     {
         return a.Sampler.Handle == b.Sampler.Handle &&

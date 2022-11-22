@@ -49,7 +49,26 @@ public static unsafe class BlendStateEditor
 
         ImGui.SameLine();
         var itemsByZero = string.Join('0', items);
-        result |= ImGui.Combo(label, ImGuiExt.RefPtr(ref currentIndex), itemsByZero, items.Length);
+
+        if (ImGui.BeginCombo(label, items[currentIndex]))
+        {
+            for (var i = 0; i < items.Length; i++)
+            {
+                var isSelected = i == currentIndex;
+                if (ImGui.Selectable(items[i], isSelected, ImGuiSelectableFlags.None, default))
+                {
+                    currentIndex = i;
+                    result = true;
+                }
+
+                if (isSelected)
+                    ImGui.SetItemDefaultFocus();
+            }
+
+            ImGui.EndCombo();
+        }
+
+        // result |= ImGui.Combo(label, ImGuiExt.RefPtr(ref currentIndex), itemsByZero, items.Length);
 
         return result;
     }

@@ -30,9 +30,12 @@ public unsafe class MyEditorMain : MyGameMain
     private string _gameWindowName = "Game";
     private IntPtr? _gameRenderTextureId;
     private Texture _imGuiRenderTarget;
-    
+
     [CVar("screenshot", "Save a screenshot")]
     public static bool Screenshot;
+
+    private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
+    private GroupInspector? _loadingScreenInspector;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -93,12 +96,49 @@ public unsafe class MyEditorMain : MyGameMain
                 IsOpen = true,
                 KeyboardShortcut = "^F3",
             },
+            new ImGuiEditorCallbackWindow("LoadingDebug", DrawLoadingDebugWindow)
+            {
+                IsOpen = true,
+                KeyboardShortcut = "^F4",
+            },
             new WorldWindow(),
         };
         foreach (var window in windows)
         {
             Windows.Add(window.Title, window);
         }
+    }
+
+    private void DrawLoadingDebugWindow(ImGuiEditorWindow window)
+    {
+        if (!window.IsOpen)
+        {
+            return;
+        }
+
+        if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen)))
+        {
+            ImGui.Checkbox("Debug Loading", ImGuiExt.RefPtr(ref LoadingScreen.Debug));
+            if (ImGui.SliderFloat("Progress", ImGuiExt.RefPtr(ref LoadingScreen.DebugProgress), 0, 1.0f, "%g"))
+            {
+            }
+
+            ImGui.TextUnformatted($"State: {LoadingScreen.DebugState.ToString()}");
+
+            var transitionType = (int)LoadingScreen.TransitionType;
+            if (BlendStateEditor.ComboStep("TransitionType", ref transitionType, _transitionTypeNames))
+            {
+                LoadingScreen.TransitionType = (TransitionType)transitionType;
+                
+                _loadingScreenInspector = InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
+            }
+
+            
+            _loadingScreenInspector ??= InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
+            _loadingScreenInspector?.Draw();
+        }
+
+        ImGui.End();
     }
 
     protected override void SetInputViewport()

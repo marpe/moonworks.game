@@ -16,7 +16,8 @@ public enum TransitionType
 {
     Diamonds,
     Pixelize,
-    FadeToBlack
+    FadeToBlack,
+    CircleCrop
 }
 
 public class LoadingScreen
@@ -40,14 +41,33 @@ public class LoadingScreen
     private float _progress = 0;
     private bool _shouldCopyRender;
 
-    private Dictionary<TransitionType, SceneTransition> _sceneTransitions = new();
+    public static readonly Dictionary<TransitionType, SceneTransition> SceneTransitions = new();
 
-    public static TransitionType TransitionType = TransitionType.Pixelize;
-    
+    public static TransitionType TransitionType = TransitionType.CircleCrop;
+
     [CVar("load_transition_speed", "Toggle transition speed")]
     public static float TransitionSpeed = 1.0f;
 
+    [CVar("debug_loading_screen", "Toggle loading screen debugging")]
+    public static bool Debug;
 
+    [CVar("debug_loading_progress", "Sets the progress")]
+    public static float DebugProgress;
+
+    public static TransitionState DebugState
+    {
+        get
+        {
+            return DebugProgress switch
+            {
+                > 0 and < 0.4f => TransitionState.TransitionOn,
+                >= 0.4f and < 0.6f => TransitionState.Active,
+                >= 0.6f => TransitionState.TransitionOff,
+                _ => TransitionState.Hidden,
+            };
+        }
+    }
+    
     public LoadingScreen(MyGameMain game)
     {
         _game = game;
@@ -57,9 +77,10 @@ public class LoadingScreen
         _backgroundSprite = new Sprite(backgroundTexture);
         _blankSprite = new Sprite(blankTexture);
 
-        _sceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition(game.GraphicsDevice));
-        _sceneTransitions.Add(TransitionType.FadeToBlack, new FadeToBlack());
-        _sceneTransitions.Add(TransitionType.Pixelize, new PixelizeTransition(game.GraphicsDevice));
+        SceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition(game.GraphicsDevice));
+        SceneTransitions.Add(TransitionType.FadeToBlack, new FadeToBlack());
+        SceneTransitions.Add(TransitionType.Pixelize, new PixelizeTransition(game.GraphicsDevice));
+        SceneTransitions.Add(TransitionType.CircleCrop, new CircleCropTransition(game.GraphicsDevice));
     }
 
     [ConsoleHandler("test_load", "Test loading screen")]
@@ -114,6 +135,11 @@ public class LoadingScreen
 
     public void Update(float deltaSeconds)
     {
+        if (Debug)
+        {
+            return;
+        }
+
         if (State == TransitionState.Hidden)
         {
             if (!_taskWork.IsEmpty || _work.Count > 0)
@@ -156,7 +182,7 @@ public class LoadingScreen
             }
         }
     }
-    
+
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
     {
         if (_shouldCopyRender)
@@ -171,13 +197,22 @@ public class LoadingScreen
             // _game.GraphicsDevice.Wait();
             _shouldCopyRender = false;
         }
-        
+
         _compositeNewCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
         commandBuffer.CopyTextureToTexture(renderDestination, _compositeNewCopy, Filter.Nearest);
 
-        _sceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
-
-        DrawLoadingText(renderer, commandBuffer, renderDestination);
+        if (Debug)
+        {
+            SceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, DebugProgress, DebugState, _gameOldCopy, _menuOldCopy,
+                _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
+            DrawLoadingText(renderer, commandBuffer, renderDestination);
+        }
+        else
+        {
+            SceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy,
+                gameRender, menuRender, _compositeNewCopy);
+            DrawLoadingText(renderer, commandBuffer, renderDestination);
+        }
     }
 
     private void DrawLoadingText(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
@@ -196,15 +231,13 @@ public class LoadingScreen
     {
         _gameOldCopy?.Dispose();
 
-        foreach (var (key, value) in _sceneTransitions)
+        foreach (var (key, value) in SceneTransitions)
         {
             value.Unload();
         }
 
         _taskWork.Clear();
         _work.Clear();
-        _sceneTransitions.Clear();
+        SceneTransitions.Clear();
     }
-
-
 }

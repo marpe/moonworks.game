@@ -185,7 +185,7 @@ public class MyGameMain : Game
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White);
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
-        Renderer.Flush(commandBuffer, renderDestination, Color.Cyan, null);
+        Renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
 
         RenderConsole(Renderer, commandBuffer, renderDestination, alpha);
 

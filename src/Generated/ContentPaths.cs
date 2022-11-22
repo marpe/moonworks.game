@@ -43,6 +43,11 @@ public static class ContentPaths
     }
     public static class Shaders
     {
+        public static class CircleCrop
+        {
+            public const string circle_crop_transition_frag_spv = @"Content\Shaders\CircleCrop\circle_crop_transition.frag.spv";
+            public const string circle_crop_transition_vert_spv = @"Content\Shaders\CircleCrop\circle_crop_transition.vert.spv";
+        }
         public static class DiamondTransition
         {
             public const string diamond_transition_frag_spv = @"Content\Shaders\DiamondTransition\diamond_transition.frag.spv";

@@ -78,13 +78,13 @@ public class GameScreen
         {
             if (World == null)
             {
-                renderer.Clear(commandBuffer, renderDestination, Color.Red);
+                renderer.Clear(commandBuffer, renderDestination, Color.Black);
                 return;
             }
 
             World.Draw(renderer, Camera.Bounds, alpha);
             var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
-            renderer.Flush(commandBuffer, renderDestination, Color.LimeGreen, viewProjection);
+            renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
         }
 
         DrawViewBounds(renderer, commandBuffer, renderDestination);
