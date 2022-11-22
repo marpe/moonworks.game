@@ -12,7 +12,7 @@ public class PauseMenu : MenuScreen
         {
             new FancyTextMenuItem("Pause") { IsEnabled = false },
             new TextMenuItem("Resume", OnCancelled),
-            new TextMenuItem("Options", () => { SetChild(Shared.Menus.OptionsScreen); }),
+            new TextMenuItem("Options", () => { Shared.Menus.PushMenu(Shared.Menus.OptionsScreen); }),
             new TextMenuItem("Quit", ConfirmQuitToMain),
         });
         _confirmQuit = new ConfirmScreen(game, Quit, () => { });
@@ -25,7 +25,7 @@ public class PauseMenu : MenuScreen
 
     private void ConfirmQuitToMain()
     {
-        SetChild(_confirmQuit);
+        Shared.Menus.PushMenu(_confirmQuit);
     }
 
     private void Quit()
@@ -34,7 +34,7 @@ public class PauseMenu : MenuScreen
             () => { Shared.Game.GameScreen.SetWorld(null); },
             () =>
             {
-                _game.SetMenu(Shared.Menus.MainMenuScreen);
+                Shared.Menus.PushMenu(Shared.Menus.MainMenuScreen);
                 while (Shared.Game.GameScreen.World != null)
                 {
                     Thread.Sleep(1);

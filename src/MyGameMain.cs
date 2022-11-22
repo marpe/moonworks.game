@@ -26,7 +26,6 @@ public class MyGameMain : Game
 
     public readonly InputHandler InputHandler;
 
-    public MenuScreen? MenuScreen { get; private set; }
     public ConsoleScreen ConsoleScreen;
     public GameScreen GameScreen;
     public readonly Time Time;
@@ -65,7 +64,7 @@ public class MyGameMain : Game
         GameScreen = new GameScreen(this);
 
         Shared.Menus = new MenuHandler(this);
-        SetMenu(Shared.Menus.MainMenuScreen);
+        Shared.Menus.PushMenu(Shared.Menus.MainMenuScreen);
 
         Shared.LoadingScreen.LoadImmediate(() =>
         {
@@ -74,19 +73,6 @@ public class MyGameMain : Game
         });
 
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
-    }
-
-
-    public void SetMenu(MenuScreen? menu)
-    {
-        var prevMenu = MenuScreen;
-        MenuScreen = menu;
-        if (menu != null)
-        {
-            menu.SetState(MenuScreenState.Active);
-            if (prevMenu != MenuScreen)
-                menu.OnBecameVisible();
-        }
     }
 
     protected override void Update(TimeSpan dt)
@@ -112,7 +98,6 @@ public class MyGameMain : Game
     private void UpdateScreens()
     {
         Shared.LoadingScreen.Update(Time.ElapsedTime);
-
         if (Shared.LoadingScreen.IsLoading)
             return;
 
@@ -120,15 +105,9 @@ public class MyGameMain : Game
         if (!ConsoleScreen.IsHidden)
             return;
 
-        if (MenuScreen != null)
-        {
-            MenuScreen.Update(Time.ElapsedTime);
-
-            if (MenuScreen.State == MenuScreenState.Exited)
-                SetMenu(null);
-            else if (MenuScreen.State != MenuScreenState.Exiting)
-                return;
-        }
+        Shared.Menus.Update(Time.ElapsedTime);
+        if (!Shared.Menus.IsHidden)
+            return;
 
         GameScreen.Update(Time.ElapsedTime);
     }
@@ -181,7 +160,7 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
 
-        RenderMenus(Renderer, commandBuffer, _menuRender, alpha);
+        Shared.Menus.Draw(Renderer, commandBuffer, _menuRender, alpha);
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White);
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
@@ -198,18 +177,6 @@ public class MyGameMain : Game
     {
         ConsoleToast.Draw(renderer, commandBuffer, renderDestination);
         ConsoleScreen.Draw(renderer, commandBuffer, renderDestination, alpha);
-    }
-
-    private void RenderMenus(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
-    {
-        if (MenuScreen != null)
-        {
-            MenuScreen.Draw(renderer, alpha);
-            renderer.Flush(commandBuffer, renderDestination, Color.Transparent, null);
-            return;
-        }
-
-        renderer.Clear(commandBuffer, renderDestination, Color.Transparent);
     }
 
     protected override void Destroy()

@@ -21,14 +21,12 @@ public abstract class MenuScreen
     public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
     protected float _transitionPercentage;
     public static float TransitionDuration = 0.25f;
-    private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
     
     protected readonly List<MenuItem> _menuItems = new();
     protected int _selectedIndex = 0;
 
     private int ItemSpacingY = 20;
 
-    protected MenuScreen? _child;
     protected MyGameMain _game;
     protected Spring _spring;
 
@@ -74,25 +72,6 @@ public abstract class MenuScreen
         }
     }
 
-    public void SetChild(MenuScreen? menu)
-    {
-        var prevMenu = _child;
-        _child = menu;
-
-        if (_child != null)
-        {
-            _child.SetState(MenuScreenState.Active);
-            SetState(MenuScreenState.Covered);
-
-            if (_child != prevMenu)
-                _child.OnBecameVisible();
-        }
-        else
-        {
-            SetState(MenuScreenState.Active);
-        }
-    }
-
     public virtual void OnCancelled()
     {
     }
@@ -109,9 +88,9 @@ public abstract class MenuScreen
 
     public virtual void OnBecameVisible()
     {
+        SetState(MenuScreenState.Active);
+        
         _transitionPercentage = 0;
-        _child = null;
-
         // select first item
         _selectedIndex = 0;
 
@@ -129,15 +108,6 @@ public abstract class MenuScreen
         if (State == MenuScreenState.Active)
         {
             HandleInput();
-        }
-
-        if (_child != null)
-        {
-            _child.Update(deltaSeconds);
-            if (_child.State == MenuScreenState.Exiting)
-                SetState(MenuScreenState.Active);
-            else if (_child.State == MenuScreenState.Exited)
-                SetChild(null);
         }
     }
 
@@ -272,8 +242,5 @@ public abstract class MenuScreen
                 renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
             }
         }
-
-        if (_child != null)
-            _child.Draw(renderer, alpha);
     }
 }

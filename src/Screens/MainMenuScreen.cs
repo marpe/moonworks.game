@@ -16,7 +16,7 @@ public class MainMenuScreen : MenuScreen
                 IsEnabled = false
             },
             new TextMenuItem("New Game", OnPlay),
-            new TextMenuItem("Options", () => { SetChild(Shared.Menus.OptionsScreen); }),
+            new TextMenuItem("Options", () => { Shared.Menus.PushMenu(Shared.Menus.OptionsScreen); }),
             new TextMenuItem("Quit", OnQuit),
         });
 
@@ -31,7 +31,7 @@ public class MainMenuScreen : MenuScreen
             () => { Shared.Game.GameScreen.SetWorld(new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk)); },
             () =>
             {
-                Shared.Game.SetMenu(null);
+                Shared.Menus.PopAll();
                 while (Shared.Game.GameScreen.World == null)
                 {
                     Thread.Sleep(1);
@@ -42,7 +42,7 @@ public class MainMenuScreen : MenuScreen
 
     private void OnQuit()
     {
-        SetChild(_confirmScreen);
+        Shared.Menus.PushMenu(_confirmScreen);
     }
     
     public override void Draw(Renderer renderer, double alpha)
