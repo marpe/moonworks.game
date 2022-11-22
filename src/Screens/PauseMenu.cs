@@ -1,4 +1,6 @@
-﻿namespace MyGame.Screens;
+﻿using System.Threading;
+
+namespace MyGame.Screens;
 
 public class PauseMenu : MenuScreen
 {
@@ -29,8 +31,18 @@ public class PauseMenu : MenuScreen
     private void Quit()
     {
         Shared.LoadingScreen.QueueLoad(
-            () => { Shared.Game.GameScreen.SetWorld(null); },
-            () => { _game.SetMenu(Shared.Menus.MainMenuScreen); }
+            () =>
+            {
+                Shared.Game.GameScreen.SetWorld(null);
+            },
+            () =>
+            {
+                _game.SetMenu(Shared.Menus.MainMenuScreen);
+                while (Shared.Game.GameScreen.World != null)
+                {
+                    Thread.Sleep(1);
+                }
+            }
         );
     }
 }

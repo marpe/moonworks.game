@@ -154,7 +154,7 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
         SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
@@ -184,6 +184,18 @@ public class Renderer
         return (commandBuffer, swapTexture);
     }
 
+    public void Clear(CommandBuffer commandBuffer, Texture renderTarget, Color clearColor)
+    {
+        var cai = new ColorAttachmentInfo()
+        {
+            ClearColor = clearColor,
+            LoadOp = LoadOp.Clear,
+            Texture = renderTarget
+        };
+        commandBuffer.BeginRenderPass(cai);
+        commandBuffer.EndRenderPass();
+    }
+    
     public void Flush(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
     {
         TextBatcher.FlushToSpriteBatch(SpriteBatch);

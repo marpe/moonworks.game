@@ -226,7 +226,7 @@ public abstract class MenuScreen
         }
     }
 
-    public virtual void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public virtual void Draw(Renderer renderer, double alpha)
     {
         for (var i = 0; i < _menuItems.Count; i++)
         {
@@ -256,6 +256,6 @@ public abstract class MenuScreen
         }
 
         if (_child != null)
-            _child.Draw(renderer, commandBuffer, renderDestination, alpha);
+            _child.Draw(renderer, alpha);
     }
 }

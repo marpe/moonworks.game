@@ -40,10 +40,10 @@ public class LoadingScreen
 
     private Dictionary<TransitionType, SceneTransition> _sceneTransitions = new();
 
-    public static TransitionType Type = TransitionType.FadeToBlack;
+    public static TransitionType Type = TransitionType.Diamonds;
     
     [CVar("load_transition_speed", "Toggle transition speed")]
-    public static float TransitionSpeed = 5.0f;
+    public static float TransitionSpeed = 1.0f;
 
 
     public LoadingScreen(MyGameMain game)

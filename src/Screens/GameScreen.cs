@@ -1,5 +1,5 @@
-﻿using MyGame.Cameras;
-using MyGame.Debug;
+﻿using System.Threading;
+using MyGame.Cameras;
 
 namespace MyGame.Screens;
 
@@ -11,14 +11,13 @@ public class GameScreen
     private GraphicsDevice _device;
 
     private readonly MyGameMain _game;
-    private Action _pauseCallback;
 
-    public GameScreen(MyGameMain game, Action pauseCallback)
+    private readonly object worldLock = new();
+
+    public GameScreen(MyGameMain game)
     {
         _game = game;
         _device = _game.GraphicsDevice;
-
-        _pauseCallback = pauseCallback;
 
         Camera = new Camera(this)
         {
@@ -31,59 +30,72 @@ public class GameScreen
     public static void Restart()
     {
         Shared.LoadingScreen.QueueLoad(() =>
-        {
-            Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
-            Shared.Game.ConsoleScreen.IsHidden = true;
-        }, () => { Shared.Game.SetMenu(null); });
+            {
+                Shared.Game.GameScreen.SetWorld(new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk));
+                Shared.Game.ConsoleScreen.IsHidden = true;
+            },
+            () =>
+            {
+                Shared.Game.SetMenu(null);
+                while (Shared.Game.GameScreen.World == null)
+                {
+                    Thread.Sleep(1);
+                }
+            }
+        );
     }
 
     public void SetWorld(World? world)
     {
-        World?.Dispose();
-        World = world;
+        lock (worldLock)
+        {
+            World?.Dispose();
+            World = world;
+        }
     }
 
     public void Update(float deltaSeconds)
     {
-        var input = _game.InputHandler;
-
-        if (input.IsKeyPressed(KeyCode.Escape))
+        lock (worldLock)
         {
-            _pauseCallback.Invoke();
-            return;
+            if (World == null)
+                return;
+
+            if (_game.InputHandler.IsKeyPressed(KeyCode.Escape))
+            {
+                _game.SetMenu(Shared.Menus.PauseScreen);
+                return;
+            }
+
+            World.Update(deltaSeconds, _game.InputHandler);
+            Camera.Update(deltaSeconds, _game.InputHandler);
         }
-
-        World?.Update(deltaSeconds, input);
-
-        Camera.Update(deltaSeconds, input);
     }
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        var sz = MyGameMain.DesignResolution;
-        if (World == null)
+        lock (worldLock)
         {
-            renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black);
-            // render view bounds
-            if (World.Debug)
-                renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
-            renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
+            if (World == null)
+            {
+                renderer.Clear(commandBuffer, renderDestination, Color.Red);
+                return;
+            }
+
+            World.Draw(renderer, Camera.Bounds, alpha);
+            var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
+            renderer.Flush(commandBuffer, renderDestination, Color.LimeGreen, viewProjection);
+        }
+
+        DrawViewBounds(renderer, commandBuffer, renderDestination);
+    }
+
+    private void DrawViewBounds(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
+    {
+        if (!World.Debug)
             return;
-        }
 
-        World.Draw(renderer, Camera.Bounds, alpha);
-
-        var viewProjection = Camera.GetViewProjection(sz.X, sz.Y);
-
-        renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
-
-        // render view bounds
-        if (World.Debug)
-        {
-            renderer.DrawRect(Vector2.Zero, sz, Color.LimeGreen, 10f);
-            renderer.Flush(commandBuffer, renderDestination, null, null);
-        }
-        
-        ConsoleToast.Draw(renderer);
+        renderer.DrawRect(Vector2.Zero, MyGameMain.DesignResolution, Color.LimeGreen, 10f);
+        renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 }

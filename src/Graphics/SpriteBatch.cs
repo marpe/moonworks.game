@@ -100,7 +100,7 @@ public class SpriteBatch
         _vertices[vertexCount + 2].TexCoord = sprite.UV.TopRight;
         _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
 
-        var effects = (byte)(flip & (SpriteFlip)0x03);
+        var effects = (byte)(flip & (SpriteFlip.FlipVertically | SpriteFlip.FlipHorizontally));
         _vertices[vertexCount].TexCoord.X = CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
         _vertices[vertexCount].TexCoord.Y = CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
         _vertices[vertexCount + 1].TexCoord.X = CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;

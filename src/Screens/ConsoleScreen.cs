@@ -442,7 +442,7 @@ public class ConsoleScreen
             return;
 
         var sprite = new Sprite(_renderTarget);
-        renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage, 0);
+        renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage);
         renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 

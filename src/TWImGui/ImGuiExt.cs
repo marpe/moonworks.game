@@ -47,24 +47,24 @@ public static unsafe class ImGuiExt
         {
             if (keyboardShortcut[j] == '^')
             {
-                result &= ImGui.IsKeyDown((ImGuiKey)KeyCode.LeftControl) ||
-                          ImGui.IsKeyDown((ImGuiKey)KeyCode.RightControl);
+                result &= ImGui.IsKeyDown((ImGuiKey_1)KeyCode.LeftControl) ||
+                          ImGui.IsKeyDown((ImGuiKey_1)KeyCode.RightControl);
             }
             else if (keyboardShortcut[j] == '+')
             {
-                result &= ImGui.IsKeyDown((ImGuiKey)KeyCode.LeftShift) ||
-                          ImGui.IsKeyDown((ImGuiKey)KeyCode.RightShift);
+                result &= ImGui.IsKeyDown((ImGuiKey_1)KeyCode.LeftShift) ||
+                          ImGui.IsKeyDown((ImGuiKey_1)KeyCode.RightShift);
             }
             else if (keyboardShortcut[j] == '!')
             {
-                result &= ImGui.IsKeyDown((ImGuiKey)KeyCode.LeftAlt) ||
-                          ImGui.IsKeyDown((ImGuiKey)KeyCode.RightAlt);
+                result &= ImGui.IsKeyDown((ImGuiKey_1)KeyCode.LeftAlt) ||
+                          ImGui.IsKeyDown((ImGuiKey_1)KeyCode.RightAlt);
             }
             else
             {
                 var keyStr = keyboardShortcut.Slice(j);
                 var keyCode = Enum.Parse<KeyCode>(keyStr);
-                return result && ImGui.IsKeyPressed((ImGuiKey)keyCode);
+                return result && ImGui.IsKeyPressed((ImGuiKey_1)keyCode);
             }
 
             if (!result)

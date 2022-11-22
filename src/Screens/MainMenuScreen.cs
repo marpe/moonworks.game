@@ -1,4 +1,6 @@
-﻿namespace MyGame.Screens;
+﻿using System.Threading;
+
+namespace MyGame.Screens;
 
 public class MainMenuScreen : MenuScreen
 {
@@ -27,7 +29,14 @@ public class MainMenuScreen : MenuScreen
     {
         Shared.LoadingScreen.QueueLoad(
             () => { Shared.Game.GameScreen.SetWorld(new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk)); },
-            () => { Shared.Game.SetMenu(null); }
+            () =>
+            {
+                Shared.Game.SetMenu(null);
+                while (Shared.Game.GameScreen.World == null)
+                {
+                    Thread.Sleep(1);
+                }
+            }
         );
     }
 
@@ -36,15 +45,15 @@ public class MainMenuScreen : MenuScreen
         SetChild(_confirmScreen);
     }
 
-    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public override void Draw(Renderer renderer, double alpha)
     {
         var scale = new Vector2(
-            renderDestination.Width / (float)_background.Width,
-            renderDestination.Height / (float)_background.Height
+            MyGameMain.DesignResolution.X / (float)_background.Width,
+            MyGameMain.DesignResolution.Y / (float)_background.Height
         );
 
-        renderer.DrawSprite(_background, Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f), Color.White, 0);
+        renderer.DrawSprite(_background, Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f), Color.White);
 
-        base.Draw(renderer, commandBuffer, renderDestination, alpha);
+        base.Draw(renderer, alpha);
     }
 }

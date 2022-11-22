@@ -339,7 +339,7 @@ public class World
         var srcRect = new Rectangle((int)tile.Src[0], (int)tile.Src[1], (int)layer.GridSize, (int)layer.GridSize);
         var sprite = new Sprite(texture, srcRect);
         var transform = Matrix3x2.CreateTranslation(position.X, position.Y);
-        renderer.DrawSprite(sprite, transform.ToMatrix4x4(), Color.White, 0);
+        renderer.DrawSprite(sprite, transform.ToMatrix4x4(), Color.White);
     }
 
     public void Dispose()

@@ -20,9 +20,10 @@ public class FadeToBlack : SceneTransition
     public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
         Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
     {
-        if ((state == TransitionState.TransitionOn || state == TransitionState.Active) && compositeOldCopy != null)
+        var isLoading = state is TransitionState.TransitionOn or TransitionState.Active;
+        if (compositeOldCopy != null && isLoading)
         {
-            renderer.DrawSprite(compositeOldCopy, Matrix4x4.Identity, Color.White, 0);
+            renderer.DrawSprite(compositeOldCopy, Matrix4x4.Identity, Color.White);
         }
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black * progress);
     }
@@ -82,7 +83,7 @@ public class DiamondTransition : SceneTransition
         var isLoading = state is TransitionState.TransitionOn or TransitionState.Active;
         if (compositeOldCopy != null && isLoading)
         {
-            renderer.DrawSprite(new Sprite(compositeOldCopy), Matrix4x4.Identity, Color.White, 0);
+            renderer.DrawSprite(new Sprite(compositeOldCopy), Matrix4x4.Identity, Color.White);
             renderer.Flush(commandBuffer, renderDestination, null, null);
         }
 

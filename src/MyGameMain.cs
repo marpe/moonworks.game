@@ -1,3 +1,4 @@
+using MyGame.Debug;
 using MyGame.Logs;
 
 namespace MyGame;
@@ -61,7 +62,7 @@ public class MyGameMain : Game
         Renderer = new Renderer(this);
         Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
-        GameScreen = new GameScreen(this, () => SetMenu(Shared.Menus.PauseScreen));
+        GameScreen = new GameScreen(this);
 
         Shared.Menus = new MenuHandler(this);
         SetMenu(Shared.Menus.MainMenuScreen);
@@ -166,7 +167,7 @@ public class MyGameMain : Game
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(_compositeRender, viewportTransform, Color.White, 0, SpriteFlip.None);
+            Renderer.DrawSprite(_compositeRender, viewportTransform, Color.White);
             Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(commandBuffer);
         }
@@ -180,19 +181,35 @@ public class MyGameMain : Game
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
 
-        Renderer.DrawPoint(renderDestination.Size() / 2, Color.Transparent, 10f, 0);
-        MenuScreen?.Draw(Renderer, commandBuffer, _menuRender, alpha);
-        Renderer.Flush(commandBuffer, _menuRender, Color.Transparent, null);
+        RenderMenus(Renderer, commandBuffer, _menuRender, alpha);
 
-        Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
-        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
+        Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White);
+        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
         Renderer.Flush(commandBuffer, renderDestination, Color.Cyan, null);
 
-        ConsoleScreen.Draw(Renderer, commandBuffer, renderDestination, alpha);
+        RenderConsole(Renderer, commandBuffer, renderDestination, alpha);
 
         Shared.LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
 
         Renderer.Submit(commandBuffer);
+    }
+
+    private void RenderConsole(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        ConsoleToast.Draw(renderer, commandBuffer, renderDestination);
+        ConsoleScreen.Draw(renderer, commandBuffer, renderDestination, alpha);
+    }
+
+    private void RenderMenus(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        if (MenuScreen != null)
+        {
+            MenuScreen.Draw(renderer, alpha);
+            renderer.Flush(commandBuffer, renderDestination, Color.Transparent, null);
+            return;
+        }
+
+        renderer.Clear(commandBuffer, renderDestination, Color.Transparent);
     }
 
     protected override void Destroy()

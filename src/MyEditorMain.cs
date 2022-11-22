@@ -31,7 +31,9 @@ public unsafe class MyEditorMain : MyGameMain
     private string _gameWindowName = "Game";
     private IntPtr? _gameRenderTextureId;
     private Texture _imGuiRenderTarget;
-    private bool _saveRender;
+    
+    [CVar("screenshot", "Save a screenshot")]
+    public static bool Screenshot;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -375,9 +377,6 @@ public unsafe class MyEditorMain : MyGameMain
             var newState = InputState.Create(inputHandler);
             _inputStates.Add(newState);
 
-            if (InputHandler.IsKeyPressed(KeyCode.P))
-                _saveRender = true;
-
             if ((int)Time.UpdateCount % _updateRate == 0)
             {
                 var inputState = InputState.Aggregate(_inputStates);
@@ -409,11 +408,11 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
-        if (_saveRender)
+        if (Screenshot)
         {
             SaveRender(GraphicsDevice, _gameRender);
             Logger.LogInfo("Render saved!");
-            _saveRender = false;
+            Screenshot = false;
         }
 
         if (_doRender)
@@ -437,7 +436,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         if (_imGuiDrawCount > 0)
-            Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White, 0);
+            Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White);
         else
             Renderer.DrawPoint(swapTexture.Size() / 2, Color.Transparent, 10f);
         Renderer.Flush(commandBuffer, swapTexture, Color.Black, null);
