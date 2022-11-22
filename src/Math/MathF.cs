@@ -407,7 +407,14 @@ public static class MathF
     {
         return from + (to - from) * Clamp01(t);
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float LerpUnclamped(float from, float to, float t)
+    {
+        return from + (to - from) * t;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float RepeatRange(float value, float range)
     {
         return (value % range + range) % range;
@@ -445,5 +452,17 @@ public static class MathF
         }
 
         return angleDegrees;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Exp(float value)
+    {
+        return (float)Math.Exp(value);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Abs(float value)
+    {
+        return Math.Abs(value);
     }
 }

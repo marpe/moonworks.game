@@ -37,6 +37,7 @@ public unsafe class MyEditorMain : MyGameMain
     private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
     private GroupInspector? _loadingScreenInspector;
     private string _loadingDebugWindowName = "LoadingDebug";
+    private GroupInspector? _mainMenuInspector;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -249,6 +250,12 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
             ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
             ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _updateRate), 1, 10, default);
+            
+            ImGui.Separator();
+
+            _mainMenuInspector ??= InspectorExt.GetInspectorForTarget(Shared.Menus.MainMenuScreen);
+            _mainMenuInspector.Draw();
+            ImGui.SliderFloat("GoalPosition", ImGuiExt.RefPtr(ref Shared.Menus.MainMenuScreen.Spring.EquilibriumPosition), -1, 1, default);
         }
 
         ImGui.End();
@@ -449,6 +456,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
+        // TODO (marpe): Move
         if (Screenshot)
         {
             SaveRender(GraphicsDevice, _gameRender);

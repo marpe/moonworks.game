@@ -41,4 +41,15 @@ public static class RectangleExt
     {
         return new Rectangle(0, 0, (int)texture.Width, (int)texture.Height);
     }
+
+    public static Rectangle FromPositionAndSize(Vector2 position, Vector2 size)
+    {
+        return FromPositionAndSize(position, size, Vector2.Half);
+    }
+
+    public static Rectangle FromPositionAndSize(Vector2 position, Vector2 size, Vector2 origin)
+    {
+        var offset = size * origin;
+        return new Rectangle((int)(position.X - offset.X), (int)(position.Y - offset.Y), (int)size.X, (int)size.Y);
+    }
 }

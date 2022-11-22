@@ -10,31 +10,35 @@ public enum MenuScreenState
 
 public abstract class MenuScreen
 {
+    public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
+    public static Color HighlightColor = Color.Yellow;
+    public static Color DisabledColor = Color.Black * 0.66f;
+    public static Color NormalColor = Color.White;
+    
     [CVar("menu.debug", "Toggle menu debugging")]
     public static bool Debug;
 
     public MenuScreenState State { get; private set; } = MenuScreenState.Exited;
     private float _transitionPercentage;
-
+    public static float TransitionDuration = 0.25f;
     private Easing.Function.Float _easeFunc = Easing.Function.Float.InOutQuad;
-
-    public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
-    public static Color HighlightColor = Color.Yellow;
-    public static Color DisabledColor = Color.Black * 0.66f;
-    public static Color NormalColor = Color.White;
-
+    
     protected readonly List<MenuItem> _menuItems = new();
     protected int _selectedIndex = 0;
 
-    [CVar("menu_transition_duration", "")] public static float TransitionDuration = 0.25f;
     private int ItemSpacingY = 20;
 
     protected MenuScreen? _child;
     protected MyGameMain _game;
+    private Spring _spring;
+
+    private float XOffset = 500f;
+    private Vector2 InitialPosition = MyGameMain.DesignResolution.ToVec2() * 0.5f;
 
     public MenuScreen(MyGameMain game)
     {
         _game = game;
+        _spring = new Spring();
     }
 
     protected void NextItem()
@@ -102,6 +106,9 @@ public abstract class MenuScreen
 
     public virtual void OnBecameVisible()
     {
+        _spring.Position = -1;
+        _spring.Velocity = 0;
+        _spring.EquilibriumPosition = -1f;
         _transitionPercentage = 0;
         _child = null;
 
@@ -208,16 +215,25 @@ public abstract class MenuScreen
 
     private void UpdateMenuItems(float deltaSeconds)
     {
-        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
-        var xPos = MyGameMain.DesignResolution.X * 0.5f * t;
-        var p = new Vector2(xPos, MyGameMain.DesignResolution.Y * 0.5f);
+        var targetPosition = State switch
+        {
+            MenuScreenState.Active => 0,
+            MenuScreenState.Covered => -1,
+            _ => 1
+        };
+
+        _spring.EquilibriumPosition = targetPosition;
+        _spring.Update(deltaSeconds);
+        
+        // var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
+        var position = new Vector2(InitialPosition.X + _spring.Position * XOffset, InitialPosition.Y);
 
         for (var i = 0; i < _menuItems.Count; i++)
         {
             _menuItems[i].PreviousPosition = _menuItems[i].Position;
-            _menuItems[i].Position = p;
+            _menuItems[i].Position = position;
 
-            p.Y += _menuItems[i].Height + ItemSpacingY;
+            position.Y += _menuItems[i].Height + ItemSpacingY;
 
             if (_menuItems[i] is FancyTextMenuItem ft)
             {
@@ -249,10 +265,12 @@ public abstract class MenuScreen
                 color *= _transitionPercentage;
 
             menuItem.Draw(p, renderer, color);
-            var bounds = menuItem.Bounds;
 
             if (Debug)
+            {
+                var bounds = menuItem.Bounds;
                 renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
+            }
         }
 
         if (_child != null)
