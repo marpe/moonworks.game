@@ -3,7 +3,7 @@ namespace MyGame.Screens;
 public class FancyTextMenuItem : MenuItem
 {
     public FancyTextComponent TextComponent;
-    public BMFontType FontType = BMFontType.ConsolasMonoHuge;
+    public BMFontType FontType = BMFontType.PixellariHuge;
 
     public override Rectangle Bounds
     {
@@ -51,6 +51,8 @@ public class FancyTextMenuItem : MenuItem
     {
         if (!IsVisible)
             return;
-        TextComponent.Render(FontType, renderer, position, color, 1.0f);
+        
+        TextComponent.Render(FontType, renderer, position + new Vector2(5, 5), Color.Black * Alpha, 1.0f);
+        TextComponent.Render(FontType, renderer, position, color * Alpha, 1.0f);
     }
 }

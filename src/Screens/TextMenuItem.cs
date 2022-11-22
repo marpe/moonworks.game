@@ -8,6 +8,7 @@ public abstract class MenuItem
     public Vector2 PreviousPosition;
     public bool IsVisible = true;
     public bool IsEnabled = true;
+    public float Alpha = 0f;
     public bool IsSelectable => IsVisible && IsEnabled;
     public abstract Rectangle Bounds { get; }
 
@@ -21,7 +22,7 @@ public class TextMenuItem : MenuItem
 
     public HorizontalAlignment AlignH = HorizontalAlignment.Center;
     public VerticalAlignment AlignV = VerticalAlignment.Top;
-    public FontType FontType = FontType.RobotoLarge;
+    public FontType FontType = FontType.PixellariLarge;
 
     public TextMenuItem(string text, Action callback)
     {
@@ -65,6 +66,7 @@ public class TextMenuItem : MenuItem
     {
         if (!IsVisible)
             return;
-        renderer.DrawText(FontType, Text, position, 0, color, AlignH, AlignV);
+        renderer.DrawText(FontType, Text, position + new Vector2(5, 5), 0, Color.Black * Alpha, AlignH, AlignV);
+        renderer.DrawText(FontType, Text, position, 0, color * Alpha, AlignH, AlignV);
     }
 }

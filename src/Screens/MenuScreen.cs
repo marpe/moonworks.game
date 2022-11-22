@@ -11,7 +11,8 @@ public enum MenuScreenState
 public abstract class MenuScreen
 {
     public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
-    public static Color HighlightColor = Color.Yellow;
+    public static Color HighlightColor1 = Color.Yellow;
+    public static Color HighlightColor2 = Color.Red;
     public static Color DisabledColor = Color.Black * 0.66f;
     public static Color NormalColor = Color.White;
 
@@ -34,6 +35,7 @@ public abstract class MenuScreen
 
     private float XOffset = 500f;
     private Vector2 InitialPosition = MyGameMain.DesignResolution.ToVec2() * 0.5f;
+    private bool _wasCoveredByOtherScreen;
 
     public MenuScreen(MyGameMain game)
     {
@@ -93,6 +95,8 @@ public abstract class MenuScreen
     {
         SetState(MenuScreenState.TransitionOn);
 
+        _spring.Position = -1;
+
         _transitionPercentage = 0;
         // select first item
         _selectedIndex = 0;
@@ -114,8 +118,6 @@ public abstract class MenuScreen
             if (!isCoveredByOtherScreen)
                 HandleInput();
 
-            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
-
             if (_transitionPercentage >= 1)
             {
                 SetState(MenuScreenState.Active);
@@ -125,13 +127,9 @@ public abstract class MenuScreen
         {
             if (!isCoveredByOtherScreen)
                 HandleInput();
-
-            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
         }
         else if (State == MenuScreenState.TransitionOff)
         {
-            UpdateMenuItems(deltaSeconds, isCoveredByOtherScreen);
-
             if (_transitionPercentage == 0)
             {
                 Shared.Menus.RemoveScreen(this);
@@ -142,6 +140,8 @@ public abstract class MenuScreen
         {
             // noop
         }
+
+        _wasCoveredByOtherScreen = isCoveredByOtherScreen;
     }
 
     private void HandleInput()
@@ -157,7 +157,8 @@ public abstract class MenuScreen
 
     private void UpdateTransition(float deltaSeconds, bool isCoveredByOtherScreen)
     {
-        var transitionDirection = State is MenuScreenState.Active or MenuScreenState.TransitionOn && !isCoveredByOtherScreen ? 1 : -1;
+        var isActive = State is MenuScreenState.Active or MenuScreenState.TransitionOn;
+        var transitionDirection = isActive ? 1 : -1;
         var speed = 1.0f / MathF.Clamp(TransitionDuration, MathF.Epsilon, float.MaxValue);
         _transitionPercentage = MathF.Clamp01(_transitionPercentage + transitionDirection * deltaSeconds * speed);
     }
@@ -231,8 +232,9 @@ public abstract class MenuScreen
         {
             _menuItems[i].PreviousPosition = _menuItems[i].Position;
             _menuItems[i].Position = position;
+            _menuItems[i].Alpha = (1.0f - MathF.Abs(_spring.Position));
 
-            position.Y += _menuItems[i].Height + ItemSpacingY;
+            position.Y = _menuItems[i].Bounds.Bottom + ItemSpacingY;
 
             if (_menuItems[i] is FancyTextMenuItem ft)
             {
@@ -251,17 +253,12 @@ public abstract class MenuScreen
             var isFancy = menuItem is FancyTextMenuItem;
             var color = (isSelected, isEnabled, isFancy) switch
             {
-                (true, _, _) => HighlightColor,
+                (true, _, _) => ColorExt.PulseColor(HighlightColor1, HighlightColor2, Shared.Game.Time.TotalElapsedTime),
                 (_, false, false) => DisabledColor,
                 (_, _, true) => Color.White,
                 (_, _, _) => NormalColor
             };
             var p = Vector2.Lerp(menuItem.PreviousPosition, menuItem.Position, (float)alpha);
-
-            if (isFancy)
-                color.A = (byte)(color.A * _transitionPercentage);
-            else
-                color *= _transitionPercentage;
 
             menuItem.Draw(p, renderer, color);
 

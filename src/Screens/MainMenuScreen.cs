@@ -11,7 +11,7 @@ public class MainMenuScreen : MenuScreen
     {
         _menuItems.AddRange(new MenuItem[]
         {
-            new FancyTextMenuItem("<~><#ff0000>Menu</#></~>")
+            new FancyTextMenuItem("<~><#ff0000>Menu\nWEE hah\nfsdasdah</#></~>")
             {
                 IsEnabled = false
             },

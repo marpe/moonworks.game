@@ -80,6 +80,26 @@ public static class ColorExt
             _ => new Color(v, p, q),
         };
     }
+    
+    /// <summary>
+    /// linearly interpolates Color from - to
+    /// </summary>
+    public static Color Lerp(in Color from, in Color to, float t)
+    {
+        var t255 = (int)(t * 255);
+        return new Color(
+            from.R + (to.R - from.R) * t255 / 255,
+            from.G + (to.G - from.G) * t255 / 255,
+            from.B + (to.B - from.B) * t255 / 255,
+            from.A + (to.A - from.A) * t255 / 255
+        );
+    }
+    
+    public static Color PulseColor(in Color from, in Color to, float timer)
+    {
+        var t = Math.Abs(MathF.Sin(timer));
+        return Lerp(from, to, t);
+    }
 }
 
 public class ColorConverter : JsonConverter<Color>

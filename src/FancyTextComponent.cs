@@ -167,18 +167,16 @@ public class FancyTextComponent
             else if (!isInTag)
             {
                 sb.Append(text[i]);
-                if (text[i] != ' ')
-                {
-                    parts.Add(new FancyTextPart(
-                            characterIndex,
-                            text[i],
-                            currentColor,
-                            isWaving,
-                            isShaking,
-                            offset
-                        )
-                    );
-                }
+                
+                parts.Add(new FancyTextPart(
+                        characterIndex,
+                        text[i],
+                        currentColor,
+                        isWaving,
+                        isShaking,
+                        offset
+                    )
+                );
 
                 offset.X++;
                 characterIndex++;
@@ -214,21 +212,39 @@ public class FancyTextComponent
         var rotation = Matrix3x2.CreateRotation(Rotation);
         var offset = Vector2.Zero;
 
-        var charSize = font.MeasureString(' ', 'X');
-
+        var partOffset = new Point();
+        var previousChar = ' ';
+        var prevLine = 0;
+        
         for (var i = 0; i < Parts.Length; i++)
         {
             var part = Parts[i];
-            var waveOffset = part.IsWaving ? GetWaveOffset(part, Timer) : Vector2.Zero;
-            var shakeOffset = part.IsShaking ? GetShakeOffset(0, ShakeSpeed, ShakeAmount, Timer) : Vector2.Zero;
-            var finalColor = MultiplyAlpha(color, part.Color, Alpha, part.Alpha);
+            
+            var charSize = font.MeasureString(previousChar, part.Character[0]);
+            
+            // newline
+            if (part.Offset.Y > prevLine)
+            {
+                partOffset.X = 0;
+                partOffset.Y += charSize.Y;
+            }
 
-            var partOffset = part.Offset * charSize;
-            var partPos = -origin + shakeOffset + waveOffset + partOffset;
-            var partOrigin = charSize / 2;
-            var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
+            if (part.Character[0] != ' ')
+            {
+                var waveOffset = part.IsWaving ? GetWaveOffset(part, Timer) : Vector2.Zero;
+                var shakeOffset = part.IsShaking ? GetShakeOffset(0, ShakeSpeed, ShakeAmount, Timer) : Vector2.Zero;
+                var finalColor = MultiplyColors(color, part.Color, Alpha, part.Alpha);
 
-            renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColor);
+                var partPos = -origin + shakeOffset + waveOffset + partOffset;
+                var partOrigin = charSize / 2;
+                var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
+
+                renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColor);
+            }
+
+            partOffset.X += charSize.X;
+            previousChar = part.Character[0];
+            prevLine = part.Offset.Y;
         }
     }
 
@@ -246,7 +262,7 @@ public class FancyTextComponent
         return numLines;
     }
 
-    private static Color MultiplyAlpha(Color colorA, Color colorB, float partAlpha, float mainAlpha)
+    private static Color MultiplyColors(Color colorA, Color colorB, float partAlpha, float mainAlpha)
     {
         // return color * (partAlpha * mainAlpha);
         var finalAlpha = mainAlpha * partAlpha * (colorA.A / 255f) * (colorB.A / 255f);

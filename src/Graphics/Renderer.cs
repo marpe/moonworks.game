@@ -84,6 +84,8 @@ public class Renderer
             (BMFontType.ConsolasMonoMedium, ContentPaths.bmfonts.consolas48_fnt),
             (BMFontType.ConsolasMonoLarge, ContentPaths.bmfonts.consolas60_fnt),
             (BMFontType.ConsolasMonoHuge, ContentPaths.bmfonts.consolas72_fnt),
+            (BMFontType.PixellariLarge, ContentPaths.bmfonts.pixellari48_fnt),
+            (BMFontType.PixellariHuge, ContentPaths.bmfonts.pixellari72_fnt),
         };
 
         BMFonts = new BMFont[bmFontTypes.Length];

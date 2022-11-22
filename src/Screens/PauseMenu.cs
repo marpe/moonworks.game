@@ -34,6 +34,7 @@ public class PauseMenu : MenuScreen
             () => { Shared.Game.GameScreen.SetWorld(null); },
             () =>
             {
+                Shared.Menus.RemoveAll();
                 Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);
                 while (Shared.Game.GameScreen.World != null)
                 {

@@ -54,7 +54,7 @@ public class MenuHandler
             _menusToUpdate[i].Update(deltaSeconds, isCoveredByOtherScreen);
 
             if (!isCoveredByOtherScreen)
-                isCoveredByOtherScreen = _menusToUpdate[i].State == MenuScreenState.Active || _menusToUpdate[i].State == MenuScreenState.TransitionOn;
+                isCoveredByOtherScreen = _menusToUpdate[i].State is MenuScreenState.Active or MenuScreenState.TransitionOn;
         }
     }
 

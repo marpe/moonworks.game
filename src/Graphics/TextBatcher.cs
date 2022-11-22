@@ -21,6 +21,8 @@ public class TextBatcher
 
         var fonts = new[]
         {
+            (FontType.Pixellari, 18f, ContentPaths.fonts.Pixellari_ttf),
+            (FontType.PixellariLarge, 48f, ContentPaths.fonts.Pixellari_ttf),
             (FontType.RobotoMedium, 18f, ContentPaths.fonts.Roboto_Regular_ttf),
             (FontType.RobotoLarge, 48f, ContentPaths.fonts.Roboto_Regular_ttf),
             (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf),

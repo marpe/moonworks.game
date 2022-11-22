@@ -2,6 +2,8 @@ namespace MyGame.Graphics;
 
 public enum FontType
 {
+    Pixellari,
+    PixellariLarge,
     RobotoMedium,
     RobotoLarge,
     ConsolasMonoMedium,
@@ -14,4 +16,6 @@ public enum BMFontType
     ConsolasMonoMedium,
     ConsolasMonoLarge,
     ConsolasMonoHuge,
+    PixellariLarge,
+    PixellariHuge
 }

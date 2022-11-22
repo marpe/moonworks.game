@@ -21,6 +21,15 @@ public static class ContentPaths
         public const string consolas72_1_png = @"Content\bmfonts\consolas72_1.png";
         public const string consolas72_2_png = @"Content\bmfonts\consolas72_2.png";
         public const string consolas_0_png = @"Content\bmfonts\consolas_0.png";
+        public const string pixellari48_bmfc = @"Content\bmfonts\pixellari48.bmfc";
+        public const string pixellari48_fnt = @"Content\bmfonts\pixellari48.fnt";
+        public const string pixellari48_0_png = @"Content\bmfonts\pixellari48_0.png";
+        public const string pixellari48_1_png = @"Content\bmfonts\pixellari48_1.png";
+        public const string pixellari72_bmfc = @"Content\bmfonts\pixellari72.bmfc";
+        public const string pixellari72_fnt = @"Content\bmfonts\pixellari72.fnt";
+        public const string pixellari72_0_png = @"Content\bmfonts\pixellari72_0.png";
+        public const string pixellari72_1_png = @"Content\bmfonts\pixellari72_1.png";
+        public const string pixellari72_2_png = @"Content\bmfonts\pixellari72_2.png";
     }
     public static class fonts
     {
