@@ -27,14 +27,11 @@ public class PauseMenu : MenuScreen
     {
         SetChild(_confirmQuit);
     }
-    
+
     private void Quit()
     {
         Shared.LoadingScreen.QueueLoad(
-            () =>
-            {
-                Shared.Game.GameScreen.SetWorld(null);
-            },
+            () => { Shared.Game.GameScreen.SetWorld(null); },
             () =>
             {
                 _game.SetMenu(Shared.Menus.MainMenuScreen);
@@ -44,5 +41,11 @@ public class PauseMenu : MenuScreen
                 }
             }
         );
+    }
+
+    public override void Draw(Renderer renderer, double alpha)
+    {
+        renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * 0.5f);
+        base.Draw(renderer, alpha);
     }
 }

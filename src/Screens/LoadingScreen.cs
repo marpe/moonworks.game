@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading;
+using MyGame.Screens.Transitions;
 
 namespace MyGame.Screens;
 
@@ -14,6 +15,7 @@ public enum TransitionState
 public enum TransitionType
 {
     Diamonds,
+    Pixelize,
     FadeToBlack
 }
 
@@ -40,7 +42,7 @@ public class LoadingScreen
 
     private Dictionary<TransitionType, SceneTransition> _sceneTransitions = new();
 
-    public static TransitionType Type = TransitionType.Diamonds;
+    public static TransitionType TransitionType = TransitionType.Pixelize;
     
     [CVar("load_transition_speed", "Toggle transition speed")]
     public static float TransitionSpeed = 1.0f;
@@ -57,6 +59,7 @@ public class LoadingScreen
 
         _sceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition(game.GraphicsDevice));
         _sceneTransitions.Add(TransitionType.FadeToBlack, new FadeToBlack());
+        _sceneTransitions.Add(TransitionType.Pixelize, new PixelizeTransition(game.GraphicsDevice));
     }
 
     [ConsoleHandler("test_load", "Test loading screen")]
@@ -172,7 +175,7 @@ public class LoadingScreen
         _compositeNewCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
         commandBuffer.CopyTextureToTexture(renderDestination, _compositeNewCopy, Filter.Nearest);
 
-        _sceneTransitions[Type].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
+        _sceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
 
         DrawLoadingText(renderer, commandBuffer, renderDestination);
     }

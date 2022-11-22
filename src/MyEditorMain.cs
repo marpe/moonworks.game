@@ -1,7 +1,6 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Editor;
-using Buffer = MoonWorks.Graphics.Buffer;
 
 namespace MyGame;
 

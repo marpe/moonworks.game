@@ -1,18 +1,89 @@
-﻿namespace MyGame.Graphics;
+﻿namespace MyGame.Screens.Transitions;
 
-[Flags]
-public enum SpriteFlip
+public class PixelizeTransition : SceneTransition
 {
-    None = 0,
-    FlipVertically = 1,
-    FlipHorizontally = 2,
+    private readonly QuadRenderer quadRenderer;
+    public readonly GraphicsPipeline Pipeline;
+
+    public Uniforms Uniform = new()
+    {
+        Progress = 0,
+        SquaresMin = new Point(20, 20),
+        Steps = 20,
+    };
+
+    private TextureSamplerBinding _sourceBinding;
+    private ColorAttachmentInfo _colorAttachmentInfo;
+
+    public PixelizeTransition(GraphicsDevice device)
+    {
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_vert_spv);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_frag_spv);
+
+        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
+        var fragmentShaderInfo = GraphicsShaderInfo.Create<Uniforms>(fragmentShader, "main", 2);
+
+        var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
+        {
+            AttachmentInfo = new GraphicsPipelineAttachmentInfo(new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)),
+            DepthStencilState = DepthStencilState.Disable,
+            VertexShaderInfo = vertexShaderInfo,
+            FragmentShaderInfo = fragmentShaderInfo,
+            MultisampleState = MultisampleState.None,
+            RasterizerState = RasterizerState.CCW_CullNone,
+            PrimitiveType = PrimitiveType.TriangleList,
+            VertexInputState = Renderer.GetVertexInputState(),
+        };
+
+        Pipeline = new GraphicsPipeline(
+            device,
+            myGraphicsPipelineCreateInfo
+        );
+
+        _sourceBinding = new TextureSamplerBinding();
+        _sourceBinding.Sampler = Renderer.PointClamp;
+
+        _colorAttachmentInfo = new ColorAttachmentInfo();
+        _colorAttachmentInfo.LoadOp = LoadOp.Clear;
+        _colorAttachmentInfo.ClearColor = Color.Cyan;
+        
+        quadRenderer = new QuadRenderer(device);
+    }
+
+    public override void Unload()
+    {
+        Pipeline.Dispose();
+    }
+
+    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
+        Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
+    {
+        if (state == TransitionState.Hidden || compositeOldCopy == null)
+            return;
+
+        quadRenderer.Draw(new Sprite(compositeOldCopy), Color.White, 0, Matrix4x4.Identity, Renderer.PointClamp);
+        quadRenderer.UpdateBuffers(commandBuffer);
+        _colorAttachmentInfo.Texture = renderDestination;
+        commandBuffer.BeginRenderPass(_colorAttachmentInfo);
+        commandBuffer.BindGraphicsPipeline(Pipeline);
+        Uniform.Progress = progress;
+        Uniform.Steps = 30;
+        commandBuffer.PushFragmentShaderUniforms(Uniform);
+        _sourceBinding.Texture = compositeNewCopy;
+        quadRenderer.Flush(commandBuffer, Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height), _sourceBinding);
+        commandBuffer.EndRenderPass();
+    }
+
+    public struct Uniforms
+    {
+        public float Progress;
+        public int Steps;
+        public Point SquaresMin;
+    }
 }
 
-public class SpriteBatch
+public class QuadRenderer
 {
-    // Used to calculate texture coordinates
-    public static readonly float[] CornerOffsetX = { 0.0f, 0.0f, 1.0f, 1.0f };
-    public static readonly float[] CornerOffsetY = { 0.0f, 1.0f, 0.0f, 1.0f };
     private readonly GraphicsDevice _device;
     private Buffer _indexBuffer;
 
@@ -27,15 +98,15 @@ public class SpriteBatch
     private Position3DTextureColorVertex[] _vertices;
 
     public uint DrawCalls { get; private set; }
-    
-    public SpriteBatch(GraphicsDevice device)
+
+    public QuadRenderer(GraphicsDevice device)
     {
         _device = device;
         var maxSprites = 8192u;
         _spriteInfo = new TextureSamplerBinding[maxSprites];
         _vertices = new Position3DTextureColorVertex[_spriteInfo.Length * 4];
         _vertexBuffer = Buffer.Create<Position3DTextureColorVertex>(device, BufferUsageFlags.Vertex, (uint)_vertices.Length);
-        _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
+        _indices = SpriteBatch.GenerateIndexArray((uint)(_spriteInfo.Length * 6));
         _indexBuffer = Buffer.Create<uint>(device, BufferUsageFlags.Index, (uint)_indices.Length);
     }
 
@@ -43,6 +114,12 @@ public class SpriteBatch
     {
         _vertexBuffer.Dispose();
         _indexBuffer.Dispose();
+    }
+
+    public void DrawRect(Rectangle rect, Color color, float depth = 0)
+    {
+        var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
+        Draw(Shared.Game.Renderer.BlankSprite, color, depth, scale.ToMatrix4x4(), Renderer.PointClamp);
     }
 
     public void Draw(Sprite sprite, Color color, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
@@ -57,7 +134,7 @@ public class SpriteBatch
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
 
-            _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
+            _indices = SpriteBatch.GenerateIndexArray((uint)(_spriteInfo.Length * 6));
 
             _vertexBuffer.Dispose();
             _vertexBuffer = Buffer.Create<Position3DTextureColorVertex>(_device, BufferUsageFlags.Vertex, (uint)_vertices.Length);
@@ -76,12 +153,6 @@ public class SpriteBatch
         var topRight = new Vector2(sprite.SrcRect.Width, 0);
         var bottomRight = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);
 
-        // var offset = Vector2.Zero;
-        /*SubtractVector(ref topLeft, ref offset);
-        SubtractVector(ref bottomLeft, ref offset);
-        SubtractVector(ref topRight, ref offset);
-        SubtractVector(ref bottomRight, ref offset);*/
-
         Vector2.Transform(ref topLeft, ref transform, out topLeft);
         Vector2.Transform(ref bottomLeft, ref transform, out bottomLeft);
         Vector2.Transform(ref topRight, ref transform, out topRight);
@@ -98,14 +169,14 @@ public class SpriteBatch
         _vertices[vertexCount + 3].TexCoord = sprite.UV.BottomRight;
 
         var effects = (byte)(flip & (SpriteFlip.FlipVertically | SpriteFlip.FlipHorizontally));
-        _vertices[vertexCount].TexCoord.X = CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount].TexCoord.Y = CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 1].TexCoord.X = CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 1].TexCoord.Y = CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 2].TexCoord.X = CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 2].TexCoord.Y = CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
-        _vertices[vertexCount + 3].TexCoord.X = CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
-        _vertices[vertexCount + 3].TexCoord.Y = CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount].TexCoord.X = SpriteBatch.CornerOffsetX[0 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount].TexCoord.Y = SpriteBatch.CornerOffsetY[0 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 1].TexCoord.X = SpriteBatch.CornerOffsetX[1 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 1].TexCoord.Y = SpriteBatch.CornerOffsetY[1 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 2].TexCoord.X = SpriteBatch.CornerOffsetX[2 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 2].TexCoord.Y = SpriteBatch.CornerOffsetY[2 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
+        _vertices[vertexCount + 3].TexCoord.X = SpriteBatch.CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
+        _vertices[vertexCount + 3].TexCoord.Y = SpriteBatch.CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
 
         _vertices[vertexCount].Color = color;
         _vertices[vertexCount + 1].Color = color;
@@ -113,13 +184,6 @@ public class SpriteBatch
         _vertices[vertexCount + 3].Color = color;
 
         _numSprites += 1;
-    }
-
-    /// Subtract b from a, modifying a
-    private static void SubtractVector(ref Vector2 a, in Vector2 b)
-    {
-        a.X -= b.X;
-        a.Y -= b.Y;
     }
 
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
@@ -142,7 +206,7 @@ public class SpriteBatch
     }
 
     /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
-    public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
+    public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection, TextureSamplerBinding sourceBinding)
     {
         DrawCalls = 0;
 
@@ -151,7 +215,7 @@ public class SpriteBatch
             Logger.LogWarn("Flushing empty SpriteBatch");
             return;
         }
-        
+
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
 
         commandBuffer.BindVertexBuffers(_vertexBuffer);
@@ -163,9 +227,9 @@ public class SpriteBatch
         {
             var spriteInfo = _spriteInfo[i];
 
-            if (!BindingsAreEqual(currSprite, spriteInfo))
+            if (!SpriteBatch.BindingsAreEqual(currSprite, spriteInfo))
             {
-                commandBuffer.BindFragmentSamplers(currSprite);
+                commandBuffer.BindFragmentSamplers(currSprite, sourceBinding);
                 commandBuffer.DrawIndexedPrimitives(
                     (uint)(offset * 4),
                     0u,
@@ -179,7 +243,7 @@ public class SpriteBatch
             }
         }
 
-        commandBuffer.BindFragmentSamplers(currSprite);
+        commandBuffer.BindFragmentSamplers(currSprite, sourceBinding);
         commandBuffer.DrawIndexedPrimitives(
             (uint)(offset * 4),
             0u,
@@ -191,27 +255,5 @@ public class SpriteBatch
 
         LastNumAddedSprites = _numSprites;
         _numSprites = 0;
-    }
-
-    public static uint[] GenerateIndexArray(uint maxIndices)
-    {
-        var result = new uint[maxIndices];
-        for (uint i = 0, j = 0; i < maxIndices; i += 6, j += 4)
-        {
-            result[i] = j;
-            result[i + 1] = j + 1;
-            result[i + 2] = j + 2;
-            result[i + 3] = j + 2;
-            result[i + 4] = j + 1;
-            result[i + 5] = j + 3;
-        }
-
-        return result;
-    }
-
-    public static bool BindingsAreEqual(in TextureSamplerBinding a, in TextureSamplerBinding b)
-    {
-        return a.Sampler.Handle == b.Sampler.Handle &&
-               a.Texture.Handle == b.Texture.Handle;
     }
 }

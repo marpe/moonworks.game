@@ -1,6 +1,4 @@
-﻿using Buffer = MoonWorks.Graphics.Buffer;
-
-namespace MyGame.Graphics;
+﻿namespace MyGame.Graphics;
 
 public static class TextureUtils
 {

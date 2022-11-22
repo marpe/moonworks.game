@@ -19,6 +19,8 @@ public class Renderer
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
 
+    public Sprite BlankSprite => _blankSprite;
+
     private readonly GraphicsDevice _device;
 
     private readonly MyGameMain _game;

@@ -26,6 +26,7 @@ public static class ContentPaths
     {
         public const string consola_ttf = @"Content\fonts\consola.ttf";
         public const string fa_6_solid_900_ttf = @"Content\fonts\fa-6-solid-900.ttf";
+        public const string Pixellari_ttf = @"Content\fonts\Pixellari.ttf";
         public const string Roboto_Bold_ttf = @"Content\fonts\Roboto-Bold.ttf";
         public const string Roboto_Regular_ttf = @"Content\fonts\Roboto-Regular.ttf";
     }
@@ -51,6 +52,11 @@ public static class ContentPaths
         {
             public const string sprite_frag_spv = @"Content\Shaders\imgui\sprite.frag.spv";
             public const string sprite_vert_spv = @"Content\Shaders\imgui\sprite.vert.spv";
+        }
+        public static class Pixelize
+        {
+            public const string pixelize_transition_frag_spv = @"Content\Shaders\Pixelize\pixelize_transition.frag.spv";
+            public const string pixelize_transition_vert_spv = @"Content\Shaders\Pixelize\pixelize_transition.vert.spv";
         }
         public const string sg2_sprite_vert_spv = @"Content\Shaders\sg2_sprite.vert.spv";
         public const string sprite_frag_spv = @"Content\Shaders\sprite.frag.spv";
