@@ -46,12 +46,10 @@ public class LoadingScreen
     public static TransitionType TransitionType = TransitionType.CircleCrop;
 
     [CVar("load_transition_speed", "Toggle transition speed")]
-    public static float TransitionSpeed = 1.0f;
+    public static float TransitionSpeed = 2.0f;
 
-    [CVar("debug_loading_screen", "Toggle loading screen debugging")]
     public static bool Debug;
 
-    [CVar("debug_loading_progress", "Sets the progress")]
     public static float DebugProgress;
 
     public static TransitionState DebugState

@@ -26,7 +26,7 @@ public abstract class MenuScreen
     protected readonly List<MenuItem> _menuItems = new();
     protected int _selectedIndex = 0;
 
-    [CVar("menu_transition_duration", "")] public static float TransitionDuration = 1.0f;
+    [CVar("menu_transition_duration", "")] public static float TransitionDuration = 0.25f;
     private int ItemSpacingY = 20;
 
     protected MenuScreen? _child;
