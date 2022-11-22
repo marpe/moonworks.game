@@ -39,8 +39,6 @@ public unsafe class ImGuiRenderer : IDisposable
     private ImGuiMouseCursor _lastCursor = ImGuiMouseCursor.None;
     private GraphicsPipeline _pipeline;
 
-    private int _textureIdCounter;
-
     private Buffer? _vertexBuffer;
     private uint _vertexBufferSize;
 
@@ -48,6 +46,8 @@ public unsafe class ImGuiRenderer : IDisposable
     {
         _game = game;
 
+        // TODO (marpe): Fix copy/paste
+        
         ImGui.CHECKVERSION();
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -682,10 +682,14 @@ public unsafe class ImGuiRenderer : IDisposable
             io->AddKeyEvent(_keyMap[keyCode], InputState.IsKeyDown(input, keyCode));
         }
 
-        io->AddKeyEvent(ImGuiKey_1.ImGuiMod_Ctrl, InputState.IsAnyKeyDown(input, InputHandler.ControlKeys));
-        io->AddKeyEvent(ImGuiKey_1.ImGuiMod_Alt, InputState.IsAnyKeyDown(input, InputHandler.AltKeys));
-        io->AddKeyEvent(ImGuiKey_1.ImGuiMod_Shift, InputState.IsAnyKeyDown(input, InputHandler.ShiftKeys));
-        io->AddKeyEvent(ImGuiKey_1.ImGuiMod_Super, InputState.IsAnyKeyDown(input, InputHandler.MetaKeys));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_LeftCtrl, InputState.IsKeyDown(input, InputHandler.ControlKeys[0]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_LeftAlt, InputState.IsKeyDown(input, InputHandler.AltKeys[0]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_LeftShift, InputState.IsKeyDown(input, InputHandler.ShiftKeys[0]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_LeftSuper, InputState.IsKeyDown(input, InputHandler.MetaKeys[0]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_RightCtrl, InputState.IsKeyDown(input, InputHandler.ControlKeys[1]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_RightAlt, InputState.IsKeyDown(input, InputHandler.AltKeys[1]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_RightShift, InputState.IsKeyDown(input, InputHandler.ShiftKeys[1]));
+        io->AddKeyEvent(ImGuiKey_1.ImGuiKey_RightSuper, InputState.IsKeyDown(input, InputHandler.MetaKeys[1]));
 
         for (var i = 0; i < input.NumTextInputChars; i++)
         {

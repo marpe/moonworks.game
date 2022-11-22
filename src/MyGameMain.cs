@@ -158,7 +158,7 @@ public class MyGameMain : Game
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
-
+        
         Shared.Menus.Draw(Renderer, commandBuffer, _menuRender, alpha);
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White);

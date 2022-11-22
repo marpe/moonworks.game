@@ -85,6 +85,8 @@ public class GameScreen
             World.Draw(renderer, Camera.Bounds, alpha);
             var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
             renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
+            
+            // TODO (marpe): Rneder post processing
         }
 
         DrawViewBounds(renderer, commandBuffer, renderDestination);

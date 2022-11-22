@@ -236,7 +236,7 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.TextUnformatted($"UpdateFps: {Time.UpdateFps}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
-            ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.DrawCalls}, AddedSprites: {Renderer.SpriteBatch.LastNumAddedSprites}");
+            ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {Renderer.SpriteBatch.MaxNumAddedSprites}");
 
             ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
             if (ImGui.Button("Reload World" + LoadingIndicator(Shared.LoadingScreen.IsLoading), default))

@@ -28,6 +28,9 @@ public class SpriteBatch
 
     public uint DrawCalls { get; private set; }
 
+    public uint MaxDrawCalls { get; private set; }
+    public uint MaxNumAddedSprites { get; private set; }
+
     public SpriteBatch(GraphicsDevice device)
     {
         _device = device;
@@ -103,6 +106,7 @@ public class SpriteBatch
     /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
     public void Flush(CommandBuffer commandBuffer, Matrix4x4 viewProjection)
     {
+        MaxDrawCalls = Math.Max(MaxDrawCalls, DrawCalls);
         DrawCalls = 0;
 
         if (_numSprites == 0)
@@ -136,6 +140,7 @@ public class SpriteBatch
         DrawIndexedQuads(commandBuffer, offset, _numSprites - offset, vertexParamOffset);
         DrawCalls++;
 
+        MaxNumAddedSprites = Math.Max(MaxNumAddedSprites, _numSprites);
         LastNumAddedSprites = _numSprites;
         _numSprites = 0;
     }
@@ -199,7 +204,7 @@ public class SpriteBatch
     {
         commandBuffer.DrawIndexedPrimitives(offset * 4u, 0u, numSprites * 2u, vertexParamOffset, 0u);
     }
-    
+
     public static bool BindingsAreEqual(in TextureSamplerBinding a, in TextureSamplerBinding b)
     {
         return a.Sampler.Handle == b.Sampler.Handle &&
