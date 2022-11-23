@@ -6,9 +6,9 @@ fontName=Pixellari
 fontFile=
 charSet=0
 fontSize=72
-aa=2
+aa=1
 scaleH=100
-useSmoothing=1
+useSmoothing=0
 isBold=0
 isItalic=0
 useUnicode=1
@@ -34,17 +34,17 @@ forceZero=0
 widthPaddingFactor=0.00
 
 # output file
-outWidth=256
-outHeight=256
+outWidth=512
+outHeight=512
 outBitDepth=32
 fontDescFormat=1
 fourChnlPacked=0
 textureFormat=png
 textureCompression=0
 alphaChnl=0
-redChnl=4
-greenChnl=4
-blueChnl=4
+redChnl=0
+greenChnl=0
+blueChnl=0
 invA=0
 invR=0
 invG=0
@@ -54,6 +54,6 @@ invB=0
 outlineThickness=0
 
 # selected chars
-chars=0-0,13,32-126
+chars=32-126
 
 # imported icon images
