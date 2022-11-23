@@ -246,7 +246,7 @@ public class FancyTextComponent
                 var partOrigin = charSize / 2;
                 var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
-                renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColors);
+                renderer.DrawBMText(fontType, part.Character, new Vector2((int)finalPos.X, (int)finalPos.Y), partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColors);
             }
 
             partOffset.X += charSize.X;

@@ -127,7 +127,7 @@ public class TextBatcher
                 {
                     var topLeftVert = vertices[i];
                     var bottomRightVert = vertices[i + 3];
-                    var transform = Matrix3x2.CreateTranslation(new Vector2(topLeftVert.Position.X, topLeftVert.Position.Y));
+                    var transform = Matrix3x2.CreateTranslation(new Vector2((int)topLeftVert.Position.X, (int)topLeftVert.Position.Y));
                     var srcPos = topLeftVert.TexCoord * fontTextureSize;
                     var srcDim = (bottomRightVert.TexCoord - topLeftVert.TexCoord) * fontTextureSize;
                     var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);

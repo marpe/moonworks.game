@@ -57,10 +57,15 @@ public class Spring
 
         UpdateDampedSpringMotion(ref Position, ref Velocity, EquilibriumPosition, MotionParams);
 
-        if (MathF.IsNearZero(Velocity))
+        if (MathF.IsNearZero(Velocity, 0.001f))
+        {
             Velocity = 0;
-        if (MathF.IsNearZero(Position))
+        }
+
+        if (MathF.IsNearZero(Position, 0.001f))
+        {
             Position = 0;
+        }
     }
 
     /// <summary>
