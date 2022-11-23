@@ -36,6 +36,7 @@ public abstract class MenuScreen
     private float XOffset = 500f;
     private Vector2 InitialPosition = MyGameMain.DesignResolution.ToVec2() * 0.5f;
     private bool _wasCoveredByOtherScreen;
+    private int _lastSelectedIndex;
 
     public MenuScreen(MyGameMain game)
     {
@@ -231,16 +232,26 @@ public abstract class MenuScreen
         for (var i = 0; i < _menuItems.Count; i++)
         {
             _menuItems[i].PreviousPosition = _menuItems[i].Position;
+            _menuItems[i].NudgeSpring.Update(deltaSeconds);
             _menuItems[i].Position = position;
+            position.Y = _menuItems[i].Bounds.Bottom + ItemSpacingY;
+            _menuItems[i].Position.Y += _menuItems[i].NudgeSpring.Position;
+
             _menuItems[i].Alpha = (1.0f - MathF.Abs(_spring.Position));
 
-            position.Y = _menuItems[i].Bounds.Bottom + ItemSpacingY;
 
             if (_menuItems[i] is FancyTextMenuItem ft)
             {
                 ft.Update(deltaSeconds);
             }
         }
+
+        if (_lastSelectedIndex != _selectedIndex)
+        {
+            _menuItems[_selectedIndex].NudgeSpring.Velocity = 500;
+        }
+
+        _lastSelectedIndex = _selectedIndex;
     }
 
     public virtual void Draw(Renderer renderer, double alpha)

@@ -9,6 +9,8 @@ public abstract class MenuItem
     public bool IsVisible = true;
     public bool IsEnabled = true;
     public float Alpha = 0f;
+    public Spring NudgeSpring = new();
+    
     public bool IsSelectable => IsVisible && IsEnabled;
     public abstract Rectangle Bounds { get; }
 

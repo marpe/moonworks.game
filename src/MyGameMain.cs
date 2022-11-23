@@ -1,4 +1,6 @@
+using FreeTypeSharp;
 using MyGame.Debug;
+using MyGame.Fonts;
 using MyGame.Logs;
 
 namespace MyGame;
@@ -65,12 +67,17 @@ public class MyGameMain : Game
 
         Shared.Menus = new MenuHandler(this);
 
+        Shared.FreeTypeLibrary = new FreeTypeLibrary(); 
+        
+        var fontAtlas = new FontAtlas(GraphicsDevice);
+        fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
+        
         Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Logs.Logs.Loggers.Add(new TWConsoleLogger());
         });
-
+        
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -158,7 +165,7 @@ public class MyGameMain : Game
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
 
         GameScreen.Draw(Renderer, commandBuffer, _gameRender, alpha);
-        
+
         Shared.Menus.Draw(Renderer, commandBuffer, _menuRender, alpha);
 
         Renderer.DrawSprite(_gameRender, Matrix4x4.Identity, Color.White);

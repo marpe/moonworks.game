@@ -161,8 +161,8 @@ public class World
     public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
     {
         DrawLevel(renderer, cameraBounds);
-        DrawPlayer(renderer, alpha);
         DrawEnemies(renderer, alpha);
+        DrawPlayer(renderer, alpha);
         DrawBullets(renderer, alpha);
         DrawCameraBounds(renderer, cameraBounds);
 

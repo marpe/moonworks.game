@@ -36,8 +36,15 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>Mochi.DearImGui.Native.dll</TargetPath>
         </ContentWithTargetPath>
+        <ContentWithTargetPath Include="lib\FreeTypeSharp\Debug\net6.0\runtimes\win-x64\native\freetype.dll">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>freetype.dll</TargetPath>
+        </ContentWithTargetPath>
     </ItemGroup>
     <ItemGroup>
+        <Reference Include="FreeTypeSharp">
+          <HintPath>lib\FreeTypeSharp\Debug\net6.0\FreeTypeSharp.dll</HintPath>
+        </Reference>
         <Reference Include="Mochi.DearImGui">
             <HintPath>lib\Mochi.DearImGui\Debug-AnyCPU\Mochi.DearImGui.dll</HintPath>
         </Reference>
