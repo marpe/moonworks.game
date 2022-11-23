@@ -80,7 +80,7 @@ public class CircleCropTransition : SceneTransition
             TransitionState.Active or TransitionState.TransitionOn => compositeOldCopy,
             _ => compositeNewCopy
         };
-        
+
         quadRenderer.Draw(new Sprite(renderToDraw), Color.White, 0, Matrix4x4.Identity, Renderer.PointClamp);
         // quadRenderer.DrawRect(RectangleExt.FromTexture(renderDestination), Color.Transparent);
 

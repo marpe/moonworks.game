@@ -24,6 +24,8 @@ public partial class Player : Entity
     public PlayerBehaviour Behaviour = new();
     public Mover Mover = new();
 
+    public Matrix4x4 LastTransform = Matrix4x4.Identity;
+    
     public override void Initialize(World world)
     {
         Behaviour.Initialize(this);
@@ -35,5 +37,14 @@ public partial class Player : Entity
     {
         Behaviour.Update(deltaSeconds, command);
         base.Update(deltaSeconds);
+    }
+
+    public Matrix4x4 GetTransform(double alpha)
+    {
+        var xform = Matrix3x2.CreateTranslation(-Origin.X, -Origin.Y) *
+                    Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
+                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+        LastTransform = xform.ToMatrix4x4();
+        return LastTransform;
     }
 }

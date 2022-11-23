@@ -40,7 +40,7 @@ public class LoadingScreen
 
     public static readonly Dictionary<TransitionType, SceneTransition> SceneTransitions = new();
 
-    public static TransitionType TransitionType = TransitionType.CircleCrop;
+    public static TransitionType TransitionType = TransitionType.Pixelize;
 
     [CVar("load_transition_speed", "Toggle transition speed")]
     public static float TransitionSpeed = 2.0f;

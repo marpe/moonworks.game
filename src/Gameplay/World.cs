@@ -229,12 +229,9 @@ public class World
     private void DrawPlayer(Renderer renderer, double alpha)
     {
         var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
-        var position = Player.Position.Lerp(alpha);
-        var xform = Matrix3x2.CreateTranslation(-Player.Origin.X, -Player.Origin.Y) *
-                    Matrix3x2.CreateScale(Player.EnableSquash ? Player.Squash : Vector2.One) *
-                    Matrix3x2.CreateTranslation(position.X, position.Y);
+        var xform = Player.GetTransform(alpha);
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, Player.Flip);
+        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
         if (Debug)
             DrawDebug(renderer, Player, true, alpha);
     }

@@ -54,7 +54,7 @@ public class Camera
         set => _zoom = MathF.Clamp(value, 0.001f, 10f);
     }
 
-    private Matrix3x2 GetView()
+    public Matrix3x2 GetView()
     {
         ViewPosition = Position + ShakeOffset + BumpOffset;
         return Matrix3x2.CreateTranslation(-ViewPosition.X, -ViewPosition.Y) *

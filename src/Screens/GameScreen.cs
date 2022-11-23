@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Threading;
 using MyGame.Cameras;
+using MyGame.Screens.Transitions;
 
 namespace MyGame.Screens;
 
@@ -89,6 +90,22 @@ public class GameScreen
 
         World.Update(deltaSeconds, _game.InputHandler);
         Camera.Update(deltaSeconds, _game.InputHandler);
+
+        SetCircleCropPosition();
+    }
+
+    private void SetCircleCropPosition()
+    {
+        if (World == null)
+            return;
+
+        var playerTransform = World.Player.LastTransform;
+        var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
+        var playerInScreen = Vector2.Transform(new Vector2(8, 8), playerTransform * viewProjection);
+        playerInScreen = Vector2.Half + playerInScreen * 0.5f;
+        var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
+        circleLoad.CenterX = playerInScreen.X;
+        circleLoad.CenterY = playerInScreen.Y;
     }
 
     public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
