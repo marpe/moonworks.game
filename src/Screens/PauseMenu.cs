@@ -12,10 +12,16 @@ public class PauseMenu : MenuScreen
         {
             new FancyTextMenuItem("Pause") { IsEnabled = false },
             new TextMenuItem("Resume", OnCancelled),
+            new TextMenuItem("Restart", OnRestart),
             new TextMenuItem("Options", () => { Shared.Menus.AddScreen(Shared.Menus.OptionsScreen); }),
             new TextMenuItem("Quit", ConfirmQuitToMain),
         });
         _confirmQuit = new ConfirmScreen(game, Quit, () => { });
+    }
+
+    private void OnRestart()
+    {
+        GameScreen.Restart();
     }
 
     public override void OnCancelled()
@@ -30,23 +36,17 @@ public class PauseMenu : MenuScreen
 
     private void Quit()
     {
-        Shared.LoadingScreen.QueueLoad(
-            () => { Shared.Game.GameScreen.SetWorld(null); },
-            () =>
-            {
-                Shared.Menus.RemoveAll();
-                Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);
-                while (Shared.Game.GameScreen.World != null)
-                {
-                    Thread.Sleep(1);
-                }
-            }
-        );
+        Shared.LoadingScreen.LoadSync(() =>
+        {
+            Shared.Game.GameScreen.Unload();
+            Shared.Menus.RemoveAll();
+            Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);   
+        });
     }
 
     public override void Draw(Renderer renderer, double alpha)
     {
-        var bgAlpha = State == MenuScreenState.Active ? 1.0f : _transitionPercentage; 
+        var bgAlpha = State == MenuScreenState.Active ? 1.0f : _transitionPercentage;
         renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * bgAlpha * 0.5f);
         base.Draw(renderer, alpha);
     }

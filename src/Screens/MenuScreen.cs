@@ -96,7 +96,7 @@ public abstract class MenuScreen
     {
         SetState(MenuScreenState.TransitionOn);
 
-        _spring.Position = -1;
+        ResetItems();
 
         _transitionPercentage = 0;
         // select first item
@@ -105,6 +105,18 @@ public abstract class MenuScreen
         if (!_menuItems[_selectedIndex].IsSelectable)
         {
             NextItem();
+        }
+    }
+
+    private void ResetItems()
+    {
+        _spring.Position = _spring.Position < 0 ? -1 : 1;
+        var position = new Vector2(InitialPosition.X + _spring.Position * XOffset, InitialPosition.Y);
+        for (var i = 0; i < _menuItems.Count; i++)
+        {
+            _menuItems[i].PreviousPosition = _menuItems[i].Position = position;
+            _menuItems[i].NudgeSpring.Position = 0;
+            _menuItems[i].Alpha = 0;
         }
     }
 
@@ -201,7 +213,11 @@ public abstract class MenuScreen
             if (!_menuItems[i].Bounds.Contains(_game.InputHandler.MousePosition) || !_menuItems[i].IsSelectable)
                 continue;
 
-            _selectedIndex = i;
+            if (_game.InputHandler.MouseDelta.X != 0 || _game.InputHandler.MouseDelta.Y != 0)
+                _selectedIndex = i;
+
+            if (_selectedIndex != i)
+                continue;
 
             if (!_game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
                 continue;
@@ -235,7 +251,7 @@ public abstract class MenuScreen
             _menuItems[i].NudgeSpring.Update(deltaSeconds);
             _menuItems[i].Position = position;
             position.Y = _menuItems[i].Bounds.Bottom + ItemSpacingY;
-            _menuItems[i].Position.Y += _menuItems[i].NudgeSpring.Position;
+            _menuItems[i].Position.X += _menuItems[i].NudgeSpring.Position;
 
             _menuItems[i].Alpha = (1.0f - MathF.Abs(_spring.Position));
 

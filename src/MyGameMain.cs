@@ -67,17 +67,17 @@ public class MyGameMain : Game
 
         Shared.Menus = new MenuHandler(this);
 
-        Shared.FreeTypeLibrary = new FreeTypeLibrary(); 
-        
+        Shared.FreeTypeLibrary = new FreeTypeLibrary();
+
         var fontAtlas = new FontAtlas(GraphicsDevice);
         fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
-        
+
         Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Logs.Logs.Loggers.Add(new TWConsoleLogger());
         });
-        
+
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -103,6 +103,8 @@ public class MyGameMain : Game
 
     private void UpdateScreens()
     {
+        GameScreen.UpdateQueued();
+
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
             return;
@@ -189,7 +191,7 @@ public class MyGameMain : Game
     {
         Logger.LogInfo("Shutting down");
 
-        GameScreen.SetWorld(null);
+        GameScreen.Unload();
 
         ConsoleScreen.Unload();
 

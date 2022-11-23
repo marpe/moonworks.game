@@ -28,9 +28,6 @@ public class LoadingScreen
     private readonly Sprite _backgroundSprite;
     private readonly Sprite _blankSprite;
 
-    private ConcurrentQueue<Action> _taskWork = new();
-    private Queue<Action> _work = new();
-
     private Texture? _compositeOldCopy;
     private Texture? _compositeNewCopy;
     private Texture? _gameOldCopy;
@@ -52,6 +49,10 @@ public class LoadingScreen
 
     public static float DebugProgress;
 
+    private ConcurrentQueue<Action> _queue = new();
+
+    private Action? _loadSyncCallback;
+
     public static TransitionState DebugState
     {
         get
@@ -65,7 +66,7 @@ public class LoadingScreen
             };
         }
     }
-    
+
     public LoadingScreen(MyGameMain game)
     {
         _game = game;
@@ -84,24 +85,34 @@ public class LoadingScreen
     [ConsoleHandler("test_load", "Test loading screen")]
     public static void TestLoad()
     {
-        Shared.LoadingScreen.QueueLoad(() => { Thread.Sleep(1000); });
+        Shared.LoadingScreen.LoadAsync(() => Thread.Sleep(1000));
     }
 
-    public void QueueLoad(Action runInTask, Action? otherWork = null)
+    public void LoadSync(Action loadSyncCallback)
     {
-        _taskWork.Enqueue(runInTask);
-        if (otherWork != null)
-            _work.Enqueue(otherWork);
-
-        if (!IsLoading)
+        if (IsLoading || _loadSyncCallback != null)
         {
-            TransitionOn();
+            Logger.LogError("Already loading sync");
         }
+
+        _loadSyncCallback = loadSyncCallback;
+        TransitionOn();
     }
 
-    public void LoadImmediate(Action runInTask, Action? otherWork = null)
+    public void LoadAsync(Action loadCallback)
     {
-        QueueLoad(runInTask, otherWork);
+        if (IsLoading || !_queue.IsEmpty)
+        {
+            Logger.LogError("Already loading async");
+        }
+
+        _queue.Enqueue(loadCallback);
+        TransitionOn();
+    }
+
+    public void LoadImmediate(Action loadCallback)
+    {
+        LoadAsync(loadCallback);
         SetActive();
     }
 
@@ -110,23 +121,28 @@ public class LoadingScreen
         _progress = 1.0f;
         State = TransitionState.Active;
 
-        void Load()
+        Task.Run(() =>
         {
-            var sw = Stopwatch.StartNew();
-            var taskWorkCount = _taskWork.Count;
-            while (_taskWork.TryDequeue(out var work))
+            Logger.LogInfo($"LoadAsync Start: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
+            while (_queue.TryPeek(out var callback))
             {
-                work.Invoke();
+                callback();
+                if (!_queue.TryDequeue(out _))
+                    throw new InvalidOperationException("Peeked, but couldn't dequeue!?");
             }
-
-            Logger.LogInfo($"*** Loading in task finished ({taskWorkCount} items in {sw.ElapsedMilliseconds} ms)");
-        }
-
-        Task.Run(Load);
+            Logger.LogInfo($"LoadAsync Done: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
+        });
     }
 
     private void TransitionOn()
     {
+        if (IsLoading)
+        {
+            Logger.LogError("Ignoring TransitionOn, since we're already active");
+            return;
+        }
+
+        Logger.LogInfo($"Load transition on: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
         State = TransitionState.TransitionOn;
         _shouldCopyRender = true;
     }
@@ -134,16 +150,12 @@ public class LoadingScreen
     public void Update(float deltaSeconds)
     {
         if (Debug)
-        {
             return;
-        }
 
         if (State == TransitionState.Hidden)
         {
-            if (!_taskWork.IsEmpty || _work.Count > 0)
-            {
+            if (!_queue.IsEmpty || _loadSyncCallback != null)
                 TransitionOn();
-            }
         }
         else if (State == TransitionState.TransitionOn)
         {
@@ -156,18 +168,17 @@ public class LoadingScreen
         }
         else if (State == TransitionState.Active)
         {
-            var workCount = _work.Count;
-            var sw = Stopwatch.StartNew();
-            while (_work.TryDequeue(out var work))
+            if (_loadSyncCallback != null)
             {
-                work.Invoke();
+                _loadSyncCallback();
+                _loadSyncCallback = null;
+                Logger.LogInfo($"LoadSync: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             }
 
-            Logger.LogInfo($"--- Loading finished, ({workCount} items in {sw.ElapsedMilliseconds} ms)");
-
-            if (_taskWork.IsEmpty)
+            if (_queue.IsEmpty)
             {
                 State = TransitionState.TransitionOff;
+                Logger.LogInfo($"Transitioning off: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             }
         }
         else if (State == TransitionState.TransitionOff)
@@ -185,6 +196,7 @@ public class LoadingScreen
     {
         if (_shouldCopyRender)
         {
+            Logger.LogInfo($"Copying render: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             _gameOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, gameRender);
             _menuOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, menuRender);
             _compositeOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
@@ -234,8 +246,8 @@ public class LoadingScreen
             value.Unload();
         }
 
-        _taskWork.Clear();
-        _work.Clear();
+        _queue.Clear();
+
         SceneTransitions.Clear();
     }
 }

@@ -27,17 +27,8 @@ public class MainMenuScreen : MenuScreen
 
     private void OnPlay()
     {
-        Shared.LoadingScreen.QueueLoad(
-            () => { Shared.Game.GameScreen.SetWorld(new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk)); },
-            () =>
-            {
-                Shared.Menus.RemoveAll();
-                while (Shared.Game.GameScreen.World == null)
-                {
-                    Thread.Sleep(1);
-                }
-            }
-        );
+        Logger.LogInfo($"Play hit from: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
+        GameScreen.Restart();
     }
 
     private void OnQuit()
