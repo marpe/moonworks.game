@@ -4,6 +4,8 @@ namespace MyGame.Graphics;
 
 public class BMFont : IDisposable
 {
+    private static Color[] _tempColors = new Color[4];
+    
     public BitmapFont Font;
 
     public Texture[] Textures;
@@ -50,18 +52,32 @@ public class BMFont : IDisposable
         IsDisposed = true;
     }
 
+
     public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Vector2 position, Vector2 origin,
         float rotation, Vector2 scale, Color color, float depth)
+    {
+        _tempColors.AsSpan().Fill(color);
+        return DrawInto(renderer, bmFont, text, position, origin, rotation, scale, _tempColors, depth);
+    }
+
+    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Vector2 position, Vector2 origin,
+        float rotation, Vector2 scale, Color[] colors, float depth)
     {
         var o = Matrix3x2.CreateTranslation(-origin.X, -origin.Y);
         var s = Matrix3x2.CreateScale(scale.X, scale.Y);
         var r = Matrix3x2.CreateRotation(rotation);
         var t = Matrix3x2.CreateTranslation(position.X, position.Y);
         var transformationMatrix = o * s * r * t;
-        return DrawInto(renderer, bmFont, text, transformationMatrix, color, depth);
+        return DrawInto(renderer, bmFont, text, transformationMatrix, colors, depth);
+    }
+    
+    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Matrix3x2 transform, Color color, float depth)
+    {
+        _tempColors.AsSpan().Fill(color);
+        return DrawInto(renderer, bmFont, text, transform, _tempColors, depth);
     }
 
-    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Matrix3x2 transform, Color color, float depth)
+    public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Matrix3x2 transform, Color[] colors, float depth)
     {
         var font = bmFont.Font;
 
@@ -102,7 +118,7 @@ public class BMFont : IDisposable
                 );
 
             var sprite = new Sprite(bmFont.Textures[currentChar.TexturePage], currentChar.Bounds);
-            renderer.DrawSprite(sprite, (characterTransform * transform).ToMatrix4x4(), color, depth);
+            renderer.DrawSprite(sprite, (characterTransform * transform).ToMatrix4x4(), colors, depth);
 
             previousCharacter = c;
         }

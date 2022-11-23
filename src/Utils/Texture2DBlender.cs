@@ -365,36 +365,6 @@ public static class Texture2DBlender
         //return MAX(x, MIN(y, z));
     }
 
-    private static Color Add(Color a, Color b)
-    {
-        return new Color(
-            a.R + b.R,
-            a.G + b.G,
-            a.B + b.B,
-            a.A + b.A
-        );
-    }
-
-    private static Color Multiply(Color a, Color b)
-    {
-        return new Color(
-            a.R * b.R,
-            a.G * b.G,
-            a.B * b.B,
-            a.A * b.A
-        );
-    }
-
-    private static Color Subtract(Color a, Color b)
-    {
-        return new Color(
-            a.R - b.R,
-            a.G - b.G,
-            a.B - b.B,
-            a.A - b.A
-        );
-    }
-
     private static byte GetR(uint packedValue)
     {
         return unchecked((byte)(packedValue >> R_SHIFT));

@@ -10,6 +10,8 @@ public enum SpriteFlip
 
 public class SpriteBatch
 {
+    private static Color[] _tempColors = new Color[4];
+
     // Used to calculate texture coordinates
     public static readonly float[] CornerOffsetX = { 0.0f, 0.0f, 1.0f, 1.0f };
     public static readonly float[] CornerOffsetY = { 0.0f, 1.0f, 0.0f, 1.0f };
@@ -50,6 +52,12 @@ public class SpriteBatch
 
     public void Draw(Sprite sprite, Color color, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
     {
+        _tempColors.AsSpan().Fill(color);
+        Draw(sprite, _tempColors, depth, transform, sampler, flip);
+    }
+
+    public void Draw(Sprite sprite, Color[] colors, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
+    {
         if (sprite.Texture.IsDisposed)
             throw new ObjectDisposedException(nameof(sprite.Texture));
 
@@ -72,7 +80,7 @@ public class SpriteBatch
         _spriteInfo[_numSprites].Sampler = sampler;
         _spriteInfo[_numSprites].Texture = sprite.Texture;
 
-        PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, color, flip);
+        PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, colors, flip);
 
         _numSprites += 1;
     }
@@ -162,7 +170,7 @@ public class SpriteBatch
     }
 
     public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, uint vertexOffset, in Sprite sprite, Matrix4x4 transform, float depth,
-        Color color, SpriteFlip flip)
+        Color[] colors, SpriteFlip flip)
     {
         var topLeft = Vector2.Zero;
         var bottomLeft = new Vector2(0, sprite.SrcRect.Height);
@@ -194,10 +202,10 @@ public class SpriteBatch
         vertices[vertexOffset + 3].TexCoord.X = CornerOffsetX[3 ^ effects] * sprite.UV.Dimensions.X + sprite.UV.Position.X;
         vertices[vertexOffset + 3].TexCoord.Y = CornerOffsetY[3 ^ effects] * sprite.UV.Dimensions.Y + sprite.UV.Position.Y;
 
-        vertices[vertexOffset].Color = color;
-        vertices[vertexOffset + 1].Color = color;
-        vertices[vertexOffset + 2].Color = color;
-        vertices[vertexOffset + 3].Color = color;
+        vertices[vertexOffset].Color = colors[0];
+        vertices[vertexOffset + 1].Color = colors[1];
+        vertices[vertexOffset + 2].Color = colors[2];
+        vertices[vertexOffset + 3].Color = colors[3];
     }
 
     public static void DrawIndexedQuads(CommandBuffer commandBuffer, uint offset, uint numSprites, uint vertexParamOffset)

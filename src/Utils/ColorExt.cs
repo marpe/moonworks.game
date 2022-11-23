@@ -100,6 +100,44 @@ public static class ColorExt
         var t = Math.Abs(MathF.Sin(timer));
         return Lerp(from, to, t);
     }
+    
+    public static Color Add(in Color a, in Color b)
+    {
+        return new Color(
+            a.R + b.R,
+            a.G + b.G,
+            a.B + b.B,
+            a.A + b.A
+        );
+    }
+
+    public static Color Multiply(in Color self, in Color second)
+    {
+        return new Color
+        {
+            R = (byte)(self.R * second.R / 255),
+            G = (byte)(self.G * second.G / 255),
+            B = (byte)(self.B * second.B / 255),
+            A = (byte)(self.A * second.A / 255)
+        };
+    }
+    
+    public static void MultiplyColors(Span<Color> colors, in Color tint)
+    {
+        for (var i = 0; i < colors.Length; i++)
+            colors[i] = Multiply(colors[i], tint);
+    }
+
+    public static Color Subtract(in Color a, in Color b)
+    {
+        return new Color(
+            a.R - b.R,
+            a.G - b.G,
+            a.B - b.B,
+            a.A - b.A
+        );
+    }
+
 }
 
 public class ColorConverter : JsonConverter<Color>

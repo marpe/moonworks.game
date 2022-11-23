@@ -2,6 +2,8 @@
 
 public class QuadRenderer
 {
+    private static Color[] _tempColors = new Color[4];
+
     private readonly GraphicsDevice _device;
     private Buffer _indexBuffer;
 
@@ -62,7 +64,8 @@ public class QuadRenderer
         _spriteInfo[_numSprites].Sampler = sampler;
         _spriteInfo[_numSprites].Texture = sprite.Texture;
 
-        SpriteBatch.PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, color, flip);
+        _tempColors.AsSpan().Fill(color);
+        SpriteBatch.PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, _tempColors, flip);
 
         _numSprites += 1;
     }

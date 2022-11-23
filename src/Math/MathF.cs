@@ -465,4 +465,11 @@ public static class MathF
     {
         return Math.Abs(value);
     }
+    
+        
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Frac(float value)
+    {
+        return (float)Math.Abs(value - Math.Truncate(value));
+    }
 }

@@ -162,6 +162,11 @@ public class Renderer
     {
         SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
+    
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    {
+        SpriteBatch.Draw(sprite, colors, depth, transform, PointClamp, flip);
+    }
 
     public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 position, float depth, Color color,
         HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
@@ -173,6 +178,12 @@ public class Renderer
         Color color)
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
+    }
+    
+    public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
+        Color[] colors)
+    {
+        BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth);
     }
 
     public (CommandBuffer, Texture?) AcquireSwapchainTexture()

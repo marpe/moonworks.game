@@ -15,14 +15,16 @@ public struct FancyTextPart
     public float WaveOffset;
     public float Rotation;
     public Vector2 Scale;
+    public bool IsRainbow;
 
-    public FancyTextPart(int index, char character, Color color, bool isWaving, bool isShaking, Point offset)
+    public FancyTextPart(int index, char character, Color color, bool isWaving, bool isShaking, bool isRainbow, Point offset)
     {
         Index = index;
         Character = new string(character, 1);
         Color = color;
         IsWaving = isWaving;
         IsShaking = isShaking;
+        IsRainbow = isRainbow;
         Offset = offset;
 
         WaveAmplitude = 4;
@@ -38,6 +40,7 @@ public struct FancyTextPart
 
 public class FancyTextComponent
 {
+    private static Color[] _tempColors = new Color[4];
     public static float ShakeSpeed = 100f;
     public static float ShakeAmount = 1f;
 
@@ -51,6 +54,7 @@ public class FancyTextComponent
     public Vector2 Scale = Vector2.One;
 
     public float Timer;
+    public static float WaveAmplitudeScale = 2f;
 
     public FancyTextComponent(ReadOnlySpan<char> rawText)
     {
@@ -93,11 +97,13 @@ public class FancyTextComponent
         var parts = new List<FancyTextPart>();
 
         var currentColor = Color.White;
+
         Stack<Color> colorStack = new();
         var isInTag = false;
         var characterIndex = 0;
         var isWaving = false;
         var isShaking = false;
+        var isRainbow = false;
         var sb = new StringBuilder();
 
         var offset = new Point();
@@ -129,6 +135,10 @@ public class FancyTextComponent
                     {
                         isShaking = true;
                     }
+                    else if (text[i + 1] == '!')
+                    {
+                        isRainbow = true;
+                    }
                     // text has at least 2 characters more
                     else if (i + 1 < text.Length - 1)
                     {
@@ -144,6 +154,10 @@ public class FancyTextComponent
                         else if (text[i + 1] == '/' && text[i + 2] == '*')
                         {
                             isShaking = false;
+                        }
+                        else if (text[i + 1] == '/' && text[i + 2] == '!')
+                        {
+                            isRainbow = false;
                         }
                     }
                 }
@@ -167,16 +181,8 @@ public class FancyTextComponent
             else if (!isInTag)
             {
                 sb.Append(text[i]);
-                
-                parts.Add(new FancyTextPart(
-                        characterIndex,
-                        text[i],
-                        currentColor,
-                        isWaving,
-                        isShaking,
-                        offset
-                    )
-                );
+
+                parts.Add(new FancyTextPart(characterIndex, text[i], currentColor, isWaving, isShaking, isRainbow, offset));
 
                 offset.X++;
                 characterIndex++;
@@ -195,7 +201,7 @@ public class FancyTextComponent
 
     private static Vector2 GetWaveOffset(FancyTextPart part, float t)
     {
-        return new Vector2(0, MathF.Sin(part.WaveSpeed * t + part.Index * part.WaveOffset) * part.WaveAmplitude);
+        return new Vector2(0, MathF.Sin(part.WaveSpeed * t + part.Offset.X * part.WaveOffset) * part.WaveAmplitude * WaveAmplitudeScale);
     }
 
     public void Update(float deltaSeconds)
@@ -215,13 +221,13 @@ public class FancyTextComponent
         var partOffset = new Point();
         var previousChar = ' ';
         var prevLine = 0;
-        
+
         for (var i = 0; i < Parts.Length; i++)
         {
             var part = Parts[i];
-            
+
             var charSize = font.MeasureString(previousChar, part.Character[0]);
-            
+
             // newline
             if (part.Offset.Y > prevLine)
             {
@@ -233,13 +239,14 @@ public class FancyTextComponent
             {
                 var waveOffset = part.IsWaving ? GetWaveOffset(part, Timer) : Vector2.Zero;
                 var shakeOffset = part.IsShaking ? GetShakeOffset(0, ShakeSpeed, ShakeAmount, Timer) : Vector2.Zero;
-                var finalColor = MultiplyColors(color, part.Color, Alpha, part.Alpha);
+
+                var finalColors = GetColors(part, Alpha, color);
 
                 var partPos = -origin + shakeOffset + waveOffset + partOffset;
                 var partOrigin = charSize / 2;
                 var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
-                renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColor);
+                renderer.DrawBMText(fontType, part.Character, finalPos, partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColors);
             }
 
             partOffset.X += charSize.X;
@@ -262,15 +269,57 @@ public class FancyTextComponent
         return numLines;
     }
 
-    private static Color MultiplyColors(Color colorA, Color colorB, float partAlpha, float mainAlpha)
+    private static Color LinearGradient(Color[] stops, float value)
     {
-        // return color * (partAlpha * mainAlpha);
-        var finalAlpha = mainAlpha * partAlpha * (colorA.A / 255f) * (colorB.A / 255f);
-        var a = (byte)(finalAlpha * 255f);
-        var r = (byte)(255 * (colorA.R / 255f * colorB.R / 255f * finalAlpha));
-        var g = (byte)(255 * (colorA.G / 255f * colorB.G / 255f * finalAlpha));
-        var b = (byte)(255 * (colorA.B / 255f * colorB.B / 255f * finalAlpha));
-        return new Color(r, g, b, a);
+        var fracValue = MathF.Frac(value);
+        var startIndex = (int)(fracValue * stops.Length) % stops.Length;
+        var endIndex = (startIndex + 1) % stops.Length;
+
+        var startOffset = startIndex / (float)stops.Length;
+        var range = 1.0f / (float)stops.Length;
+        var frac = (fracValue - startOffset) / range;
+
+        return ColorExt.Lerp(stops[startIndex], stops[endIndex], frac);
+    }
+
+    public static Color[] GetColors(in FancyTextPart part, float alpha, Color tint)
+    {
+        if (part.IsRainbow)
+        {
+            var gradient = new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
+
+            var points = new Vector2[]
+            {
+                new Vector2(0, 0),
+                new Vector2(0, 1),
+                new Vector2(1, 0),
+                new Vector2(1, 1),
+            };
+
+            var s = 0.01f;
+
+            var position = new Vector2(part.Offset.X, part.Offset.Y) + Vector2.One * Shared.Game.Time.TotalElapsedTime * 0.025f;
+            var t = Matrix3x2.CreateTranslation(-Vector2.Half) *
+                    Matrix3x2.CreateScale(Vector2.One * s) *
+                    Matrix3x2.CreateRotation(45 * MathF.Deg2Rad) * 
+                    Matrix3x2.CreateTranslation(position);
+
+            for (var i = 0; i < points.Length; i++)
+            {
+                var d1 = Vector2.Transform(points[i], t);
+                var dx = 15f * d1.X + part.Offset.X * 0.15f;
+                _tempColors[i] = LinearGradient(gradient, dx);
+            }
+
+            ColorExt.MultiplyColors(_tempColors, tint);
+            return _tempColors;
+        }
+        else
+        {
+            _tempColors.AsSpan().Fill(part.Color);
+            ColorExt.MultiplyColors(_tempColors, tint);
+            return _tempColors;
+        }
     }
 
     private static Vector2 MeasureText(ReadOnlySpan<char> text, FontData font, HorizontalAlignment alignH, VerticalAlignment alignV)
@@ -279,19 +328,4 @@ public class FancyTextComponent
         font.Packer.TextBounds(s, 500, 500, alignH, alignV, out var rect);
         return new Vector2(rect.W, rect.H);
     }
-
-    /*private static void UpdateBounds(BMFont font, List<FancyTextPart> parts, AlignH alignH, AlignV alignV, out Vector2 bounds, out Vector2 origin)
-    {
-        bounds = Vector2.Zero;
-        var previousChar = ' ';
-        foreach (var p in parts)
-        {
-            var size = font.MeasureString(previousChar, p.Character);
-            bounds.X += size.X;
-            if (p.Character == '\n')
-                bounds.Y = font.Font.LineHeight;
-            previousChar = p.Character;
-        }
-        origin = GetAlignVector(alignH, alignV) * bounds;
-    }*/
 }
