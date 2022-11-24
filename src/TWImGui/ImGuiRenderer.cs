@@ -1,6 +1,5 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
-using SDL2;
 
 namespace MyGame.TWImGui;
 

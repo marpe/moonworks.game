@@ -1,6 +1,4 @@
-﻿using SDL2;
-
-namespace MyGame.Input;
+﻿namespace MyGame.Input;
 
 public struct InputState
 {

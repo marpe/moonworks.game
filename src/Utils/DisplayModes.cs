@@ -2,32 +2,32 @@ namespace MyGame.Utils;
 
 public static class DisplayModes
 {
-    public static DisplayMode[] GetDisplayModes(IntPtr windowHandle)
+    public static SDL.SDL_DisplayMode[] GetDisplayModes(IntPtr windowHandle)
     {
-        var displayModes = new List<DisplayMode>();
-        var displayIndex = SDL2.SDL.SDL_GetWindowDisplayIndex(windowHandle);
-        var numDisplayModes = SDL2.SDL.SDL_GetNumDisplayModes(displayIndex);
+        var displayModes = new List<SDL.SDL_DisplayMode>();
+        var displayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
+        var numDisplayModes = SDL.SDL_GetNumDisplayModes(displayIndex);
         if (numDisplayModes >= 1)
         {
             for (var i = 0; i < numDisplayModes; i++)
             {
-                var result = SDL2.SDL.SDL_GetDisplayMode(displayIndex, i, out var displayMode);
+                var result = SDL.SDL_GetDisplayMode(displayIndex, i, out var displayMode);
                 if (result != 0)
                 {
-                    throw new InvalidOperationException($"Failed to get display mode: {SDL2.SDL.SDL_GetError()}");
+                    throw new SDLException("Failed to get display mode", nameof(SDL.SDL_GetDisplayMode));
                 }
 
                 // Display modes are sorted from largest to smallest and highest refresh rate to lowest, see https://wiki.libsdl.org/SDL_GetDisplayMode
                 // Don't bother with entries that have the same size but different refresh rate
-                if (i > 0 && displayModes[^1].X == displayMode.w && displayModes[^1].Y == displayMode.h)
+                if (i > 0 && displayModes[^1].w == displayMode.w && displayModes[^1].w == displayMode.h)
                     continue;
 
-                displayModes.Add(new DisplayMode(displayMode.w, displayMode.h, displayMode.refresh_rate));
+                displayModes.Add(displayMode);
             }
         }
         else
         {
-            throw new InvalidOperationException($"Failed to get display modes: {SDL2.SDL.SDL_GetError()}");
+            throw new SDLException("Failed to get display modes", nameof(SDL.SDL_GetNumDisplayModes));
         }
 
         return displayModes.ToArray();

@@ -1,5 +1,3 @@
-using SDL2;
-
 namespace MyGame.Screens;
 
 public enum ConsoleScreenState

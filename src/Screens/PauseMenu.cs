@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace MyGame.Screens;
+﻿namespace MyGame.Screens;
 
 public class PauseMenu : MenuScreen
 {

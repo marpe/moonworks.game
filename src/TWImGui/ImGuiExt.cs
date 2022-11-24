@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using Mochi.DearImGui;
-using SDL2;
 
 namespace MyGame.TWImGui;
 

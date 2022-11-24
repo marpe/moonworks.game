@@ -32,3 +32,4 @@ global using System.Threading.Tasks;
 global using System;
 global using WellspringCS;
 global using ldtk;
+global using SDL2;

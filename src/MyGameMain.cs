@@ -23,18 +23,6 @@ public class TestGame : Game
 
 public class MyGameMain : Game
 {
-    private static bool _isFullscreen = false;
-    [CVar("fullscreen", "Toggle fullscreen")]
-    public static bool IsFullscreen
-    {
-        get => _isFullscreen;
-        set
-        {
-            _isFullscreen = value;
-            Shared.Game.MainWindow.SetScreenMode(_isFullscreen ? ScreenMode.Fullscreen : ScreenMode.Windowed);
-        }
-    }
-    
     public static readonly UPoint DesignResolution = new UPoint(1920, 1080);
     public const int TARGET_TIMESTEP = 120;
 
@@ -52,6 +40,39 @@ public class MyGameMain : Game
     private readonly Texture _menuRender;
     private readonly Texture _gameRender;
 
+    [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
+    public static ScreenMode ScreenMode
+    {
+        get => Shared.Game.MainWindow.ScreenMode;
+        set
+        {
+            if (value == ScreenMode.Fullscreen)
+                SetWindowDisplayMode(Shared.Game.MainWindow.Handle);
+
+            Shared.Game.MainWindow.SetScreenMode(value);
+        }
+    }
+
+    private static void SetWindowDisplayMode(IntPtr windowHandle)
+    {
+        var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
+        int result;
+        result = SDL.SDL_GetDesktopDisplayMode(windowDisplayIndex, out var desktopDisplayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_GetDesktopDisplayMode));
+        result = SDL.SDL_SetWindowDisplayMode(windowHandle, ref desktopDisplayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_SetWindowDisplayMode));
+    }
+
+    private static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)
+    {
+        var result = SDL.SDL_GetWindowDisplayMode(windowHandle, out var displayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_GetWindowDisplayMode));
+        return displayMode;
+    }
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -60,6 +81,10 @@ public class MyGameMain : Game
     ) : base(windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
     {
         var sw = Stopwatch.StartNew();
+
+        var displayMode = GetWindowDisplayMode(MainWindow.Handle);
+        SetWindowDisplayMode(MainWindow.Handle);
+        Logger.LogInfo($"WindowSize: {MainWindow.Size.X}x{MainWindow.Size.Y}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
 
         Time = new Time();
 
