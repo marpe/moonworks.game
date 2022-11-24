@@ -249,8 +249,103 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
             ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
             ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _updateRate), 1, 10, default);
-            
+
             ImGui.Separator();
+
+            if (Shared.Game.GameScreen.World != null)
+            {
+                var player = Shared.Game.GameScreen.World.Player;
+
+                if (ImGuiExt.BeginCollapsingHeader("Ground", Color.LightBlue))
+                {
+                    if (ImGuiExt.BeginPropTable("GroundCollisions"))
+                    {
+                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TableHeader("GroundCollisions");
+
+                        foreach (var collision in player.Mover.GroundCollisions)
+                        {
+                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
+                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
+                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
+                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
+                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
+                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                        }
+
+                        ImGui.EndTable();
+                    }
+
+                    if (ImGuiExt.BeginPropTable("ContinuedGroundCollisions"))
+                    {
+                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TableHeader("ContinuedGroundCollisions");
+
+                        foreach (var collision in player.Mover.ContinuedGroundCollisions)
+                        {
+                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
+                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
+                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
+                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
+                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
+                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                        }
+
+                        ImGui.EndTable();
+                    }
+
+                    ImGuiExt.EndCollapsingHeader();
+                }
+
+                if (ImGuiExt.BeginCollapsingHeader("Move", Color.LightBlue))
+                {
+                    if (ImGuiExt.BeginPropTable("MoveCollisions"))
+                    {
+                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TableHeader("MoveCollisions");
+
+                        foreach (var collision in player.Mover.MoveCollisions)
+                        {
+                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
+                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
+                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
+                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
+                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
+                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                        }
+
+                        ImGui.EndTable();
+                    }
+
+                    if (ImGuiExt.BeginPropTable("ContinuedMoveCollisions"))
+                    {
+                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TableHeader("ContinuedMoveCollisions");
+
+                        foreach (var collision in player.Mover.ContinuedMoveCollisions)
+                        {
+                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
+                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
+                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
+                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
+                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
+                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                        }
+
+                        ImGui.EndTable();
+                    }
+
+                    ImGuiExt.EndCollapsingHeader();
+                }
+            }
 
             /*_mainMenuInspector ??= InspectorExt.GetInspectorForTarget(Shared.Menus.MainMenuScreen);
             _mainMenuInspector.Draw();

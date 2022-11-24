@@ -36,9 +36,9 @@ public class Bullet : Entity
             return;
 
         Timer += deltaSeconds;
-        var collisions = Mover.PerformMove(Velocity, deltaSeconds);
+        Mover.PerformMove(Velocity, deltaSeconds);
         var distance = 5f;
-        
+
         for (var i = World.Enemies.Count - 1; i >= 0; i--)
         {
             var offset = World.Enemies[i].Bounds.Center - Bounds.Center;
@@ -62,7 +62,7 @@ public class Bullet : Entity
         }
         */
 
-        if (collisions != CollisionDir.None || Timer >= Lifetime)
+        if (Mover.MoveCollisions.Count > 0 || Timer >= Lifetime)
             IsDestroyed = true;
 
         base.Update(deltaSeconds);

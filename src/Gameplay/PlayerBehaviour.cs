@@ -65,7 +65,6 @@ public class PlayerBehaviour
         }
 
         Player.TotalTime += deltaSeconds;
-        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X) ? 0 : (uint)(Player.TotalTime * 10) % 2;
 
         if (Player.Mover.IsGrounded(Player.Velocity))
         {
@@ -76,6 +75,8 @@ public class PlayerBehaviour
         {
             Player.Velocity.X += command.MovementX * Player.Speed;
         }
+        
+        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTime * 10) % 2;
 
         if (!Player.IsJumping && command.IsJumpPressed)
         {
@@ -106,14 +107,14 @@ public class PlayerBehaviour
             }
         }
 
-        var collisions = Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
-
-        if ((collisions & CollisionDir.Down) == CollisionDir.Down)
+        Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
+        
+        if (Player.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Down) == CollisionDir.Down))
         {
             Player.Squash = new Vector2(1.5f, 0.5f);
         }
 
-        if ((collisions & CollisionDir.Top) == CollisionDir.Top)
+        if (Player.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Top) == CollisionDir.Top))
         {
             Player.IsJumping = false;
         }

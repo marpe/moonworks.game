@@ -25,7 +25,7 @@ public partial class Player : Entity
     public Mover Mover = new();
 
     public Matrix4x4 LastTransform = Matrix4x4.Identity;
-    
+
     public override void Initialize(World world)
     {
         Behaviour.Initialize(this);

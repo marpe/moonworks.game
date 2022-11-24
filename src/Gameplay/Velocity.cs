@@ -1,11 +1,14 @@
 ﻿namespace MyGame;
 
 [CustomInspector(typeof(GroupInspector))]
+[DebuggerDisplay("{DebugDisplayString,nq}")]
 public class Velocity
 {
     public const float KillThreshold = 0.0005f;
     public Vector2 Delta = Vector2.Zero;
     public Vector2 Friction = new(0.84f, 0.94f);
+    
+    public string DebugDisplayString => string.Concat(X.ToString(), " ", Y.ToString());
 
     public float X
     {

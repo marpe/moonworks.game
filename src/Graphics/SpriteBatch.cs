@@ -10,6 +10,7 @@ public enum SpriteFlip
 
 public class SpriteBatch
 {
+    public static bool ShouldRoundPositions;
     private static Color[] _tempColors = new Color[4];
 
     // Used to calculate texture coordinates
@@ -181,6 +182,14 @@ public class SpriteBatch
         Vector2.Transform(ref bottomLeft, ref transform, out bottomLeft);
         Vector2.Transform(ref topRight, ref transform, out topRight);
         Vector2.Transform(ref bottomRight, ref transform, out bottomRight);
+
+        if (ShouldRoundPositions)
+        {
+            topLeft = topLeft.ToVec2Int();
+            bottomLeft = bottomLeft.ToVec2Int();
+            topRight = topRight.ToVec2Int();
+            bottomRight = bottomRight.ToVec2Int();
+        }
 
         SetVector(ref vertices[vertexOffset].Position, topLeft, depth);
         SetVector(ref vertices[vertexOffset + 1].Position, bottomLeft, depth);

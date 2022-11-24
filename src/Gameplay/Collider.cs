@@ -20,6 +20,11 @@ public class Collider
         _parent = parent;
     }
 
+    public bool HasCollision(in Point cell)
+    {
+        return HasCollision(cell.X, cell.Y);
+    }
+
     public bool HasCollision(int x, int y)
     {
         var ldtk = Parent.World.LdtkRaw; 

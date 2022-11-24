@@ -18,13 +18,13 @@ public class SlugBehaviour : EnemyBehaviour
         if (!Parent.CanMove)
             return;
 
-        var collisions = Parent.Mover.PerformMove(Parent.Velocity, deltaSeconds);
+        Parent.Mover.PerformMove(Parent.Velocity, deltaSeconds);
 
-        if ((collisions & CollisionDir.Left) != 0)
+        if (Parent.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Left) == CollisionDir.Left))
         {
             Parent.Velocity.Delta = new Vector2(_speed, 0);
         }
-        else if ((collisions & CollisionDir.Right) != 0)
+        if (Parent.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Right) == CollisionDir.Right))
         {
             Parent.Velocity.Delta = new Vector2(-_speed, 0);
         }
