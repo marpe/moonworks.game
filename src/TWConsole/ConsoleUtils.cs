@@ -2,31 +2,6 @@ using System.Globalization;
 
 namespace MyGame.TWConsole;
 
-public interface IStringParser
-{
-    public object Parse(Type type, string value);
-}
-
-public class StringParser<T> : IStringParser where T : notnull
-{
-    private readonly Func<Type, string, T> _parser;
-
-    public StringParser(Func<Type, string, T> parser)
-    {
-        _parser = parser;
-    }
-
-    public object Parse(Type type, string value)
-    {
-        return Parse(value);
-    }
-
-    public T Parse(string value)
-    {
-        return _parser(typeof(T), value);
-    }
-}
-
 public static class ConsoleUtils
 {
     private static readonly Dictionary<string, bool> _boolLookup = new(StringComparer.InvariantCultureIgnoreCase)
@@ -59,28 +34,12 @@ public static class ConsoleUtils
         { typeof(Vector2), "vector2" },
     };
 
-    private static readonly Dictionary<Type, IStringParser> _parsers = new();
-
-    static ConsoleUtils()
+    private static bool ParseBool(ReadOnlySpan<char> str)
     {
-        _parsers.Add(typeof(int), new StringParser<int>((_, str) => int.Parse(str)));
-        _parsers.Add(typeof(float), new StringParser<float>((_, str) => float.Parse(str)));
-        _parsers.Add(typeof(decimal), new StringParser<decimal>((_, str) => decimal.Parse(str)));
-        _parsers.Add(typeof(double), new StringParser<double>((_, str) => double.Parse(str)));
-        _parsers.Add(typeof(byte), new StringParser<byte>((_, str) => byte.Parse(str)));
-        _parsers.Add(typeof(sbyte), new StringParser<sbyte>((_, str) => sbyte.Parse(str)));
-        _parsers.Add(typeof(uint), new StringParser<uint>((_, str) => uint.Parse(str)));
-        _parsers.Add(typeof(short), new StringParser<short>((_, str) => short.Parse(str)));
-        _parsers.Add(typeof(ushort), new StringParser<ushort>((_, str) => ushort.Parse(str)));
-        _parsers.Add(typeof(long), new StringParser<long>((_, str) => long.Parse(str)));
-        _parsers.Add(typeof(ulong), new StringParser<ulong>((_, str) => ulong.Parse(str)));
-        _parsers.Add(typeof(char), new StringParser<char>((_, str) => char.Parse(str)));
-        _parsers.Add(typeof(string), new StringParser<string>((_, str) => str));
-        _parsers.Add(typeof(bool), new StringParser<bool>((_, str) => ParseBool(str)));
-        _parsers.Add(typeof(Color), new StringParser<Color>((_, str) => ParseColor(str)));
-        _parsers.Add(typeof(Vector2), new StringParser<Vector2>((_, str) => ParseVector2(str)));
-        _parsers.Add(typeof(Point), new StringParser<Point>((_, str) => ParsePoint(str)));
-        _parsers.Add(typeof(Enum), new StringParser<Enum>((type, str) => ParseEnum(type, str)));
+        var key = str.ToString();
+        if (!_boolLookup.ContainsKey(key))
+            throw new InvalidOperationException($"Cannot parse '{key}' to a bool.");
+        return _boolLookup[key];
     }
 
     public static string GetDisplayName(Type type)
@@ -98,46 +57,28 @@ public static class ConsoleUtils
         return type.Name;
     }
 
-    public static bool CanParse(Type type)
+    public static object ParseArg(Type t, ReadOnlySpan<char> strValue)
     {
-        return _parsers.ContainsKey(type);
-    }
+        if (t == typeof(string)) return strValue.ToString();
+        if (t.IsEnum) return Enum.Parse(t, strValue, true);
+        if (t == typeof(int)) return int.Parse(strValue);
+        if (t == typeof(float)) return float.Parse(strValue);
+        if (t == typeof(decimal)) return decimal.Parse(strValue);
+        if (t == typeof(double)) return double.Parse(strValue);
+        if (t == typeof(byte)) return byte.Parse(strValue);
+        if (t == typeof(sbyte)) return sbyte.Parse(strValue);
+        if (t == typeof(uint)) return uint.Parse(strValue);
+        if (t == typeof(short)) return short.Parse(strValue);
+        if (t == typeof(ushort)) return ushort.Parse(strValue);
+        if (t == typeof(long)) return long.Parse(strValue);
+        if (t == typeof(ulong)) return ulong.Parse(strValue);
+        if (t == typeof(char)) return strValue[0];
+        if (t == typeof(bool)) return ParseBool(strValue);
+        if (t == typeof(Color)) return ParseColor(strValue);
+        if (t == typeof(Vector2)) return ParseVector2(strValue);
+        if (t == typeof(Point)) return ParsePoint(strValue);
 
-    public static bool ParseBool(string str)
-    {
-        return _boolLookup.ContainsKey(str) ? _boolLookup[str] : throw new InvalidOperationException($"Cannot parse '{str}' to a bool.");
-    }
-
-    private static Enum ParseEnum(Type type, string strValue)
-    {
-        return (Enum)Enum.Parse(type, strValue);
-    }
-
-    public static T Parse<T>(string strValue) where T : struct
-    {
-        var t = typeof(T);
-        if (t.IsEnum)
-        {
-            return Enum.Parse<T>(strValue, true);
-        }
-
-        if (!_parsers.ContainsKey(t))
-        {
-            throw new InvalidOperationException($"Cannot parse {GetDisplayName(t)}.");
-        }
-
-        var parser = (StringParser<T>)_parsers[t];
-        return parser.Parse(strValue);
-    }
-
-    public static object ParseArg(Type type, string strValue)
-    {
-        if (!_parsers.ContainsKey(type))
-        {
-            throw new InvalidOperationException($"Cannot parse {GetDisplayName(type)}.");
-        }
-
-        return _parsers[type].Parse(type, strValue);
+        throw new InvalidOperationException($"Cannot parse {GetDisplayName(t)}.");
     }
 
     private static Point ParsePoint(string strValue)
@@ -147,23 +88,24 @@ public static class ConsoleUtils
         var parsed = new[] { 0, 0 };
         for (var i = 0; i < xy.Length && i < 2; i++)
         {
-            parsed[i] = Parse<int>(xy[i]);
+            parsed[i] = int.Parse(xy[i]);
         }
 
         return new Point(parsed[0], parsed[1]);
     }
 
-    private static Vector2 ParseVector2(string strValues)
+    private static Vector2 ParseVector2(ReadOnlySpan<char> strValues)
     {
         var splitBy = strValues.Contains(',') ? ',' : ' ';
-        var xy = strValues.Split(splitBy);
-        var parsed = new[] { 0f, 0f };
-        for (var i = 0; i < xy.Length && i < 2; i++)
-        {
-            parsed[i] = Parse<float>(xy[i]);
-        }
+        var splitAt = strValues.IndexOf(splitBy);
 
-        return new Vector2(parsed[0], parsed[1]);
+        var xSpan = strValues.Slice(0, splitAt);
+        var ySpan = strValues.Slice(splitAt + 1);
+
+        var x = float.Parse(xSpan);
+        var y = float.Parse(ySpan);
+
+        return new Vector2(x, y);
     }
 
     public static Point ParsePoint(ReadOnlySpan<char> strValue)
@@ -180,14 +122,21 @@ public static class ConsoleUtils
         return new Point(x, y);
     }
 
-    private static Color ParseColor(string strValue)
+    private static Color ParseColor(ReadOnlySpan<char> strValue)
     {
-        var splitBy = strValue.Contains(',') ? ',' : ' ';
-        var rgba = strValue.Split(splitBy);
         Span<float> parsed = stackalloc[] { 1.0f, 1.0f, 1.0f, 1.0f };
-        for (var i = 0; i < rgba.Length && i < 4; i++)
+
+        for (var i = 0; i < parsed.Length; i++)
         {
-            parsed[i] = Parse<float>(rgba[i]);
+            var splitAt = strValue.IndexOfAny(' ', ',');
+            if (splitAt == -1)
+            {
+                parsed[i] = float.Parse(strValue);
+                break;
+            }
+
+            parsed[i] = float.Parse(strValue.Slice(0, splitAt));
+            strValue = strValue.Slice(splitAt + 1);
         }
 
         return new Color(parsed[0], parsed[1], parsed[2], parsed[3]);

@@ -65,12 +65,26 @@ public class MyGameMain : Game
             throw new SDLException(nameof(SDL.SDL_SetWindowDisplayMode));
     }
 
-    private static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)
+    public static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)
     {
         var result = SDL.SDL_GetWindowDisplayMode(windowHandle, out var displayMode);
         if (result != 0)
             throw new SDLException(nameof(SDL.SDL_GetWindowDisplayMode));
         return displayMode;
+    }
+
+    public static ScreenMode GetScreenMode(IntPtr windowHandle)
+    {
+        var flags = SDL.SDL_GetWindowFlags(windowHandle);
+        var isFullscreenWindow = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
+        if (isFullscreenWindow)
+            return ScreenMode.BorderlessFullscreen;
+
+        var isFullscreen = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
+        if (isFullscreen)
+            return ScreenMode.Fullscreen;
+
+        return ScreenMode.Windowed;
     }
 
     public MyGameMain(
@@ -161,6 +175,11 @@ public class MyGameMain : Game
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {
+            SDL.SDL_Vulkan_GetDrawableSize(MainWindow.Handle, out var w, out var h);
+            var screenMode = GetScreenMode(MainWindow.Handle);
+            var displayMode = GetWindowDisplayMode(MainWindow.Handle);
+            var windowSize = MainWindow.Size;
+
             MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
             _nextWindowTitleUpdate += 1f;
         }
@@ -211,11 +230,24 @@ public class MyGameMain : Game
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
         Renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
 
+        DrawFPS(Renderer, commandBuffer, renderDestination);
+
         RenderConsole(Renderer, commandBuffer, renderDestination, alpha);
 
         Shared.LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, _gameRender, _menuRender, alpha);
 
         Renderer.Submit(commandBuffer);
+    }
+
+    private void DrawFPS(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
+    {
+        var position = new Vector2(DesignResolution.X, 0);
+        var str = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
+        var strSize = renderer.TextBatcher.GetFont(FontType.ConsolasMonoMedium).MeasureString(str);
+        var bg = RectangleExt.FromFloats(position.X - strSize.X, 0, strSize.X, strSize.Y);
+        renderer.DrawRect(bg, Color.Black * 0.66f);
+        renderer.DrawText(FontType.ConsolasMonoMedium, str, new Vector2(position.X - strSize.X, 0), 0, Color.Yellow);
+        renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 
     private void RenderConsole(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)

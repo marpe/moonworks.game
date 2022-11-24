@@ -56,7 +56,7 @@ public class CVar
         return value;
     }
 
-    public void SetValue(object? value)
+    private void SetValueInternal(object? value)
     {
         switch (_memberInfo)
         {
@@ -77,7 +77,14 @@ public class CVar
 
     public void SetValue(string strValue)
     {
-        var value = ConsoleUtils.ParseArg(VarType, strValue);
-        SetValue(value);
+        if (VarType == typeof(string))
+        {
+            SetValueInternal(strValue);
+        }
+        else
+        {
+            var value = ConsoleUtils.ParseArg(VarType, strValue);
+            SetValueInternal(value);
+        }
     }
 }

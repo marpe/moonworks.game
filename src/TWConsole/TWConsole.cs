@@ -157,12 +157,6 @@ public class TWConsole
         for (var i = 0; i < parameters.Length; i++)
         {
             var param = parameters[i];
-
-            if (!ConsoleUtils.CanParse(param.ParameterType))
-            {
-                throw new InvalidOperationException($"Invalid parameter type: {param.ParameterType.Name}");
-            }
-
             defaults[i] = new ConsoleCommandArg(param.Name, param.HasDefaultValue, param.DefaultValue, param.ParameterType);
         }
 
@@ -241,7 +235,7 @@ public class TWConsole
                 for (var i = 0; i < parameters.Length && i < numSuppliedParams; i++)
                 {
                     // args[0] will be the command
-                    parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[i + 1]);
+                    parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[1 + i]);
                 }
 
                 method.Invoke(target, parameters);
@@ -286,11 +280,21 @@ public class TWConsole
         Print("Garbage Collection took ~" + DateTime.Now.Subtract(now).TotalMilliseconds + "ms");
     }
 
-    [ConsoleHandler("res", "Print display resolution")]
+    [ConsoleHandler("win_info", "Print window size and resolution info")]
     private void PrintDisplayResolution()
     {
-        var size = Shared.Game.MainWindow.Size;
-        Print($"Current resolution: {size.X}x{size.Y}");
+        var window = Shared.Game.MainWindow;
+        SDL.SDL_Vulkan_GetDrawableSize(window.Handle, out var w, out var h);
+        var screenMode = MyGameMain.GetScreenMode(window.Handle);
+        var displayMode = MyGameMain.GetWindowDisplayMode(window.Handle);
+        var displayIndex = SDL.SDL_GetWindowDisplayIndex(window.Handle);
+        var windowSize = window.Size;
+        var message = $"DrawableSize: {w}, {h}, " +
+                     $"ScreenMode: {OptionsMenuScreen.ScreenModeNames[screenMode]}, " +
+                     $"DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz), " +
+                     $"WindowSize: {windowSize.X}x{windowSize.Y} " +
+                     $"DisplayIndex: {displayIndex}";
+        Print(message);
     }
 
     public void RegisterCommand(ConsoleCommand command)

@@ -52,7 +52,7 @@ public class InputHandler
     public static Dictionary<KeyCode, string> KeyStrings = new();
 
     public static MouseButtonCode[] MouseButtonsCodes = Enum.GetValues<MouseButtonCode>();
-    
+
     static InputHandler()
     {
         foreach (var keyCode in KeyCodes)
@@ -98,7 +98,7 @@ public class InputHandler
                 var wasActive = bind.Active;
                 bind.Active = true;
                 bind.WasActive = wasActive;
-                bind.Sources[0] = args.Length > 1 ? (int)ConsoleUtils.Parse<KeyCode>(args[1]) : -1;
+                bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
                 bind.Frame = Shared.Game.Time.UpdateCount;
                 bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
             };
@@ -106,7 +106,7 @@ public class InputHandler
             {
                 bind.Active = false;
                 bind.WasActive = false;
-                bind.Sources[0] = args.Length > 1 ? (int)ConsoleUtils.Parse<KeyCode>(args[1]) : -1;
+                bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
                 bind.Frame = Shared.Game.Time.UpdateCount;
                 bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
             };
@@ -200,7 +200,7 @@ public class InputHandler
             {
                 if (!IsKeyPressed(keyCode))
                     continue;
-                
+
                 // ignore if console is down
                 if (!Shared.Game.ConsoleScreen.IsHidden)
                     continue;

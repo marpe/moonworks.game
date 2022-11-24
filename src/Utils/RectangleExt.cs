@@ -52,4 +52,9 @@ public static class RectangleExt
         var offset = size * origin;
         return new Rectangle((int)(position.X - offset.X), (int)(position.Y - offset.Y), (int)size.X, (int)size.Y);
     }
+
+    public static Rectangle FromFloats(float x, float y, float width, float height)
+    {
+        return new Rectangle((int)x, (int)y, (int)width, (int)height);
+    }
 }
