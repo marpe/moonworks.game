@@ -622,7 +622,7 @@ public unsafe class ImGuiRenderer : IDisposable
         for (var i = 0; i < numMonitors; i++)
         {
             var result = SDL.SDL_GetDisplayUsableBounds(i, out var r);
-            if (result < 0)
+            if (result != 0)
             {
                 Logger.LogError($"SDL_GetDisplayUsableBounds failed: {SDL.SDL_GetError()}");
             }

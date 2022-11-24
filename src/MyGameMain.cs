@@ -23,6 +23,18 @@ public class TestGame : Game
 
 public class MyGameMain : Game
 {
+    private static bool _isFullscreen = false;
+    [CVar("fullscreen", "Toggle fullscreen")]
+    public static bool IsFullscreen
+    {
+        get => _isFullscreen;
+        set
+        {
+            _isFullscreen = value;
+            Shared.Game.MainWindow.SetScreenMode(_isFullscreen ? ScreenMode.Fullscreen : ScreenMode.Windowed);
+        }
+    }
+    
     public static readonly UPoint DesignResolution = new UPoint(1920, 1080);
     public const int TARGET_TIMESTEP = 120;
 
