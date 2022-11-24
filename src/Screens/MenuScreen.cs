@@ -292,7 +292,7 @@ public abstract class MenuScreen
             if (Debug)
             {
                 var bounds = menuItem.Bounds;
-                renderer.DrawRect(bounds.Min(), bounds.Max(), Color.Green, 2f);
+                renderer.DrawRectOutline(bounds.Min(), bounds.Max(), Color.Green, 2f);
             }
         }
     }

@@ -9,6 +9,7 @@ public enum DebugDrawType
 public class DebugDraw
 {
     public Color Color;
+    public Color OutlineColor;
     public DebugDrawType DrawType = DebugDrawType.Text;
     public Rectangle Rectangle;
     public string Text = "";
@@ -28,6 +29,18 @@ public class DebugDrawItems
             Rectangle = new Rectangle((int)position.X, (int)position.Y, 0, 0),
             UpdateCountAtDraw = Shared.Game.Time.UpdateCount,
             DrawType = DebugDrawType.Text,
+        });
+    }
+    
+    public void AddRect(Rectangle rect, Color fill, Color outline)
+    {
+        _debugDrawCalls.Add(new DebugDraw()
+        {
+            Color = fill,
+            OutlineColor = outline,
+            Rectangle = rect,
+            UpdateCountAtDraw = Shared.Game.Time.UpdateCount,
+            DrawType = DebugDrawType.Rect,
         });
     }
 
@@ -50,7 +63,7 @@ public class DebugDrawItems
             }
             else
             {
-                renderer.DrawRect(debugDrawCall.Rectangle, debugDrawCall.Color);
+                renderer.DrawRectWithOutline(debugDrawCall.Rectangle, debugDrawCall.Color, debugDrawCall.OutlineColor);
             }
         }
     }

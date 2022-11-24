@@ -16,6 +16,10 @@ public class GameScreen
 
     private ConcurrentQueue<Action> _queuedActions = new();
 
+    public static int GameUpdateRate = 1;
+    public static bool IsStepping = false;
+    public static bool IsPaused = false;
+
     public GameScreen(MyGameMain game)
     {
         _game = game;
@@ -31,6 +35,37 @@ public class GameScreen
     public static void Restart()
     {
         Shared.Game.GameScreen.LoadWorld(() => new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk));
+    }
+
+    [ConsoleHandler("step")]
+    public static void Step()
+    {
+        IsPaused = true;
+        IsStepping = true;
+        Logger.LogInfo("Stepping...");
+    }
+
+    [ConsoleHandler("pause")]
+    public static void Pause()
+    {
+        IsPaused = !IsPaused;
+        Logger.LogInfo(IsPaused ? "Game paused" : "Game resumed");
+    }
+
+    [ConsoleHandler("speed_up")]
+    public static void IncreaseUpdateRate()
+    {
+        GameUpdateRate--;
+        if (GameUpdateRate < 1)
+            GameUpdateRate = 1;
+        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
+    }
+
+    [ConsoleHandler("speed_down")]
+    public static void DecreaseUpdateRate()
+    {
+        GameUpdateRate++;
+        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 
     public void LoadWorld(Func<World> worldLoader)
@@ -88,10 +123,22 @@ public class GameScreen
             return;
         }
 
-        World.Update(deltaSeconds, _game.InputHandler);
+        var doUpdate = IsStepping || (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
+
+        if (doUpdate)
+        {
+            World.Update(deltaSeconds, _game.InputHandler);
+        }
+
         Camera.Update(deltaSeconds, _game.InputHandler);
 
         SetCircleCropPosition();
+
+        if (IsStepping)
+        {
+            IsStepping = false;
+            return;
+        }
     }
 
     private void SetCircleCropPosition()
@@ -130,7 +177,7 @@ public class GameScreen
         if (!World.Debug)
             return;
 
-        renderer.DrawRect(Vector2.Zero, MyGameMain.DesignResolution, Color.LimeGreen, 10f);
+        renderer.DrawRectOutline(Vector2.Zero, MyGameMain.DesignResolution, Color.LimeGreen, 10f);
         renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 }

@@ -28,6 +28,9 @@ public class World
     public Player Player { get; }
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
+    
+    public ulong WorldUpdateCount;
+    public float WorldTotalElapsedTime;
 
     public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -46,6 +49,7 @@ public class World
         var allEntities = new List<Entity>();
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+
         foreach (var level in levels)
         {
             var entities = LoadEntitiesInLevel(level);
@@ -107,8 +111,27 @@ public class World
         return entities;
     }
 
+    [ConsoleHandler("kill_all")]
+    public static void KillAllEnemies()
+    {
+        var world = Shared.Game.GameScreen.World;
+        if (world == null)
+        {
+            Shared.Console.Print("World is null");
+            return;
+        }
+        for (var i = world.Enemies.Count - 1; i >= 0; i--)
+        {
+            world.Enemies.RemoveAt(i);
+        }
+        Shared.Console.Print("Killed all enemies");
+    }
+
     public void Update(float deltaSeconds, InputHandler input)
     {
+        WorldUpdateCount++;
+        WorldTotalElapsedTime += deltaSeconds;
+        
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
@@ -134,7 +157,7 @@ public class World
             _gameScreen.Camera.TrackEntity(Player);
             Player.Initialize(this);
         }
-        
+
         var command = PlayerBinds.ToPlayerCommand();
         Player.Update(deltaSeconds, command);
     }
@@ -167,7 +190,23 @@ public class World
         DrawCameraBounds(renderer, cameraBounds);
 
         if (Debug)
+        {
+            DrawMousePosition(renderer);
             _debugDraw.Render(renderer);
+        }
+    }
+    
+    private void DrawMousePosition(Renderer renderer)
+    {
+        var mousePosition = Shared.Game.InputHandler.MousePosition;
+        var view = Shared.Game.GameScreen.Camera.GetView();
+        Matrix3x2.Invert(view, out var invertedView);
+        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+        var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld, Vector2.Zero, DefaultGridSize);
+        
+        var mouseRect = new Rectangle(mouseCell.X * DefaultGridSize, mouseCell.Y * DefaultGridSize, DefaultGridSize, DefaultGridSize);
+        renderer.DrawRectOutline(mouseRect, Color.Red);
+        renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
     }
 
     private static void DrawCameraBounds(Renderer renderer, Bounds cameraBounds)
@@ -176,7 +215,7 @@ public class World
             return;
 
         var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
-        renderer.DrawRect(boundsMin, boundsMax, Color.Red, 1f);
+        renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
     }
 
     private void DrawLevel(Renderer renderer, Bounds cameraBounds)
@@ -198,16 +237,16 @@ public class World
             }
 
             if (Debug)
-                renderer.DrawRect(level.Position, level.Position + level.Size, Color.Red, 1.0f);
+                renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Red, 1.0f);
         }
 
         if (Debug)
-            renderer.DrawRect(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
+            renderer.DrawRectOutline(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
 
         foreach (var (x, y) in Bresenham.Line(Start.X, Start.Y, End.X, End.Y))
         {
             var min = new Vector2(x, y) * DefaultGridSize;
-            renderer.DrawRect(min, min + Vector2.One * DefaultGridSize, Color.Red, 1f);
+            renderer.DrawRectOutline(min, min + Vector2.One * DefaultGridSize, Color.Red, 1f);
         }
     }
 
@@ -290,7 +329,7 @@ public class World
                     var max = min + new Vector2(gridSize, gridSize);
                     var intGridValue = layerDef.IntGridValues[value - 1];
                     var color = LayerDefs.TilesColors[enumValue]; // ColorExt.FromHex(intGridValue.Color.AsSpan().Slice(1));
-                    renderer.DrawRect(min, max, color, 1.0f);
+                    renderer.DrawRectOutline(min, max, color, 1.0f);
                 }
             }
         }
@@ -371,13 +410,13 @@ public class World
 
         if (drawCoords)
         {
-            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({(cellRel.X * 100):0.#}, {(cellRel.Y * 100):0.#})";
+            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({(cellRel.X):0.##}, {(cellRel.Y):0.##})";
             var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
             renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 0), Vector2.One * 0.25f, 0, 0, Color.Black);
             // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
         }
 
-        renderer.DrawRect(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
+        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)

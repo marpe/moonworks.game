@@ -199,10 +199,60 @@ public ref struct LineSplitEnumerator
     }
 }
 
+public ref struct SplitEnumerator
+{
+    private ReadOnlySpan<char> _str;
+    private ReadOnlySpan<char> _splitBy;
+
+    public ReadOnlySpan<char> Current { get; private set; }
+
+    public SplitEnumerator(ReadOnlySpan<char> str, ReadOnlySpan<char> splitBy)
+    {
+        _str = str;
+        _splitBy = splitBy;
+        Current = default;
+    }
+
+    public bool MoveNext()
+    {
+        var span = _str;
+        if (span.Length == 0)
+            return false;
+
+        var index = span.IndexOf(_splitBy);
+        if (index == -1)
+        {
+            _str = ReadOnlySpan<char>.Empty;
+            Current = span;
+            return true;
+        }
+
+        Current = span.Slice(0, index);
+        _str = span.Slice(index + 1);
+
+        return true;
+    }
+
+    public ReadOnlySpan<char> Next()
+    {
+        var result = MoveNext();
+        if (!result)
+            throw new InvalidOperationException();
+        return Current;
+    }
+
+    public SplitEnumerator GetEnumerator() => this;
+}
+
 public static class StringExtensions
 {
     public static LineSplitEnumerator SplitLines(this ReadOnlySpan<char> str, bool stripColors, int maxLineWidth)
     {
         return new LineSplitEnumerator(str, stripColors, maxLineWidth);
+    }
+
+    public static SplitEnumerator Split(this ReadOnlySpan<char> str, ReadOnlySpan<char> splitBy)
+    {
+        return new SplitEnumerator(str, splitBy);
     }
 }

@@ -7,6 +7,7 @@ public static class PlayerBinds
     public static ButtonBind Jump = new();
     public static ButtonBind Fire1 = new();
     public static ButtonBind Respawn = new();
+    public static ButtonBind MoveToMouse = new();
 
     public static PlayerCommand ToPlayerCommand()
     {
@@ -22,6 +23,7 @@ public static class PlayerBinds
         cmd.Respawn = Respawn.WasPressed;
         cmd.IsJumpDown = Jump.Active;
         cmd.IsJumpPressed = Jump.WasPressed;
+        cmd.MoveToMouse = MoveToMouse.Active;
 
         return cmd;
     }
@@ -34,11 +36,13 @@ public struct PlayerCommand
     public bool IsJumpPressed;
     public bool IsJumpDown;
     public bool Respawn;
+    public bool MoveToMouse;
 }
 
 public class PlayerBehaviour
 {
     private Player? _player;
+    
     public Player Player => _player ?? throw new InvalidOperationException();
 
     public void Initialize(Player player)
@@ -74,6 +78,17 @@ public class PlayerBehaviour
         if (command.MovementX != 0)
         {
             Player.Velocity.X += command.MovementX * Player.Speed;
+        }
+
+        if (command.MoveToMouse)
+        {
+            var mousePosition = Shared.Game.InputHandler.MousePosition;
+            var view = Shared.Game.GameScreen.Camera.GetView();
+            Matrix3x2.Invert(view, out var invertedView);
+            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+
+            var offset = mouseInWorld - Player.Position;
+            Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
         
         Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTime * 10) % 2;
@@ -130,7 +145,7 @@ public class PlayerBehaviour
             Player.Flip = SpriteFlip.FlipHorizontally;
         }
 
-        if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping)
+        if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping && !command.MoveToMouse)
         {
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
         }

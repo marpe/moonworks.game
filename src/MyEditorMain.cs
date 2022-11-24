@@ -131,11 +131,11 @@ public unsafe class MyEditorMain : MyGameMain
             {
                 LoadingScreen.TransitionType = (TransitionType)transitionType;
 
-                _loadingScreenInspector = InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
+                _loadingScreenInspector = InspectorExt.GetGroupInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
             }
 
 
-            _loadingScreenInspector ??= InspectorExt.GetInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
+            _loadingScreenInspector ??= InspectorExt.GetGroupInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
             _loadingScreenInspector?.Draw();
         }
 
@@ -258,44 +258,26 @@ public unsafe class MyEditorMain : MyGameMain
 
                 if (ImGuiExt.BeginCollapsingHeader("Ground", Color.LightBlue))
                 {
-                    if (ImGuiExt.BeginPropTable("GroundCollisions"))
+                    ImGui.Text("GroundCollisions");
+
+                    foreach (var collision in player.Mover.GroundCollisions)
                     {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TableHeader("GroundCollisions");
-
-                        foreach (var collision in player.Mover.GroundCollisions)
+                        if (ImGuiExt.BeginPropTable("GroundCollisions"))
                         {
-                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
-                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
-                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
-                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
-                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
-                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
-                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                            DrawCollision(collision);
+                            ImGui.EndTable();
                         }
-
-                        ImGui.EndTable();
                     }
 
-                    if (ImGuiExt.BeginPropTable("ContinuedGroundCollisions"))
+                    ImGui.Text("ContinuedGroundCollisions");
+
+                    foreach (var collision in player.Mover.ContinuedGroundCollisions)
                     {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TableHeader("ContinuedGroundCollisions");
-
-                        foreach (var collision in player.Mover.ContinuedGroundCollisions)
+                        if (ImGuiExt.BeginPropTable("ContinuedGroundCollisions"))
                         {
-                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
-                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
-                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
-                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
-                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
-                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
-                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                            DrawCollision(collision);
+                            ImGui.EndTable();
                         }
-
-                        ImGui.EndTable();
                     }
 
                     ImGuiExt.EndCollapsingHeader();
@@ -303,44 +285,26 @@ public unsafe class MyEditorMain : MyGameMain
 
                 if (ImGuiExt.BeginCollapsingHeader("Move", Color.LightBlue))
                 {
-                    if (ImGuiExt.BeginPropTable("MoveCollisions"))
+                    ImGui.Text("MoveCollisions");
+
+                    foreach (var collision in player.Mover.MoveCollisions)
                     {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TableHeader("MoveCollisions");
-
-                        foreach (var collision in player.Mover.MoveCollisions)
+                        if (ImGuiExt.BeginPropTable("MoveCollisions"))
                         {
-                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
-                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
-                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
-                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
-                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
-                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
-                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                            DrawCollision(collision);
+                            ImGui.EndTable();
                         }
-
-                        ImGui.EndTable();
                     }
 
-                    if (ImGuiExt.BeginPropTable("ContinuedMoveCollisions"))
+                    ImGui.Text("ContinuedMoveCollisions");
+                    for (var i = 0; i < player.Mover.ContinuedMoveCollisions.Count; i++)
                     {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TableHeader("ContinuedMoveCollisions");
-
-                        foreach (var collision in player.Mover.ContinuedMoveCollisions)
+                        var collision = player.Mover.ContinuedMoveCollisions[i];
+                        if (ImGuiExt.BeginPropTable("ContinuedMoveCollisions"))
                         {
-                            ImGuiExt.PropRow("Frame", collision.Frame.ToString());
-                            ImGuiExt.PropRow("Cell", collision.Cell.ToString());
-                            ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
-                            ImGuiExt.PropRow("Direction", collision.Direction.ToString());
-                            ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
-                            ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
-                            ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+                            DrawCollision(collision);
+                            ImGui.EndTable();
                         }
-
-                        ImGui.EndTable();
                     }
 
                     ImGuiExt.EndCollapsingHeader();
@@ -360,6 +324,17 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         ImGui.End();
+    }
+
+    private static void DrawCollision(CollisionResult collision)
+    {
+        ImGuiExt.PropRow("Frame", collision.Frame.ToString());
+        ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+        ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
+        ImGuiExt.PropRow("Direction", collision.Direction.ToString());
+        ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
+        ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
+        ImGuiExt.PropRow("Depth", collision.Depth.ToString());
     }
 
     private void DrawMenu(ImGuiMenu menu, int depth = 0)
@@ -451,7 +426,29 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.EndMenu();
         }
 
+        DrawMainMenuButtons();
+
         ImGui.EndMainMenuBar();
+    }
+
+    private void DrawMainMenuButtons()
+    {
+        var hasWorld = Shared.Game.GameScreen.World != null;
+
+        var (icon, color, tooltip) = GameScreen.IsPaused switch
+        {
+            true => (FontAwesome6.Play, Color.Green, "Play"),
+            _ => (FontAwesome6.Pause, Color.Yellow, "Pause")
+        };
+        if (ImGuiExt.ColoredButton(icon, color, tooltip))
+        {
+            GameScreen.IsPaused = !GameScreen.IsPaused;
+        }
+
+        if (ImGuiExt.ColoredButton(FontAwesome6.ForwardStep, Color.Orange, "Step"))
+        {
+            GameScreen.IsStepping = true;
+        }
     }
 
     private void DrawInternal()

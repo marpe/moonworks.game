@@ -76,45 +76,6 @@ public class InputHandler
     {
         _inputs = inputs;
         Inputs.TextInput += OnTextInput;
-
-        var inputCommands = new[]
-        {
-            ("right", "Move right", KeyCode.D, PlayerBinds.Right),
-            ("left", "Move left", KeyCode.A, PlayerBinds.Left),
-            ("jump", "Jump", KeyCode.Space, PlayerBinds.Jump),
-            ("fire1", "Fire", KeyCode.LeftControl, PlayerBinds.Fire1),
-            ("respawn", "Respawn", KeyCode.Insert, PlayerBinds.Respawn)
-        };
-
-        for (var i = 0; i < inputCommands.Length; i++)
-        {
-            var (cmd, description, defaultBind, bind) = inputCommands[i];
-
-            Binds.Bind(defaultBind.ToString(), $"+{cmd}");
-
-            var args = new ConsoleCommandArg[] { new("Source", true, -1, typeof(int)) };
-            ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
-            {
-                var wasActive = bind.Active;
-                bind.Active = true;
-                bind.WasActive = wasActive;
-                bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
-                bind.Frame = Shared.Game.Time.UpdateCount;
-                bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
-            };
-            ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
-            {
-                bind.Active = false;
-                bind.WasActive = false;
-                bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
-                bind.Frame = Shared.Game.Time.UpdateCount;
-                bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
-            };
-            var downCmd = new ConsoleCommand($"+{cmd}", description, downHandler, args, Array.Empty<string>(), false);
-            var upCmd = new ConsoleCommand($"-{cmd}", description, upHandler, args, Array.Empty<string>(), false);
-            Shared.Console.RegisterCommand(downCmd);
-            Shared.Console.RegisterCommand(upCmd);
-        }
     }
 
     public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;

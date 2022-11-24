@@ -12,6 +12,7 @@ public class TWConsole
     public readonly Dictionary<string, CVar> CVars = new();
     public readonly ConsoleScreenBuffer ScreenBuffer;
     public static event Action<StringBuilder>? OnCfgSave;
+    public string DefaultConfig = "";
 
     public TWConsole()
     {
@@ -23,6 +24,7 @@ public class TWConsole
         var sw = Stopwatch.StartNew();
         ProcessConsoleHandlerAttributes();
         ProcessCVarAttributes();
+        DefaultConfig = GetCfgAsText();
         Execute("exec " + kCvarsFilename, false);
         Logger.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
     }
@@ -290,10 +292,10 @@ public class TWConsole
         var displayIndex = SDL.SDL_GetWindowDisplayIndex(window.Handle);
         var windowSize = window.Size;
         var message = $"DrawableSize: {w}, {h}, " +
-                     $"ScreenMode: {OptionsMenuScreen.ScreenModeNames[screenMode]}, " +
-                     $"DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz), " +
-                     $"WindowSize: {windowSize.X}x{windowSize.Y} " +
-                     $"DisplayIndex: {displayIndex}";
+                      $"ScreenMode: {OptionsMenuScreen.ScreenModeNames[screenMode]}, " +
+                      $"DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz), " +
+                      $"WindowSize: {windowSize.X}x{windowSize.Y} " +
+                      $"DisplayIndex: {displayIndex}";
         Print(message);
     }
 
@@ -345,7 +347,7 @@ public class TWConsole
     [ConsoleHandler("echo", "Prints input to console")]
     private void EchoCommand(string text)
     {
-        Print(string.Join(" ", text));
+        Print(text);
     }
 
     private static string FormatCommand(ConsoleCommand cmd)
@@ -532,6 +534,22 @@ public class TWConsole
         command.Handler.Invoke(this, command, args);
     }
 
+    public string GetCfgAsText()
+    {
+        var sb = new StringBuilder();
+        GetCVarsAsText(sb);
+        OnCfgSave?.Invoke(sb);
+        return sb.ToString();
+    }
+
+    public void GetCVarsAsText(StringBuilder sb)
+    {
+        foreach (var (key, value) in CVars)
+        {
+            sb.AppendLine($"{key} \"{value.GetStringValue()}\"");
+        }
+    }
+
     [ConsoleHandler("quit", "Quit the game", new[] { "exit" })]
     private void QuitCommand()
     {
@@ -541,16 +559,8 @@ public class TWConsole
     [ConsoleHandler("cfg.save", "Save config file")]
     private void CfgSave(string filename = "cvars.cfg")
     {
-        var sb = new StringBuilder();
-        foreach (var (key, value) in CVars)
-        {
-            sb.AppendLine($"{key} \"{value.GetStringValue()}\"");
-        }
-
-        OnCfgSave?.Invoke(sb);
-
-        File.WriteAllText(filename, sb.ToString());
-
+        var cfgAsText = GetCfgAsText();
+        File.WriteAllText(filename, cfgAsText);
         Print($"Saved config to {filename}");
     }
 
@@ -571,6 +581,25 @@ public class TWConsole
         {
             Print($"File not found {filename}");
         }
+    }
+
+    [ConsoleHandler("cfg.default", "Loads the default config")]
+    private void LoadDefaultConfig()
+    {
+        var lines = DefaultConfig.AsSpan().Split(Environment.NewLine);
+        foreach (var line in lines)
+        {
+            Execute(line, false);
+        }
+
+        Print("Loaded default config");
+    }
+
+    [ConsoleHandler("cfg.list", "Prints the current config to console")]
+    private void PrintConfigToConsole()
+    {
+        var cfgAsText = GetCfgAsText();
+        Print(cfgAsText);
     }
 
     public void SaveCVars()

@@ -39,9 +39,6 @@ public class MyGameMain : Game
     private Texture _compositeRender;
     private readonly Texture _menuRender;
     private readonly Texture _gameRender;
-    private static int GameUpdateRate = 1;
-    private static bool IsStepping = false;
-    public static bool IsPaused = false;
 
     [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
     public static ScreenMode ScreenMode
@@ -54,37 +51,6 @@ public class MyGameMain : Game
 
             Shared.Game.MainWindow.SetScreenMode(value);
         }
-    }
-
-    [ConsoleHandler("step")]
-    public static void Step()
-    {
-        IsPaused = true;
-        IsStepping = true;
-        Logger.LogInfo("Stepping...");
-    }
-
-    [ConsoleHandler("pause")]
-    public static void Pause()
-    {
-        IsPaused = !IsPaused;
-        Logger.LogInfo(IsPaused ? "Game paused" : "Game resumed");
-    }
-
-    [ConsoleHandler("speed_up")]
-    public static void IncreaseUpdateRate()
-    {
-        GameUpdateRate--;
-        if (GameUpdateRate < 1)
-            GameUpdateRate = 1;
-        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
-    }
-
-    [ConsoleHandler("speed_down")]
-    public static void DecreaseUpdateRate()
-    {
-        GameUpdateRate++;
-        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 
     private static void SetWindowDisplayMode(IntPtr windowHandle)
@@ -138,6 +104,7 @@ public class MyGameMain : Game
 
         Shared.Game = this;
         Shared.Console = new TWConsole.TWConsole();
+        Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
 
         _compositeRender = Texture.CreateTexture2D(GraphicsDevice, DesignResolution.X, DesignResolution.Y, TextureFormat.B8G8R8A8,
@@ -202,18 +169,7 @@ public class MyGameMain : Game
         if (!Shared.Menus.IsHidden)
             return;
 
-        if (IsStepping)
-        {
-            GameScreen.Update(Time.ElapsedTime);
-            IsStepping = false;
-            return;
-        }
-
-        if (IsPaused)
-            return;
-
-        if ((int)Time.UpdateCount % GameUpdateRate == 0)
-            GameScreen.Update(Time.ElapsedTime);
+        GameScreen.Update(Time.ElapsedTime);
     }
 
     private void UpdateWindowTitle()

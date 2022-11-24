@@ -101,7 +101,7 @@ public unsafe class SimpleTypeInspector : Inspector
         if (ImGuiExt.DebugInspectors)
             DrawDebug();
 
-        var hideInInspector = HideInInspectorCondition?.Invoke(_target) ?? false;
+        var hideInInspector = HideInInspectorAttribute != null;
         if (hideInInspector)
             return;
 

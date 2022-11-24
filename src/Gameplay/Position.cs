@@ -1,7 +1,11 @@
 namespace MyGame;
 
+[CustomInspector(typeof(GroupInspector))]
+[DebuggerDisplay("{DebugDisplayString,nq}")]
 public class Position
 {
+    public string DebugDisplayString => string.Concat(Current.X.ToString(), " ", Current.Y.ToString());
+
     public Vector2 Current { get; private set; }
     public Vector2 Previous { get; private set; }
     public Vector2 Initial { get; private set; } = Vector2.Zero;
@@ -52,5 +56,10 @@ public class Position
     public void SetPrevAndCurrent(Vector2 position)
     {
         Current = Previous = position;
+    }
+
+    public static implicit operator Vector2(Position position)
+    {
+        return position.Current;
     }
 }

@@ -143,7 +143,18 @@ public class Renderer
         SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4(), PointClamp);
     }
 
-    public void DrawRect(Vector2 min, Vector2 max, Color color, float thickness)
+    public void DrawRectWithOutline(Rectangle rectangle, Color color, Color outlineColor)
+    {
+        DrawRect(rectangle, color);
+        DrawRectOutline(rectangle, outlineColor);
+    }
+
+    public void DrawRectOutline(Rectangle rectangle, Color color, float thickness = 1.0f)
+    {
+        DrawRectOutline(rectangle.Min(), rectangle.Max(), color, thickness);
+    }
+    
+    public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness)
     {
         ReadOnlySpan<Vector2> points = stackalloc Vector2[]
         {

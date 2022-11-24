@@ -38,7 +38,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
             {
                 if (_prevWorld != world || _worldInspector == null)
                 {
-                    _worldInspector = InspectorExt.GetInspectorForTarget(world);
+                    _worldInspector = InspectorExt.GetGroupInspectorForTarget(world);
                 }
 
                 _prevWorld = world;
@@ -49,13 +49,24 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 var (cell, cellRel) = Entity.GetGridCoords(world.Player);
                 ImGui.TextUnformatted($"Cell {cell.ToString()}");
                 ImGui.TextUnformatted($"CellRel {cellRel.ToString()}");
+                ImGui.TextUnformatted($"Pos {world.Player.Position.Current.ToString()}");
                 
+                var mousePosition = Shared.Game.InputHandler.MousePosition;
+                var view = Shared.Game.GameScreen.Camera.GetView();
+                Matrix3x2.Invert(view, out var invertedView);
+                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+                ImGui.TextUnformatted($"MousePos {mouseInWorld.ToString()}");
+                
+                var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld, Vector2.Zero, World.DefaultGridSize);
+                ImGui.TextUnformatted($"MouseCel {mouseCell.ToString()}");
+                ImGui.TextUnformatted($"MouseCelPos {mouseCellPos.ToString()}");
+
                 ImGui.EndTabItem();
             }
 
             if (ImGui.BeginTabItem("Camera"))
             {
-                _cameraInspector ??= InspectorExt.GetInspectorForTarget(Shared.Game.GameScreen.Camera);
+                _cameraInspector ??= InspectorExt.GetGroupInspectorForTarget(Shared.Game.GameScreen.Camera);
                 _cameraInspector.Draw();
 
                 ImGui.EndTabItem();

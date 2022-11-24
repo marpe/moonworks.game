@@ -1,5 +1,16 @@
 ﻿namespace MyGame.Cameras;
 
+public static class CameraBinds
+{
+    public static ButtonBind ZoomIn = new();
+    public static ButtonBind ZoomOut = new();
+    
+    public static ButtonBind Up = new();
+    public static ButtonBind Down = new();
+    public static ButtonBind Right = new();
+    public static ButtonBind Left = new();
+}
+
 public class Camera
 {
     [Inspectable] protected Vector2 _cameraRotation = new(0, MathHelper.Pi);
@@ -28,8 +39,6 @@ public class Camera
     public Vector2 ShakeOffset;
     public Vector2 TargetOffset;
     public Vector2 TargetPosition;
-
-    private Vector2 _lastViewPosition;
 
     /// <summary>This is the "true" position, that was used for the view projection calculation Which has shake and bump and crap applied</summary>
     public Vector2 ViewPosition;
@@ -271,32 +280,32 @@ public class Camera
                 Position = Vector2.Zero;
             }
 
-            if (input.IsKeyDown(KeyCode.PageUp))
+            if (CameraBinds.ZoomIn.Active)
             {
                 Zoom += 0.025f * Zoom;
             }
 
-            if (input.IsKeyDown(KeyCode.PageDown))
+            if (CameraBinds.ZoomOut.Active)
             {
                 Zoom -= 0.025f * Zoom;
             }
 
-            if (input.IsKeyDown(KeyCode.W))
+            if (CameraBinds.Up.Active)
             {
                 Position.Y -= moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.S))
+            if (CameraBinds.Down.Active)
             {
                 Position.Y += moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.A))
+            if (CameraBinds.Left.Active)
             {
                 Position.X -= moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.D))
+            if (CameraBinds.Right.Active)
             {
                 Position.X += moveDelta;
             }

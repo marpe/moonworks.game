@@ -17,11 +17,10 @@ public abstract class Inspector : IInspector
     protected Type? _targetType;
     protected Type? _valueType;
 
-    /// <summary>Will hide this inspector if the predicate evaluates to true</summary>
-    public Predicate<object?>? HideInInspectorCondition;
-
     protected bool IsReadOnly;
     public MemberInfo? MemberInfo => _memberInfo;
+
+    protected HideInInspectorAttribute? HideInInspectorAttribute;
 
     public string Name
     {
@@ -52,7 +51,7 @@ public abstract class Inspector : IInspector
         _stepSizeAttribute = memberInfo.GetCustomAttribute<StepSizeAttribute>();
         _customDrawAttr = memberInfo.GetCustomAttribute<CustomDrawInspectorAttribute>();
         _callableAttr = memberInfo.GetCustomAttribute<InspectorCallableAttribute>();
-        HideInInspectorCondition = memberInfo.GetCustomAttribute<HideInInspectorAttribute>()?.Condition;
+        HideInInspectorAttribute = memberInfo.GetCustomAttribute<HideInInspectorAttribute>();
 
         if (memberInfo is FieldInfo field)
         {

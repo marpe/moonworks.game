@@ -321,17 +321,17 @@ public static unsafe class ImGuiExt
         return ColoredButton(label, color.ToColor());
     }
 
-    public static bool ColoredButton(string label, Color color)
+    public static bool ColoredButton(string label, Color color, string? tooltip = null)
     {
-        return ColoredButton(label, color, Vector2.Zero, ButtonPadding);
+        return ColoredButton(label, color, tooltip, Vector2.Zero, ButtonPadding);
     }
 
-    public static bool ColoredButton(string label, Color color, Vector2 size)
+    public static bool ColoredButton(string label, Color color, Vector2 size, string? tooltip = null)
     {
-        return ColoredButton(label, color, size, ButtonPadding);
+        return ColoredButton(label, color, tooltip, size, ButtonPadding);
     }
 
-    public static bool ColoredButton(string label, Color color, Vector2 size, Vector2 padding)
+    public static bool ColoredButton(string label, Color color, string? tooltip, Vector2 size, Vector2 padding)
     {
         var (h, s, v) = ColorExt.RgbToHsv(color);
         ImGui.PushStyleColor(ImGuiCol.Button, ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f).ToNumerics());
@@ -342,9 +342,11 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.ToNumerics());
         var result = ImGui.Button(label, size.ToNumerics());
 
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered() && tooltip != null)
         {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+            ImGui.BeginTooltip();
+            ImGui.TextUnformatted(tooltip);
+            ImGui.EndTooltip();
         }
 
         ImGui.PopStyleColor(5);

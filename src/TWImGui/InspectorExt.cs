@@ -59,7 +59,7 @@ public static class InspectorExt
         return null;
     }
 
-    public static GroupInspector GetInspectorForTarget(object target)
+    public static GroupInspector GetGroupInspectorForTarget(object target)
     {
         var inspectors = GetInspectorsForTarget(target);
         var groupInspector = new GroupInspector(inspectors);
@@ -68,16 +68,15 @@ public static class InspectorExt
         return groupInspector;
     }
 
-    public static List<IInspector> GetInspectorsForTarget(object target)
+    private static List<IInspector> GetInspectorsForTarget(object target)
     {
         var type = target.GetType();
         List<IInspector> inspectors = new();
         if (type.IsValueType)
         {
-            Logger.LogError(
-                $"Attempted to get inspectors for object \"{target}\" which is of value type \"{type.Name}\", but objects of value types are not supported");
+            Logger.LogError($"Attempted to get inspectors for object \"{target}\" which is of value type \"{type.Name}\", " +
+                            "but objects of value types are not supported");
             return inspectors;
-            // throw new InvalidOperationException();
         }
 
         while (type != null && type != typeof(object))
@@ -95,32 +94,9 @@ public static class InspectorExt
         return inspectors;
     }
 
-    private static Inspector? GetInspectorForMember(object? target, MemberInfo memberInfo)
+    private static IInspector? GetInspectorForTypeOrIntrospect(object? target, Type type)
     {
-        var hideAttr = memberInfo.GetCustomAttribute<HideInInspectorAttribute>(false);
-        if (hideAttr != null && hideAttr.Condition == null)
-        {
-            return null;
-        }
-
-        var valueType = memberInfo switch
-        {
-            FieldInfo fieldInfo => fieldInfo.FieldType,
-            PropertyInfo propInfo => propInfo.PropertyType,
-            _ => null,
-        };
-
-        if (valueType == null)
-        {
-            return null;
-        }
-
-        return GetInspectorForType(valueType);
-    }
-
-
-    public static IInspector? GetInspectorForTypeOrIntrospect(object? target, Type type)
-    {
+        // check if there's a custom inspector for this type
         var typeInspector = GetInspectorForType(type);
         if (typeInspector != null)
         {
@@ -129,6 +105,7 @@ public static class InspectorExt
             return typeInspector;
         }
 
+        // if no custom inspector was found iterate through fields and properties to create inspectors per member
         return GetInspectorForTargetAndType(target, type);
     }
 
@@ -158,7 +135,12 @@ public static class InspectorExt
                 continue;
             }
 
-            var inspector = GetInspectorForMember(target, field);
+            if (field.IsDefined(typeof(HideInInspectorAttribute)))
+            {
+                continue;
+            }
+
+            var inspector = GetInspectorForType(field.FieldType);
             if (inspector != null)
             {
                 inspector.SetTarget(target, type, field);
@@ -182,7 +164,12 @@ public static class InspectorExt
                 continue;
             }
 
-            var inspector = GetInspectorForMember(target, prop);
+            if (prop.IsDefined(typeof(HideInInspectorAttribute)))
+            {
+                continue;
+            }
+
+            var inspector = GetInspectorForType(prop.PropertyType);
             if (inspector != null)
             {
                 inspector.SetTarget(target, type, prop);
@@ -196,10 +183,9 @@ public static class InspectorExt
 
         foreach (var methodInfo in methods)
         {
-            var inspector = GetInspectorForMember(target, methodInfo);
-            if (inspector != null)
+            var hideAttr = methodInfo.GetCustomAttribute<HideInInspectorAttribute>(false);
+            if (hideAttr != null)
             {
-                inspectors.Add(inspector);
                 continue;
             }
 

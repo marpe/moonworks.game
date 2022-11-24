@@ -45,13 +45,23 @@ public unsafe class GroupInspector : Inspector
         {
             ShowHeader = true;
             var value = GetValue();
+
             if (value != null)
             {
-                var inspector = InspectorExt.GetInspectorForTargetAndType(value, value.GetType());
-                if (inspector != null)
+                var targetType = value.GetType();
+                
+                while (targetType != null && targetType != typeof(object))
                 {
-                    _inspectors.Add(inspector);
+                    var inspector = InspectorExt.GetInspectorForTargetAndType(value, targetType);
+                    if (inspector != null)
+                    {
+                        _inspectors.Add(inspector);
+                    }
+
+                    targetType = targetType.BaseType;
                 }
+
+                _inspectors.Reverse();
             }
 
             _isInitialized = true;
@@ -63,7 +73,7 @@ public unsafe class GroupInspector : Inspector
         Draw(0);
     }
 
-    public void Draw(int depth)
+    private void Draw(int depth)
     {
         var value = GetValue();
         if (value == null && ChildCount == 0)

@@ -11,6 +11,8 @@ public partial class Entity
     public Vector2 Center => new(Position.Current.X + (0.5f - Pivot.X) * Size.X, Position.Current.Y + (0.5f - Pivot.Y) * Size.Y);
 
     private World? _world;
+    
+    [HideInInspector]
     public World World => _world ?? throw new InvalidOperationException();
 
     public CoroutineManager CoroutineManager = new();
@@ -42,9 +44,8 @@ public partial class Entity
 
     public static (Point, Vector2) GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
     {
-        var (adjustX, adjustY) = (MathF.Approx(pivot.X, 1) ? -1 : 0, MathF.Approx(pivot.Y, 1) ? -1 : 0);
-        var cellX = ((int)position.X + adjustX) / gridSize;
-        var cellY = ((int)position.Y + adjustY) / gridSize;
+        var cellX = (int)(position.X / gridSize);
+        var cellY = (int)(position.Y / gridSize);
         var cellPosX = position.X % gridSize / gridSize;
         var cellPosY = position.Y % gridSize / gridSize;
         return (new Point(cellX, cellY), new Vector2(cellPosX, cellPosY));

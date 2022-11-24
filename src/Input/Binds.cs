@@ -1,19 +1,86 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using MyGame.Cameras;
 
 namespace MyGame.Input;
 
 public static class Binds
 {
-    private static Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
+    private static readonly Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
 
-    static Binds()
+    public static void Initialize()
     {
+        var defaultBinds = new[]
+        {
+            ("f1", "imgui.hidden"),
+            ("f2", "noclip"),
+            ("f4", "world.debug"),
+            ("f5", "kill_all"),
+            ("f9", "step"),
+            ("f10", "pause"),
+        };
+
+        var inputCommands = new[]
+        {
+            ("right", "Move right", KeyCode.D, PlayerBinds.Right),
+            ("left", "Move left", KeyCode.A, PlayerBinds.Left),
+            ("jump", "Jump", KeyCode.Space, PlayerBinds.Jump),
+            ("fire1", "Fire", KeyCode.LeftControl, PlayerBinds.Fire1),
+            ("respawn", "Respawn", KeyCode.Insert, PlayerBinds.Respawn),
+            ("mousemove", "Move to mouse", KeyCode.M, PlayerBinds.MoveToMouse),
+            
+            ("cam_zoom_in", "Increase camera zoom", KeyCode.D0, CameraBinds.ZoomIn),
+            ("cam_zoom_out", "Decrease camera zoom", KeyCode.Minus, CameraBinds.ZoomOut),
+            ("cam_up", "Move camera up", KeyCode.I, CameraBinds.Up),
+            ("cam_down", "Move camera down", KeyCode.K, CameraBinds.Down),
+            ("cam_left", "Move camera left", KeyCode.J, CameraBinds.Left),
+            ("cam_right", "Move camera right", KeyCode.L, CameraBinds.Right),
+        };
+        
+        for (var i = 0; i < defaultBinds.Length; i++)
+        {
+            var (key, cmd) = defaultBinds[i];
+            Bind(key, cmd);
+        }
+
+        for (var i = 0; i < inputCommands.Length; i++)
+        {
+            var (cmd, description, defaultBind, bind) = inputCommands[i];
+            Bind(defaultBind.ToString(), $"+{cmd}");
+            RegisterConsoleCommandForBind(cmd, description, bind);
+        }
+        
         TWConsole.TWConsole.OnCfgSave += builder =>
         {
             builder.AppendLine("unbindall");
             var sb = GetBindsAsText();
             builder.Append(sb);
         };
+    }
+
+    private static void RegisterConsoleCommandForBind(ReadOnlySpan<char> cmdName, ReadOnlySpan<char> description, ButtonBind bind)
+    {
+        var args = new ConsoleCommandArg[] { new("Source", true, -1, typeof(int)) };
+        ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
+        {
+            var wasActive = bind.Active;
+            bind.Active = true;
+            bind.WasActive = wasActive;
+            bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
+            bind.Frame = Shared.Game.Time.UpdateCount;
+            bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
+        };
+        ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
+        {
+            bind.Active = false;
+            bind.WasActive = false;
+            bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
+            bind.Frame = Shared.Game.Time.UpdateCount;
+            bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
+        };
+        var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, args, Array.Empty<string>(), false);
+        var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, args, Array.Empty<string>(), false);
+        Shared.Console.RegisterCommand(downCmd);
+        Shared.Console.RegisterCommand(upCmd);
     }
 
     public static bool TryGetBind(ReadOnlySpan<char> key, [NotNullWhen(true)] out string? bind)
@@ -101,7 +168,7 @@ public static class Binds
             Shared.Console.Print($"Button {keyStr} is unbound");
     }
 
-    private static StringBuilder GetBindsAsText()
+    public static StringBuilder GetBindsAsText()
     {
         var sb = new StringBuilder();
 

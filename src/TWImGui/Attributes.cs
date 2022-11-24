@@ -24,15 +24,8 @@ public class InspectorCallableAttribute : Attribute
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class HideInInspectorAttribute : Attribute
 {
-    public readonly Predicate<object?>? Condition;
-
     public HideInInspectorAttribute()
     {
-    }
-
-    public HideInInspectorAttribute(Predicate<object?> condition)
-    {
-        Condition = condition;
     }
 }
 
