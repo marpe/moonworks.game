@@ -59,54 +59,59 @@ public static class InspectorExt
         return null;
     }
 
-    public static GroupInspector GetGroupInspectorForTarget(object target)
-    {
-        var inspectors = GetInspectorsForTarget(target);
-        var groupInspector = new GroupInspector(inspectors);
-        groupInspector.SetTarget(target, target.GetType());
-        groupInspector.Initialize();
-        return groupInspector;
-    }
-
-    private static List<IInspector> GetInspectorsForTarget(object target)
+    public static IInspector GetGroupInspectorForTarget(object target)
     {
         var type = target.GetType();
         List<IInspector> inspectors = new();
         if (type.IsValueType)
         {
-            Logger.LogError($"Attempted to get inspectors for object \"{target}\" which is of value type \"{type.Name}\", " +
-                            "but objects of value types are not supported");
-            return inspectors;
+            var message = $"Attempted to get inspectors for object \"{target}\" which is of value type \"{type.Name}\", " +
+                          "but objects of value types are not supported";
+            Logger.LogError(message);
+            return new PlaceholderInspector(message);
         }
 
         while (type != null && type != typeof(object))
         {
-            var inspector = GetInspectorForTypeOrIntrospect(target, type);
+            // check if there's a custom inspector for this type
+            var inspectorForType = GetInspectorForType(type);
+            if (inspectorForType != null)
+            {
+                inspectorForType.SetTarget(target, type);
+                inspectorForType.Initialize();
+                inspectors.Add(inspectorForType);
+                type = type.BaseType;
+                continue;
+            }
+            
+            // if no custom inspector was found iterate through fields and properties to create inspectors per member
+            var inspector = GetInspectorForTargetAndType(target, type);
             if (inspector != null)
             {
                 inspectors.Add(inspector);
             }
+            
+            Logger.LogWarn($"Could not find any inspectors for {target.ToString()} ({type.Name})");
 
             type = type.BaseType;
         }
 
         inspectors.Reverse();
-        return inspectors;
-    }
 
-    private static IInspector? GetInspectorForTypeOrIntrospect(object? target, Type type)
-    {
-        // check if there's a custom inspector for this type
-        var typeInspector = GetInspectorForType(type);
-        if (typeInspector != null)
+        if (inspectors.Count == 0)
         {
-            typeInspector.SetTarget(target, type);
-            typeInspector.Initialize();
-            return typeInspector;
+            return new PlaceholderInspector($"Could not find any inspectors for {target.ToString()} ({target.GetType().Name})");
         }
 
-        // if no custom inspector was found iterate through fields and properties to create inspectors per member
-        return GetInspectorForTargetAndType(target, type);
+        if (inspectors.Count == 1)
+        {
+            return inspectors[0];
+        }
+
+        var groupInspector = new GroupInspector(inspectors);
+        groupInspector.SetTarget(target, target.GetType());
+        groupInspector.Initialize();
+        return groupInspector;
     }
 
     public static IInspector? GetInspectorForTargetAndType(object? target, Type type)

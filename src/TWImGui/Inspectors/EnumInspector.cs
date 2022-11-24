@@ -86,12 +86,21 @@ public unsafe class EnumInspector : Inspector
         {
             var value = GetValue();
             var index = Array.IndexOf(_enumValues, value);
-
-            var separatedByZeroes = string.Join('0', _enumNames);
-
-            if (ImGui.Combo(_name, ImGuiExt.RefPtr(ref index), separatedByZeroes, _enumNames.Length))
+            if (ImGui.BeginCombo(_name, _enumNames[index]))
             {
-                SetValue(_enumValues.GetValue(index));
+                for (var i = 0; i < _enumNames.Length; i++)
+                {
+                    var isSelected = i == index;
+                    if (ImGui.Selectable(_enumNames[i], isSelected, ImGuiSelectableFlags.None, default))
+                    {
+                        SetValue(_enumValues.GetValue(i));
+                    }
+
+                    if (isSelected)
+                        ImGui.SetItemDefaultFocus();
+                }
+
+                ImGui.EndCombo();
             }
         }
 

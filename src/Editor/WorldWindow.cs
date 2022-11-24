@@ -5,8 +5,8 @@ namespace MyGame.Editor;
 public unsafe class WorldWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "World";
-    private GroupInspector? _cameraInspector;
-    private GroupInspector? _worldInspector;
+    private IInspector? _cameraInspector;
+    private IInspector? _worldInspector;
     private World? _prevWorld;
 
     public WorldWindow() : base(WindowTitle)

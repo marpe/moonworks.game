@@ -35,7 +35,7 @@ public unsafe class MyEditorMain : MyGameMain
     public static bool Screenshot;
 
     private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
-    private GroupInspector? _loadingScreenInspector;
+    private IInspector? _loadingScreenInspector;
     private string _loadingDebugWindowName = "LoadingDebug";
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(

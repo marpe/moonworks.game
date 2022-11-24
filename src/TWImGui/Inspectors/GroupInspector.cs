@@ -41,31 +41,31 @@ public unsafe class GroupInspector : Inspector
 
     public override void Initialize()
     {
-        if (!_isInitialized)
+        if (_isInitialized)
+            return;
+
+        ShowHeader = true;
+        var value = GetValue();
+
+        if (value != null)
         {
-            ShowHeader = true;
-            var value = GetValue();
-
-            if (value != null)
-            {
-                var targetType = value.GetType();
+            var targetType = value.GetType();
                 
-                while (targetType != null && targetType != typeof(object))
+            while (targetType != null && targetType != typeof(object))
+            {
+                var inspector = InspectorExt.GetInspectorForTargetAndType(value, targetType);
+                if (inspector != null)
                 {
-                    var inspector = InspectorExt.GetInspectorForTargetAndType(value, targetType);
-                    if (inspector != null)
-                    {
-                        _inspectors.Add(inspector);
-                    }
-
-                    targetType = targetType.BaseType;
+                    _inspectors.Add(inspector);
                 }
 
-                _inspectors.Reverse();
+                targetType = targetType.BaseType;
             }
 
-            _isInitialized = true;
+            _inspectors.Reverse();
         }
+
+        _isInitialized = true;
     }
 
     public override void Draw()
