@@ -53,6 +53,11 @@ public class Position
     public void DeltaMoveX(float dx) => SetX(Current.X + dx);
     public void DeltaMoveY(float dy) => SetY(Current.Y + dy);
 
+    public void Set(Vector2 position)
+    {
+        Current = position;
+    }
+
     public void SetPrevAndCurrent(Vector2 position)
     {
         Current = Previous = position;

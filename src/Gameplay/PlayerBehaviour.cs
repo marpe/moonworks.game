@@ -134,8 +134,6 @@ public class PlayerBehaviour
             Player.IsJumping = false;
         }
 
-        Velocity.ApplyFriction(Player.Velocity);
-
         if (Player.Velocity.X > 0)
         {
             Player.Flip = SpriteFlip.None;
