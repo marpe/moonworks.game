@@ -40,7 +40,9 @@ public struct FancyTextPart
 
 public class FancyTextComponent
 {
+    private static Color[] _rainbowGradient =  new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
     private static Color[] _tempColors = new Color[4];
+    private static Vector2[] _tempPoints = { new(0, 0), new(0, 1), new(1, 0), new(1, 1), };
     public static float ShakeSpeed = 100f;
     public static float ShakeAmount = 1f;
 
@@ -286,16 +288,6 @@ public class FancyTextComponent
     {
         if (part.IsRainbow)
         {
-            var gradient = new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
-
-            var points = new Vector2[]
-            {
-                new Vector2(0, 0),
-                new Vector2(0, 1),
-                new Vector2(1, 0),
-                new Vector2(1, 1),
-            };
-
             var s = 0.01f;
 
             var position = new Vector2(part.Offset.X, part.Offset.Y) + Vector2.One * Shared.Game.Time.TotalElapsedTime * 0.025f;
@@ -304,11 +296,11 @@ public class FancyTextComponent
                     Matrix3x2.CreateRotation(45 * MathF.Deg2Rad) * 
                     Matrix3x2.CreateTranslation(position);
 
-            for (var i = 0; i < points.Length; i++)
+            for (var i = 0; i < _tempPoints.Length; i++)
             {
-                var d1 = Vector2.Transform(points[i], t);
+                var d1 = Vector2.Transform(_tempPoints[i], t);
                 var dx = 15f * d1.X + part.Offset.X * 0.15f;
-                _tempColors[i] = LinearGradient(gradient, dx);
+                _tempColors[i] = LinearGradient(_rainbowGradient, dx);
             }
 
             ColorExt.MultiplyColors(_tempColors, tint);

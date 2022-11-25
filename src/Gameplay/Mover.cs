@@ -144,16 +144,6 @@ public class Mover
 
     private bool CheckCollisions(in Point cell) => Parent.Collider.HasCollision(cell);
 
-    private void SanityCheck(Vector2 deltaMove)
-    {
-        // -----------------------------------------------
-        var (finalCell, finalCellPos) = Entity.GetGridCoords(Parent, deltaMove);
-        var hasCollision = Parent.Collider.HasCollision(finalCell.X, finalCell.Y);
-        if (hasCollision && PreviousMoveCollisions.Count == 0)
-            Logger.LogInfo("Moved into collision tile!");
-        // -----------------------------------------------
-    }
-
     private void HandleHorizontalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
     {
         if (gridCoords.CellPos.X > Bounds.Right)
@@ -163,14 +153,14 @@ public class Mover
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
                 gridCoords.CellPos.X = Bounds.Right;
                 deltaMove.X = 0;
-                Logger.LogInfo("Collided right");
+                // Logger.LogInfo("Collided right");
             }
             else if (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownRight))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
                 gridCoords.CellPos.X = Bounds.Right;
                 deltaMove.X = 0;
-                Logger.LogInfo("Collided right down");
+                // Logger.LogInfo("Collided right down");
             }
         }
 
@@ -181,14 +171,14 @@ public class Mover
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
                 gridCoords.CellPos.X = Bounds.Left;
                 deltaMove.X = 0;
-                Logger.LogInfo("Collided left");
+                // Logger.LogInfo("Collided left");
             }
             else if (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownLeft))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
                 gridCoords.CellPos.X = Bounds.Left;
                 deltaMove.X = 0;
-                Logger.LogInfo("Collided left down");
+                // Logger.LogInfo("Collided left down");
             }
         }
     }
@@ -221,7 +211,7 @@ public class Mover
                 gridCoords.CellPos.Y = Bounds.Bottom;
                 gridCoords.Cell.Y = newCell.Y;
                 deltaMove.Y = 0;
-                Logger.LogInfo($"Collided down: {StringExt.TruncateNumber(newCellPosY)}");
+                // Logger.LogInfo($"Collided down: {StringExt.TruncateNumber(newCellPosY)}");
             }
             else
             {
@@ -233,12 +223,21 @@ public class Mover
                     gridCoords.CellPos.Y = Bounds.Bottom;
                     gridCoords.Cell.Y = newCell.Y;
                     deltaMove.Y = 0;
-                    Logger.LogInfo("Collided down right");
+                    // Logger.LogInfo("Collided down right");
                 }
             }
         }
     }
-
+    
+    private void SanityCheck()
+    {
+        // -----------------------------------------------
+        var (finalCell, finalCellPos) = Entity.GetGridCoords(Parent);
+        var hasCollision = Parent.Collider.HasCollision(finalCell.X, finalCell.Y);
+        if (hasCollision && PreviousMoveCollisions.Count == 0)
+            Logger.LogInfo("Moved into collision tile!");
+        // -----------------------------------------------
+    }
 
     public void PerformMove(Velocity velocity, float deltaSeconds)
     {
@@ -287,6 +286,7 @@ public class Mover
 
             var finalPosition = (gridCoords.Cell + gridCoords.CellPos) * World.DefaultGridSize;
             Parent.Position.Set(finalPosition);
+            SanityCheck();
         }
 
         foreach (var collision in MoveCollisions)
