@@ -31,6 +31,8 @@ public class World
 
     public ulong WorldUpdateCount;
     public float WorldTotalElapsedTime;
+    public Vector2 MousePivot = new Vector2(0f, 0f);
+    public Point MouseSize = new Point(8, 12);
 
     public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -204,8 +206,6 @@ public class World
         var view = Shared.Game.GameScreen.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var mousePivot = new Vector2(1.0f, 1.0f);
-        var mouseSize = new Point(16, 16);
         var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld);
 
         var mouseCellRect = new Rectangle(
@@ -219,16 +219,16 @@ public class World
         var mousePosRect = new Bounds(
             mouseInWorld.X,
             mouseInWorld.Y,
-            mouseSize.X,
-            mouseSize.Y
+            MouseSize.X,
+            MouseSize.Y
         );
         renderer.DrawRectOutline(mousePosRect, Color.Blue * 0.5f);
 
         var mouseRenderRect = new Bounds(
             mouseInWorld.X,
             mouseInWorld.Y,
-            mouseSize.X,
-            mouseSize.Y
+            MouseSize.X,
+            MouseSize.Y
         );
         renderer.DrawRectOutline(mouseRenderRect, Color.Magenta * 0.5f);
 
@@ -433,10 +433,10 @@ public class World
         }
 
         renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
-        
+
         if (drawCoords)
         {
-            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({(cellRel.X):0.##}, {(cellRel.Y):0.##})";
+            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({StringExt.TruncateNumber(cellRel.X)}, {StringExt.TruncateNumber(cellRel.Y)})";
             var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
             renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
             // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);

@@ -20,6 +20,15 @@ public partial class Entity
 
     public Position Position = new();
 
+    public GridCoords GridCoords
+    {
+        get
+        {
+            var (cell, cellPos) = GetGridCoords(Position);
+            return new GridCoords(cell, cellPos);
+        }
+    }
+
     /*public Point Cell;
     /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
     public Vector2 CellPos;*/
