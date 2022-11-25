@@ -94,7 +94,15 @@ public class Mover
 
     private static readonly CollisionResult NoCollision = new();
 
-    private Bounds Bounds => new(0, 0, 1 - SizeInGridTiles.X, 1 - SizeInGridTiles.Y);
+    private Bounds Bounds
+    {
+        get
+        {
+            // var w = MathF.Approx(SizeInGridTiles.X, 1.0f) ? MathF.Epsilon : 1.0f - SizeInGridTiles.X;
+            // var h = MathF.Approx(SizeInGridTiles.Y, 1.0f) ? MathF.Epsilon : 1.0f - SizeInGridTiles.Y;
+            return new(0, 0, 1.0f - SizeInGridTiles.X, 1.0f - SizeInGridTiles.Y);
+        }
+    }
 
     public void Initialize(Entity parent)
     {
@@ -187,6 +195,8 @@ public class Mover
 
     private void HandleVerticalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
     {
+        var newCell = gridCoords.Cell + gridCoords.CellPos.ToPoint();
+        var newCellPosY = gridCoords.CellPos.Y % 1.0f;
         if (gridCoords.CellPos.Y < Bounds.Top)
         {
             if (CheckCollisions(gridCoords.Cell + Up))
@@ -203,23 +213,25 @@ public class Mover
             }
         }
 
-
-        if (gridCoords.CellPos.Y > Bounds.Bottom)
+        if (newCellPosY > Bounds.Bottom)
         {
-            if (CheckCollisions(gridCoords.Cell + Down))
+            if (CheckCollisions(newCell + Down))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
                 gridCoords.CellPos.Y = Bounds.Bottom;
+                gridCoords.Cell.Y = newCell.Y;
                 deltaMove.Y = 0;
-                Logger.LogInfo("Collided down");
+                Logger.LogInfo($"Collided down: {StringExt.TruncateNumber(newCellPosY)}");
             }
             else
             {
-                var hasCollision = CheckCollisions(gridCoords.Cell + DownRight);
-                if (deltaMove.Y > 0 && gridCoords.CellPos.X > Bounds.Right && prevGridCoords.CellPos.Y <= Bounds.Bottom && hasCollision)
+                var hasCollision = CheckCollisions(newCell + DownRight);
+                var boundsCheck = Bounds.Bottom == 0 ? prevGridCoords.Cell.Y < newCell.Y : prevGridCoords.CellPos.Y <= Bounds.Bottom;
+                if (deltaMove.Y > 0 && gridCoords.CellPos.X > Bounds.Right && boundsCheck && hasCollision)
                 {
                     MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
                     gridCoords.CellPos.Y = Bounds.Bottom;
+                    gridCoords.Cell.Y = newCell.Y;
                     deltaMove.Y = 0;
                     Logger.LogInfo("Collided down right");
                 }
