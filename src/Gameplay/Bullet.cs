@@ -30,6 +30,14 @@ public class Bullet : Entity
         return new Point((int)(level.PxWid / World.DefaultGridSize), (int)(level.PxHei / World.DefaultGridSize));
     }
 
+    public Matrix4x4 GetTransform(double alpha)
+    {
+        var xform = Matrix3x2.CreateTranslation(-Origin.X, -Origin.Y) * 
+                    Matrix3x2.CreateTranslation(Origin.X, Origin.Y) * 
+                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+        return xform.ToMatrix4x4();
+    }
+    
     public override void Update(float deltaSeconds)
     {
         if (IsDestroyed)

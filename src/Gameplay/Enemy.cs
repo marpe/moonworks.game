@@ -37,6 +37,14 @@ public partial class Enemy : Entity
         }
     }
 
+    public Matrix4x4 GetTransform(double alpha)
+    {
+        var xform = Matrix3x2.CreateTranslation(-Origin.X, -Origin.Y) * 
+                    Matrix3x2.CreateTranslation(Origin.X, Origin.Y) * 
+                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+        return xform.ToMatrix4x4();
+    }
+
     public void FreezeMovement(float freezeTime)
     {
         FreezeMovementUntil = Math.Max(FreezeMovementUntil, TotalTime + freezeTime);

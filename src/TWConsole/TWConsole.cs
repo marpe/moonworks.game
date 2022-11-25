@@ -119,7 +119,7 @@ public class TWConsole
         RegisterCommand(
             new ConsoleCommand(
                 cvarAttribute.Name,
-                $"{cvarAttribute.Description} <^3{typeName}^0> ({defaultValueStr}^0)",
+                $"{cvarAttribute.Description}, default value: {defaultValueStr}",
                 CVarHandler(cvar),
                 new ConsoleCommandArg[]
                 {
@@ -159,7 +159,7 @@ public class TWConsole
         for (var i = 0; i < parameters.Length; i++)
         {
             var param = parameters[i];
-            defaults[i] = new ConsoleCommandArg(param.Name, param.HasDefaultValue, param.DefaultValue, param.ParameterType);
+            defaults[i] = new ConsoleCommandArg(param.Name!, param.HasDefaultValue, param.DefaultValue, param.ParameterType);
         }
 
         var target = method.DeclaringType == GetType() ? this : null;
@@ -228,7 +228,7 @@ public class TWConsole
 
                 if (numRequiredParams > numSuppliedParams)
                 {
-                    console.Print($"Usage:\n{FormatCommand(cmd)}");
+                    console.Print($"Usage:\n{FormatCommand(cmd, true)}");
                     return;
                 }
 
@@ -350,34 +350,20 @@ public class TWConsole
         Print(text);
     }
 
-    private static string FormatCommand(ConsoleCommand cmd)
+    private static string FormatCommand(ConsoleCommand cmd, bool includeArgs)
     {
         var cmdArgs = string.Empty;
-        if (cmd.Arguments.Length > 0)
+        if (includeArgs && cmd.Arguments.Length > 0)
         {
-            // TODO (marpe): Clean up this horrible mess
-            var formattedArgs = cmd.Arguments.Select(x =>
-            {
-                var str = x.Name + " (^3" + ConsoleUtils.GetDisplayName(x.Type) + "^1";
-                if (x.HasDefaultValue)
-                {
-                    str += ", " + Colorize(x.DefaultValue) + "^1";
-                }
-
-                str += ")";
-                return str;
-            });
+            var formattedArgs = cmd.Arguments.Select(x => x.GetDescription());
             var args = string.Join(", ", formattedArgs);
             cmdArgs = $" ^1[{args}]^0";
         }
 
-        var cmdPart = cmd.Key;
-        if (cmd.Aliases.Length > 0)
-        {
-            cmdPart += " ^5(" + string.Join(", ", cmd.Aliases) + ")^0";
-        }
-
-        return $"^6{cmdPart}{cmdArgs}^0: {cmd.Description}";
+        var cmdDescription = string.Empty;
+        if (!string.IsNullOrWhiteSpace(cmd.Description))
+            cmdDescription = $": {cmd.Description}";
+        return $"^6{cmd.Key}{cmdArgs}^0{cmdDescription}";
     }
 
 
@@ -385,17 +371,20 @@ public class TWConsole
     private void HelpCommand(string search = "")
     {
         var sb = new StringBuilder();
+        var commands = Commands.Where(kvp => !kvp.Key.StartsWith('-'))
+            .OrderBy(kvp => kvp.Value.IsCVar)
+            .ThenBy(kvp => kvp.Key);
         if (string.IsNullOrWhiteSpace(search))
         {
             sb.AppendLine("^8Available commands:");
-            foreach (var (_, value) in Commands)
+            foreach (var (_, value) in commands)
             {
-                sb.AppendLine(FormatCommand(value));
+                sb.AppendLine(FormatCommand(value, false));
             }
         }
         else
         {
-            var results = Commands.Where(c => c.Key.Contains(search)).Select(c => c.Value).ToList();
+            var results = commands.Where(c => c.Key.Contains(search)).Select(c => c.Value).ToList();
             if (results.Count == 0)
             {
                 sb.AppendLine($"^4Could not find any commands which contains {search}");
@@ -405,40 +394,7 @@ public class TWConsole
                 sb.AppendLine($"^8Found {results.Count} commands containing {search}:");
                 foreach (var c in results)
                 {
-                    sb.AppendLine(FormatCommand(c));
-                }
-            }
-        }
-
-        Print(sb.ToString());
-    }
-
-    [ConsoleHandler("commands", "Lists available console commands")]
-    private void ListCommands(string search = "")
-    {
-        var sb = new StringBuilder();
-        if (string.IsNullOrWhiteSpace(search))
-        {
-            sb.AppendLine("^8Available commands:");
-            var results = Commands.Where(c => !c.Value.IsCVar);
-            foreach (var (_, value) in results)
-            {
-                sb.AppendLine(FormatCommand(value));
-            }
-        }
-        else
-        {
-            var results = Commands.Where(c => c.Key.Contains(search) && !c.Value.IsCVar).Select(c => c.Value).ToList();
-            if (results.Count == 0)
-            {
-                sb.AppendLine($"^4Could not find any commands which contains {search}");
-            }
-            else
-            {
-                sb.AppendLine($"^8Found {results.Count} commands containing {search}:");
-                foreach (var c in results)
-                {
-                    sb.AppendLine(FormatCommand(c));
+                    sb.AppendLine(FormatCommand(c, true));
                 }
             }
         }
@@ -462,7 +418,7 @@ public class TWConsole
                 sb.AppendLine("^8Available cvars:");
                 foreach (var (_, value) in results)
                 {
-                    sb.AppendLine(FormatCommand(value));
+                    sb.AppendLine(FormatCommand(value, false));
                 }
             }
         }
@@ -478,7 +434,7 @@ public class TWConsole
                 sb.AppendLine($"^8Found {results.Count} cvars containing {search}:");
                 foreach (var c in results)
                 {
-                    sb.AppendLine(FormatCommand(c));
+                    sb.AppendLine(FormatCommand(c, true));
                 }
             }
         }

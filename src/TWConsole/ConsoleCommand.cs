@@ -2,17 +2,24 @@
 
 public struct ConsoleCommandArg
 {
-    public string? Name;
+    public string Name;
     public object? DefaultValue;
     public bool HasDefaultValue;
     public Type Type;
 
-    public ConsoleCommandArg(string? name, bool hasDefaultValue, object? defaultValue, Type type)
+    public ConsoleCommandArg(string name, bool hasDefaultValue, object? defaultValue, Type type)
     {
         Name = name;
         HasDefaultValue = hasDefaultValue;
         DefaultValue = defaultValue;
         Type = type;
+    }
+
+    public string GetDescription()
+    {
+        if (HasDefaultValue)
+            return $"{Name}, default: {DefaultValue}";
+        return $"{Name}";
     }
 }
 

@@ -283,9 +283,8 @@ public class World
         {
             var bullet = Bullets[i];
             var srcRect = new Rectangle(4 * 16, 0, 16, 16);
-            var position = bullet.Position.Lerp(alpha);
-            var xform = Matrix3x2.CreateTranslation(position.X - bullet.Origin.X, position.Y - bullet.Origin.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, bullet.Flip);
+            var xform = bullet.GetTransform(alpha);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
             if (Debug)
                 DrawDebug(renderer, bullet, false, alpha);
         }
@@ -317,9 +316,8 @@ public class World
 
             var frameIndex = (int)(entity.TotalTime * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-            var position = entity.Position.Lerp(alpha);
-            var xform = Matrix3x2.CreateTranslation(position.X - entity.Origin.X, position.Y - entity.Origin.Y);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform.ToMatrix4x4(), Color.White, 0, entity.Flip);
+            var xform = entity.GetTransform(alpha);
+            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
                 DrawDebug(renderer, entity, false, alpha);
         }
@@ -509,7 +507,7 @@ public class World
     public void SpawnBullet(Vector2 position, int direction)
     {
         var bullet = new Bullet();
-        bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, -8));
+        bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
         bullet.Pivot = new Vector2(0.5f, 0.5f);
         bullet.Size = new Point(16, 16);

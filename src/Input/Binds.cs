@@ -37,6 +37,7 @@ public static class Binds
             ("pageup", "speed_up"),
             ("pagedown", "speed_down"),
             ("p", "pause"),
+            ("mb_left", "+fire1")
         };
 
         var keyBinds = new[]
@@ -183,16 +184,9 @@ public static class Binds
     {
         var sb = new StringBuilder();
 
-        List<(string key, string action)> binds = new();
-
         foreach (var (key, cmd) in _binds)
         {
-            binds.Add((key, cmd));
-        }
-
-        foreach (var (key, action) in binds)
-        {
-            sb.AppendLine($"bind {key.ToLowerInvariant()} \"{action.ToLowerInvariant()}\"");
+            sb.AppendLine($"bind {key.ToLowerInvariant(),-20} \"{cmd.ToLowerInvariant()}\"");
         }
 
         return sb;
