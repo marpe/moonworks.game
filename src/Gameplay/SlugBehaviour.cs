@@ -20,11 +20,11 @@ public class SlugBehaviour : EnemyBehaviour
 
         Parent.Mover.PerformMove(Parent.Velocity, deltaSeconds);
 
-        if (Parent.Mover.MoveCollisions.Any(c => c.CollisionCell.X < c.PreviousCell.X))
+        if (Parent.Mover.MoveCollisions.Any(c => c.Direction == CollisionDir.Left))
         {
             Parent.Velocity.Delta = new Vector2(_speed, 0);
         }
-        if (Parent.Mover.MoveCollisions.Any(c => c.CollisionCell.X > c.PreviousCell.X))
+        if (Parent.Mover.MoveCollisions.Any(c => c.Direction == CollisionDir.Right))
         {
             Parent.Velocity.Delta = new Vector2(-_speed, 0);
         }

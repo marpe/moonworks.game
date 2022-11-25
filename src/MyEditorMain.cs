@@ -328,6 +328,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private static void DrawCollision(CollisionResult collision)
     {
+        ImGuiExt.PropRow("Direction", collision.Direction.ToString());
         ImGuiExt.PropRow("Frame", collision.Frame.ToString());
         ImGuiExt.PropRow("PreviousCell", collision.PreviousCell.ToString());
         ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());

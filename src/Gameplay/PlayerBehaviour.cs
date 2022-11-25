@@ -124,12 +124,12 @@ public class PlayerBehaviour
 
         Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
 
-        if (Player.Mover.MoveCollisions.Any(c => c.CollisionCell.Y > c.PreviousCell.Y))
+        if (Player.Mover.MoveCollisions.Any(c => c.Direction == CollisionDir.Down))
         {
             Player.Squash = new Vector2(1.5f, 0.5f);
         }
 
-        if (Player.Mover.MoveCollisions.Any(c => c.CollisionCell.Y < c.PreviousCell.Y))
+        if (Player.Mover.MoveCollisions.Any(c => c.Direction == CollisionDir.Up))
         {
             Player.IsJumping = false;
         }

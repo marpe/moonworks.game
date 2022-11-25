@@ -8,9 +8,11 @@ public struct CollisionResult
     public readonly Vector2 DeltaMove;
     public readonly Point CollisionCell;
     public readonly float ResultXyOnCollision;
+    public CollisionDir Direction;
 
-    public CollisionResult(Point previousCell, Vector2 cellPos, float resultXYOnCollision, Vector2 deltaMove, Point collisionCell)
+    public CollisionResult(CollisionDir direction, Point previousCell, Vector2 cellPos, float resultXYOnCollision, Vector2 deltaMove, Point collisionCell)
     {
+        Direction = direction;
         PreviousCell = previousCell;
         CellPos = cellPos;
         DeltaMove = deltaMove;
@@ -22,6 +24,27 @@ public struct CollisionResult
 
 public class Mover
 {
+    private static Point Up = new(0, -1);
+    private static Point Right = new(1, 0);
+    private static Point Down = new(0, 1);
+    private static Point Left = new(-1, 0);
+    private static Point UpRight = new(1, -1);
+    private static Point UpLeft = new(-1, -1);
+    private static Point DownRight = new(1, 1);
+    private static Point DownLeft = new(-1, 1);
+
+    private static Dictionary<Point, CollisionDir> _directionMap = new()
+    {
+        { Up, CollisionDir.Up },
+        { Right, CollisionDir.Right },
+        { Down, CollisionDir.Down },
+        { Left, CollisionDir.Left },
+        { UpRight, CollisionDir.UpRight },
+        { UpLeft, CollisionDir.UpLeft },
+        { DownRight, CollisionDir.DownRight },
+        { DownLeft, CollisionDir.DownLeft },
+    };
+
     private Entity? _parent;
     public Entity Parent => _parent ?? throw new InvalidOperationException();
 
@@ -36,6 +59,8 @@ public class Mover
     public List<CollisionResult> ContinuedGroundCollisions = new();
 
     private static readonly CollisionResult NoCollision = new();
+
+    private Bounds Bounds => new(0, 0, 1 - SizeInGridTiles.X, 1 - SizeInGridTiles.Y);
 
     public void Initialize(Entity parent)
     {
@@ -54,15 +79,12 @@ public class Mover
 
         var (cell, cellPos) = Entity.GetGridCoords(Parent);
 
-        CollisionResult result;
-        var didCollide = CheckCollisions(cell, Down, 0, out result) ||
-                         (cellPos.X > Bounds.Left && CheckCollisions(cell, DownRight, 0, out result)) ||
-                         (cellPos.X < Bounds.Right && CheckCollisions(cell, DownLeft, 0, out result));
-
-        if (didCollide)
-        {
-            GroundCollisions.Add(result);
-        }
+        if (CheckCollisions(cell + Down))
+            GroundCollisions.Add(new CollisionResult(CollisionDir.Down, cell, cellPos, 0, Vector2.Zero, cell + Down));
+        if (cellPos.X > Bounds.Left && CheckCollisions(cell + DownRight))
+            GroundCollisions.Add(new CollisionResult(CollisionDir.DownRight, cell, cellPos, 0, Vector2.Zero, cell + DownRight));
+        if (cellPos.X < Bounds.Right && CheckCollisions(cell + DownLeft))
+            GroundCollisions.Add(new CollisionResult(CollisionDir.DownLeft, cell, cellPos, 0, Vector2.Zero, cell + DownLeft));
 
         for (var i = 0; i < PreviousGroundCollisions.Count; i++)
         {
@@ -81,69 +103,77 @@ public class Mover
         return GroundCollisions.Count > 0;
     }
 
-    private static Point Up = new Point(0, -1);
-    private static Point Right = new Point(1, 0);
-    private static Point Down = new Point(0, 1);
-    private static Point Left = new Point(-1, 0);
-    private static Point UpRight = new Point(1, -1);
-    private static Point UpLeft = new Point(-1, -1);
-    private static Point DownRight = new Point(1, 1);
-    private static Point DownLeft = new Point(-1, 1);
-
-    private static Dictionary<Point, CollisionDir> _directionMap = new()
-    {
-        { Up, CollisionDir.Up },
-        { Right, CollisionDir.Right },
-        { Down, CollisionDir.Down },
-        { Left, CollisionDir.Left },
-        { UpRight, CollisionDir.UpRight },
-        { UpLeft, CollisionDir.UpLeft },
-        { DownRight, CollisionDir.DownRight },
-        { DownLeft, CollisionDir.DownLeft },
-    };
-
-    private bool CheckCollisions(Point cell, Vector2 nextCellPos, float xyOnCollision, out CollisionResult result)
-    {
-        if (Parent.Collider.HasCollision(cell + nextCellPos.ToPoint()))
-        {
-            // TODO (marpe): depth
-            var (_, cellPos) = Entity.GetGridCoords(Parent);
-            result = new CollisionResult(cell, nextCellPos, xyOnCollision, nextCellPos - cellPos, cell + nextCellPos.ToPoint());
-            return true;
-        }
-
-        result = NoCollision;
-        return false;
-    }
-
-    private Bounds Bounds => new Bounds(0, 0, 1 - SizeInGridTiles.X, 1 - SizeInGridTiles.Y);
+    private bool CheckCollisions(Point cell) => Parent.Collider.HasCollision(cell);
 
     private bool CheckCollisionRight(Point cell, Vector2 nextCellPos, float xOnCollision, out CollisionResult result)
     {
-        return CheckCollisions(cell, nextCellPos + Right, xOnCollision, out result) ||
-               (nextCellPos.Y < Bounds.Bottom && CheckCollisions(cell, nextCellPos + UpRight, xOnCollision, out result)) ||
-               (nextCellPos.Y > Bounds.Top && CheckCollisions(cell, nextCellPos + DownRight, xOnCollision, out result));
+        var cellDelta = nextCellPos.ToPoint();
+        var didCollide = CheckCollisions(cell + cellDelta + Right) ||
+                         (nextCellPos.Y < Bounds.Bottom && CheckCollisions(cell + cellDelta + UpRight)) ||
+                         (nextCellPos.Y > Bounds.Top && CheckCollisions(cell + cellDelta + DownRight));
+
+        result = NoCollision;
+        if (didCollide)
+        {
+            var (_, prevCellPos) = Entity.GetGridCoords(Parent);
+            result = new CollisionResult(CollisionDir.Right, cell, nextCellPos, xOnCollision, nextCellPos - prevCellPos, cell + nextCellPos.ToPoint());
+        }
+
+        return didCollide;
     }
 
     private bool CheckCollisionLeft(Point cell, Vector2 nextCellPos, float xOnCollision, out CollisionResult result)
     {
-        return CheckCollisions(cell, nextCellPos + Left, xOnCollision, out result) ||
-               (nextCellPos.Y < Bounds.Bottom && CheckCollisions(cell, nextCellPos + UpLeft, xOnCollision, out result)) ||
-               (nextCellPos.Y > Bounds.Top && CheckCollisions(cell, nextCellPos + DownLeft, xOnCollision, out result));
+        var cellDelta = nextCellPos.ToPoint();
+
+        var didCollide = CheckCollisions(cell + cellDelta + Left) ||
+                         (nextCellPos.Y < Bounds.Bottom && CheckCollisions(cell + cellDelta + UpLeft)) ||
+                         (nextCellPos.Y > Bounds.Top && CheckCollisions(cell + cellDelta + DownLeft));
+
+        result = NoCollision;
+        if (didCollide)
+        {
+            var (_, prevCellPos) = Entity.GetGridCoords(Parent);
+            result = new CollisionResult(CollisionDir.Left, cell, nextCellPos, xOnCollision, nextCellPos - prevCellPos, cell + nextCellPos.ToPoint());
+        }
+
+        return didCollide;
     }
 
     private bool CheckCollisionDown(Point cell, Vector2 nextCellPos, float yOnCollision, out CollisionResult result)
     {
-        return CheckCollisions(cell, nextCellPos + Down, yOnCollision, out result) ||
-               (nextCellPos.X > Bounds.Left && CheckCollisions(cell, nextCellPos + DownRight, yOnCollision, out result)) ||
-               (nextCellPos.X < Bounds.Right && CheckCollisions(cell, nextCellPos + DownLeft, yOnCollision, out result));
+        var cellDelta = nextCellPos.ToPoint();
+
+        var didCollide = CheckCollisions(cell + cellDelta + Down) ||
+                         (nextCellPos.X > Bounds.Left && CheckCollisions(cell + cellDelta + DownRight)) ||
+                         (nextCellPos.X < Bounds.Right && CheckCollisions(cell + cellDelta + DownLeft));
+
+        result = NoCollision;
+        if (didCollide)
+        {
+            var (_, prevCellPos) = Entity.GetGridCoords(Parent);
+            result = new CollisionResult(CollisionDir.Down, cell, nextCellPos, yOnCollision, nextCellPos - prevCellPos, cell + nextCellPos.ToPoint());
+        }
+
+        return didCollide;
     }
 
     private bool CheckCollisionUp(Point cell, Vector2 nextCellPos, float yOnCollision, out CollisionResult result)
     {
-        return CheckCollisions(cell, nextCellPos + Up, yOnCollision, out result) ||
-               (nextCellPos.X > Bounds.Left && CheckCollisions(cell, nextCellPos + UpRight, yOnCollision, out result)) ||
-               (nextCellPos.X < Bounds.Right && CheckCollisions(cell, nextCellPos + UpLeft, yOnCollision, out result));
+        var cellDelta = nextCellPos.ToPoint();
+
+        var didCollide = CheckCollisions(cell + cellDelta + Up) ||
+                         (nextCellPos.X > Bounds.Left && CheckCollisions(cell + cellDelta + UpRight)) ||
+                         (nextCellPos.X < Bounds.Right && CheckCollisions(cell + cellDelta + UpLeft));
+
+        result = NoCollision;
+        if (didCollide)
+        {
+            var (_, prevCellPos) = Entity.GetGridCoords(Parent);
+            result = new CollisionResult(CollisionDir.Up, cell, nextCellPos, yOnCollision, nextCellPos - prevCellPos, cell + nextCellPos.ToPoint());
+        }
+
+        return didCollide;
     }
 
     public void PerformMove(Velocity velocity, float deltaSeconds)

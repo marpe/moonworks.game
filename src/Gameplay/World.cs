@@ -432,15 +432,15 @@ public class World
             renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
         }
 
+        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
+        
         if (drawCoords)
         {
             ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({(cellRel.X):0.##}, {(cellRel.Y):0.##})";
             var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
-            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 0), Vector2.One * 0.25f, 0, 0, Color.Black);
+            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
             // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
         }
-
-        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
     }
 
     private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
