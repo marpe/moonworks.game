@@ -42,7 +42,7 @@ public struct PlayerCommand
 public class PlayerBehaviour
 {
     private Player? _player;
-    
+
     public Player Player => _player ?? throw new InvalidOperationException();
 
     public void Initialize(Player player)
@@ -90,7 +90,7 @@ public class PlayerBehaviour
             var offset = mouseInWorld - Player.Position;
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
-        
+
         Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTime * 10) % 2;
 
         if (!Player.IsJumping && command.IsJumpPressed)
@@ -123,13 +123,13 @@ public class PlayerBehaviour
         }
 
         Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
-        
-        if (Player.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Down) == CollisionDir.Down))
+
+        if (Player.Mover.MoveCollisions.Any(c => c.CollisionCell.Y > c.PreviousCell.Y))
         {
             Player.Squash = new Vector2(1.5f, 0.5f);
         }
 
-        if (Player.Mover.MoveCollisions.Any(c => (c.Direction & CollisionDir.Top) == CollisionDir.Top))
+        if (Player.Mover.MoveCollisions.Any(c => c.CollisionCell.Y < c.PreviousCell.Y))
         {
             Player.IsJumping = false;
         }

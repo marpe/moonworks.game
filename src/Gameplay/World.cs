@@ -28,7 +28,7 @@ public class World
     public Player Player { get; }
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
-    
+
     public ulong WorldUpdateCount;
     public float WorldTotalElapsedTime;
 
@@ -93,7 +93,7 @@ public class World
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Pivot = entityInstance.PivotVec;
                 entity.Position = new Position(level.Position + entityInstance.Position);
-                entity.Size = new Vector2(entityInstance.Width, entityInstance.Height);
+                entity.Size = entityInstance.Size;
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
 
                 foreach (var field in entityInstance.FieldInstances)
@@ -120,10 +120,12 @@ public class World
             Shared.Console.Print("World is null");
             return;
         }
+
         for (var i = world.Enemies.Count - 1; i >= 0; i--)
         {
             world.Enemies.RemoveAt(i);
         }
+
         Shared.Console.Print("Killed all enemies");
     }
 
@@ -131,7 +133,7 @@ public class World
     {
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
-        
+
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
@@ -195,18 +197,42 @@ public class World
             _debugDraw.Render(renderer);
         }
     }
-    
+
     private void DrawMousePosition(Renderer renderer)
     {
         var mousePosition = Shared.Game.InputHandler.MousePosition;
         var view = Shared.Game.GameScreen.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld, Vector2.Zero, DefaultGridSize);
-        
-        var mouseRect = new Rectangle(mouseCell.X * DefaultGridSize, mouseCell.Y * DefaultGridSize, DefaultGridSize, DefaultGridSize);
-        renderer.DrawRectOutline(mouseRect, Color.Red);
-        renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
+        var mousePivot = new Vector2(1.0f, 1.0f);
+        var mouseSize = new Point(16, 16);
+        var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld);
+
+        var mouseCellRect = new Rectangle(
+            mouseCell.X * DefaultGridSize,
+            mouseCell.Y * DefaultGridSize,
+            DefaultGridSize,
+            DefaultGridSize
+        );
+        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f);
+
+        var mousePosRect = new Bounds(
+            mouseInWorld.X,
+            mouseInWorld.Y,
+            mouseSize.X,
+            mouseSize.Y
+        );
+        renderer.DrawRectOutline(mousePosRect, Color.Blue * 0.5f);
+
+        var mouseRenderRect = new Bounds(
+            mouseInWorld.X,
+            mouseInWorld.Y,
+            mouseSize.X,
+            mouseSize.Y
+        );
+        renderer.DrawRectOutline(mouseRenderRect, Color.Magenta * 0.5f);
+
+        // renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
     }
 
     private static void DrawCameraBounds(Renderer renderer, Bounds cameraBounds)
@@ -486,7 +512,7 @@ public class World
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, -8));
         bullet.Velocity.X = direction * 300f;
         bullet.Pivot = new Vector2(0.5f, 0.5f);
-        bullet.Size = new Vector2(16, 16);
+        bullet.Size = new Point(16, 16);
         Bullets.Add(bullet);
     }
 

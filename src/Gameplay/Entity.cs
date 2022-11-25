@@ -7,8 +7,8 @@ public partial class Entity
     public bool IsDestroyed;
 
     public Vector2 Origin => Pivot * Size;
-    public Bounds Bounds => new(Position.Current.X - Origin.X, Position.Current.Y - Origin.Y, Size.X, Size.Y);
-    public Vector2 Center => new(Position.Current.X + (0.5f - Pivot.X) * Size.X, Position.Current.Y + (0.5f - Pivot.Y) * Size.Y);
+    public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
+    public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 
     private World? _world;
     
@@ -39,11 +39,17 @@ public partial class Entity
 
     public static (Point, Vector2) GetGridCoords(Entity entity)
     {
-        return GetGridCoords(entity.Position.Current, entity.Pivot, World.DefaultGridSize);
+        return GetGridCoords(entity.Position.Current);
     }
 
-    public static (Point, Vector2) GetGridCoords(Vector2 position, Vector2 pivot, int gridSize)
+    public static (Point, Vector2) GetGridCoords(Entity entity, Vector2 moveDelta)
     {
+        return GetGridCoords(entity.Position.Current + moveDelta);
+    }
+
+    public static (Point, Vector2) GetGridCoords(Vector2 position)
+    {
+        var gridSize = World.DefaultGridSize;
         var cellX = (int)(position.X / gridSize);
         var cellY = (int)(position.Y / gridSize);
         var cellPosX = position.X % gridSize / gridSize;

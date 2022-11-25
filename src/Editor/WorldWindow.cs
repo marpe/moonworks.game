@@ -57,7 +57,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
                 ImGui.TextUnformatted($"MousePos {mouseInWorld.ToString()}");
                 
-                var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld, Vector2.Zero, World.DefaultGridSize);
+                var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld);
                 ImGui.TextUnformatted($"MouseCel {mouseCell.ToString()}");
                 ImGui.TextUnformatted($"MouseCelPos {mouseCellPos.ToString()}");
 

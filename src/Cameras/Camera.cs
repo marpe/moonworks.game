@@ -9,6 +9,7 @@ public static class CameraBinds
     public static ButtonBind Down = new();
     public static ButtonBind Right = new();
     public static ButtonBind Left = new();
+    public static ButtonBind Pan = new();
 }
 
 public class Camera
@@ -267,7 +268,7 @@ public class Camera
 
             var cameraSpeed = 500f;
 
-            if (input.IsMouseButtonHeld(MouseButtonCode.Right))
+            if (CameraBinds.Pan.Active)
             {
                 Position += new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }

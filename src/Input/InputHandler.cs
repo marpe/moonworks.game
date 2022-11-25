@@ -2,7 +2,7 @@
 
 public class ButtonBind
 {
-    public int[] Sources = { 0, 0 };
+    public string[] Sources = { "", "" };
     public float Timestamp;
     public float TimeHeld;
     public bool Active;
@@ -121,6 +121,72 @@ public class InputHandler
     // TODO (marpe): Cleanup and optimize
     private void HandleBoundKeys()
     {
+        for (var i = 0; i < MouseButtonsCodes.Length; i++)
+        {
+            var buttonCode = MouseButtonsCodes[i];
+            var buttonStr = Binds.MouseButtonCodeToName[buttonCode];
+            if (!IsMouseButtonDown(buttonCode))
+            {
+                if (!IsMouseButtonReleased(buttonCode))
+                    continue;
+                if (!Binds.TryGetBind(buttonStr, out var bind))
+                    continue;
+                var split = ConsoleUtils.SplitArgs(bind);
+                var cmdKey = split[0];
+
+                if (!cmdKey.StartsWith('+'))
+                    continue;
+
+                var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
+                if (Shared.Console.Commands.ContainsKey(upCmdKey))
+                {
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, buttonStr });
+                }
+            }
+            else
+            {
+                if (!IsMouseButtonPressed(buttonCode))
+                    continue;
+
+                // ignore if console is down
+                if (!Shared.Game.ConsoleScreen.IsHidden)
+                    continue;
+
+                if (!Binds.TryGetBind(buttonStr, out var bind))
+                    continue;
+
+                var split = ConsoleUtils.SplitArgs(bind);
+                var cmdKey = split[0];
+
+                if (Shared.Console.CVars.ContainsKey(cmdKey))
+                {
+                    var cvar = Shared.Console.CVars[cmdKey];
+                    if (cvar.VarType == typeof(bool))
+                    {
+                        var curr = cvar.GetValue<bool>();
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
+                        continue;
+                    }
+                }
+
+                if (Shared.Console.Commands.ContainsKey(cmdKey))
+                {
+                    if (cmdKey.StartsWith('+') || cmdKey.StartsWith('-'))
+                    {
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, buttonStr });
+                    }
+                    else
+                    {
+                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
+                    }
+                }
+                else
+                {
+                    Logger.LogError($"Command not found: {buttonStr} -> {cmdKey}");
+                }
+            }
+        }
+
         for (var i = 0; i < KeyCodes.Length; i++)
         {
             var keyCode = KeyCodes[i];
@@ -150,7 +216,7 @@ public class InputHandler
                 var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
                 if (Shared.Console.Commands.ContainsKey(upCmdKey))
                 {
-                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, keyCode.ToString() });
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, keyStr });
                 }
                 else
                 {
@@ -317,6 +383,22 @@ public class InputHandler
             MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsPressed,
             MouseButtonCode.X1 => _inputs.Mouse.X1Button.IsPressed,
             MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsPressed,
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
+    public bool IsMouseButtonReleased(MouseButtonCode mouseButton)
+    {
+        if (!MouseEnabled)
+            return false;
+
+        return mouseButton switch
+        {
+            MouseButtonCode.Left => _inputs.Mouse.LeftButton.IsReleased,
+            MouseButtonCode.Right => _inputs.Mouse.RightButton.IsReleased,
+            MouseButtonCode.Middle => _inputs.Mouse.MiddleButton.IsReleased,
+            MouseButtonCode.X1 => _inputs.Mouse.X1Button.IsReleased,
+            MouseButtonCode.X2 => _inputs.Mouse.X2Button.IsReleased,
             _ => throw new InvalidOperationException(),
         };
     }

@@ -329,12 +329,11 @@ public unsafe class MyEditorMain : MyGameMain
     private static void DrawCollision(CollisionResult collision)
     {
         ImGuiExt.PropRow("Frame", collision.Frame.ToString());
-        ImGuiExt.PropRow("Cell", collision.Cell.ToString());
+        ImGuiExt.PropRow("PreviousCell", collision.PreviousCell.ToString());
         ImGuiExt.PropRow("CellPos", collision.CellPos.ToString());
-        ImGuiExt.PropRow("Direction", collision.Direction.ToString());
         ImGuiExt.PropRow("CollisionCell", collision.CollisionCell.ToString());
-        ImGuiExt.PropRow("VelocityDelta", collision.VelocityDelta.ToString());
-        ImGuiExt.PropRow("Depth", collision.Depth.ToString());
+        ImGuiExt.PropRow("DeltaMove", collision.DeltaMove.ToString());
+        ImGuiExt.PropRow("ResultXyOnCollision", collision.ResultXyOnCollision.ToString());
     }
 
     private void DrawMenu(ImGuiMenu menu, int depth = 0)

@@ -153,7 +153,12 @@ public class Renderer
     {
         DrawRectOutline(rectangle.Min(), rectangle.Max(), color, thickness);
     }
-    
+
+    public void DrawRectOutline(Bounds bounds, Color color, float thickness = 1.0f)
+    {
+        DrawRectOutline(bounds.Min, bounds.Max, color, thickness);
+    }
+
     public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness)
     {
         ReadOnlySpan<Vector2> points = stackalloc Vector2[]
@@ -173,7 +178,7 @@ public class Renderer
     {
         SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
     }
-    
+
     public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
         SpriteBatch.Draw(sprite, colors, depth, transform, PointClamp, flip);
@@ -190,7 +195,7 @@ public class Renderer
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
     }
-    
+
     public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
         Color[] colors)
     {
@@ -221,7 +226,7 @@ public class Renderer
         commandBuffer.BeginRenderPass(cai);
         commandBuffer.EndRenderPass();
     }
-    
+
     public void Flush(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
     {
         TextBatcher.FlushToSpriteBatch(SpriteBatch);

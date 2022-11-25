@@ -55,7 +55,7 @@ public class GameScreen
     [ConsoleHandler("speed_up")]
     public static void IncreaseUpdateRate()
     {
-        GameUpdateRate--;
+        GameUpdateRate -= 5;
         if (GameUpdateRate < 1)
             GameUpdateRate = 1;
         Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
@@ -64,7 +64,7 @@ public class GameScreen
     [ConsoleHandler("speed_down")]
     public static void DecreaseUpdateRate()
     {
-        GameUpdateRate++;
+        GameUpdateRate += 5;
         Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 

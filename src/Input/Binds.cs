@@ -7,6 +7,22 @@ public static class Binds
 {
     private static readonly Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
 
+    public static readonly Dictionary<MouseButtonCode, string> MouseButtonCodeToName;
+
+    private static readonly Dictionary<string, MouseButtonCode> _mouseButtonNames = new()
+    {
+        { "mb_left", MouseButtonCode.Left },
+        { "mb_right", MouseButtonCode.Right },
+        { "mb_middle", MouseButtonCode.Middle },
+        { "mb_x1", MouseButtonCode.X1 },
+        { "mb_x2", MouseButtonCode.X2 },
+    };
+
+    static Binds()
+    {
+        MouseButtonCodeToName = _mouseButtonNames.ToDictionary(x => x.Value, x => x.Key);
+    }
+
     public static void Initialize()
     {
         var defaultBinds = new[]
@@ -16,10 +32,14 @@ public static class Binds
             ("f4", "world.debug"),
             ("f5", "kill_all"),
             ("f9", "step"),
+            ("f8", "restart"),
             ("f10", "pause"),
+            ("pageup", "speed_up"),
+            ("pagedown", "speed_down"),
+            ("p", "pause"),
         };
 
-        var inputCommands = new[]
+        var keyBinds = new[]
         {
             ("right", "Move right", KeyCode.D, PlayerBinds.Right),
             ("left", "Move left", KeyCode.A, PlayerBinds.Left),
@@ -27,7 +47,7 @@ public static class Binds
             ("fire1", "Fire", KeyCode.LeftControl, PlayerBinds.Fire1),
             ("respawn", "Respawn", KeyCode.Insert, PlayerBinds.Respawn),
             ("mousemove", "Move to mouse", KeyCode.M, PlayerBinds.MoveToMouse),
-            
+
             ("cam_zoom_in", "Increase camera zoom", KeyCode.D0, CameraBinds.ZoomIn),
             ("cam_zoom_out", "Decrease camera zoom", KeyCode.Minus, CameraBinds.ZoomOut),
             ("cam_up", "Move camera up", KeyCode.I, CameraBinds.Up),
@@ -35,20 +55,32 @@ public static class Binds
             ("cam_left", "Move camera left", KeyCode.J, CameraBinds.Left),
             ("cam_right", "Move camera right", KeyCode.L, CameraBinds.Right),
         };
-        
+
+        var mouseBinds = new[]
+        {
+            ("mb_middle", "cam_pan", "Pan camera", CameraBinds.Pan)
+        };
+
         for (var i = 0; i < defaultBinds.Length; i++)
         {
             var (key, cmd) = defaultBinds[i];
             Bind(key, cmd);
         }
 
-        for (var i = 0; i < inputCommands.Length; i++)
+        for (var i = 0; i < keyBinds.Length; i++)
         {
-            var (cmd, description, defaultBind, bind) = inputCommands[i];
+            var (cmd, description, defaultBind, bind) = keyBinds[i];
             Bind(defaultBind.ToString(), $"+{cmd}");
             RegisterConsoleCommandForBind(cmd, description, bind);
         }
-        
+
+        for (var i = 0; i < mouseBinds.Length; i++)
+        {
+            var (button, cmd, description, bind) = mouseBinds[i];
+            Bind(button, $"+{cmd}");
+            RegisterConsoleCommandForBind(cmd, description, bind);
+        }
+
         TWConsole.TWConsole.OnCfgSave += builder =>
         {
             builder.AppendLine("unbindall");
@@ -65,7 +97,7 @@ public static class Binds
             var wasActive = bind.Active;
             bind.Active = true;
             bind.WasActive = wasActive;
-            bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
+            bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.Frame = Shared.Game.Time.UpdateCount;
             bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
         };
@@ -73,7 +105,7 @@ public static class Binds
         {
             bind.Active = false;
             bind.WasActive = false;
-            bind.Sources[0] = args.Length > 1 ? (int)Enum.Parse<KeyCode>(args[1]) : -1;
+            bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.Frame = Shared.Game.Time.UpdateCount;
             bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
         };
@@ -102,16 +134,6 @@ public static class Binds
         _binds.Clear();
     }
 
-    private static bool TryParseKey(string keyStr, out KeyCode keyCode)
-    {
-        var parsedKey = Enum.TryParse(keyStr, true, out keyCode);
-        if (parsedKey)
-            return true;
-
-        Shared.Console.Print($"Invalid key name: {keyStr}");
-        return false;
-    }
-
     [ConsoleHandler("list_keys", "List key codes")]
     private static void PrintKeyNames()
     {
@@ -126,16 +148,6 @@ public static class Binds
         Shared.Console.Print(sb.ToString());
     }
 
-    private static bool TryParseMouseButton(ReadOnlySpan<char> keyStr, out int mouseButton)
-    {
-        if (keyStr.Length == 3 && int.TryParse(keyStr.Slice(2), out mouseButton) && mouseButton is >= 1 and <= 5)
-            return true;
-
-        mouseButton = -1;
-        Shared.Console.Print("Invalid mouse button name, valid values are: mb<1-5>");
-        return false;
-    }
-
     [ConsoleHandler("bind", "Bind an action to a key")]
     public static void Bind(string keyStr, string cmdStr = "")
     {
@@ -148,8 +160,7 @@ public static class Binds
             return;
         }
 
-        var isValidKeyStr = Enum.TryParse<KeyCode>(keyStr, true, out var result) ||
-                            keyStr == "mb1";
+        var isValidKeyStr = Enum.TryParse<KeyCode>(keyStr, true, out _) || _mouseButtonNames.ContainsKey(keyStr);
 
         if (!isValidKeyStr)
         {
