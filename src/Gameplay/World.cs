@@ -510,7 +510,7 @@ public class World
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
         bullet.Pivot = new Vector2(0.5f, 0.5f);
-        bullet.Size = new Point(16, 16);
+        bullet.Size = new Point(8, 8);
         Bullets.Add(bullet);
     }
 

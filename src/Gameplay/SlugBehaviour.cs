@@ -6,7 +6,7 @@ public class SlugBehaviour : EnemyBehaviour
     public Enemy Parent => _parent ?? throw new InvalidOperationException();
 
     private float _speed = 50f;
-    private float _turnDistanceFromEdge = 0.1f;
+    private float _turnDistanceFromEdge = 0;
 
     public override void Initialize(Enemy parent)
     {
@@ -55,7 +55,7 @@ public class SlugBehaviour : EnemyBehaviour
 
         var (cell, cellPos) = Entity.GetGridCoords(Parent);
 
-        var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(cell.X + 1, cell.Y + 1) && cellPos.X > (1.0f - _turnDistanceFromEdge);
+        var shouldTurn = Parent.Velocity.X > 0 && !Parent.Collider.HasCollision(cell.X + 1, cell.Y + 1) && cellPos.X > _turnDistanceFromEdge;
 
         if (!shouldTurn)
         {

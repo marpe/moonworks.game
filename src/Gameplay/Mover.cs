@@ -111,32 +111,46 @@ public class Mover
 
     private bool CheckCollisionRight(in GridCoords gridCoords)
     {
-        var didCollide = CheckCollisions(gridCoords.Cell + Right) ||
-                         (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownRight));
-        return didCollide;
+        if (gridCoords.CellPos.X > Bounds.Right)
+        {
+            return CheckCollisions(gridCoords.Cell + Right) ||
+                   (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownRight));
+        }
+
+        return false;
     }
 
     private bool CheckCollisionLeft(in GridCoords gridCoords)
     {
-        var didCollide = CheckCollisions(gridCoords.Cell + Left) ||
-                         (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownLeft));
+        if (gridCoords.CellPos.X < Bounds.Left)
+        {
+            return CheckCollisions(gridCoords.Cell + Left) ||
+                   (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownLeft));
+        }
 
-        return didCollide;
+        return false;
     }
 
     private bool CheckCollisionDown(in GridCoords gridCoords)
     {
-        var didCollide = CheckCollisions(gridCoords.Cell + Down) ||
-                         (gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + DownRight));
-        return didCollide;
+        if (gridCoords.CellPos.Y > Bounds.Bottom)
+        {
+            return CheckCollisions(gridCoords.Cell + Down) ||
+                   (gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + DownRight));
+        }
+
+        return false;
     }
 
     private bool CheckCollisionUp(in GridCoords gridCoords)
     {
-        var didCollide = CheckCollisions(gridCoords.Cell + Up) ||
-                         (gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + UpRight));
+        if (gridCoords.CellPos.Y < Bounds.Top)
+        {
+            return CheckCollisions(gridCoords.Cell + Up) ||
+                   (gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + UpRight));
+        }
 
-        return didCollide;
+        return false;
     }
 
     private void SanityCheck(Vector2 deltaMove)
@@ -151,14 +165,14 @@ public class Mover
 
     private void HandleHorizontalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 velocity)
     {
-        if (gridCoords.CellPos.X > Bounds.Right && CheckCollisionRight(gridCoords))
+        if (CheckCollisionRight(gridCoords))
         {
             MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
             gridCoords.CellPos.X = Bounds.Right;
             velocity.X = 0;
         }
 
-        if (gridCoords.CellPos.X < Bounds.Left && CheckCollisionLeft(gridCoords))
+        if (CheckCollisionLeft(gridCoords))
         {
             MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
             gridCoords.CellPos.X = Bounds.Left;
@@ -168,14 +182,14 @@ public class Mover
 
     private void HandleVerticalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 velocity)
     {
-        if (gridCoords.CellPos.Y < Bounds.Top && CheckCollisionUp(gridCoords))
+        if (CheckCollisionUp(gridCoords))
         {
             MoveCollisions.Add(new CollisionResult(CollisionDir.Up, prevGridCoords, gridCoords));
             gridCoords.CellPos.Y = Bounds.Top;
             velocity.Y = 0;
         }
 
-        if (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisionDown(gridCoords))
+        if (CheckCollisionDown(gridCoords))
         {
             MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
             gridCoords.CellPos.Y = Bounds.Bottom;
@@ -231,7 +245,7 @@ public class Mover
                     HandleVerticalMovement(prevGridCoords, ref gridCoords, ref deltaMove);
                 }
 
-                while (gridCoords.CellPos.Y > 1f)
+                while (gridCoords.CellPos.Y >= 1f)
                 {
                     gridCoords.CellPos.Y--;
                     gridCoords.Cell.Y++;
