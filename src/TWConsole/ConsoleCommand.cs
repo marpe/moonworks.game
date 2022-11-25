@@ -18,7 +18,7 @@ public struct ConsoleCommandArg
     public string GetDescription()
     {
         if (HasDefaultValue)
-            return $"{Name}, default: {DefaultValue}";
+            return $"{Name}, default: {ConsoleUtils.Colorize(DefaultValue)}^1";
         return $"{Name}";
     }
 }
@@ -47,16 +47,31 @@ public class ConsoleCommand : IComparable<ConsoleCommand>
 
     public int CompareTo(ConsoleCommand? other)
     {
-        if (ReferenceEquals(this, other))
-        {
-            return 0;
-        }
+        if (ReferenceEquals(this, other)) return 0;
+        if (ReferenceEquals(null, other)) return 1;
 
-        if (ReferenceEquals(null, other))
-        {
-            return 1;
-        }
+        if (IsCVar && !other.IsCVar) return 1;
+        if (!IsCVar && other.IsCVar) return -1;
+
+        if ((Key.StartsWith('+') || Key.StartsWith('-')) && (other.Key.StartsWith('+') || other.Key.StartsWith('-')))
+            return string.Compare(Key[1..], other.Key[1..], StringComparison.Ordinal);
 
         return string.Compare(Key, other.Key, StringComparison.Ordinal);
+    }
+
+    public string PrettyPrint(bool includeArgs)
+    {
+        var cmdArgs = string.Empty;
+        if (includeArgs && Arguments.Length > 0)
+        {
+            var formattedArgs = Arguments.Select(x => x.GetDescription());
+            var args = string.Join(", ", formattedArgs);
+            cmdArgs = $" ^1[{args}]^0";
+        }
+
+        var cmdDescription = string.Empty;
+        if (!string.IsNullOrWhiteSpace(Description))
+            cmdDescription = $": {Description}";
+        return $"^6{Key}{cmdArgs}^0{cmdDescription}";
     }
 }

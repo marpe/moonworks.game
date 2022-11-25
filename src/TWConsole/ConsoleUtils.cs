@@ -192,17 +192,25 @@ public static class ConsoleUtils
         return args.ToArray();
     }
 
+    public static string Colorize(object? value)
+    {
+        if (value == null)
+            return "^8null";
+        if (value is bool boolValue)
+            return boolValue ? "^7true" : "^4false";
+        if (value is string strValue)
+            return $"\"{strValue}\"";
+
+        return ConvertToString(value);
+    }
+
     public static string ConvertToString<T>(T value)
     {
         if (value is null)
-        {
             return "null";
-        }
 
         if (value is string strValue)
-        {
             return strValue;
-        }
 
         if (value is Color c)
         {
@@ -214,14 +222,10 @@ public static class ConsoleUtils
         }
 
         if (value is Point p)
-        {
             return $"{p.X}, {p.Y}";
-        }
 
         if (value is Vector2 v)
-        {
             return $"{v.X}, {v.Y}";
-        }
 
         return Convert.ToString(value, CultureInfo.InvariantCulture)?.ToLower() ?? string.Empty;
     }

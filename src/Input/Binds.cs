@@ -92,7 +92,6 @@ public static class Binds
 
     private static void RegisterConsoleCommandForBind(ReadOnlySpan<char> cmdName, ReadOnlySpan<char> description, ButtonBind bind)
     {
-        var args = new ConsoleCommandArg[] { new("Source", true, -1, typeof(int)) };
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
             var wasActive = bind.Active;
@@ -110,8 +109,8 @@ public static class Binds
             bind.Frame = Shared.Game.Time.UpdateCount;
             bind.Timestamp = Shared.Game.Time.TotalElapsedTime;
         };
-        var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, args, Array.Empty<string>(), false);
-        var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, args, Array.Empty<string>(), false);
+        var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
+        var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
         Shared.Console.RegisterCommand(downCmd);
         Shared.Console.RegisterCommand(upCmd);
     }

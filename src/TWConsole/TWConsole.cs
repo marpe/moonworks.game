@@ -91,35 +91,14 @@ public class TWConsole
         RegisterCVar(cvar, cvarAttribute);
     }
 
-    private static string Colorize(object? value)
-    {
-        if (value == null)
-        {
-            return "^8null";
-        }
 
-        if (value is bool boolValue)
-        {
-            return boolValue ? "^7true" : "^4false";
-        }
-
-        if (value is string strValue)
-        {
-            return $"\"{strValue}\"";
-        }
-
-        return ConsoleUtils.ConvertToString(value);
-    }
 
     private void RegisterCVar(CVar cvar, CVarAttribute cvarAttribute)
     {
-        var typeName = ConsoleUtils.GetDisplayName(cvar.VarType);
-        var defaultValueStr = Colorize(cvar.DefaultValue);
-
         RegisterCommand(
             new ConsoleCommand(
                 cvarAttribute.Name,
-                $"{cvarAttribute.Description}, default value: {defaultValueStr}",
+                cvarAttribute.Description,
                 CVarHandler(cvar),
                 new ConsoleCommandArg[]
                 {
@@ -167,22 +146,15 @@ public class TWConsole
         string GetDisplayName(Type? type)
         {
             if (type == null)
-            {
-                return "null";
-            }
-
+                return "Global";
             if (type.DeclaringType != null)
-            {
                 return type.DeclaringType.Name + "." + type.Name;
-            }
-
             return type.Name;
         }
 
         if (target == null && !method.IsStatic)
         {
-            throw new InvalidOperationException(
-                $"Method has to be static: {GetDisplayName(method.DeclaringType)}.{method.Name}");
+            throw new InvalidOperationException($"Method has to be static: {GetDisplayName(method.DeclaringType)}.{method.Name}");
         }
 
         RegisterCommand(
@@ -212,8 +184,6 @@ public class TWConsole
                     console.Print($"^4An error occurred while invoking the set handler for {cmd.Key}:\n{e}");
                 }
             }
-
-            console.Print($"{cmd.Key} = {Colorize(cvar.GetValueRaw())}");
         };
     }
 
@@ -228,7 +198,7 @@ public class TWConsole
 
                 if (numRequiredParams > numSuppliedParams)
                 {
-                    console.Print($"Usage:\n{FormatCommand(cmd, true)}");
+                    console.Print($"Usage:\n{cmd.PrettyPrint(true)}");
                     return;
                 }
 
@@ -350,36 +320,17 @@ public class TWConsole
         Print(text);
     }
 
-    private static string FormatCommand(ConsoleCommand cmd, bool includeArgs)
-    {
-        var cmdArgs = string.Empty;
-        if (includeArgs && cmd.Arguments.Length > 0)
-        {
-            var formattedArgs = cmd.Arguments.Select(x => x.GetDescription());
-            var args = string.Join(", ", formattedArgs);
-            cmdArgs = $" ^1[{args}]^0";
-        }
-
-        var cmdDescription = string.Empty;
-        if (!string.IsNullOrWhiteSpace(cmd.Description))
-            cmdDescription = $": {cmd.Description}";
-        return $"^6{cmd.Key}{cmdArgs}^0{cmdDescription}";
-    }
-
-
     [ConsoleHandler("help", "Lists available console commands and cvars")]
     private void HelpCommand(string search = "")
     {
         var sb = new StringBuilder();
-        var commands = Commands.Where(kvp => !kvp.Key.StartsWith('-'))
-            .OrderBy(kvp => kvp.Value.IsCVar)
-            .ThenBy(kvp => kvp.Key);
+        var commands = Commands.Where(kvp => !kvp.Key.StartsWith('-'));
         if (string.IsNullOrWhiteSpace(search))
         {
             sb.AppendLine("^8Available commands:");
             foreach (var (_, value) in commands)
             {
-                sb.AppendLine(FormatCommand(value, false));
+                sb.AppendLine(value.PrettyPrint(false));
             }
         }
         else
@@ -394,7 +345,7 @@ public class TWConsole
                 sb.AppendLine($"^8Found {results.Count} commands containing {search}:");
                 foreach (var c in results)
                 {
-                    sb.AppendLine(FormatCommand(c, true));
+                    sb.AppendLine(c.PrettyPrint(true));
                 }
             }
         }
@@ -418,7 +369,7 @@ public class TWConsole
                 sb.AppendLine("^8Available cvars:");
                 foreach (var (_, value) in results)
                 {
-                    sb.AppendLine(FormatCommand(value, false));
+                    sb.AppendLine(value.PrettyPrint(false));
                 }
             }
         }
@@ -434,7 +385,7 @@ public class TWConsole
                 sb.AppendLine($"^8Found {results.Count} cvars containing {search}:");
                 foreach (var c in results)
                 {
-                    sb.AppendLine(FormatCommand(c, true));
+                    sb.AppendLine(c.PrettyPrint(true));
                 }
             }
         }
