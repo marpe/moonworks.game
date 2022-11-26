@@ -1,6 +1,7 @@
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Editor;
+using NumVector2 = System.Numerics.Vector2;
 
 namespace MyGame;
 
@@ -16,14 +17,11 @@ public unsafe class MyEditorMain : MyGameMain
     private readonly ImGuiRenderer _imGuiRenderer;
     private readonly Sampler _sampler;
     private readonly float _alpha = 1.0f;
-    private bool _doRender = false;
     private ulong _imGuiDrawCount;
-    private readonly List<InputState> _inputStates = new();
     private readonly float _mainMenuPaddingY = 6f;
     private readonly List<ImGuiMenu> _menuItems = new();
     private int _updateRate = 1;
     internal SortedList<string, ImGuiEditorWindow> Windows = new();
-    private float _prevElapsedTime;
     private bool _firstTime = true;
     private static readonly string _debugWindowName = "MyGame Debug";
     private static string _imguiDemoWindowName = "ImGui Demo Window";
@@ -37,12 +35,18 @@ public unsafe class MyEditorMain : MyGameMain
     private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
     private IInspector? _loadingScreenInspector;
     private string _loadingDebugWindowName = "LoadingDebug";
+    private bool IsHoveringGameWindow;
+    private Rectangle _gameRenderBounds;
+    private Matrix4x4 _gameRenderViewportTransform;
+    private NumVector2 _gameRenderViewportPos;
+    private NumVector2 _gameRenderOffset;
+    private NumVector2 _gameRenderWindowSize;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
     {
-        var sz = MyGameMain.DesignResolution;
+        var sz = DesignResolution;
         _gameRender = Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
         _imGuiRenderTarget =
             Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
@@ -151,9 +155,7 @@ public unsafe class MyEditorMain : MyGameMain
     private void DrawGameWindow(ImGuiEditorWindow window)
     {
         if (!window.IsOpen)
-        {
             return;
-        }
 
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
 
@@ -174,6 +176,7 @@ public unsafe class MyEditorMain : MyGameMain
             }
 
             var windowSize = ImGui.GetWindowSize();
+            _gameRenderWindowSize = windowSize;
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(new Point((int)windowSize.X, (int)windowSize.Y), DesignResolution);
 
             ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
@@ -182,21 +185,21 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One,
                 borderColor);
 
+
             ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 
+            _gameRenderBounds = new Rectangle((int)cursorScreenPos.X, (int)cursorScreenPos.Y, viewport.Width, viewport.Height);
             var viewportPos = ImGui.GetWindowViewport()->Pos;
-            var renderOffset = cursorScreenPos - viewportPos;
+            _gameRenderViewportPos = viewportPos;
+            _gameRenderOffset = cursorScreenPos - viewportPos;
+            IsHoveringGameWindow = ImGui.IsWindowHovered(); // ImGui.IsItemHovered();
+
+            ImGui.Text(
+                $"bounds: {_gameRenderBounds.ToString()}, viewport: {_gameRenderViewportPos.ToString()}, offset: {_gameRenderOffset.ToString()}, hovering: {IsHoveringGameWindow.ToString()}");
+
             viewportTransform.Decompose(out var scale, out _, out _);
-            viewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
-                                 Matrix3x2.CreateTranslation(renderOffset.X, renderOffset.Y)).ToMatrix4x4();
-
-            InputHandler.SetViewportTransform(viewportTransform);
-
-            /*if (ImGui.IsItemHovered())
-            {
-                ImGui.SetNextFrameWantCaptureMouse(false);
-                ImGui.SetNextFrameWantCaptureKeyboard(false);
-            }*/
+            _gameRenderViewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
+                                            Matrix3x2.CreateTranslation(_gameRenderOffset.X, _gameRenderOffset.Y)).ToMatrix4x4();
         }
 
         ImGui.PopStyleVar();
@@ -516,31 +519,37 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void Update(TimeSpan dt)
     {
-        var inputHandler = InputHandler;
-
         if (!IsHidden)
         {
-            var newState = InputState.Create(inputHandler);
-            _inputStates.Add(newState);
-
-            if ((int)Time.UpdateCount % _updateRate == 0)
-            {
-                var inputState = InputState.Aggregate(_inputStates);
-                _inputStates.Clear();
-                var deltaTime = Time.TotalElapsedTime - _prevElapsedTime;
-                _imGuiRenderer.Update(deltaTime, _imGuiRenderTarget.Size(), inputState);
-                _prevElapsedTime = Time.TotalElapsedTime;
-                _doRender = true;
-            }
+            _imGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputState.Create(InputHandler));
 
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-            if (io->NavActive) // io->WantCaptureMouse)
+            if (io->NavActive)
                 InputHandler.MouseEnabled = false;
         }
 
+        var wasHidden = IsHidden;
+
+        InputHandler.SetViewportTransform(IsHoveringGameWindow ? _gameRenderViewportTransform : Matrix4x4.Identity);
+
         base.Update(dt);
+
+
+        if (wasHidden != IsHidden)
+        {
+            var platformIO = ImGui.GetPlatformIO();
+            for (var i = 1; i < platformIO->Viewports.Size; i++)
+            {
+                ImGuiViewport* vp = platformIO->Viewports[i];
+                var window = vp->Window();
+                if (IsHidden)
+                    SDL.SDL_HideWindow(window.Handle);
+                else
+                    SDL.SDL_ShowWindow(window.Handle);
+            }
+        }
     }
 
     protected override void Draw(double alpha)
@@ -562,16 +571,15 @@ public unsafe class MyEditorMain : MyGameMain
             Screenshot = false;
         }
 
-        if (_doRender)
-        {
-            RenderGame(alpha, _gameRender);
+        RenderGame(alpha, _gameRender);
 
+        if ((int)Time.UpdateCount % _updateRate == 0)
+        {
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
             DrawInternal();
             TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size);
             _imGuiRenderer.End(_imGuiRenderTarget);
-            _doRender = false;
         }
 
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
@@ -582,11 +590,24 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
+        {
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(
+                swapTexture.Size(),
+                DesignResolution
+            );
+            var view = Matrix4x4.CreateTranslation(0, 0, -1000);
+            var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
+
+            Renderer.DrawSprite(_gameRender, viewportTransform, Color.White);
+            Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
+        }
+
         if (_imGuiDrawCount > 0)
+        {
             Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White);
-        else
-            Renderer.DrawPoint(swapTexture.Size() / 2, Color.Transparent, 10f);
-        Renderer.Flush(commandBuffer, swapTexture, Color.Black, null);
+            Renderer.Flush(commandBuffer, swapTexture, null, null);
+        }
+
         Renderer.Submit(commandBuffer);
     }
 
