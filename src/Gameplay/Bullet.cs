@@ -32,12 +32,11 @@ public class Bullet : Entity
 
     public Matrix4x4 GetTransform(double alpha)
     {
-        var xform = Matrix3x2.CreateTranslation(-Origin.X, -Origin.Y) * 
-                    Matrix3x2.CreateTranslation(Origin.X, Origin.Y) * 
+        var xform = Matrix3x2.CreateTranslation(Size * Pivot - Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize)) *
                     Matrix3x2.CreateTranslation(Position.Lerp(alpha));
         return xform.ToMatrix4x4();
     }
-    
+
     public override void Update(float deltaSeconds)
     {
         if (IsDestroyed)

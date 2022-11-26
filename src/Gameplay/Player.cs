@@ -41,8 +41,12 @@ public partial class Player : Entity
 
     public Matrix4x4 GetTransform(double alpha)
     {
-        var xform = Matrix3x2.CreateTranslation(-Origin.X, -Origin.Y) * 
-                    Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
+        var squash = Matrix3x2.CreateTranslation(-Size * Pivot) *
+                     Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
+                     Matrix3x2.CreateTranslation(Size * Pivot);
+
+        var xform = Matrix3x2.CreateTranslation(Pivot * (Size - World.DefaultGridSize)) *
+                    squash *
                     Matrix3x2.CreateTranslation(Position.Lerp(alpha));
         LastTransform = xform.ToMatrix4x4();
         return LastTransform;

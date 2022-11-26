@@ -6,7 +6,6 @@ public partial class Entity
     public bool IsInitialized;
     public bool IsDestroyed;
 
-    public Vector2 Origin => Pivot * Size;
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
     public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 

@@ -946,8 +946,8 @@
 			"maxCount": 0,
 			"limitScope": "PerWorld",
 			"limitBehavior": "PreventAdding",
-			"pivotX": 0,
-			"pivotY": 0,
+			"pivotX": 0.5,
+			"pivotY": 1,
 			"fieldDefs": []
 		},
 		{
@@ -1793,8 +1793,8 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [12,2],
-							"__pivot": [0,0],
+							"__grid": [12,1],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
@@ -1936,7 +1936,7 @@
 						{
 							"__identifier": "Player",
 							"__grid": [28,3],
-							"__pivot": [0,0],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
@@ -2237,8 +2237,8 @@
 					"entityInstances": [
 						{
 							"__identifier": "Player",
-							"__grid": [20,16],
-							"__pivot": [0,0],
+							"__grid": [20,15],
+							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
