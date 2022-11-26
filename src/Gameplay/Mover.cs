@@ -94,15 +94,7 @@ public class Mover
 
     private static readonly CollisionResult NoCollision = new();
 
-    private Bounds Bounds
-    {
-        get
-        {
-            // var w = MathF.Approx(SizeInGridTiles.X, 1.0f) ? MathF.Epsilon : 1.0f - SizeInGridTiles.X;
-            // var h = MathF.Approx(SizeInGridTiles.Y, 1.0f) ? MathF.Epsilon : 1.0f - SizeInGridTiles.Y;
-            return new(0, 0, 1.0f - SizeInGridTiles.X, 1.0f - SizeInGridTiles.Y);
-        }
-    }
+    private Point CeilSize => new(MathF.CeilToInt(SizeInGridTiles.X), MathF.CeilToInt(SizeInGridTiles.Y));
 
     public void Initialize(Entity parent)
     {
@@ -120,9 +112,13 @@ public class Mover
             return false;
 
         var gridCoords = Parent.GridCoords;
-        if (CheckCollisions(gridCoords.Cell + Down))
+        if (gridCoords.CellPos.Y + SizeInGridTiles.Y < CeilSize.Y)
+            return false;
+
+        if (HasCollision(gridCoords.Cell, 0, CeilSize.Y))
             GroundCollisions.Add(new CollisionResult(CollisionDir.Down, gridCoords, gridCoords));
-        if (gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + DownRight))
+        if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
+            Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
             GroundCollisions.Add(new CollisionResult(CollisionDir.DownRight, gridCoords, gridCoords));
 
         for (var i = 0; i < PreviousGroundCollisions.Count; i++)
@@ -142,93 +138,112 @@ public class Mover
         return GroundCollisions.Count > 0;
     }
 
-    private bool CheckCollisions(in Point cell) => Parent.Collider.HasCollision(cell);
-
     private void HandleHorizontalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
     {
-        if (gridCoords.CellPos.X > Bounds.Right)
+        if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X)
         {
-            if (CheckCollisions(gridCoords.Cell + Right))
+            if (HasCollision(gridCoords.Cell, CeilSize.X, 0))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = Bounds.Right;
+                gridCoords.CellPos.X -= gridCoords.CellPos.X + SizeInGridTiles.X - CeilSize.X;
                 deltaMove.X = 0;
-                // Logger.LogInfo("Collided right");
+                Logger.LogInfo("Collided right");
             }
-            else if (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownRight))
+            else if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
+                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = Bounds.Right;
+                gridCoords.CellPos.X -= gridCoords.CellPos.X + SizeInGridTiles.X - CeilSize.X;
                 deltaMove.X = 0;
-                // Logger.LogInfo("Collided right down");
+                Logger.LogInfo("Collided right down");
             }
         }
 
-        if (gridCoords.CellPos.X < Bounds.Left)
+        if (gridCoords.CellPos.X < 0)
         {
-            if (CheckCollisions(gridCoords.Cell + Left))
+            if (HasCollision(gridCoords.Cell, -1, 0))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = Bounds.Left;
+                gridCoords.CellPos.X = 0;
                 deltaMove.X = 0;
-                // Logger.LogInfo("Collided left");
+                Logger.LogInfo("Collided left");
             }
-            else if (gridCoords.CellPos.Y > Bounds.Bottom && CheckCollisions(gridCoords.Cell + DownLeft))
+            else if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
+                     Parent.Collider.HasCollision(gridCoords.Cell.X + Left.X, gridCoords.Cell.Y + CeilSize.Y))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = Bounds.Left;
+                gridCoords.CellPos.X = 0;
                 deltaMove.X = 0;
-                // Logger.LogInfo("Collided left down");
+                Logger.LogInfo("Collided left down");
             }
         }
+    }
+
+    private bool HasCollision(Point topLeft, int dx, int dy)
+    {
+        if (dy != 0)
+        {
+            for (var x = 0; x < CeilSize.X; x++)
+            {
+                if (Parent.Collider.Parent.Collider.HasCollision(topLeft.X + x, topLeft.Y + dy))
+                    return true;
+            }
+        }
+
+
+        if (dx != 0)
+        {
+            for (var y = 0; y < CeilSize.Y; y++)
+            {
+                if (Parent.Collider.Parent.Collider.HasCollision(topLeft.X + dx, topLeft.Y + y))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     private void HandleVerticalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
     {
-        var newCell = gridCoords.Cell + gridCoords.CellPos.ToPoint();
-        var newCellPosY = gridCoords.CellPos.Y % 1.0f;
-        if (gridCoords.CellPos.Y < Bounds.Top)
+        if (gridCoords.CellPos.Y < 0)
         {
-            if (CheckCollisions(gridCoords.Cell + Up))
+            if (HasCollision(gridCoords.Cell, 0, -1))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Up, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y = Bounds.Top;
+                gridCoords.CellPos.Y = 0;
                 deltaMove.Y = 0;
+                Logger.LogInfo("Collided up");
             }
-            else if ((gridCoords.CellPos.X > Bounds.Right && CheckCollisions(gridCoords.Cell + UpRight)))
+            else if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
+                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + Up.Y))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Up, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y = Bounds.Top;
+                gridCoords.CellPos.Y = 0;
                 deltaMove.Y = 0;
+                Logger.LogInfo("Collided up right");
             }
         }
 
-        if (newCellPosY > Bounds.Bottom)
+        if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y)
         {
-            if (CheckCollisions(newCell + Down))
+            if (HasCollision(gridCoords.Cell, 0, CeilSize.Y))
             {
                 MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y = Bounds.Bottom;
-                gridCoords.Cell.Y = newCell.Y;
+                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
                 deltaMove.Y = 0;
-                // Logger.LogInfo($"Collided down: {StringExt.TruncateNumber(newCellPosY)}");
+                Logger.LogInfo("Collided down");
             }
-            else
+            else if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
+                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
             {
-                var hasCollision = CheckCollisions(newCell + DownRight);
-                var boundsCheck = Bounds.Bottom == 0 ? prevGridCoords.Cell.Y < newCell.Y : prevGridCoords.CellPos.Y <= Bounds.Bottom;
-                if (deltaMove.Y > 0 && gridCoords.CellPos.X > Bounds.Right && boundsCheck && hasCollision)
-                {
-                    MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                    gridCoords.CellPos.Y = Bounds.Bottom;
-                    gridCoords.Cell.Y = newCell.Y;
-                    deltaMove.Y = 0;
-                    // Logger.LogInfo("Collided down right");
-                }
+                MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
+                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
+                deltaMove.Y = 0;
+                Logger.LogInfo("Collided down right");
             }
         }
     }
-    
+
     private void SanityCheck()
     {
         // -----------------------------------------------

@@ -24,6 +24,11 @@ public class Collider
         _parent = parent;
     }
 
+    public bool HasCollision(in Vector2 cell)
+    {
+        return HasCollision((int)cell.X, (int)cell.Y);
+    }
+
     public bool HasCollision(in Point cell)
     {
         return HasCollision(cell.X, cell.Y);
@@ -31,8 +36,8 @@ public class Collider
 
     public bool HasCollision(int x, int y)
     {
-        var ldtk = Parent.World.LdtkRaw; 
-            
+        var ldtk = Parent.World.LdtkRaw;
+
         var isMultiWorld = ldtk.Worlds.Length > 0;
         var levels = isMultiWorld ? ldtk.Worlds[0].Levels : ldtk.Levels;
 
