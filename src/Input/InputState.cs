@@ -31,7 +31,13 @@ public struct InputState
 
     public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
     {
-        return inputState.KeyboardState.Count > 0;
+        foreach (var key in keyCodes)
+        {
+            if (inputState.KeyboardState.Contains(key))
+                return true;
+        }
+
+        return false;
     }
 
     public static bool IsMouseButtonDown(in InputState inputState, MouseButtonCode mouseButton)
