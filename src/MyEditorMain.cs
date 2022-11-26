@@ -41,6 +41,7 @@ public unsafe class MyEditorMain : MyGameMain
     private NumVector2 _gameRenderViewportPos;
     private NumVector2 _gameRenderOffset;
     private NumVector2 _gameRenderWindowSize;
+    private int _imGuiUpdateCount;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -195,7 +196,7 @@ public unsafe class MyEditorMain : MyGameMain
             IsHoveringGameWindow = ImGui.IsWindowHovered(); // ImGui.IsItemHovered();
 
             ImGui.Text(
-                $"bounds: {_gameRenderBounds.ToString()}, viewport: {_gameRenderViewportPos.ToString()}, offset: {_gameRenderOffset.ToString()}, hovering: {IsHoveringGameWindow.ToString()}");
+                $"ishovering game: {IsHoveringGame().ToString()}, bounds: {_gameRenderBounds.ToString()}, viewport: {_gameRenderViewportPos.ToString()}, offset: {_gameRenderOffset.ToString()}, hovering: {IsHoveringGameWindow.ToString()}");
 
             viewportTransform.Decompose(out var scale, out _, out _);
             _gameRenderViewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
@@ -517,6 +518,14 @@ public unsafe class MyEditorMain : MyGameMain
         }
     }
 
+    private static bool IsHoveringGame()
+    {
+        var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
+        if (hoveredWindow == null)
+            return true;
+        return ImGuiExt.StringFromPtr(hoveredWindow->Name) == "Game";
+    }
+
     protected override void Update(TimeSpan dt)
     {
         if (!IsHidden)
@@ -526,8 +535,10 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-            if (io->NavActive)
+            if (io->NavActive || !IsHoveringGame())
                 InputHandler.MouseEnabled = false;
+
+            _imGuiUpdateCount++;
         }
 
         var wasHidden = IsHidden;
@@ -573,7 +584,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         RenderGame(alpha, _gameRender);
 
-        if ((int)Time.UpdateCount % _updateRate == 0)
+        if (((int)Time.UpdateCount % _updateRate == 0) && _imGuiUpdateCount > 0)
         {
             _imGuiDrawCount++;
             _imGuiRenderer.Begin();
