@@ -33,6 +33,8 @@ public class World
     public float WorldTotalElapsedTime;
     public Vector2 MousePivot = new Vector2(0f, 0f);
     public Point MouseSize = new Point(8, 12);
+    
+    public static bool DebugCameraBounds;
 
     public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -237,7 +239,7 @@ public class World
 
     private static void DrawCameraBounds(Renderer renderer, Bounds cameraBounds)
     {
-        if (!Debug)
+        if (!Debug || !DebugCameraBounds)
             return;
 
         var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
@@ -432,7 +434,7 @@ public class World
             renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
         }
 
-        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, Color.LimeGreen, 1.0f);
+        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, e.SmartColor, 1.0f);
 
         if (drawCoords)
         {

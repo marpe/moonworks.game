@@ -1677,7 +1677,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Gun_Pickup",
-							"__grid": [10,10],
+							"__grid": [22,10],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
@@ -1686,7 +1686,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 107,
-							"px": [171,162],
+							"px": [363,162],
 							"fieldInstances": []
 						},
 						{
@@ -1702,9 +1702,9 @@
 							"defUid": 98,
 							"px": [231,152],
 							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [ { "cx": 16, "cy": 11 }, { "cx": 14, "cy": 11 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
+								{ "__identifier": "Wander", "__value": [ { "cx": 10, "cy": 10 }, { "cx": 14, "cy": 11 } ], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [ {
 									"id": "V_String",
-									"params": ["16,11"]
+									"params": ["10,10"]
 								}, {
 									"id": "V_String",
 									"params": ["14,11"]
@@ -1793,7 +1793,7 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [16,8],
+							"__grid": [12,2],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
@@ -1802,7 +1802,7 @@
 							"width": 8,
 							"height": 12,
 							"defUid": 120,
-							"px": [267,128],
+							"px": [203,32],
 							"fieldInstances": []
 						},
 						{
@@ -1935,7 +1935,7 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [20,8],
+							"__grid": [28,3],
 							"__pivot": [0,0],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
@@ -1944,7 +1944,7 @@
 							"width": 8,
 							"height": 12,
 							"defUid": 120,
-							"px": [328,143],
+							"px": [456,63],
 							"fieldInstances": []
 						}
 					]

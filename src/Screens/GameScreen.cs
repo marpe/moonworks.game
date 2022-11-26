@@ -19,6 +19,7 @@ public class GameScreen
     public static int GameUpdateRate = 1;
     public static bool IsStepping = false;
     public static bool IsPaused = false;
+    public static bool DebugViewBounds = false;
 
     public GameScreen(MyGameMain game)
     {
@@ -168,14 +169,14 @@ public class GameScreen
         renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // TODO (marpe): Rneder post processing
-
-        DrawViewBounds(renderer, commandBuffer, renderDestination);
+        
+         DrawViewBounds(renderer, commandBuffer, renderDestination);
     }
 
     private void DrawViewBounds(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
     {
-        if (!World.Debug)
-            return;
+        if (!World.Debug) return;
+        if (!DebugViewBounds) return;
 
         renderer.DrawRectOutline(Vector2.Zero, MyGameMain.DesignResolution, Color.LimeGreen, 10f);
         renderer.Flush(commandBuffer, renderDestination, null, null);

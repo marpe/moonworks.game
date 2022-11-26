@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "MyGame": {
+      "commandName": "Project"
+    },
+    "MyGame.Editor": {
+      "commandName": "Project",
+      "commandLineArgs": "--editor",
+      "nativeDebugging": true
+    }
+  }
+}

@@ -11,9 +11,8 @@ public partial class Entity
     public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 
     private World? _world;
-    
-    [HideInInspector]
-    public World World => _world ?? throw new InvalidOperationException();
+
+    [HideInInspector] public World World => _world ?? throw new InvalidOperationException();
 
     public CoroutineManager CoroutineManager = new();
     public Collider Collider = new();
@@ -64,6 +63,11 @@ public partial class Entity
         var cellPosX = position.X % gridSize / gridSize;
         var cellPosY = position.Y % gridSize / gridSize;
         return (new Point(cellX, cellY), new Vector2(cellPosX, cellPosY));
+    }
+
+    public override string ToString()
+    {
+        return $"Type: {EntityType}";
     }
 }
 

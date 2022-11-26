@@ -192,11 +192,11 @@ public unsafe class MyEditorMain : MyGameMain
 
             InputHandler.SetViewportTransform(viewportTransform);
 
-            if (ImGui.IsItemHovered())
+            /*if (ImGui.IsItemHovered())
             {
                 ImGui.SetNextFrameWantCaptureMouse(false);
                 ImGui.SetNextFrameWantCaptureKeyboard(false);
-            }
+            }*/
         }
 
         ImGui.PopStyleVar();
@@ -229,6 +229,8 @@ public unsafe class MyEditorMain : MyGameMain
         if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
         {
             var io = ImGui.GetIO();
+            ImGui.TextUnformatted($"MousePos: {InputHandler.MousePosition.ToString()}");
+            ImGui.TextUnformatted($"MouseEnabled: {InputHandler.MouseEnabled.ToString()}");
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
@@ -534,7 +536,7 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-            if (io->WantCaptureMouse)
+            if (io->NavActive) // io->WantCaptureMouse)
                 InputHandler.MouseEnabled = false;
         }
 

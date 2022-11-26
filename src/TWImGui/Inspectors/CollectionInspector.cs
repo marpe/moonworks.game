@@ -17,6 +17,9 @@ public unsafe class CollectionInspector : Inspector
 
     public override void Draw()
     {
+        if (ImGuiExt.DebugInspectors)
+            DrawDebug();
+
         var value = GetValue();
         if (value == null)
         {
@@ -111,6 +114,10 @@ public unsafe class CollectionInspector : Inspector
         else if (item is float fvalue)
         {
             ImGui.DragFloat("##Value", ImGuiExt.RefPtr(ref fvalue), default, default, default, default);
+        }
+        else
+        {
+            ImGui.TextUnformatted(item.ToString());
         }
 
         ImGui.PopID();

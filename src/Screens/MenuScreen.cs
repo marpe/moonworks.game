@@ -10,6 +10,7 @@ public enum MenuScreenState
 
 public abstract class MenuScreen
 {
+    public static Color MenuItemDebugOutlineColor = Color.Red;
     public static Color BackgroundColor = Color.CornflowerBlue * 0.5f;
     public static Color HighlightColor1 = Color.Yellow;
     public static Color HighlightColor2 = Color.Red;
@@ -292,7 +293,7 @@ public abstract class MenuScreen
             if (Debug)
             {
                 var bounds = menuItem.Bounds;
-                renderer.DrawRectOutline(bounds.Min(), bounds.Max(), Color.Green, 2f);
+                renderer.DrawRectOutline(bounds.Min(), bounds.Max(), MenuItemDebugOutlineColor, 2f);
             }
         }
     }
