@@ -40,59 +40,26 @@ public unsafe class ImGuiRenderer : IDisposable
 
     private Buffer? _vertexBuffer;
     private uint _vertexBufferSize;
-    
+
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static byte* GetClipboardText(void* userData)
     {
         var text = SDL.SDL_GetClipboardText();
-        /*var byteCount = Encoding.UTF8.GetByteCount(text) + 1;
-        var dataPtr = (byte*)ImGui.MemAlloc((nuint)byteCount);
-        var byteSpan = new Span<byte>(dataPtr, byteCount);
-        var encodedBytesCount = Encoding.UTF8.GetBytes(text, byteSpan);
-        byteSpan[encodedBytesCount] = 0;
-        return dataPtr;*/
-
-        /*var text = SDL.SDL_GetClipboardText();
-        var handle = GCHandle.Alloc(text, GCHandleType.Pinned);
-        var addr = (byte*)handle.AddrOfPinnedObject();
-        return addr;*/
-
+        // NB (marpe): Should probably be freed by calling FreeCoTaskMem, see: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal.stringtocotaskmemutf8?view=net-7.0
         return (byte*)Marshal.StringToCoTaskMemUTF8(text);
     }
-    
+
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetClipboardText(void* userData, byte* text)
     {
-        var str = ImGuiExt.StringFromPtr(text);
+        var str = Marshal.PtrToStringUTF8((IntPtr)text);
         SDL.SDL_SetClipboardText(str);
     }
-    
-    /*[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate string GetClipboardDelegate(IntPtr userData);
-
-    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-    private delegate void SetClipboardDelegate(IntPtr userData, string text);
-
-    
-    private static GetClipboardDelegate _getClipboard = GetClipboardText;
-    private static SetClipboardDelegate _setClipboard = SetClipboardText;
-    
-    private static string GetClipboardText(IntPtr userData)
-    {
-        return SDL.SDL_GetClipboardText();
-    }
-
-    private static void SetClipboardText(IntPtr userData, string text)
-    {
-        SDL.SDL_SetClipboardText(text);
-    }*/
 
     public ImGuiRenderer(MyGameMain game)
     {
         _game = game;
 
-        // TODO (marpe): Fix copy/paste
-        
         ImGui.CHECKVERSION();
         var context = ImGui.CreateContext();
         ImGui.SetCurrentContext(context);
@@ -108,8 +75,6 @@ public unsafe class ImGuiRenderer : IDisposable
         io->BackendFlags |= ImGuiBackendFlags.HasSetMousePos;
         io->ConfigDockingTransparentPayload = true;
 
-        // io->GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(_getClipboard);
-        // io->SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(_setClipboard);
         io->GetClipboardTextFn = &GetClipboardText;
         io->SetClipboardTextFn = &SetClipboardText;
 
