@@ -176,11 +176,6 @@ public class MyGameMain : Game
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {
-            SDL.SDL_Vulkan_GetDrawableSize(MainWindow.Handle, out var w, out var h);
-            var screenMode = GetScreenMode(MainWindow.Handle);
-            var displayMode = GetWindowDisplayMode(MainWindow.Handle);
-            var windowSize = MainWindow.Size;
-
             MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
             _nextWindowTitleUpdate += 1f;
         }

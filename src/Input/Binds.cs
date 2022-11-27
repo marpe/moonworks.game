@@ -37,7 +37,9 @@ public static class Binds
             ("pageup", "speed_up"),
             ("pagedown", "speed_down"),
             ("p", "pause"),
-            ("mb_left", "+fire1")
+            ("mb_left", "+fire1"),
+            ("d1", "save_pos"),
+            ("d2", "load_pos")
         };
 
         var keyBinds = new[]

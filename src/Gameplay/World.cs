@@ -35,6 +35,7 @@ public class World
     public Point MouseSize = new Point(8, 12);
     
     public static bool DebugCameraBounds;
+    private static Vector2 SavedPos;
 
     public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -525,5 +526,26 @@ public class World
         }
 
         throw new InvalidOperationException();
+    }
+
+    [ConsoleHandler("save_pos")]
+    public static void SavePos()
+    {
+        if (Shared.Game.GameScreen.World != null)
+        {
+            SavedPos = Shared.Game.GameScreen.World.Player.Position;
+            Shared.Console.Print($"Saved position: {SavedPos.ToString()}");
+        }
+    }
+    
+    [ConsoleHandler("load_pos")]
+    public static void LoadPos(Vector2? position = null)
+    {
+        if (Shared.Game.GameScreen.World != null)
+        {
+            var positionToLoad = position ?? SavedPos;
+            Shared.Game.GameScreen.World.Player.Position.SetPrevAndCurrent(positionToLoad);
+            Shared.Console.Print($"Loaded position: {positionToLoad.ToString()}");
+        }
     }
 }

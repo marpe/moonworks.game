@@ -48,23 +48,33 @@ public unsafe class CollectionInspector : Inspector
 
                 ImGui.TableHeadersRow();
 
-                if (collection is IDictionary dictionary)
+                IEnumerable enumerable;
+
                 {
-                    foreach (var key in dictionary.Keys)
-                    {
-                        var keyStr = key.ToString() ?? throw new InvalidOperationException("Key cannot be null");
-                        DrawItem(keyStr, dictionary[key]);
-                    }
+                    if (collection is IDictionary dictionary)
+                        enumerable = dictionary.Keys;
+                    else
+                        enumerable = collection;
                 }
-                else
+
+                var i = 0;
+                foreach (var item in enumerable)
                 {
-                    var i = 0;
-                    foreach (var item in collection)
+                    ImGui.PushID(i);
+
+                    if (collection is IDictionary dictionary)
+                    {
+                        var keyStr = item.ToString() ?? "";
+                        DrawItem(keyStr, dictionary[item]);
+                    }
+                    else
                     {
                         var keyStr = i.ToString();
                         DrawItem(keyStr, item);
-                        i++;
                     }
+
+                    i++;
+                    ImGui.PopID();
                 }
 
                 ImGui.EndTable();
@@ -83,10 +93,10 @@ public unsafe class CollectionInspector : Inspector
         ImGui.Spacing();
     }
 
+    private Dictionary<object, IInspector> _inspectors = new();
+
     private void DrawItem(string key, object? item)
     {
-        ImGui.PushID(key);
-
         ImGui.TableNextRow();
 
         ImGui.TableSetColumnIndex(0);
@@ -115,11 +125,15 @@ public unsafe class CollectionInspector : Inspector
         {
             ImGui.DragFloat("##Value", ImGuiExt.RefPtr(ref fvalue), default, default, default, default);
         }
+        else if (item is Enemy)
+        {
+            if (!_inspectors.ContainsKey(item))
+                _inspectors.Add(item, InspectorExt.GetGroupInspectorForTarget(item));
+            _inspectors[item].Draw();
+        }
         else
         {
             ImGui.TextUnformatted(item.ToString());
         }
-
-        ImGui.PopID();
     }
 }
