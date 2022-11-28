@@ -40,7 +40,7 @@ public class Mover
             return false;
 
         var position = Parent.Position + Vector2.UnitY;
-        if (HasCollision(position))
+        if (Parent.Collider.HasCollision(position, Parent.Size))
             GroundCollisions.Add(new CollisionResult(CollisionDir.Down, Parent.Position, position, Vector2.UnitY));
 
         for (var i = 0; i < PreviousGroundCollisions.Count; i++)
@@ -60,27 +60,6 @@ public class Mover
         return GroundCollisions.Count > 0;
     }
 
-    private bool HasCollision(Vector2 position)
-    {
-        var minCell = GridCoords.ToCell(position);
-        var max = new Vector2(
-            MathF.Ceil(position.X + Parent.Size.X - 1),
-            MathF.Ceil(position.Y + Parent.Size.Y - 1)
-        );
-        var maxCell = GridCoords.ToCell(max);
-
-        for (var x = minCell.X; x <= maxCell.X; x++)
-        {
-            for (var y = minCell.Y; y <= maxCell.Y; y++)
-            {
-                if (Parent.Collider.HasCollision(x, y))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
     private bool TryGetValidPosition(out Vector2 position)
     {
         var startPosition = position = Parent.Position.Current;
@@ -98,7 +77,7 @@ public class Mover
                 if (x >= levelSize.X)
                     x = startPosition.X - x % levelSize.X;
 
-                if (HasCollision(new Vector2(x, y)))
+                if (Parent.Collider.HasCollision(new Vector2(x, y), Parent.Size))
                     continue;
 
                 position = new Vector2(x, y);
@@ -141,14 +120,14 @@ public class Mover
                 var dx = deltaMove.X / steps;
                 var prev = position;
                 position += new Vector2(dx, 0);
-                if (HasCollision(position))
+                if (Parent.Collider.HasCollision(position, Parent.Size))
                 {
                     float intersection;
 
                     if (deltaMove.X > 0)
-                        intersection = (position.X + Parent.Size.X) % World.DefaultGridSize;
+                        intersection = MathF.Loop(position.X + Parent.Size.X, World.DefaultGridSize) % World.DefaultGridSize;
                     else
-                        intersection = (position.X % World.DefaultGridSize) - World.DefaultGridSize;
+                        intersection = MathF.Loop(position.X, World.DefaultGridSize) - World.DefaultGridSize;
 
                     var direction = intersection > 0 ? CollisionDir.Right : CollisionDir.Left;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(intersection, 0)));
@@ -162,13 +141,13 @@ public class Mover
                 var dy = deltaMove.Y / steps;
                 var prev = position;
                 position += new Vector2(0, dy);
-                if (HasCollision(position))
+                if (Parent.Collider.HasCollision(position, Parent.Size))
                 {
                     float intersection;
                     if (deltaMove.Y > 0)
-                        intersection = (position.Y + Parent.Size.Y) % World.DefaultGridSize;
+                        intersection = MathF.Loop(position.Y + Parent.Size.Y, World.DefaultGridSize) % World.DefaultGridSize;
                     else
-                        intersection = (position.Y % World.DefaultGridSize) - World.DefaultGridSize;
+                        intersection = MathF.Loop(position.Y, World.DefaultGridSize) - World.DefaultGridSize;
 
                     var direction = intersection > 0 ? CollisionDir.Down : CollisionDir.Up;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(0, intersection)));
@@ -179,7 +158,7 @@ public class Mover
         }
 
         Parent.Position.Current = position;
-        if (HasCollision(Parent.Position.Current))
+        if (Parent.Collider.HasCollision(Parent.Position.Current, Parent.Size))
             Logger.LogInfo("Moved into collision tile!");
 
         Velocity.ApplyFriction(velocity);

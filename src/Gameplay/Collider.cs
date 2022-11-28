@@ -24,21 +24,33 @@ public class Collider
         _parent = parent;
     }
 
-    public bool HasCollision(in Vector2 cell)
+    public bool HasCollision(Vector2 position, Vector2 size)
     {
-        return HasCollision((int)cell.X, (int)cell.Y);
-    }
+        var minCell = GridCoords.ToCell(position);
+        var max = new Vector2(
+            MathF.Ceil(position.X + size.X - 1),
+            MathF.Ceil(position.Y + size.Y - 1)
+        );
+        var maxCell = GridCoords.ToCell(max);
 
-    public bool HasCollision(in Point cell)
-    {
-        return HasCollision(cell.X, cell.Y);
+        for (var x = minCell.X; x <= maxCell.X; x++)
+        {
+            for (var y = minCell.Y; y <= maxCell.Y; y++)
+            {
+                if (HasCollision(x, y))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     public bool HasCollision(int x, int y)
     {
-        var levelGridSize = Parent.World.Level.Size / World.DefaultGridSize;
+        var levelMin = Parent.World.Level.Position / World.DefaultGridSize;
+        var levelMax = levelMin + Parent.World.Level.Size / World.DefaultGridSize;
 
-        if (x < 0 || y < 0 || x >= levelGridSize.X || y >= levelGridSize.Y)
+        if (x < levelMin.X || y < levelMin.Y || x >= levelMax.X || y >= levelMax.Y)
             return true;
 
         foreach (var layer in Parent.World.Level.LayerInstances)
@@ -46,11 +58,10 @@ public class Collider
             if (layer.Identifier != "Tiles" || layer.Type != "IntGrid")
                 continue;
 
-            var value = layer.IntGridCsv[y * layer.CWid + x];
+            var (ix, iy) = (x - levelMin.X, y - levelMin.Y);
+            var value = layer.IntGridCsv[iy * layer.CWid + ix];
             if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
-            {
                 return true;
-            }
         }
 
         return false;
