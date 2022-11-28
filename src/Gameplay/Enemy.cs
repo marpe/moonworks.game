@@ -2,15 +2,20 @@ namespace MyGame;
 
 public partial class Enemy : Entity
 {
-    public SpriteFlip Flip;
-    public float TotalTime;
     public Velocity Velocity = new();
+    
+    [HideInInspector]
+    public SpriteFlip Flip;
+    
+    [HideInInspector]
     public float TimeOffset;
 
     private EnemyBehaviour? _behaviour;
     public EnemyBehaviour Behaviour => _behaviour ?? throw new InvalidOperationException();
-    public bool CanMove => TotalTime >= FreezeMovementUntil;
+    
+    [HideInInspector]
     public float FreezeMovementUntil;
+    
     public Mover Mover = new();
 
     public override void Initialize(World world)
@@ -46,13 +51,12 @@ public partial class Enemy : Entity
 
     public void FreezeMovement(float freezeTime)
     {
-        FreezeMovementUntil = Math.Max(FreezeMovementUntil, TotalTime + freezeTime);
+        FreezeMovementUntil = Math.Max(FreezeMovementUntil, TotalTimeActive + freezeTime);
     }
 
     public override void Update(float deltaSeconds)
     {
-        TotalTime += deltaSeconds;
-        Behaviour.Update(deltaSeconds);
         base.Update(deltaSeconds);
+        Behaviour.Update(deltaSeconds);
     }
 }

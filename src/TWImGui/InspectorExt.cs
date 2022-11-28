@@ -101,16 +101,20 @@ public static class InspectorExt
         if (inspectors.Count == 1)
         {
             var first = inspectors[0];
+
             if (first is GroupInspector grpInspector)
             {
                 grpInspector.Initialize();
+                grpInspector.SetShowHeaders(true, 2);
             }
+
             return first;
         }
 
         var groupInspector = new GroupInspector(inspectors);
         groupInspector.SetTarget(target, target.GetType(), null);
         groupInspector.Initialize();
+        groupInspector.SetShowHeaders(true, 2);
         return groupInspector;
     }
 
@@ -159,7 +163,7 @@ public static class InspectorExt
             {
                 var msg = $"Could not find an inspector for field: \"{field.Name}\" ({ReflectionUtils.GetDisplayName(field.FieldType)}), " +
                           $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
-                Logger.LogWarn(msg);
+                Logs.LogVerbose(msg);
             }
         }
 
@@ -190,7 +194,7 @@ public static class InspectorExt
             {
                 var msg = $"Could not find an inspector for property: \"{prop.Name}\" ({ReflectionUtils.GetDisplayName(prop.PropertyType)}), " +
                           $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
-                Logger.LogWarn(msg);
+                Logs.LogVerbose(msg);
             }
         }
 

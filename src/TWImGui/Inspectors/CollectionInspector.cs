@@ -11,11 +11,13 @@ public unsafe class CollectionInspector : Inspector
 
     public static void DrawItemCount(int count)
     {
+        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
         ImGui.SameLine();
         var itemCountLabel = $"({count} items)";
         var itemCountLabelSize = ImGui.CalcTextSize(itemCountLabel);
         ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - itemCountLabelSize.X);
         ImGui.Text(itemCountLabel);
+        ImGui.PopFont();
     }
 
     public override void Draw()
@@ -36,21 +38,28 @@ public unsafe class CollectionInspector : Inspector
         }
 
         PushStyle();
-        if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor, ImGuiTreeNodeFlags.None))
+        if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor, ImGuiTreeNodeFlags.None, ImGuiFont.Tiny))
         {
             foreach (var item in _inspectors.Keys)
                 _inactiveItems.Add(item);
 
             DrawItemCount(collection.Count);
 
+
             if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags, new Num.Vector2(0, 0)))
             {
                 var keyLabel = collection is IDictionary ? "Key" : "#";
 
                 ImGui.TableSetupColumn(keyLabel, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
-                ImGui.TableSetupColumn("Value");
+                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.NoHide);
 
-                ImGui.TableHeadersRow();
+                ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
+                ImGui.TableSetColumnIndex(0);
+                ImGui.TableHeader(keyLabel);
+                ImGui.TableSetColumnIndex(1);
+                ImGui.TableHeader("Value");
+                ImGui.PopFont();
 
                 IEnumerable enumerable;
 
@@ -105,11 +114,13 @@ public unsafe class CollectionInspector : Inspector
     {
         ImGui.PushStyleVar(ImGuiStyleVar.IndentSpacing, 0);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, 0));
+        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Num.Vector2(0, 4));
     }
 
     private static void PopStyle()
     {
-        ImGui.PopStyleVar(2);
+        ImGui.PopStyleVar(4);
     }
 
     private void DrawItem(string key, object? item)
@@ -145,7 +156,10 @@ public unsafe class CollectionInspector : Inspector
         else if (item is Enemy)
         {
             if (!_inspectors.ContainsKey(item))
-                _inspectors.Add(item, InspectorExt.GetGroupInspectorForTarget(item));
+            {
+                var inspector = InspectorExt.GetGroupInspectorForTarget(item);
+                _inspectors.Add(item, inspector);
+            }
 
             PopStyle();
             _inspectors[item].Draw();

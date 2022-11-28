@@ -1,10 +1,14 @@
 namespace MyGame;
 
+[CustomInspector(typeof(GroupInspector))]
 public partial class Player : Entity
 {
     public bool EnableSquash = true;
+    
+    [HideInInspector]
     public SpriteFlip Flip = SpriteFlip.None;
 
+    [HideInInspector]
     public uint FrameIndex;
     public bool IsJumping;
     public float JumpHoldTime = 0.3f;
@@ -13,7 +17,7 @@ public partial class Player : Entity
     public float LastOnGroundTime;
     public float Speed = 20f;
     public Vector2 Squash = Vector2.One;
-    public float TotalTime;
+
 
     public Velocity Velocity = new()
     {

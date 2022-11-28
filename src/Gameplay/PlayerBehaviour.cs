@@ -68,11 +68,9 @@ public class PlayerBehaviour
             Player.Position.SetPrevAndCurrent(Player.Position.Initial);
         }
 
-        Player.TotalTime += deltaSeconds;
-
         if (Player.Mover.IsGrounded(Player.Velocity))
         {
-            Player.LastOnGroundTime = Player.TotalTime;
+            Player.LastOnGroundTime = Player.TotalTimeActive;
         }
 
         if (command.MovementX != 0)
@@ -91,17 +89,17 @@ public class PlayerBehaviour
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
 
-        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTime * 10) % 2;
+        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTimeActive * 10) % 2;
 
         if (!Player.IsJumping && command.IsJumpPressed)
         {
-            var timeSinceOnGround = Player.TotalTime - Player.LastOnGroundTime;
+            var timeSinceOnGround = Player.TotalTimeActive - Player.LastOnGroundTime;
             if (timeSinceOnGround < 0.1f)
             {
                 Player.Squash = new Vector2(0.6f, 1.4f);
                 Player.LastOnGroundTime = 0;
                 Player.Velocity.Y = Player.JumpSpeed;
-                Player.LastJumpStartTime = Player.TotalTime;
+                Player.LastJumpStartTime = Player.TotalTimeActive;
                 Player.IsJumping = true;
             }
         }
@@ -114,7 +112,7 @@ public class PlayerBehaviour
             }
             else
             {
-                var timeAirborne = Player.TotalTime - Player.LastJumpStartTime;
+                var timeAirborne = Player.TotalTimeActive - Player.LastJumpStartTime;
                 if (timeAirborne > Player.JumpHoldTime)
                 {
                     Player.IsJumping = false;

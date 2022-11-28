@@ -7,7 +7,8 @@ public static unsafe class ImGuiExt
 {
     public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                      ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
-                                                     ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg;
+                                                     ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
+                                                     ImGuiTableFlags.NoPadOuterX;
 
     [CVar("imgui.debug", "Toggle inspector debug information")]
     public static bool DebugInspectors = false;
@@ -381,12 +382,11 @@ public static unsafe class ImGuiExt
         ImGui.PopStyleColor();
         ImGui.PopStyleVar();
 
-        var textColor = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
-        ImGui.SameLine();
+        /*ImGui.SameLine();
         if (TextButton(label, string.Empty, textColor.ToColor()))
         {
             openPicker = true;
-        }
+        }*/
 
         if (openPicker)
         {
@@ -398,6 +398,7 @@ public static unsafe class ImGuiExt
         if (ImGui.BeginPopup("picker"))
         {
             ImGui.Text(label);
+
             ImGui.Spacing();
             ImGui.SetNextItemWidth(frameHeight * 12.0f);
             if (ImGui.ColorPicker4("##picker", RefPtr(ref colorNum)))
@@ -413,6 +414,12 @@ public static unsafe class ImGuiExt
         ImGui.EndGroup();
 
         return valueChanged;
+    }
+
+    public static bool TextButton(string text, string tooltip)
+    {
+        var color = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
+        return TextButton(text, tooltip, color.ToColor());
     }
 
     public static bool TextButton(string text, string tooltip, Color textColor)
@@ -512,45 +519,79 @@ public static unsafe class ImGuiExt
         );
     }
 
+    public static string LabelPrefix(string label, bool preserveLabel = false)
+    {
+        var width = ImGui.CalcItemWidth();
+        float x = ImGui.GetCursorPosX();
+        ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
+        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
+        ImGui.Text(label);
+        ImGui.PopFont();
+        ImGui.PopStyleColor();
+        ImGui.SameLine();
+        ImGui.SetCursorPosX(x + width * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X);
+        ImGui.SetNextItemWidth(-1);
+
+        return preserveLabel ? label : "##" + label;
+    }
+
     public static bool BeginCollapsingHeader(string header, Color color,
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen)
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont font = ImGuiFont.Medium, bool hideHeader = false)
     {
         var (h, s, v) = ColorExt.RgbToHsv(color);
 
-        // flags |= ImGuiTreeNodeFlags.Framed;
+        var (normal, hovered, active, border) = (
+            ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f),
+            ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f),
+            ColorExt.HsvToRgb(h, s * 1f, v * 0.8f),
+            GetStyleColor(ImGuiCol.Border).ToColor()
+        );
 
-        var headerColor = ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f);
-        ImGui.PushStyleColor(ImGuiCol.Header, headerColor.ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f).ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.HeaderActive, ColorExt.HsvToRgb(h, s * 1f, v * 0.8f).ToNumerics());
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(6, 4));
-        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
+        var framePadding = new Num.Vector2(6, 4);
+
+        if (hideHeader)
+        {
+            normal.A = hovered.A = active.A = border.A = 0;
+            framePadding.Y = 0;
+        }
+
+        void PushStyles()
+        {
+            PushStyleColor(ImGuiCol.Header, normal);
+            PushStyleColor(ImGuiCol.HeaderHovered, hovered);
+            PushStyleColor(ImGuiCol.HeaderActive, active);
+            PushStyleColor(ImGuiCol.Border, border);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, framePadding);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
+            ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(font));
+        }
+
+        void PopStyles()
+        {
+            ImGui.PopStyleColor(4);
+            ImGui.PopStyleVar(2);
+            ImGui.PopFont();
+        }
+
         ImGui.BeginGroup();
 
-        var result = false;
-        var hovered = false;
-        if (ImGui.CollapsingHeader(header, flags))
+        PushStyles();
+        var id = hideHeader ? "##" + header : header;
+        flags |= hideHeader ? ImGuiTreeNodeFlags.Leaf : ImGuiTreeNodeFlags.None;
+        var result = ImGui.CollapsingHeader(id, flags);
+        PopStyles();
+
+        if (result)
         {
-            _colorStack.Push(headerColor);
-            hovered = ImGui.IsItemHovered();
             Indent();
             ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
-            result = true;
+            _colorStack.Push(normal);
         }
         else
         {
-            hovered = ImGui.IsItemHovered();
             ImGui.EndGroup();
-            DrawCollapsingHeaderBorder(headerColor);
+            DrawCollapsingHeaderBorder(normal);
         }
-
-        if (hovered)
-        {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-        }
-
-        ImGui.PopStyleColor(3);
-        ImGui.PopStyleVar(2);
 
         return result;
     }
@@ -632,6 +673,16 @@ public static unsafe class ImGuiExt
         }
 
         return Encoding.UTF8.GetString(ptr, length);
+    }
+
+    public static void PushStyleColor(ImGuiCol c, in Color color)
+    {
+        ImGui.PushStyleColor(c, color.ToNumerics());
+    }
+
+    public static Num.Vector4 GetStyleColor(ImGuiCol c)
+    {
+        return ImGui.GetStyle()->Colors[(int)c];
     }
 }
 

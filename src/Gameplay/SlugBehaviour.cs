@@ -14,7 +14,7 @@ public class SlugBehaviour : EnemyBehaviour
 
     public override void Update(float deltaSeconds)
     {
-        if (!Parent.CanMove)
+        if (Parent.TotalTimeActive < Parent.FreezeMovementUntil)
             return;
 
         if (Parent.Mover.IsGrounded(Parent.Velocity))

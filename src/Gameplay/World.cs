@@ -321,7 +321,7 @@ public class World
                 EnemyType.YellowBee or _ => 1,
             };
 
-            var frameIndex = (int)(entity.TotalTime * 10) % 2;
+            var frameIndex = (int)(entity.TotalTimeActive * 10) % 2;
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var xform = entity.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);

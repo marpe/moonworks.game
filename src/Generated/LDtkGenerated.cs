@@ -64,6 +64,7 @@ public enum EntityType
 
 public partial class Entity
 {
+    [HideInInspector]
     public static Dictionary<EntityType, Type> TypeMap = new()
     {
         { EntityType.Enemy, typeof(Enemy) },

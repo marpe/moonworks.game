@@ -15,6 +15,8 @@ public unsafe class MyEditorMain : MyGameMain
     private readonly string[] _blendStateNames;
 
     private readonly ImGuiRenderer _imGuiRenderer;
+    public ImGuiRenderer ImGuiRenderer => _imGuiRenderer;
+    
     private readonly Sampler _sampler;
     private readonly float _alpha = 1.0f;
     private ulong _imGuiDrawCount;

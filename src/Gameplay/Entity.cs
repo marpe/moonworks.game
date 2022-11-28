@@ -3,21 +3,31 @@
 [CustomInspector(typeof(GroupInspector))]
 public partial class Entity
 {
+    [HideInInspector]
     public bool IsInitialized;
+
+    [HideInInspector]
     public bool IsDestroyed;
 
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
+    
+    [HideInInspector]
     public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 
     private World? _world;
 
-    [HideInInspector] public World World => _world ?? throw new InvalidOperationException();
+    [HideInInspector]
+    public World World => _world ?? throw new InvalidOperationException();
 
     public CoroutineManager CoroutineManager = new();
 
+    [HideInInspector]
     public Position Position = new();
 
     public Point Cell => ToCell(Position);
+    
+    [HideInInspector]
+    public float TotalTimeActive;
 
     /*public Point Cell;
     /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
@@ -33,6 +43,7 @@ public partial class Entity
     public virtual void Update(float deltaSeconds)
     {
         CoroutineManager.Update(deltaSeconds);
+        TotalTimeActive += deltaSeconds;
     }
 
     public override string ToString()

@@ -19,7 +19,7 @@ public static class ConsoleSettings
     public static Color Color5 = Color.Brown;
     public static Color Color6 = Color.Magenta;
     public static Color Color7 = Color.LightGreen;
-    public static Color Color8 = Color.Yellow;
+    public static Color Color8 = new(90, 90, 90);
     public static Color Color9 = Color.Orange;
 
     public static Color[] Colors = {

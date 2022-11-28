@@ -1,6 +1,5 @@
 namespace MyGame;
 
-[CustomInspector(typeof(GroupInspector))]
 [DebuggerDisplay("{DebugDisplayString,nq}")]
 public class Position
 {

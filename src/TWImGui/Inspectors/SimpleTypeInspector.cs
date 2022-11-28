@@ -11,21 +11,24 @@ public unsafe class SimpleTypeInspector : Inspector
         typeof(Rectangle),
     };
 
+    [CVar("imgui.hide_const", "Toggle visibility of const values in inspector")]
+    public static bool HideReadOnly = true;
+
     private bool InspectFloat(ref float value)
     {
         if (_rangeAttribute != null)
         {
             if (_rangeAttribute.UseDragVersion)
             {
-                return ImGui.DragFloat(_name, ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, _rangeAttribute.MinValue,
+                return ImGui.DragFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, _rangeAttribute.MinValue,
                     _rangeAttribute.MaxValue, "%g");
             }
 
-            return ImGui.SliderFloat(_name, ImGuiExt.RefPtr(ref value), _rangeAttribute.MinValue, _rangeAttribute.MaxValue, "%.4g");
+            return ImGui.SliderFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.MinValue, _rangeAttribute.MaxValue, "%.4g");
         }
 
         var stepSize = _stepSizeAttribute?.StepSize ?? 1f;
-        return ImGui.DragFloat(_name, ImGuiExt.RefPtr(ref value), stepSize, 0, 0, "%g");
+        return ImGui.DragFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), stepSize, 0, 0, "%g");
     }
 
     private bool InspectInt(ref int value)
@@ -34,23 +37,23 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             if (_rangeAttribute.UseDragVersion)
             {
-                return ImGui.DragInt(_name, ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, (int)_rangeAttribute.MinValue,
+                return ImGui.DragInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, (int)_rangeAttribute.MinValue,
                     (int)_rangeAttribute.MaxValue, default);
             }
 
-            return ImGui.SliderInt(_name, ImGuiExt.RefPtr(ref value), (int)_rangeAttribute.MinValue, (int)_rangeAttribute.MaxValue, default);
+            return ImGui.SliderInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), (int)_rangeAttribute.MinValue, (int)_rangeAttribute.MaxValue,
+                default);
         }
 
         var stepSize = _stepSizeAttribute != null ? _stepSizeAttribute.StepSize : 1f;
-        return ImGui.DragInt(_name, ImGuiExt.RefPtr(ref value), stepSize, default, default, default);
+        return ImGui.DragInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), stepSize, default, default, default);
     }
 
     private bool InspectUInt(ref uint value)
     {
         var result = false;
         var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
-        var name = (DearImGuiInterpolatedStringHandler)_name;
-        if (ImGui.DragScalar(name, ImGuiDataType.U32, valuePtr, default, default, default, default))
+        if (ImGui.DragScalar(ImGuiExt.LabelPrefix(_name), ImGuiDataType.U32, valuePtr, default, default, default, default))
         {
             result = true;
         }
@@ -105,6 +108,9 @@ public unsafe class SimpleTypeInspector : Inspector
         if (hideInInspector)
             return;
 
+        if (HideReadOnly && IsReadOnly)
+            return;
+
         if (_valueType == typeof(Rectangle))
         {
             var value = GetValue<Rectangle>();
@@ -143,7 +149,7 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             var value = GetValue<bool>();
 
-            if (ImGuiExt.DrawCheckbox(_name, ref value))
+            if (ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(_name), ref value))
             {
                 SetValue(value);
             }
@@ -154,7 +160,7 @@ public unsafe class SimpleTypeInspector : Inspector
 
             var inputBuffer = new ImGuiInputBuffer(value, 100);
 
-            if (ImGui.InputText(_name, inputBuffer.Data, inputBuffer.Length))
+            if (ImGui.InputText(ImGuiExt.LabelPrefix(_name), inputBuffer.Data, inputBuffer.Length))
             {
                 SetValue(value);
             }
@@ -164,7 +170,7 @@ public unsafe class SimpleTypeInspector : Inspector
             var value = GetValue<Point>();
             var tuple = new ValueTuple<int, int>(value.X, value.Y);
             var xy = &tuple;
-            if (ImGui.DragInt2(_name, xy, 1.0f, 0, 0, "%11d"))
+            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(_name), xy, 1.0f, 0, 0, "%11d"))
             {
                 SetValue(new Point(xy->Item1, xy->Item2));
             }
@@ -174,7 +180,7 @@ public unsafe class SimpleTypeInspector : Inspector
             var value = GetValue<UPoint>();
             var tuple = new ValueTuple<int, int>((int)value.X, (int)value.Y);
             var xy = &tuple;
-            if (ImGui.DragInt2(_name, xy, 1.0f, 0, 0, "%u"))
+            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(_name), xy, 1.0f, 0, 0, "%u"))
             {
                 SetValue(new UPoint((uint)xy->Item1, (uint)xy->Item2));
             }
@@ -182,7 +188,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Vector2))
         {
             var value = GetValue<Vector2>().ToNumerics();
-            if (ImGui.DragFloat2(_name, ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%g"))
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%g"))
             {
                 SetValue(value.ToXNA());
             }
@@ -190,7 +196,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Num.Vector2))
         {
             var value = GetValue<Num.Vector2>();
-            if (ImGui.DragFloat2(_name, ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%g"))
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%g"))
             {
                 SetValue(value);
             }
@@ -198,7 +204,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Vector3))
         {
             var value = GetValue<Vector3>().ToNumerics();
-            if (ImGui.DragFloat3(_name, ImGuiExt.RefPtr(ref value), default, default, default, default))
+            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), default, default, default, default))
             {
                 SetValue(value.ToXNA());
             }
@@ -206,7 +212,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Vector4))
         {
             var value = GetValue<Vector4>().ToNumerics();
-            if (ImGui.DragFloat4(_name, ImGuiExt.RefPtr(ref value), default, default, default, default))
+            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), default, default, default, default))
             {
                 SetValue(value.ToXNA());
             }
@@ -214,7 +220,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (_valueType == typeof(Color))
         {
             var value = GetValue<Color>();
-            if (ImGuiExt.ColorEdit(_name, ref value))
+            if (ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(_name, true), ref value))
             {
                 SetValue(value);
             }

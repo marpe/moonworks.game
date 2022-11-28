@@ -6,7 +6,7 @@ internal class Program
 {
     private static void Main(string[] args)
     {
-        Logs.Logs.Initialize();
+        Logs.Initialize();
 
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         

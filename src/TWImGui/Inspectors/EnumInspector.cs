@@ -56,37 +56,38 @@ public unsafe class EnumInspector : Inspector
 
         if (_isFlag)
         {
-            var value = GetValue();
+            var value = GetValue() ?? throw new InvalidOperationException();
+
+            var valueStr = value.ToString();
+            ImGuiExt.LabelPrefix(FontAwesome6.FlagCheckered + " " + _name);
+
+            var icon = (_isExpanded ? FontAwesome6.AngleDown : FontAwesome6.AngleRight);
+            if (ImGuiExt.TextButton(icon + " " + valueStr, "Click to expand"))
+            {
+                _isExpanded = !_isExpanded;
+            }
 
             var flags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                         ImGuiTableFlags.SizingStretchSame | ImGuiTableFlags.RowBg;
 
-            if (ImGui.BeginTable("#Matrix", 2, flags, default))
+            if (_isExpanded)
             {
-                ImGui.TableSetupColumn(_name);
-                ImGui.TableSetupColumn(value.ToString());
-                ImGui.TableHeadersRow();
-
-                if (ImGui.IsItemClicked())
+                if (ImGui.BeginTable("#Matrix", 2, flags, default))
                 {
-                    _isExpanded = !_isExpanded;
-                }
-
-                ImGuiExt.ItemTooltip("Click to expand");
-
-                if (_isExpanded)
-                {
+                    ImGui.TableSetupColumn(_name);
+                    ImGui.TableSetupColumn(value.ToString());
+                    // ImGui.TableHeadersRow();
                     DrawRows(value);
-                }
 
-                ImGui.EndTable();
+                    ImGui.EndTable();
+                }
             }
         }
         else
         {
             var value = GetValue();
             var index = Array.IndexOf(_enumValues, value);
-            if (ImGui.BeginCombo(_name, _enumNames[index]))
+            if (ImGui.BeginCombo(ImGuiExt.LabelPrefix(_name), _enumNames[index]))
             {
                 for (var i = 0; i < _enumNames.Length; i++)
                 {

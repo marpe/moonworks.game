@@ -1,7 +1,6 @@
 using FreeTypeSharp;
 using MyGame.Debug;
 using MyGame.Fonts;
-using MyGame.Logs;
 
 namespace MyGame;
 
@@ -127,7 +126,7 @@ public class MyGameMain : Game
         Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
-            Logs.Logs.Loggers.Add(new TWConsoleLogger());
+            Logs.Loggers.Add(new TWConsoleLogger());
         });
 
         Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
