@@ -41,12 +41,12 @@ public class World
 
     public Level Level;
 
-    public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
+    public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
     {
         _gameScreen = gameScreen;
         var jsonString = File.ReadAllText(ldtkPath.ToString());
         LdtkRaw = LdtkJson.FromJson(jsonString);
-        TilesetTextures = LoadTilesets(device, ldtkPath, LdtkRaw.Defs.Tilesets);
+        TilesetTextures = LoadTilesets(gameScreen.Game.GraphicsDevice, ldtkPath, LdtkRaw.Defs.Tilesets);
         WorldSize = GetWorldSize(LdtkRaw);
 
         _debugDraw = new DebugDrawItems();
@@ -61,12 +61,12 @@ public class World
         {
             if (texturePath.EndsWith(".aseprite"))
             {
-                var texture = TextureUtils.LoadAseprite(device, texturePath);
+                var texture = TextureUtils.LoadAseprite(gameScreen.Game.GraphicsDevice, texturePath);
                 Textures.Add(texturePath, texture);
             }
             else
             {
-                var texture = TextureUtils.LoadPngTexture(device, texturePath);
+                var texture = TextureUtils.LoadPngTexture(gameScreen.Game.GraphicsDevice, texturePath);
                 Textures.Add(texturePath, texture);
             }
         }
@@ -413,6 +413,9 @@ public class World
 
     public void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
+        if (!e.DrawDebug)
+            return;
+        
         var cell = e.Cell;
         var cellInScreen = cell * DefaultGridSize;
         renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);

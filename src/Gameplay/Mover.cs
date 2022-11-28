@@ -65,16 +65,17 @@ public class Mover
         var startPosition = position = Parent.Position.Current;
         startPosition = startPosition.Floor();
         var levelSize = Parent.World.Level.Size;
+        var levelPos = Parent.World.Level.Position;
 
         for (var dy = 0; dy < levelSize.Y; dy++)
         {
             var y = (startPosition.Y + dy);
-            if (y >= levelSize.Y)
+            if (y >= levelPos.Y + levelSize.Y)
                 y = startPosition.Y - y % levelSize.Y;
             for (var dx = 0; dx < levelSize.X; dx++)
             {
                 var x = (startPosition.X + dx);
-                if (x >= levelSize.X)
+                if (x >= levelPos.X + levelSize.X)
                     x = startPosition.X - x % levelSize.X;
 
                 if (Parent.HasCollision(new Vector2(x, y), Parent.Size))
@@ -92,6 +93,8 @@ public class Mover
     {
         if (TryGetValidPosition(out var validPosition))
         {
+            var deltaPos = validPosition - Parent.Position.Current;
+            Logger.LogInfo($"Moving entity from {Parent.Position.Current} to {validPosition} ({deltaPos.X}, {deltaPos.Y})");
             Parent.Position.SetPrevAndCurrent(validPosition);
             return;
         }

@@ -1,3 +1,4 @@
+using System.Threading;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Editor;
@@ -41,6 +42,7 @@ public unsafe class MyEditorMain : MyGameMain
     private Matrix4x4 _gameRenderViewportTransform;
     private NumVector2 _gameRenderOffset;
     private int _imGuiUpdateCount;
+    private FileWatcher fileWatcher;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -58,7 +60,25 @@ public unsafe class MyEditorMain : MyGameMain
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         AddDefaultMenus();
+
+        fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
+
         Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
+    }
+
+    private void OnFileChanged(string filePath)
+    {
+        Logs.LogInfo($"File changed: {filePath}");
+        var extension = Path.GetExtension(filePath);
+        if (extension == ".ldtk")
+        {
+            Task.Run(() =>
+            {
+                Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
+                var world = new World(GameScreen, filePath);
+                Shared.Game.GameScreen.QueueSetWorld(world);
+            });
+        }
     }
 
     private void AddDefaultMenus()

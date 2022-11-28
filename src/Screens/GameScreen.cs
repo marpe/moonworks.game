@@ -10,9 +10,8 @@ public class GameScreen
     public Camera Camera { get; private set; }
     public World? World { get; private set; }
 
-    private GraphicsDevice _device;
-
     private readonly MyGameMain _game;
+    public MyGameMain Game => _game;
 
     private ConcurrentQueue<Action> _queuedActions = new();
 
@@ -24,7 +23,6 @@ public class GameScreen
     public GameScreen(MyGameMain game)
     {
         _game = game;
-        _device = _game.GraphicsDevice;
 
         Camera = new Camera(this)
         {
@@ -35,17 +33,28 @@ public class GameScreen
     [ConsoleHandler("restart")]
     public static void Restart(bool immediate = true)
     {
-        var worldLoader = () => new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+        var worldLoader = () => new World(Shared.Game.GameScreen, ContentPaths.ldtk.Example.World_ldtk);
         if (immediate)
         {
-            Shared.Game.ConsoleScreen.IsHidden = true;
-            Shared.Menus.RemoveAll();
-            Shared.Game.GameScreen.World = worldLoader.Invoke();
+            Shared.Game.GameScreen.QueueSetWorld(worldLoader());
         }
         else
         {
             Shared.Game.GameScreen.LoadWorld(worldLoader);
         }
+    }
+
+    public void QueueSetWorld(World world)
+    {
+        _queuedActions.Enqueue(() =>
+        {
+            Logger.LogInfo($"Setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
+            Shared.Menus.RemoveAll();
+            Shared.Game.ConsoleScreen.IsHidden = true;
+            Unload();
+            World = world;
+            Logger.LogInfo("World set!");
+        });
     }
 
     [ConsoleHandler("step")]
@@ -89,7 +98,7 @@ public class GameScreen
 
         _queuedActions.Enqueue(() =>
         {
-            Logger.LogInfo($"Removing screens from: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
+            Logger.LogInfo($"Removing screens from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             Unload();
@@ -98,20 +107,16 @@ public class GameScreen
         Shared.LoadingScreen.LoadAsync(() =>
         {
             var world = worldLoader();
-            _queuedActions.Enqueue(() =>
-            {
-                Logger.LogInfo($"Settings world from: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
-                Shared.Menus.RemoveAll();
-                Shared.Game.ConsoleScreen.IsHidden = true;
-                World = world;
-            });
+            QueueSetWorld(world);
         });
     }
 
     public void Unload()
     {
-        Logger.LogInfo($"Unloading world from: {Thread.CurrentThread.ManagedThreadId}, {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
-        World?.Dispose();
+        if (World == null)
+            return;
+        Logger.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
+        World.Dispose();
         World = null;
     }
 

@@ -123,7 +123,7 @@ public class LoadingScreen
 
         Task.Run(() =>
         {
-            Logger.LogInfo($"LoadAsync Start: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
+            Logger.LogInfo($"LoadAsync Start: {Thread.CurrentThread.ManagedThreadId}");
             while (_queue.TryPeek(out var callback))
             {
                 callback();

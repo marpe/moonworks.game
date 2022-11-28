@@ -29,6 +29,8 @@ public partial class Entity
     [HideInInspector]
     public float TotalTimeActive;
 
+    public bool DrawDebug;
+
     /*public Point Cell;
     /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
     public Vector2 CellPos;*/

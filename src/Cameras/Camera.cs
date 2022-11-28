@@ -270,7 +270,7 @@ public class Camera
 
             if (CameraBinds.Pan.Active)
             {
-                Position += new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
+                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }
 
             var moveDelta = cameraSpeed * deltaSeconds;
