@@ -1,4 +1,5 @@
 ﻿using FreeTypeSharp;
+using MyGame.Audio;
 
 namespace MyGame;
 
@@ -9,4 +10,5 @@ public static class Shared
     public static LoadingScreen LoadingScreen = null!;
     public static MenuHandler Menus = null!;
     public static FreeTypeLibrary FreeTypeLibrary = null!;
+    public static AudioManager AudioManager = null!;
 }

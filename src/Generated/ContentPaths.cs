@@ -28,8 +28,6 @@ public static class ContentPaths
         public const string pixellari72_bmfc = @"Content\bmfonts\pixellari72.bmfc";
         public const string pixellari72_fnt = @"Content\bmfonts\pixellari72.fnt";
         public const string pixellari72_0_png = @"Content\bmfonts\pixellari72_0.png";
-        public const string pixellari72_1_png = @"Content\bmfonts\pixellari72_1.png";
-        public const string pixellari72_2_png = @"Content\bmfonts\pixellari72_2.png";
     }
     public static class fonts
     {
@@ -49,6 +47,11 @@ public static class ContentPaths
         }
         public const string map_ldtk = @"Content\ldtk\map.ldtk";
         public const string tileset1_aseprite = @"Content\ldtk\tileset1.aseprite";
+    }
+    public static class sfx
+    {
+        public const string gun_wav = @"Content\sfx\gun.wav";
+        public const string gun2_wav = @"Content\sfx\gun2.wav";
     }
     public static class Shaders
     {

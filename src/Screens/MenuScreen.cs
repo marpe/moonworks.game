@@ -265,6 +265,7 @@ public abstract class MenuScreen
 
         if (_lastSelectedIndex != _selectedIndex)
         {
+            Shared.AudioManager.Play(ContentPaths.sfx.gun_wav);
             _menuItems[_selectedIndex].NudgeSpring.Velocity = 500;
         }
 

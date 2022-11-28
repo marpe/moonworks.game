@@ -22,7 +22,7 @@ public class OptionsMenuScreen : MenuScreen
 
         _menuItems.AddRange(new MenuItem[]
         {
-            new FancyTextMenuItem("Options") { IsEnabled = false },
+            new FancyTextMenuItem("<!>Options</!>") { IsEnabled = false },
             _volume,
             _scale,
             _windowMode,

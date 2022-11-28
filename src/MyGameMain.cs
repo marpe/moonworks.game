@@ -1,4 +1,5 @@
 using FreeTypeSharp;
+using MyGame.Audio;
 using MyGame.Debug;
 using MyGame.Fonts;
 
@@ -115,6 +116,8 @@ public class MyGameMain : Game
         Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
+        
+        Shared.AudioManager = new AudioManager(this);
 
         Shared.Menus = new MenuHandler(this);
 
@@ -142,6 +145,8 @@ public class MyGameMain : Game
         SetInputViewport();
 
         UpdateScreens();
+        
+        Shared.AudioManager.Update((float)dt.TotalSeconds);
 
         InputHandler.EndFrame();
     }
