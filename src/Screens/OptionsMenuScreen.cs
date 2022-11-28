@@ -1,4 +1,6 @@
-﻿namespace MyGame.Screens;
+﻿using MyGame.Audio;
+
+namespace MyGame.Screens;
 
 public class OptionsMenuScreen : MenuScreen
 {
@@ -16,7 +18,10 @@ public class OptionsMenuScreen : MenuScreen
 
     public OptionsMenuScreen(MyGameMain game) : base(game)
     {
-        _volume = new TextMenuItem("Volume", () => { });
+        _volume = new TextMenuItem($"Volume: {AudioManager.Volume.ToString("P0")}", () =>
+        {
+            
+        });
         _scale = new TextMenuItem("Scale", ChangeScale);
         _windowMode = new TextMenuItem("Window mode", CycleScreenMode);
 
