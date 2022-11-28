@@ -16,7 +16,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private readonly ImGuiRenderer _imGuiRenderer;
     public ImGuiRenderer ImGuiRenderer => _imGuiRenderer;
-    
+
     private readonly Sampler _sampler;
     private readonly float _alpha = 1.0f;
     private ulong _imGuiDrawCount;
@@ -38,11 +38,8 @@ public unsafe class MyEditorMain : MyGameMain
     private IInspector? _loadingScreenInspector;
     private string _loadingDebugWindowName = "LoadingDebug";
     private bool IsHoveringGameWindow;
-    private Rectangle _gameRenderBounds;
     private Matrix4x4 _gameRenderViewportTransform;
-    private NumVector2 _gameRenderViewportPos;
     private NumVector2 _gameRenderOffset;
-    private NumVector2 _gameRenderWindowSize;
     private int _imGuiUpdateCount;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
@@ -158,7 +155,7 @@ public unsafe class MyEditorMain : MyGameMain
     private void DrawGameWindow(ImGuiEditorWindow window)
     {
         IsHoveringGameWindow = false;
-        
+
         if (!window.IsOpen)
             return;
 
@@ -181,7 +178,6 @@ public unsafe class MyEditorMain : MyGameMain
             }
 
             var windowSize = ImGui.GetWindowSize();
-            _gameRenderWindowSize = windowSize;
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(new Point((int)windowSize.X, (int)windowSize.Y), DesignResolution);
 
             ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
@@ -193,14 +189,9 @@ public unsafe class MyEditorMain : MyGameMain
 
             ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 
-            _gameRenderBounds = new Rectangle((int)cursorScreenPos.X, (int)cursorScreenPos.Y, viewport.Width, viewport.Height);
             var viewportPos = ImGui.GetWindowViewport()->Pos;
-            _gameRenderViewportPos = viewportPos;
             _gameRenderOffset = cursorScreenPos - viewportPos;
-            IsHoveringGameWindow = ImGui.IsWindowHovered(); // ImGui.IsItemHovered();
-
-            ImGui.Text(
-                $"ishovering game: {IsHoveringGame().ToString()}, bounds: {_gameRenderBounds.ToString()}, viewport: {_gameRenderViewportPos.ToString()}, offset: {_gameRenderOffset.ToString()}, hovering: {IsHoveringGameWindow.ToString()}");
+            IsHoveringGameWindow = ImGui.IsWindowHovered();
 
             viewportTransform.Decompose(out var scale, out _, out _);
             _gameRenderViewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
@@ -425,7 +416,7 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.PopStyleVar(2);
         if (windowMenu)
         {
-            foreach (var (key, window) in Windows)
+            foreach (var (_, window) in Windows)
             {
                 ImGui.MenuItem(window.Title, window.KeyboardShortcut, ImGuiExt.RefPtr(ref window.IsOpen));
             }
@@ -440,13 +431,15 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void DrawMainMenuButtons()
     {
-        var hasWorld = Shared.Game.GameScreen.World != null;
+        var max = ImGui.GetContentRegionMax();
+        ImGui.SetCursorPosX(max.X / 2 - 29);
 
         var (icon, color, tooltip) = GameScreen.IsPaused switch
         {
             true => (FontAwesome6.Play, Color.Green, "Play"),
             _ => (FontAwesome6.Pause, Color.Yellow, "Pause")
         };
+
         if (ImGuiExt.ColoredButton(icon, color, tooltip))
         {
             GameScreen.IsPaused = !GameScreen.IsPaused;
@@ -454,7 +447,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (ImGuiExt.ColoredButton(FontAwesome6.ForwardStep, Color.Orange, "Step"))
         {
-            GameScreen.IsStepping = true;
+            GameScreen.IsPaused = GameScreen.IsStepping = true;
         }
     }
 

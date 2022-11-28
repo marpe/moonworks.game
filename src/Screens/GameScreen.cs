@@ -33,14 +33,19 @@ public class GameScreen
     }
 
     [ConsoleHandler("restart")]
-    public static void Restart()
+    public static void Restart(bool immediate = true)
     {
-        /*Shared.Game.GameScreen._queuedActions.Enqueue(() =>
+        var worldLoader = () => new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+        if (immediate)
         {
-        });*/
-        Shared.Game.ConsoleScreen.IsHidden = true;
-        Shared.Menus.RemoveAll();
-        Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
+            Shared.Game.ConsoleScreen.IsHidden = true;
+            Shared.Menus.RemoveAll();
+            Shared.Game.GameScreen.World = worldLoader.Invoke();
+        }
+        else
+        {
+            Shared.Game.GameScreen.LoadWorld(worldLoader);
+        }
     }
 
     [ConsoleHandler("step")]

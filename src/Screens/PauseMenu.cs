@@ -19,7 +19,7 @@ public class PauseMenu : MenuScreen
 
     private void OnRestart()
     {
-        GameScreen.Restart();
+        GameScreen.Restart(false);
     }
 
     public override void OnCancelled()

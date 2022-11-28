@@ -194,7 +194,7 @@ public class World
 
     public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
     {
-        DrawLevel(renderer, cameraBounds);
+        DrawLevel(renderer, Level, cameraBounds);
         DrawEnemies(renderer, alpha);
         DrawPlayer(renderer, alpha);
         DrawBullets(renderer, alpha);
@@ -251,36 +251,20 @@ public class World
         renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
     }
 
-    private void DrawLevel(Renderer renderer, Bounds cameraBounds)
+    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
-        var isMultiWorld = LdtkRaw.Worlds.Length > 0;
-        var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+        var color = ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
+        renderer.DrawRect(level.Bounds, color);
 
-        for (var levelIndex = 0; levelIndex < levels.Length; levelIndex++)
+        for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
         {
-            var level = levels[levelIndex];
-            var color = ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
-            renderer.DrawRect(level.Bounds, color);
-
-            for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
-            {
-                var layer = level.LayerInstances[layerIndex];
-                var layerDef = GetLayerDefinition(LdtkRaw, layer.LayerDefUid);
-                DrawLayer(renderer, level, layer, layerDef, cameraBounds);
-            }
-
-            if (Debug)
-                renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Red, 1.0f);
+            var layer = level.LayerInstances[layerIndex];
+            var layerDef = GetLayerDefinition(LdtkRaw, layer.LayerDefUid);
+            DrawLayer(renderer, level, layer, layerDef, cameraBounds);
         }
 
         if (Debug)
-            renderer.DrawRectOutline(Vector2.Zero, WorldSize, Color.Magenta, 1.0f);
-
-        foreach (var (x, y) in Bresenham.Line(Start.X, Start.Y, End.X, End.Y))
-        {
-            var min = new Vector2(x, y) * DefaultGridSize;
-            renderer.DrawRectOutline(min, min + Vector2.One * DefaultGridSize, Color.Red, 1f);
-        }
+            renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Red, 1.0f);
     }
 
     private void DrawBullets(Renderer renderer, double alpha)
