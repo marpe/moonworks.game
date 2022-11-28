@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace MyGame;
 
 public class World
 {
@@ -25,7 +27,7 @@ public class World
     public Point Start = new Point(10, 10);
     public Point End = new Point(40, 30);
 
-    public Player Player { get; }
+    public Player Player;
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
 
@@ -33,9 +35,11 @@ public class World
     public float WorldTotalElapsedTime;
     public Vector2 MousePivot = new Vector2(0f, 0f);
     public Point MouseSize = new Point(8, 12);
-    
+
     public static bool DebugCameraBounds;
     private static Vector2 SavedPos;
+
+    public Level Level;
 
     public World(GameScreen gameScreen, GraphicsDevice device, ReadOnlySpan<char> ldtkPath)
     {
@@ -47,19 +51,10 @@ public class World
 
         _debugDraw = new DebugDrawItems();
 
-        foreach (var entityDef in LdtkRaw.Defs.Entities)
-        {
-        }
-
-        var allEntities = new List<Entity>();
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
-        var levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-
-        foreach (var level in levels)
-        {
-            var entities = LoadEntitiesInLevel(level);
-            allEntities.AddRange(entities);
-        }
+        Level[] levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+        var firstLevel = FindLevel("World_Level_1", levels);
+        StartLevel(firstLevel);
 
         var textures = new[] { ContentPaths.ldtk.Example.Characters_png };
         foreach (var texturePath in textures)
@@ -75,9 +70,15 @@ public class World
                 Textures.Add(texturePath, texture);
             }
         }
+    }
 
-        Player = (Player)allEntities.First(t => t.EntityType == EntityType.Player);
-        Enemies.AddRange(allEntities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
+    [MemberNotNull(nameof(Level), nameof(Player))]
+    private void StartLevel(Level level)
+    {
+        Level = level;
+        var entities = LoadEntitiesInLevel(level);
+        Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
+        Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
     }
 
     private static List<Entity> LoadEntitiesInLevel(Level level)
@@ -209,11 +210,11 @@ public class World
         var view = Shared.Game.GameScreen.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var (mouseCell, mouseCellPos) = Entity.GetGridCoords(mouseInWorld);
+        var mouseCoords = new GridCoords(mouseInWorld);
 
         var mouseCellRect = new Rectangle(
-            mouseCell.X * DefaultGridSize,
-            mouseCell.Y * DefaultGridSize,
+            mouseCoords.Cell.X * DefaultGridSize,
+            mouseCoords.Cell.Y * DefaultGridSize,
             DefaultGridSize,
             DefaultGridSize
         );
@@ -425,8 +426,8 @@ public class World
 
     public void DrawDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
-        var (cell, cellRel) = Entity.GetGridCoords(e);
-        var cellInScreen = cell * DefaultGridSize;
+        var gridCoords = e.GridCoords;
+        var cellInScreen = gridCoords.Cell * DefaultGridSize;
         renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);
 
         // draw small crosshair
@@ -439,7 +440,8 @@ public class World
 
         if (drawCoords)
         {
-            ReadOnlySpan<char> str = $"{cell.X}, {cell.Y} ({StringExt.TruncateNumber(cellRel.X)}, {StringExt.TruncateNumber(cellRel.Y)})";
+            ReadOnlySpan<char> str =
+                $"{gridCoords.Cell.X}, {gridCoords.Cell.Y} ({StringExt.TruncateNumber(gridCoords.CellPos.X)}, {StringExt.TruncateNumber(gridCoords.CellPos.Y)})";
             var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
             renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
             // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
@@ -517,6 +519,17 @@ public class World
         Bullets.Add(bullet);
     }
 
+    public static Level FindLevel(string identifier, Level[] levels)
+    {
+        for (var i = 0; i < levels.Length; i++)
+        {
+            if (levels[i].Identifier == identifier)
+                return levels[i];
+        }
+
+        throw new InvalidOperationException($"Level not found: {identifier}");
+    }
+
     public static LayerDefinition GetLayerDefinition(LdtkJson ldtkRaw, long layerDefUid)
     {
         for (var i = 0; i < ldtkRaw.Defs.Layers.Length; i++)
@@ -529,23 +542,32 @@ public class World
     }
 
     [ConsoleHandler("save_pos")]
-    public static void SavePos()
+    public static void SavePos(Vector2? position = null)
     {
         if (Shared.Game.GameScreen.World != null)
         {
-            SavedPos = Shared.Game.GameScreen.World.Player.Position;
+            SavedPos = position ?? Shared.Game.GameScreen.World.Player.Position;
             Shared.Console.Print($"Saved position: {SavedPos.ToString()}");
         }
     }
-    
+
     [ConsoleHandler("load_pos")]
     public static void LoadPos(Vector2? position = null)
     {
         if (Shared.Game.GameScreen.World != null)
         {
-            var positionToLoad = position ?? SavedPos;
-            Shared.Game.GameScreen.World.Player.Position.SetPrevAndCurrent(positionToLoad);
-            Shared.Console.Print($"Loaded position: {positionToLoad.ToString()}");
+            var loadPos = position ?? SavedPos;
+            Shared.Game.GameScreen.World.Player.Position.SetPrevAndCurrent(loadPos);
+            Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
+        }
+    }
+
+    [ConsoleHandler("unstuck")]
+    public static void Unstuck()
+    {
+        if (Shared.Game.GameScreen.World != null)
+        {
+            Shared.Game.GameScreen.World.Player.Mover.Unstuck();
         }
     }
 }

@@ -59,6 +59,12 @@ public static class ConsoleUtils
 
     public static object ParseArg(Type t, ReadOnlySpan<char> strValue)
     {
+        var underlyingType = Nullable.GetUnderlyingType(t);
+        if (underlyingType != null)
+        {
+            var parsedArg = ParseArg(underlyingType, strValue);
+            return Activator.CreateInstance(t, parsedArg)!;
+        }
         if (t == typeof(string)) return strValue.ToString();
         if (t.IsEnum) return Enum.Parse(t, strValue, true);
         if (t == typeof(int)) return int.Parse(strValue);

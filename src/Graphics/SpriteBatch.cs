@@ -185,10 +185,10 @@ public class SpriteBatch
 
         if (ShouldRoundPositions)
         {
-            topLeft = topLeft.ToVec2Int();
-            bottomLeft = bottomLeft.ToVec2Int();
-            topRight = topRight.ToVec2Int();
-            bottomRight = bottomRight.ToVec2Int();
+            topLeft = topLeft.Floor();
+            bottomLeft = bottomLeft.Floor();
+            topRight = topRight.Floor();
+            bottomRight = bottomRight.Floor();
         }
 
         SetVector(ref vertices[vertexOffset].Position, topLeft, depth);

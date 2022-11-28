@@ -18,14 +18,7 @@ public partial class Entity
 
     public Position Position = new();
 
-    public GridCoords GridCoords
-    {
-        get
-        {
-            var (cell, cellPos) = GetGridCoords(Position);
-            return new GridCoords(cell, cellPos);
-        }
-    }
+    public GridCoords GridCoords => new(Position.Current);
 
     /*public Point Cell;
     /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
@@ -42,26 +35,6 @@ public partial class Entity
     public virtual void Update(float deltaSeconds)
     {
         CoroutineManager.Update(deltaSeconds);
-    }
-
-    public static (Point, Vector2) GetGridCoords(Entity entity)
-    {
-        return GetGridCoords(entity.Position.Current);
-    }
-
-    public static (Point, Vector2) GetGridCoords(Entity entity, Vector2 moveDelta)
-    {
-        return GetGridCoords(entity.Position.Current + moveDelta);
-    }
-
-    public static (Point, Vector2) GetGridCoords(Vector2 position)
-    {
-        var gridSize = World.DefaultGridSize;
-        var cellX = (int)(position.X / gridSize);
-        var cellY = (int)(position.Y / gridSize);
-        var cellPosX = position.X % gridSize / gridSize;
-        var cellPosY = position.Y % gridSize / gridSize;
-        return (new Point(cellX, cellY), new Vector2(cellPosX, cellPosY));
     }
 
     public override string ToString()

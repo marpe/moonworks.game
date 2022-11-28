@@ -6,7 +6,7 @@ public class Position
 {
     public string DebugDisplayString => string.Concat(Current.X.ToString(), " ", Current.Y.ToString());
 
-    public Vector2 Current { get; private set; }
+    public Vector2 Current;
     public Vector2 Previous { get; private set; }
     public Vector2 Initial { get; private set; } = Vector2.Zero;
 
@@ -33,29 +33,6 @@ public class Position
     public void Initialize()
     {
         Initial = Previous = Current;
-    }
-
-    public void SetX(float x)
-    {
-        Current = new Vector2(x, Current.Y);
-    }
-
-    public void SetY(float y)
-    {
-        Current = new Vector2(Current.X, y);
-    }
-
-    public void DeltaMove(Vector2 deltaMove)
-    {
-        Current += deltaMove;
-    }
-
-    public void DeltaMoveX(float dx) => SetX(Current.X + dx);
-    public void DeltaMoveY(float dy) => SetY(Current.Y + dy);
-
-    public void Set(Vector2 position)
-    {
-        Current = position;
     }
 
     public void SetPrevAndCurrent(Vector2 position)

@@ -7,10 +7,10 @@ public static class Vector2Ext
     {
         return new Point((int)self.X, (int)self.Y);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 ToVec2Int(this Vector2 self)
+    public static Vector2 Floor(this Vector2 self)
     {
-        return new Vector2((int)self.X, (int)self.Y);
+        return new Vector2(MathF.Floor(self.X), MathF.Floor(self.Y));
     }
 }

@@ -1,61 +1,5 @@
 ﻿namespace MyGame;
 
-[DebuggerDisplay("{DebugDisplayString,nq}")]
-public struct GridCoords
-{
-    public Vector2 CellPos;
-    public Point Cell;
-
-    public GridCoords(Point cell, Vector2 cellPos)
-    {
-        Cell = cell;
-        CellPos = cellPos;
-    }
-
-    public void Update()
-    {
-        while (CellPos.X > 1f)
-        {
-            CellPos.X--;
-            Cell.X++;
-        }
-
-        while (CellPos.X < 0)
-        {
-            CellPos.X++;
-            Cell.X--;
-        }
-
-        while (CellPos.Y > 1f)
-        {
-            CellPos.Y--;
-            Cell.Y++;
-        }
-
-        while (CellPos.Y < 0)
-        {
-            CellPos.Y++;
-            Cell.Y--;
-        }
-    }
-
-    public string DebugDisplayString => $"c: {Cell.X}, {Cell.Y} r: {StringExt.TruncateNumber(CellPos.X)}, {StringExt.TruncateNumber(CellPos.Y)}";
-}
-
-public struct CollisionResult
-{
-    public CollisionDir Direction;
-    public GridCoords Previous;
-    public GridCoords Next;
-
-    public CollisionResult(CollisionDir direction, GridCoords previous, GridCoords next)
-    {
-        Direction = direction;
-        Previous = previous;
-        Next = next;
-    }
-}
-
 public class Mover
 {
     private static Point Up = new(0, -1);
@@ -82,8 +26,6 @@ public class Mover
     private Entity? _parent;
     public Entity Parent => _parent ?? throw new InvalidOperationException();
 
-    public Vector2 SizeInGridTiles => new(Parent.Size.X / (float)World.DefaultGridSize, Parent.Size.Y / (float)World.DefaultGridSize);
-
     public List<CollisionResult> PreviousMoveCollisions = new();
     public List<CollisionResult> MoveCollisions = new();
     public List<CollisionResult> ContinuedMoveCollisions = new();
@@ -93,8 +35,6 @@ public class Mover
     public List<CollisionResult> ContinuedGroundCollisions = new();
 
     private static readonly CollisionResult NoCollision = new();
-
-    private Point CeilSize => new(MathF.CeilToInt(SizeInGridTiles.X), MathF.CeilToInt(SizeInGridTiles.Y));
 
     public void Initialize(Entity parent)
     {
@@ -122,15 +62,9 @@ public class Mover
         if (velocity.Y != 0)
             return false;
 
-        var gridCoords = Parent.GridCoords;
-        if (gridCoords.CellPos.Y + SizeInGridTiles.Y < CeilSize.Y)
-            return false;
-
-        if (HasCollision(gridCoords.Cell, 0, CeilSize.Y))
-            GroundCollisions.Add(new CollisionResult(CollisionDir.Down, gridCoords, gridCoords));
-        if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
-            Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
-            GroundCollisions.Add(new CollisionResult(CollisionDir.DownRight, gridCoords, gridCoords));
+        var position = Parent.Position + Vector2.UnitY;
+        if (HasCollision(position))
+            GroundCollisions.Add(new CollisionResult(CollisionDir.Down, Parent.Position, position, Vector2.UnitY));
 
         for (var i = 0; i < PreviousGroundCollisions.Count; i++)
         {
@@ -138,7 +72,7 @@ public class Mover
             for (var j = 0; j < GroundCollisions.Count; j++)
             {
                 var curr = GroundCollisions[j];
-                if (prev.Next.Cell == curr.Next.Cell)
+                if (prev == curr)
                 {
                     ContinuedGroundCollisions.Add(prev);
                     break;
@@ -149,141 +83,73 @@ public class Mover
         return GroundCollisions.Count > 0;
     }
 
-    private void HandleHorizontalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
+    private bool HasCollision(Vector2 position)
     {
-        if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X)
-        {
-            if (HasCollision(gridCoords.Cell, CeilSize.X, 0))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X -= gridCoords.CellPos.X + SizeInGridTiles.X - CeilSize.X;
-                deltaMove.X = 0;
-                Logger.LogInfo("Collided right");
-            }
-            else if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
-                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Right, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X -= gridCoords.CellPos.X + SizeInGridTiles.X - CeilSize.X;
-                deltaMove.X = 0;
-                Logger.LogInfo("Collided right down");
-            }
-        }
+        var minCell = GridCoords.ToCell(position);
+        var max = new Vector2(
+            MathF.Ceil(position.X + Parent.Size.X - 1),
+            MathF.Ceil(position.Y + Parent.Size.Y - 1)
+        );
+        var maxCell = GridCoords.ToCell(max);
 
-        if (gridCoords.CellPos.X < 0)
+        for (var x = minCell.X; x <= maxCell.X; x++)
         {
-            if (HasCollision(gridCoords.Cell, -1, 0))
+            for (var y = minCell.Y; y <= maxCell.Y; y++)
             {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = 0;
-                deltaMove.X = 0;
-                Logger.LogInfo("Collided left");
+                if (Parent.Collider.HasCollision(x, y))
+                    return true;
             }
-            else if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
-                     Parent.Collider.HasCollision(gridCoords.Cell.X + Left.X, gridCoords.Cell.Y + CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Left, prevGridCoords, gridCoords));
-                gridCoords.CellPos.X = 0;
-                deltaMove.X = 0;
-                Logger.LogInfo("Collided left down");
-            }
-        }
-    }
-
-    private bool HasCollision(Point topLeft, int dx, int dy)
-    {
-        for (var x = 0; x < CeilSize.X; x++)
-        {
-            if (Parent.Collider.Parent.Collider.HasCollision(topLeft.X + x, topLeft.Y + dy))
-                return true;
-        }
-
-
-        for (var y = 0; y < CeilSize.Y; y++)
-        {
-            if (Parent.Collider.Parent.Collider.HasCollision(topLeft.X + dx, topLeft.Y + y))
-                return true;
         }
 
         return false;
     }
 
-    private void HandleVerticalMovement(in GridCoords prevGridCoords, ref GridCoords gridCoords, ref Vector2 deltaMove)
-    {
-        var newGridCoords = gridCoords;
-        newGridCoords.Update();
-
-        if (newGridCoords.Cell.Y < gridCoords.Cell.Y)
-        {
-            if (HasCollision(newGridCoords.Cell, 0, 0))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Up, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y = 0;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided up");
-            }
-            else if (gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
-                     Parent.Collider.HasCollision(newGridCoords.Cell.X + CeilSize.X, newGridCoords.Cell.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Up, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y = 0;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided up right");
-            }
-        }
-        // new cell collision down
-        // new cell collision down right
-        // same cell, collision down
-        // same cell collision down right
-
-        if (newGridCoords.Cell.Y > gridCoords.Cell.Y)
-        {
-            if (newGridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y && HasCollision(newGridCoords.Cell, 0, CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided down 1");
-            }
-            else if (newGridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
-                     gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
-                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, newGridCoords.Cell.Y + CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided down right 1");
-            }
-        }
-        else
-        {
-            if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y && HasCollision(gridCoords.Cell, 0, CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided down 2");
-            }
-            else if (gridCoords.CellPos.Y + SizeInGridTiles.Y > CeilSize.Y &&
-                     gridCoords.CellPos.X + SizeInGridTiles.X > CeilSize.X &&
-                     Parent.Collider.HasCollision(gridCoords.Cell.X + CeilSize.X, gridCoords.Cell.Y + CeilSize.Y))
-            {
-                MoveCollisions.Add(new CollisionResult(CollisionDir.Down, prevGridCoords, gridCoords));
-                gridCoords.CellPos.Y -= gridCoords.CellPos.Y + SizeInGridTiles.Y - CeilSize.Y;
-                deltaMove.Y = 0;
-                Logger.LogInfo("Collided down right 2");
-            }
-        }
-    }
-
     private void SanityCheck()
     {
         // -----------------------------------------------
-        var (finalCell, finalCellPos) = Entity.GetGridCoords(Parent);
-        var hasCollision = Parent.Collider.HasCollision(finalCell.X, finalCell.Y);
+        var gridCoords = Parent.GridCoords;
+        var hasCollision = Parent.Collider.HasCollision(gridCoords.Cell.X, gridCoords.Cell.Y);
         if (hasCollision && PreviousMoveCollisions.Count == 0)
             Logger.LogInfo("Moved into collision tile!");
         // -----------------------------------------------
+    }
+
+    public bool TryGetValidPosition(out Vector2 position)
+    {
+        var startPosition = position = Parent.Position.Current;
+        var levelSize = Parent.World.Level.Size;
+        int dx, dy;
+
+        for (dy = 0; dy < levelSize.Y; dy++)
+        {
+            var y = (startPosition.Y + dy);
+            if (y >= levelSize.Y)
+                y = startPosition.Y - y % levelSize.Y;
+            for (dx = 0; dx < levelSize.X; dx++)
+            {
+                var x = (startPosition.X + dx);
+                if (x >= levelSize.X)
+                    x = startPosition.X - x % levelSize.X;
+                if (!HasCollision(new Vector2(x, y)))
+                {
+                    position = new Vector2(x, y);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    public void Unstuck()
+    {
+        if (TryGetValidPosition(out var validPosition))
+        {
+            Parent.Position.SetPrevAndCurrent(validPosition);
+            return;
+        }
+
+        Logger.LogError("Couldn't find a suitable position");
     }
 
     public void PerformMove(Velocity velocity, float deltaSeconds)
@@ -296,53 +162,56 @@ public class Mover
         if (velocity.Delta.LengthSquared() == 0)
             return;
 
-        var deltaMove = velocity * deltaSeconds / World.DefaultGridSize;
-        var steps = MathF.CeilToInt((MathF.Abs(deltaMove.X) + MathF.Abs(deltaMove.Y)) / 0.33f);
-        var gridCoords = Parent.GridCoords;
+        var deltaMove = velocity * deltaSeconds;
+        var steps = MathF.Ceil((MathF.Abs(deltaMove.X) + MathF.Abs(deltaMove.Y)) / World.DefaultGridSize / 0.33f);
+        var position = Parent.Position.Current;
 
-        if (steps > 0)
+        for (var i = 0; i < steps; i++)
         {
-            var n = 0;
-            while (n < steps)
+            if (deltaMove.X != 0)
             {
-                var preUpdateCoords = gridCoords;
-                gridCoords.CellPos.X += deltaMove.X / steps;
-
-                if (deltaMove.X != 0)
+                var dx = deltaMove.X / steps;
+                var prev = position;
+                position += new Vector2(dx, 0);
+                if (HasCollision(position))
                 {
-                    HandleHorizontalMovement(preUpdateCoords, ref gridCoords, ref deltaMove);
+                    float intersection;
+
+                    if (deltaMove.X > 0)
+                        intersection = (position.X + Parent.Size.X) % World.DefaultGridSize;
+                    else
+                        intersection = (position.X % World.DefaultGridSize) - World.DefaultGridSize;
+
+                    var direction = intersection > 0 ? CollisionDir.Right : CollisionDir.Left;
+                    MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(intersection, 0)));
+                    position.X -= intersection;
+                    velocity.X = deltaMove.X = 0;
                 }
-
-                gridCoords.Update();
-                preUpdateCoords = gridCoords;
-                gridCoords.CellPos.Y += deltaMove.Y / steps;
-
-                if (deltaMove.Y != 0)
-                {
-                    HandleVerticalMovement(preUpdateCoords, ref gridCoords, ref deltaMove);
-                }
-
-                gridCoords.Update();
-
-                n++;
             }
 
-            var finalPosition = (gridCoords.Cell + gridCoords.CellPos) * World.DefaultGridSize;
-            Parent.Position.Set(finalPosition);
-            SanityCheck();
+            if (deltaMove.Y != 0)
+            {
+                var dy = deltaMove.Y / steps;
+                var prev = position;
+                position += new Vector2(0, dy);
+                if (HasCollision(position))
+                {
+                    float intersection;
+                    if (deltaMove.Y > 0)
+                        intersection = (position.Y + Parent.Size.Y) % World.DefaultGridSize;
+                    else
+                        intersection = (position.Y % World.DefaultGridSize) - World.DefaultGridSize;
+
+                    var direction = intersection > 0 ? CollisionDir.Down : CollisionDir.Up;
+                    MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(0, intersection)));
+                    position.Y -= intersection;
+                    velocity.Y = deltaMove.Y = 0;
+                }
+            }
         }
 
-        foreach (var collision in MoveCollisions)
-        {
-            if (collision.Direction == CollisionDir.Right)
-                velocity.X = 0;
-            else if (collision.Direction == CollisionDir.Left)
-                velocity.X = 0;
-            else if (collision.Direction == CollisionDir.Up)
-                velocity.Y = 0;
-            else if (collision.Direction == CollisionDir.Down)
-                velocity.Y = 0;
-        }
+        Parent.Position.Current = position;
+        SanityCheck();
 
         Velocity.ApplyFriction(velocity);
 
@@ -352,7 +221,7 @@ public class Mover
             for (var j = 0; j < MoveCollisions.Count; j++)
             {
                 var curr = MoveCollisions[j];
-                if (prev.Next.Cell == curr.Next.Cell)
+                if (prev == curr)
                 {
                     ContinuedMoveCollisions.Add(prev);
                     break;

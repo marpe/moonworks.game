@@ -208,7 +208,7 @@ public static class MathF
         return value;
     }
 
-    /// <summary>floors the float to the nearest int value below x. note that this only works for values in the range of short</summary>
+    /// <summary>floors the float to the nearest int value below x. note that this only works for values in the range of short (-32,768 to 32,767)</summary>
     /// <returns>The floor to int.</returns>
     /// <param name="x">The x coordinate.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -465,8 +465,7 @@ public static class MathF
     {
         return Math.Abs(value);
     }
-    
-        
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Frac(float value)
     {

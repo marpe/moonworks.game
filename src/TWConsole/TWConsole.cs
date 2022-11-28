@@ -207,7 +207,8 @@ public class TWConsole
                 for (var i = 0; i < parameters.Length && i < numSuppliedParams; i++)
                 {
                     // args[0] will be the command
-                    parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, args[1 + i]);
+                    var arg = i == parameters.Length - 1 ? string.Join(' ', args.Slice(1 + i).ToArray()) : args[1 + i];
+                    parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, arg);
                 }
 
                 method.Invoke(target, parameters);
