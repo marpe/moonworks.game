@@ -2,11 +2,11 @@ using System.Threading;
 
 namespace MyGame.Editor;
 
-public record struct FileEvent(string FullPath, float CallAtTime);
+public record struct FileEvent(string FullPath, float CallAtTime, WatcherChangeTypes ChangeType);
 
-public class FileWatcher : IDisposable
+public sealed class FileWatcher : IDisposable
 {
-    private Action<string>? _callback;
+    private Action<FileEvent>? _callback;
     private FileSystemWatcher? _watcher;
 
     private Dictionary<string, FileEvent> _eventQueue = new();
@@ -15,7 +15,7 @@ public class FileWatcher : IDisposable
 
     public bool IsDisposed { get; private set; }
 
-    public FileWatcher(string path, string filter, Action<string> callback)
+    public FileWatcher(string path, string filter, Action<FileEvent> callback)
     {
         _timer = new Timer(TimerCallback, null, 500, Timeout.Infinite);
 
@@ -53,7 +53,7 @@ public class FileWatcher : IDisposable
         {
             if (kvp.Value.CallAtTime <= Shared.Game.Time.TotalElapsedTime)
             {
-                InvokeCallback(kvp.Value.FullPath);
+                InvokeCallback(kvp.Value);
                 keysToRemove.Add(kvp.Key);
             }
         }
@@ -73,7 +73,7 @@ public class FileWatcher : IDisposable
 
     private void OnRenamed(object sender, RenamedEventArgs e)
     {
-        QueueFileEvent(e.FullPath);
+        QueueFileEvent(e.FullPath, e.ChangeType);
     }
 
     private static bool IsFileLocked(string fullPath)
@@ -90,21 +90,21 @@ public class FileWatcher : IDisposable
         return false;
     }
 
-    private void InvokeCallback(string fullPath)
+    private void InvokeCallback(in FileEvent fileChangedEvent)
     {
-        if (IsFileLocked(fullPath))
+        if (IsFileLocked(fileChangedEvent.FullPath))
         {
-            Logs.LogError($"File is locked ({fullPath}), ignoring...");
+            Logs.LogError($"File is locked ({fileChangedEvent.FullPath}), ignoring...");
             return;
         }
 
-        Logs.LogInfo($"Invoking callback for {fullPath}");
-        _callback?.Invoke(fullPath);
+        Logs.LogInfo($"Invoking callback for {fileChangedEvent.FullPath} ({fileChangedEvent.ChangeType})");
+        _callback?.Invoke(fileChangedEvent);
     }
 
     private void OnCreated(object sender, FileSystemEventArgs e)
     {
-        QueueFileEvent(e.FullPath);
+        QueueFileEvent(e.FullPath, e.ChangeType);
     }
 
     private void OnError(object sender, ErrorEventArgs e) => PrintException(e.GetException());
@@ -112,17 +112,15 @@ public class FileWatcher : IDisposable
     private void OnChanged(object sender, FileSystemEventArgs e)
     {
         if (e.ChangeType != WatcherChangeTypes.Changed)
-        {
             return;
-        }
 
-        QueueFileEvent(e.FullPath);
+        QueueFileEvent(e.FullPath, e.ChangeType);
     }
 
-    private void QueueFileEvent(string fullPath)
+    private void QueueFileEvent(string fullPath, WatcherChangeTypes changeType)
     {
         var deferredDuration = 1f;
-        _eventQueue[fullPath] = new FileEvent(fullPath, Shared.Game.Time.TotalElapsedTime + deferredDuration);
+        _eventQueue[fullPath] = new FileEvent(fullPath, Shared.Game.Time.TotalElapsedTime + deferredDuration, changeType);
     }
 
     private static void PrintException(Exception? ex)
@@ -140,10 +138,9 @@ public class FileWatcher : IDisposable
     public void Dispose()
     {
         Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
+    private void Dispose(bool disposing)
     {
         if (IsDisposed)
         {

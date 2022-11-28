@@ -42,7 +42,7 @@ public unsafe class MyEditorMain : MyGameMain
     private Matrix4x4 _gameRenderViewportTransform;
     private NumVector2 _gameRenderOffset;
     private int _imGuiUpdateCount;
-    private FileWatcher fileWatcher;
+    private FileWatcher _fileWatcher;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -61,22 +61,36 @@ public unsafe class MyEditorMain : MyGameMain
         AddDefaultWindows();
         AddDefaultMenus();
 
-        fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
+        _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
         Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
     }
 
-    private void OnFileChanged(string filePath)
+    private void OnFileChanged(FileEvent e)
     {
-        Logs.LogInfo($"File changed: {filePath}");
-        var extension = Path.GetExtension(filePath);
+        Logs.LogInfo($"File changed: {e.FullPath}, {e.ChangeType}");
+        var extension = Path.GetExtension(e.FullPath);
         if (extension == ".ldtk")
         {
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
-                var world = new World(GameScreen, filePath);
-                Shared.Game.GameScreen.QueueSetWorld(world);
+                var world = new World(GameScreen, e.FullPath);
+                GameScreen.QueueSetWorld(world);
+            });
+        }
+        else if (extension == ".aseprite")
+        {
+            Task.Run(() =>
+            {
+                Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
+                var texture = TextureUtils.LoadAseprite(GraphicsDevice, e.FullPath);
+                var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
+                GameScreen.QueueAction(() =>
+                {
+                    GameScreen.Content.AddTexture(relativePath, texture);
+                    Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");
+                });
             });
         }
     }
@@ -658,5 +672,6 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.SaveIniSettingsToDisk(fileName);
         Logger.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
         _imGuiRenderer.Dispose();
+        _fileWatcher.Dispose();
     }
 }

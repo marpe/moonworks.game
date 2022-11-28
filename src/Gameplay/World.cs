@@ -20,8 +20,7 @@ public class World
     public float Gravity = 800f;
 
     public readonly LdtkJson LdtkRaw;
-    private readonly Dictionary<string, Texture> Textures = new();
-    private readonly Dictionary<long, Texture> TilesetTextures;
+
     public Point WorldSize;
 
     public Point Start = new Point(10, 10);
@@ -40,13 +39,22 @@ public class World
     private static Vector2 SavedPos;
 
     public Level Level;
+    private readonly Dictionary<long, string> _tileSetTextureMapping;
 
     public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
     {
         _gameScreen = gameScreen;
         var jsonString = File.ReadAllText(ldtkPath.ToString());
         LdtkRaw = LdtkJson.FromJson(jsonString);
-        TilesetTextures = LoadTilesets(gameScreen.Game.GraphicsDevice, ldtkPath, LdtkRaw.Defs.Tilesets);
+
+        _tileSetTextureMapping = LoadTilesets(ldtkPath, LdtkRaw.Defs.Tilesets);
+        var textures = new List<string>(_tileSetTextureMapping.Values)
+        {
+            ContentPaths.ldtk.Example.Characters_png
+        };
+
+        gameScreen.Content.LoadTextures(textures);
+
         WorldSize = GetWorldSize(LdtkRaw);
 
         _debugDraw = new DebugDrawItems();
@@ -55,21 +63,6 @@ public class World
         Level[] levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
         var firstLevel = FindLevel("World_Level_1", levels);
         StartLevel(firstLevel);
-
-        var textures = new[] { ContentPaths.ldtk.Example.Characters_png };
-        foreach (var texturePath in textures)
-        {
-            if (texturePath.EndsWith(".aseprite"))
-            {
-                var texture = TextureUtils.LoadAseprite(gameScreen.Game.GraphicsDevice, texturePath);
-                Textures.Add(texturePath, texture);
-            }
-            else
-            {
-                var texture = TextureUtils.LoadPngTexture(gameScreen.Game.GraphicsDevice, texturePath);
-                Textures.Add(texturePath, texture);
-            }
-        }
     }
 
     [MemberNotNull(nameof(Level), nameof(Player))]
@@ -269,7 +262,7 @@ public class World
 
     private void DrawBullets(Renderer renderer, double alpha)
     {
-        var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
+        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
         for (var i = 0; i < Bullets.Count; i++)
         {
             var bullet = Bullets[i];
@@ -285,7 +278,7 @@ public class World
     {
         var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
         var xform = Player.GetTransform(alpha);
-        var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
+        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
         renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
         if (Debug)
             DrawEntityDebug(renderer, Player, true, alpha);
@@ -293,7 +286,7 @@ public class World
 
     private void DrawEnemies(Renderer renderer, double alpha)
     {
-        var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
+        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
         for (var i = 0; i < Enemies.Count; i++)
         {
             var entity = Enemies[i];
@@ -319,7 +312,8 @@ public class World
         if (!layer.TilesetDefUid.HasValue)
             return;
 
-        var texture = TilesetTextures[layer.TilesetDefUid.Value];
+        var texturePath = _tileSetTextureMapping[layer.TilesetDefUid.Value];
+        var texture = _gameScreen.Content[texturePath];
 
         var layerWidth = layer.CWid;
         var layerHeight = layer.CHei;
@@ -400,12 +394,6 @@ public class World
         if (IsDisposed)
             return;
 
-        foreach (var (key, texture) in TilesetTextures)
-        {
-            texture.Dispose();
-        }
-
-        TilesetTextures.Clear();
         _gameScreen.Camera.TrackEntity(null);
 
         IsDisposed = true;
@@ -415,7 +403,7 @@ public class World
     {
         if (!e.DrawDebug)
             return;
-        
+
         var cell = e.Cell;
         var cellInScreen = cell * DefaultGridSize;
         renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);
@@ -470,34 +458,20 @@ public class World
         return worldSize;
     }
 
-    private static Dictionary<long, Texture> LoadTilesets(GraphicsDevice device, ReadOnlySpan<char> ldtkPath, TilesetDefinition[] tilesets)
+    private static Dictionary<long, string> LoadTilesets(ReadOnlySpan<char> ldtkPath, TilesetDefinition[] tilesets)
     {
-        var textures = new Dictionary<long, Texture>();
+        var mapping = new Dictionary<long, string>();
 
-        var commandBuffer = device.AcquireCommandBuffer();
         foreach (var tilesetDef in tilesets)
         {
             if (string.IsNullOrWhiteSpace(tilesetDef.RelPath))
-            {
                 continue;
-            }
 
             var tilesetPath = Path.Combine(Path.GetDirectoryName(ldtkPath).ToString(), tilesetDef.RelPath);
-            if (tilesetPath.EndsWith(".aseprite"))
-            {
-                var asepriteTexture = TextureUtils.LoadAseprite(device, tilesetPath);
-                textures.Add(tilesetDef.Uid, asepriteTexture);
-            }
-            else
-            {
-                var texture = Texture.LoadPNG(device, commandBuffer, tilesetPath);
-                textures.Add(tilesetDef.Uid, texture);
-            }
+            mapping.Add(tilesetDef.Uid, tilesetPath);
         }
 
-        device.Submit(commandBuffer);
-
-        return textures;
+        return mapping;
     }
 
     public void SpawnBullet(Vector2 position, int direction)

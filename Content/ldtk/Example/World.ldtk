@@ -1793,7 +1793,7 @@
 						},
 						{
 							"__identifier": "Player",
-							"__grid": [12,2],
+							"__grid": [19,9],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
@@ -1802,7 +1802,7 @@
 							"width": 8,
 							"height": 12,
 							"defUid": 120,
-							"px": [200,48],
+							"px": [312,160],
 							"fieldInstances": []
 						},
 						{
@@ -2218,48 +2218,6 @@
 							"height": 16,
 							"defUid": 98,
 							"px": [344,224],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [23,9],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "797cca60-5110-11ed-b5e9-a3a5a6c28032",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [376,160],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [24,8],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "79a0cd20-5110-11ed-b5e9-6117952621cf",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [392,144],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{

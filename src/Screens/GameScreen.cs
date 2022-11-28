@@ -7,6 +7,7 @@ namespace MyGame.Screens;
 
 public class GameScreen
 {
+    public ContentManager Content;
     public Camera Camera { get; private set; }
     public World? World { get; private set; }
 
@@ -23,6 +24,8 @@ public class GameScreen
     public GameScreen(MyGameMain game)
     {
         _game = game;
+
+        Content = new ContentManager(game.GraphicsDevice);
 
         Camera = new Camera(this)
         {
@@ -46,7 +49,7 @@ public class GameScreen
 
     public void QueueSetWorld(World world)
     {
-        _queuedActions.Enqueue(() =>
+        QueueAction(() =>
         {
             Logger.LogInfo($"Setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Menus.RemoveAll();
@@ -96,7 +99,7 @@ public class GameScreen
             return;
         }
 
-        _queuedActions.Enqueue(() =>
+        QueueAction(() =>
         {
             Logger.LogInfo($"Removing screens from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Game.ConsoleScreen.IsHidden = true;
@@ -109,6 +112,11 @@ public class GameScreen
             var world = worldLoader();
             QueueSetWorld(world);
         });
+    }
+
+    public void QueueAction(Action callback)
+    {
+        _queuedActions.Enqueue(callback);
     }
 
     public void Unload()

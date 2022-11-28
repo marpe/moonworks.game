@@ -39,7 +39,10 @@ public static class Binds
             ("p", "pause"),
             ("mb_left", "+fire1"),
             ("d1", "save_pos"),
-            ("d2", "load_pos")
+            ("d2", "load_pos"),
+            ("left", "+left"),
+            ("right", "+right"),
+            ("up", "+jump"),
         };
 
         var keyBinds = new[]
