@@ -168,7 +168,7 @@ public class Renderer
 
     public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness)
     {
-        var points = new Vector2[]
+        ReadOnlySpan<Vector2> points = stackalloc Vector2[]
         {
             new(min.X + thickness, min.Y),
             new(max.X, min.Y),
