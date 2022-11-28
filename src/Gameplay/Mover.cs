@@ -2,27 +2,6 @@
 
 public class Mover
 {
-    private static Point Up = new(0, -1);
-    private static Point Right = new(1, 0);
-    private static Point Down = new(0, 1);
-    private static Point Left = new(-1, 0);
-    private static Point UpRight = new(1, -1);
-    private static Point UpLeft = new(-1, -1);
-    private static Point DownRight = new(1, 1);
-    private static Point DownLeft = new(-1, 1);
-
-    private static Dictionary<Point, CollisionDir> _directionMap = new()
-    {
-        { Up, CollisionDir.Up },
-        { Right, CollisionDir.Right },
-        { Down, CollisionDir.Down },
-        { Left, CollisionDir.Left },
-        { UpRight, CollisionDir.UpRight },
-        { UpLeft, CollisionDir.UpLeft },
-        { DownRight, CollisionDir.DownRight },
-        { DownLeft, CollisionDir.DownLeft },
-    };
-
     private Entity? _parent;
     public Entity Parent => _parent ?? throw new InvalidOperationException();
 
@@ -33,8 +12,6 @@ public class Mover
     public List<CollisionResult> PreviousGroundCollisions = new();
     public List<CollisionResult> GroundCollisions = new();
     public List<CollisionResult> ContinuedGroundCollisions = new();
-
-    private static readonly CollisionResult NoCollision = new();
 
     public void Initialize(Entity parent)
     {
@@ -104,37 +81,28 @@ public class Mover
         return false;
     }
 
-    private void SanityCheck()
-    {
-        // -----------------------------------------------
-        var gridCoords = Parent.GridCoords;
-        var hasCollision = Parent.Collider.HasCollision(gridCoords.Cell.X, gridCoords.Cell.Y);
-        if (hasCollision && PreviousMoveCollisions.Count == 0)
-            Logger.LogInfo("Moved into collision tile!");
-        // -----------------------------------------------
-    }
-
-    public bool TryGetValidPosition(out Vector2 position)
+    private bool TryGetValidPosition(out Vector2 position)
     {
         var startPosition = position = Parent.Position.Current;
+        startPosition = startPosition.Floor();
         var levelSize = Parent.World.Level.Size;
-        int dx, dy;
 
-        for (dy = 0; dy < levelSize.Y; dy++)
+        for (var dy = 0; dy < levelSize.Y; dy++)
         {
             var y = (startPosition.Y + dy);
             if (y >= levelSize.Y)
                 y = startPosition.Y - y % levelSize.Y;
-            for (dx = 0; dx < levelSize.X; dx++)
+            for (var dx = 0; dx < levelSize.X; dx++)
             {
                 var x = (startPosition.X + dx);
                 if (x >= levelSize.X)
                     x = startPosition.X - x % levelSize.X;
-                if (!HasCollision(new Vector2(x, y)))
-                {
-                    position = new Vector2(x, y);
-                    return true;
-                }
+
+                if (HasCollision(new Vector2(x, y)))
+                    continue;
+
+                position = new Vector2(x, y);
+                return true;
             }
         }
 
@@ -211,7 +179,8 @@ public class Mover
         }
 
         Parent.Position.Current = position;
-        SanityCheck();
+        if (HasCollision(Parent.Position.Current))
+            Logger.LogInfo("Moved into collision tile!");
 
         Velocity.ApplyFriction(velocity);
 
