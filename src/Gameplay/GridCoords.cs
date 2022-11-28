@@ -13,7 +13,7 @@ public readonly record struct GridCoords
 
     public static Point ToCell(Vector2 position, int gridSize = World.DefaultGridSize)
     {
-        return new Point((int)(position.X / gridSize), (int)(position.Y / gridSize));
+        return new Point(MathF.FloorToInt(position.X / gridSize), MathF.FloorToInt(position.Y / gridSize));
     }
 
     public static Vector2 ToRelativePositionInCell(Vector2 position, int gridSize = World.DefaultGridSize)

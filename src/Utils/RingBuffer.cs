@@ -23,14 +23,10 @@ public class RingBuffer<T> : IEnumerable<T>
         get
         {
             if (IsEmpty)
-            {
-                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
-            }
+                throw new IndexOutOfRangeException($"Cannot access index {index}. Buffer is empty");
 
             if (index >= Count)
-            {
-                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, Count));
-            }
+                throw new IndexOutOfRangeException($"Cannot access index {index}. Buffer size is {Count}");
 
             var actualIndex = InternalIndex(index);
             return _buffer[actualIndex];
@@ -38,14 +34,10 @@ public class RingBuffer<T> : IEnumerable<T>
         set
         {
             if (IsEmpty)
-            {
-                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer is empty", index));
-            }
+                throw new IndexOutOfRangeException($"Cannot access index {index}. Buffer is empty");
 
             if (index >= Count)
-            {
-                throw new IndexOutOfRangeException(string.Format("Cannot access index {0}. Buffer size is {1}", index, Count));
-            }
+                throw new IndexOutOfRangeException($"Cannot access index {index}. Buffer size is {Count}");
 
             var actualIndex = InternalIndex(index);
             _buffer[actualIndex] = value;
@@ -56,13 +48,8 @@ public class RingBuffer<T> : IEnumerable<T>
     {
         for (var i = 0; i < Count; i++)
         {
-            var index = _start + i;
-            if (index >= Capacity)
-            {
-                index -= Capacity;
-            }
-
-            yield return _buffer[index];
+            var actualIndex = InternalIndex(i);
+            yield return _buffer[actualIndex];
         }
     }
 
@@ -73,22 +60,19 @@ public class RingBuffer<T> : IEnumerable<T>
 
     public void Add(T item)
     {
+        _buffer[_end] = item;
+        _end = (_end + 1) % Capacity;
         if (Count == Capacity)
-        {
-            _buffer[_end] = item;
-            _end = MathF.IncrementWithWrap(_end, Capacity);
             _start = _end;
-        }
         else
-        {
-            _buffer[_end] = item;
-            _end = MathF.IncrementWithWrap(_end, Capacity);
             Count++;
-        }
     }
 
     private int InternalIndex(int index)
     {
-        return _start + (index < Capacity - _start ? index : index - Capacity);
+        var actualIndex = _start + index;
+        if (actualIndex < Capacity)
+            return actualIndex;
+        return -Capacity + actualIndex;
     }
 }

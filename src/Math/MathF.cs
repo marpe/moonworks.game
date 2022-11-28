@@ -70,38 +70,10 @@ public static class MathF
         return Math.Max(a, Math.Max(b, Math.Max(c, d)));
     }
 
-    /// <summary>Checks if the value passed falls under a certain threshold. Useful for small, precise comparisons.</summary>
-    /// <param name="value">The value to check.</param>
-    /// <param name="ep">The threshold to check the value with. <see cref="Epsilon" /> is used by default.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool WithinEpsilon(float value, float ep = Epsilon)
-    {
-        return Math.Abs(value) < ep;
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsEven(int value)
     {
         return value % 2 == 0;
-    }
-
-
-    /// <summary>clamps value between 0 and 1</summary>
-    /// <param name="value">Value.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float Clamp01(float value)
-    {
-        if (value < 0f)
-        {
-            return 0f;
-        }
-
-        if (value > 1f)
-        {
-            return 1f;
-        }
-
-        return value;
     }
 
     /// <summary>maps value (which is in the range leftMin - leftMax) to a value in the range rightMin - rightMax</summary>
@@ -135,77 +107,22 @@ public static class MathF
         return AngleBetweenVectors(from, to) * Math.Sign(from.X * to.Y - from.Y * to.X);
     }
 
-    /// <summary>increments t and ensures it is always greater than or equal to 0 and less than length</summary>
-    /// <param name="t">T.</param>
-    /// <param name="length">Length.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int IncrementWithWrap(int t, int length)
-    {
-        t++;
-        if (t == length)
-        {
-            return 0;
-        }
-
-        return t;
-    }
-
-    /// <summary>decrements t and ensures it is always greater than or equal to 0 and less than length</summary>
-    /// <returns>The with wrap.</returns>
-    /// <param name="t">T.</param>
-    /// <param name="length">Length.</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int DecrementWithWrap(int t, int length)
-    {
-        t--;
-        if (t < 0)
-        {
-            return length - 1;
-        }
-
-        return t;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int FloorToInt(float f)
-    {
-        return (int)Math.Floor(f);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static int RoundToInt(float f)
-    {
-        return (int)Math.Round(f);
-    }
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Clamp(float value, float min, float max)
     {
-        if (value < min)
-        {
-            return min;
-        }
-
-        if (value > max)
-        {
-            return max;
-        }
-
-        return value;
+        return Math.Clamp(value, min, max);
     }
 
-    /// <summary>Restricts a value to be within a specified range.</summary>
-    /// <param name="value">The value to clamp.</param>
-    /// <param name="min">The minimum value. If <c>value</c> is less than <c>min</c>, <c>min</c> will be returned.</param>
-    /// <param name="max">The maximum value. If <c>value</c> is greater than <c>max</c>, <c>max</c> will be returned.</param>
-    /// <returns>The clamped value.</returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Clamp(int value, int min, int max)
     {
-        value = value > max ? max : value;
-        value = value < min ? min : value;
-
-        return value;
+        return Math.Clamp(value, min, max);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Clamp01(float value)
+    {
+        return Clamp(value, 0, 1);
     }
 
     /// <summary>floors the float to the nearest int value below x. note that this only works for values in the range of short (-32,768 to 32,767)</summary>
@@ -318,10 +235,10 @@ public static class MathF
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float DeltaAngleDegrees(float current, float target)
     {
-        var delta = Loop(target - current, 360.0F);
-        if (delta > 180.0F)
+        var delta = Loop(target - current, 360f);
+        if (delta > 180f)
         {
-            delta -= 360.0F;
+            delta -= 360f;
         }
 
         return delta;
@@ -344,13 +261,25 @@ public static class MathF
     public static float Loop(float t, float length)
     {
         var numLoops = Floor(t / length);
-        return Math.Clamp(t - numLoops * length, 0.0f, length); // Clamp may be overkill
+        return t - numLoops * length;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Floor(float f)
     {
         return (float)Math.Floor(f);
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int FloorToInt(float f)
+    {
+        return (int)Math.Floor(f);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int RoundToInt(float f)
+    {
+        return (int)Math.Round(f);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -376,7 +305,13 @@ public static class MathF
     {
         return Math.Abs(a - b) > tolerance;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsNearZero(float value, float tolerance = Epsilon)
+    {
+        return Approx(value, 0, tolerance);
+    }
+    
     /// <summary>Lerp between two angles measured in radians</summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float LerpAngle(float a, float b, float t)
@@ -412,46 +347,6 @@ public static class MathF
     public static float LerpUnclamped(float from, float to, float t)
     {
         return from + (to - from) * t;
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float RepeatRange(float value, float range)
-    {
-        return (value % range + range) % range;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static bool IsNearZero(float value, float tolerance = Epsilon)
-    {
-        return Approx(value, 0, tolerance);
-    }
-
-    /// <summary>Reduces a given angle to a value between 180 and -180.</summary>
-    /// <param name="angle">The angle to reduce, in degrees.</param>
-    /// <returns>The new angle, in degrees</returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static float WrapAngle(float angleDegrees)
-    {
-        var Alpha = 180;
-        var TwoAlpha = Alpha * 2f;
-
-        if (angleDegrees > -Alpha && angleDegrees <= Alpha)
-        {
-            return angleDegrees;
-        }
-
-        angleDegrees %= TwoAlpha;
-        if (angleDegrees <= -Alpha)
-        {
-            return angleDegrees + TwoAlpha;
-        }
-
-        if (angleDegrees > Alpha)
-        {
-            return angleDegrees - TwoAlpha;
-        }
-
-        return angleDegrees;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

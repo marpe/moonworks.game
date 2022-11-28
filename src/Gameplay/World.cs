@@ -75,6 +75,9 @@ public class World
     [MemberNotNull(nameof(Level), nameof(Player))]
     private void StartLevel(Level level)
     {
+        Enemies.Clear();
+        Bullets.Clear();
+        
         Level = level;
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
