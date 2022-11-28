@@ -61,7 +61,7 @@ public class Camera
     public float Zoom
     {
         get => _zoom;
-        set => _zoom = MathF.Clamp(value, 0.001f, 10f);
+        set => _zoom = MathF.Clamp(value, 0.001f, 50f);
     }
 
     public Matrix3x2 GetView()

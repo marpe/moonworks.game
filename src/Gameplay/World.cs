@@ -101,8 +101,8 @@ public class World
                 entity.EntityType = parsedType;
                 entity.Iid = Guid.Parse(entityInstance.Iid);
                 entity.Pivot = entityInstance.PivotVec;
-                entity.Position = new Position(level.Position + entityInstance.Position);
                 entity.Size = entityInstance.Size;
+                entity.Position = new Position(level.Position + entityInstance.Position - entity.Pivot * entity.Size);
                 entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
 
                 foreach (var field in entityInstance.FieldInstances)
@@ -221,7 +221,7 @@ public class World
             DefaultGridSize,
             DefaultGridSize
         );
-        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f);
+        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f, 1f);
 
         var mousePosRect = new Bounds(
             mouseInWorld.X,
@@ -293,7 +293,7 @@ public class World
             var xform = bullet.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
             if (Debug)
-                DrawDebug(renderer, bullet, false, alpha);
+                DrawEntityDebug(renderer, bullet, false, alpha);
         }
     }
 
@@ -304,7 +304,7 @@ public class World
         var texture = Textures[ContentPaths.ldtk.Example.Characters_png];
         renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
         if (Debug)
-            DrawDebug(renderer, Player, true, alpha);
+            DrawEntityDebug(renderer, Player, true, alpha);
     }
 
     private void DrawEnemies(Renderer renderer, double alpha)
@@ -326,7 +326,7 @@ public class World
             var xform = entity.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
             if (Debug)
-                DrawDebug(renderer, entity, false, alpha);
+                DrawEntityDebug(renderer, entity, false, alpha);
         }
     }
 
@@ -360,7 +360,7 @@ public class World
                     var max = min + new Vector2(gridSize, gridSize);
                     var intGridValue = layerDef.IntGridValues[value - 1];
                     var color = LayerDefs.TilesColors[enumValue]; // ColorExt.FromHex(intGridValue.Color.AsSpan().Slice(1));
-                    renderer.DrawRectOutline(min, max, color, 1.0f);
+                    renderer.DrawRect(min, max, color * 0.5f, 0);
                 }
             }
         }
@@ -427,7 +427,7 @@ public class World
         IsDisposed = true;
     }
 
-    public void DrawDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
+    public void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
         var cell = e.Cell;
         var cellInScreen = cell * DefaultGridSize;

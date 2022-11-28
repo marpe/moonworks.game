@@ -157,6 +157,8 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void DrawGameWindow(ImGuiEditorWindow window)
     {
+        IsHoveringGameWindow = false;
+        
         if (!window.IsOpen)
             return;
 

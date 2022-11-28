@@ -92,7 +92,6 @@ public class TWConsole
     }
 
 
-
     private void RegisterCVar(CVar cvar, CVarAttribute cvarAttribute)
     {
         RegisterCommand(
@@ -174,6 +173,10 @@ public class TWConsole
                 {
                     console.Print($"^4An error occurred while invoking the set handler for {cmd.Key}:\n{e}");
                 }
+            }
+            else
+            {
+                console.Print($"{cmd.Key} = {ConsoleUtils.Colorize(cvar.GetStringValue())}");
             }
         };
     }

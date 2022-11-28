@@ -17,14 +17,24 @@ public class SlugBehaviour : EnemyBehaviour
         if (Parent.TotalTimeActive < Parent.FreezeMovementUntil)
             return;
 
-        if (Parent.Mover.IsGrounded(Parent.Velocity))
+        if (!Parent.Mover.IsGrounded(Parent.Velocity))
         {
+            Parent.Velocity.X = 0;
+        }
+        else
+        {
+            if (Parent.Velocity.X == 0)
+                Parent.Velocity.X = Random.Shared.NextSingle() >= 0.5f ? _speed : -_speed;
+            else
+                Parent.Velocity.X = Math.Sign(Parent.Velocity.X) * _speed;
+
             var nextPosition = Parent.Position.Current + Parent.Velocity * deltaSeconds;
 
             if (Parent.Velocity.X > 0)
-                nextPosition.X += Parent.Size.X - 1;
-            else
-                nextPosition.X -= Parent.Size.X;
+            {
+                nextPosition.X += Parent.Size.X;
+                nextPosition.X = MathF.Ceil(nextPosition.X - 1);
+            }
 
             var nextCellPosition = Entity.ToCell(nextPosition);
 
@@ -40,21 +50,23 @@ public class SlugBehaviour : EnemyBehaviour
 
         if (Mover.HasCollisionInDirection(CollisionDir.Left, Parent.Mover.MoveCollisions))
         {
-            Parent.Velocity.Delta = new Vector2(_speed, 0);
+            Parent.Velocity.X = _speed;
         }
 
         if (Mover.HasCollisionInDirection(CollisionDir.Right, Parent.Mover.MoveCollisions))
         {
-            Parent.Velocity.Delta = new Vector2(-_speed, 0);
+            Parent.Velocity.X = -_speed;
         }
 
         Velocity.ApplyFriction(Parent.Velocity);
 
-        if (Parent.Velocity.X > 0)
+        Parent.FacingDirection.X = (int)Math.Sign(Parent.Velocity.X);
+        
+        if (Parent.FacingDirection.X > 0)
         {
             Parent.Flip = SpriteFlip.None;
         }
-        else if (Parent.Velocity.X < 0)
+        else
         {
             Parent.Flip = SpriteFlip.FlipHorizontally;
         }
@@ -62,11 +74,6 @@ public class SlugBehaviour : EnemyBehaviour
         if (!Parent.Mover.IsGrounded(Parent.Velocity))
         {
             Parent.Velocity.Y += Parent.World.Gravity * deltaSeconds;
-        }
-
-        if (Math.Abs(Parent.Velocity.X) < _speed * 0.5f)
-        {
-            Parent.Velocity.X += Parent.Velocity.X;
         }
     }
 }

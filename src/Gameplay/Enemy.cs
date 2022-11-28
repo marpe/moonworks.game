@@ -18,6 +18,9 @@ public partial class Enemy : Entity
     
     public Mover Mover = new();
 
+    [HideInInspector]
+    public Point FacingDirection = new Point(1, 0);
+
     public override void Initialize(World world)
     {
         base.Initialize(world);

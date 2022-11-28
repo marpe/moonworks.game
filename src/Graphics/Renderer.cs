@@ -126,6 +126,13 @@ public class Renderer
         SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
 
+    public void DrawRect(Vector2 min, Vector2 max, Color color, float depth = 0)
+    {
+        var scale = Matrix3x2.CreateScale(max.X - min.X, max.Y - min.Y) *
+                    Matrix3x2.CreateTranslation(min.X, min.Y);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
+    }
+
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
@@ -135,7 +142,7 @@ public class Renderer
     public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness)
     {
         var length = (from - to).Length();
-        var origin = Matrix3x2.CreateTranslation(0, -0.5f);
+        var origin = Matrix3x2.CreateTranslation(0, 0);
         var scale = Matrix3x2.CreateScale(length, thickness);
         var rotation = Matrix3x2.CreateRotation(MathF.AngleBetweenVectors(from, to));
         var translation = Matrix3x2.CreateTranslation(from);
@@ -161,16 +168,23 @@ public class Renderer
 
     public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness)
     {
-        ReadOnlySpan<Vector2> points = stackalloc Vector2[]
+        var points = new Vector2[]
         {
-            min,
+            new(min.X + thickness, min.Y),
             new(max.X, min.Y),
-            max,
+
+            new(max.X, min.Y + thickness),
+            new(max.X, max.Y - thickness),
+
+            new(max.X, max.Y),
             new(min.X, max.Y),
+
+            new(min.X, max.Y - thickness),
+            new(min.X, min.Y),
         };
-        for (var i = 0; i < 4; i++)
+        for (var i = 0; i < points.Length; i += 2)
         {
-            DrawLine(points[i], points[(i + 1) % 4], color, thickness);
+            DrawLine(points[i], points[i + 1], color, thickness);
         }
     }
 
