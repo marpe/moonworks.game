@@ -143,18 +143,9 @@ public class TWConsole
 
         var target = method.DeclaringType == GetType() ? this : null;
 
-        string GetDisplayName(Type? type)
-        {
-            if (type == null)
-                return "Global";
-            if (type.DeclaringType != null)
-                return type.DeclaringType.Name + "." + type.Name;
-            return type.Name;
-        }
-
         if (target == null && !method.IsStatic)
         {
-            throw new InvalidOperationException($"Method has to be static: {GetDisplayName(method.DeclaringType)}.{method.Name}");
+            throw new InvalidOperationException($"Method has to be static: {ReflectionUtils.GetDisplayName(method.DeclaringType)}.{method.Name}");
         }
 
         RegisterCommand(

@@ -77,7 +77,7 @@ public class World
     {
         Enemies.Clear();
         Bullets.Clear();
-        
+
         Level = level;
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
@@ -213,11 +213,11 @@ public class World
         var view = Shared.Game.GameScreen.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var mouseCoords = new GridCoords(mouseInWorld);
+        var mouseCell = Entity.ToCell(mouseInWorld);
 
         var mouseCellRect = new Rectangle(
-            mouseCoords.Cell.X * DefaultGridSize,
-            mouseCoords.Cell.Y * DefaultGridSize,
+            mouseCell.X * DefaultGridSize,
+            mouseCell.Y * DefaultGridSize,
             DefaultGridSize,
             DefaultGridSize
         );
@@ -429,8 +429,8 @@ public class World
 
     public void DrawDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
-        var gridCoords = e.GridCoords;
-        var cellInScreen = gridCoords.Cell * DefaultGridSize;
+        var cell = e.Cell;
+        var cellInScreen = cell * DefaultGridSize;
         renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);
 
         // draw small crosshair
@@ -443,8 +443,9 @@ public class World
 
         if (drawCoords)
         {
-            ReadOnlySpan<char> str =
-                $"{gridCoords.Cell.X}, {gridCoords.Cell.Y} ({StringExt.TruncateNumber(gridCoords.CellPos.X)}, {StringExt.TruncateNumber(gridCoords.CellPos.Y)})";
+            var cellText = $"{cell.X.ToString()}, {cell.Y.ToString()}";
+            var posText = $"{StringExt.TruncateNumber(e.Position.Current.X)}, {StringExt.TruncateNumber(e.Position.Current.Y)}";
+            ReadOnlySpan<char> str = posText + " " + cellText;
             var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
             renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
             // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);

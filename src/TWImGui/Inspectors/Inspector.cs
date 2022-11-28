@@ -4,7 +4,6 @@ namespace MyGame.TWImGui.Inspectors;
 
 public abstract class Inspector : IInspector
 {
-    private object? _cachedValue;
     protected InspectorCallableAttribute? _callableAttr;
     protected CustomDrawInspectorAttribute? _customDrawAttr;
     protected MemberInfo? _memberInfo;
@@ -18,21 +17,16 @@ public abstract class Inspector : IInspector
     protected Type? _valueType;
 
     protected bool IsReadOnly;
-    public MemberInfo? MemberInfo => _memberInfo;
 
     protected HideInInspectorAttribute? HideInInspectorAttribute;
 
-    public string Name
-    {
-        get => _name;
-        set => _name = value;
-    }
+    public bool IsInitialized { get; private set; }
 
     public string? InspectorOrder { get; set; }
 
     public abstract void Draw();
 
-    public void SetTarget(object? target, Type targetType, MemberInfo? memberInfo = null)
+    public void SetTarget(object? target, Type targetType, MemberInfo? memberInfo)
     {
         _target = target;
         _targetType = targetType;
@@ -73,11 +67,17 @@ public abstract class Inspector : IInspector
 
     public virtual void Initialize()
     {
+        if (IsInitialized)
+            throw new InvalidOperationException("Inspector has already been initialized");
+        IsInitialized = true;
     }
 
     protected virtual void DrawDebug()
     {
-        var label = $"[{GetType().Name}] {Name}";
+        if (!IsInitialized)
+            throw new InvalidOperationException("Inspector has not been initialized");
+        
+        var label = $"[{GetType().Name}] {_name}";
 
         if (ImGuiExt.Fold(label))
         {
@@ -104,26 +104,30 @@ public abstract class Inspector : IInspector
         }
     }
 
-    public object? GetValue()
+    protected object? GetValue()
     {
+        if (!IsInitialized)
+            throw new InvalidOperationException("Inspector has not been initialized");
         var value = _memberInfo switch
         {
             FieldInfo fieldInfo => fieldInfo.GetValue(_target),
             PropertyInfo propInfo => propInfo.GetValue(_target),
             _ => _target,
         };
-        _cachedValue = value;
         return value;
     }
 
-    public T? GetValue<T>()
+    protected T? GetValue<T>()
     {
         var value = GetValue();
         return value == null ? default : (T)value;
     }
 
-    public void SetValue<T>(T value)
+    protected void SetValue<T>(T value)
     {
+        if (!IsInitialized)
+            throw new InvalidOperationException("Inspector has not been initialized");
+        
         if (IsReadOnly)
         {
             return;
@@ -141,10 +145,5 @@ public abstract class Inspector : IInspector
         {
             Logger.LogError($"Value cannot be set since MemberInfo ({_memberInfo?.GetType().Name ?? "null"}) is neither FieldInfo nor PropertyInfo");
         }
-    }
-
-    public object? GetTarget()
-    {
-        return _target;
     }
 }

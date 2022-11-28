@@ -9,8 +9,6 @@ public unsafe class InspectorCallableInspector : Inspector
 
     public override void Initialize()
     {
-        base.Initialize();
-
         var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
 
         var methodParams = methodInfo.GetParameters();
@@ -33,6 +31,7 @@ public unsafe class InspectorCallableInspector : Inspector
                 _invokeParamNames[i] = parameter.Name ?? parameter.ParameterType.Name;
             }
         }
+        base.Initialize();
     }
 
     public override void Draw()

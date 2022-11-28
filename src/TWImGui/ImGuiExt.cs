@@ -466,10 +466,10 @@ public static unsafe class ImGuiExt
         );
     }
 
-    public static void DrawCollapsableLeaf(string header, Color headerColor)
+    public static void DrawCollapsableLeaf(ReadOnlySpan<char> header, Color headerColor)
     {
+        // TODO (marpe): This is crashing for some reason...]
         var dl = ImGui.GetWindowDrawList();
-
         var avail = ImGui.GetContentRegionAvail();
         var c = ImGui.GetCursorScreenPos();
         ImGui.InvisibleButton(header, new Num.Vector2(avail.X, ImGui.GetFrameHeight() + 6));

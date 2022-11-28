@@ -1811,7 +1811,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#0007E9",
+							"__smartColor": "#A65050",
 							"iid": "203a1230-8dc0-11ec-a0e2-9bd99f75636d",
 							"width": 16,
 							"height": 16,
@@ -1829,7 +1829,7 @@
 									"id": "V_String",
 									"params": ["Slug"]
 								}] },
-								{ "__identifier": "Color", "__value": "#0007E9", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [{ "id": "V_Int", "params": [2025] }] }
+								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [null] }
 							]
 						},
 						{
@@ -1914,7 +1914,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [19,9],
+							"__grid": [19,8],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
@@ -1923,7 +1923,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [312,152],
+							"px": [312,136],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
@@ -1946,6 +1946,48 @@
 							"defUid": 120,
 							"px": [456,63],
 							"fieldInstances": []
+						},
+						{
+							"__identifier": "Enemy",
+							"__grid": [22,8],
+							"__pivot": [0.5,1],
+							"__tags": [],
+							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#A65050",
+							"iid": "e7c3a7a0-5110-11ed-b5e9-4f7bfff8f79b",
+							"width": 16,
+							"height": 16,
+							"defUid": 98,
+							"px": [360,144],
+							"fieldInstances": [
+								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
+								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Slug"]
+								}] },
+								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+							]
+						},
+						{
+							"__identifier": "Enemy",
+							"__grid": [19,4],
+							"__pivot": [0.5,1],
+							"__tags": [],
+							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
+							"__smartColor": "#A65050",
+							"iid": "93083070-5110-11ed-b5e9-dff7c6313ead",
+							"width": 16,
+							"height": 16,
+							"defUid": 98,
+							"px": [312,80],
+							"fieldInstances": [
+								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
+								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
+									"id": "V_String",
+									"params": ["Slug"]
+								}] },
+								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+							]
 						}
 					]
 				},
@@ -1975,7 +2017,7 @@
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,6,6,0,0,6,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,6,0,0,0,0,0,0,0,6,6,6,6,6,
+						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,6,0,0,0,6,0,0,0,6,6,6,6,6,
 						6,6,6,6,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,7,0,0,0,0,6,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,5,0,0,0,0,7,0,0,0,
 						0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,5,0,0,0,0,0,0,0,0,0,0,0,2,0,0,5,0,
@@ -2011,7 +2053,6 @@
 						{ "px": [16,96], "src": [16,16], "f": 0, "t": 14, "d": [68,253] },
 						{ "px": [176,96], "src": [16,16], "f": 0, "t": 14, "d": [68,263] },
 						{ "px": [272,96], "src": [16,16], "f": 0, "t": 14, "d": [68,269] },
-						{ "px": [304,96], "src": [16,16], "f": 0, "t": 14, "d": [68,271] },
 						{ "px": [336,96], "src": [16,16], "f": 0, "t": 14, "d": [68,273] },
 						{ "px": [256,128], "src": [32,16], "f": 0, "t": 15, "d": [68,352] },
 						{ "px": [320,128], "src": [32,16], "f": 0, "t": 15, "d": [68,356] },
@@ -2176,7 +2217,8 @@
 						{ "px": [80,256], "src": [48,0], "f": 0, "t": 3, "d": [93,677] },
 						{ "px": [176,64], "src": [48,0], "f": 0, "t": 3, "d": [69,179] },
 						{ "px": [480,160], "src": [96,0], "f": 0, "t": 6, "d": [69,450] },
-						{ "px": [336,176], "src": [96,0], "f": 0, "t": 6, "d": [69,483] }
+						{ "px": [336,176], "src": [96,0], "f": 0, "t": 6, "d": [69,483] },
+						{ "px": [304,96], "src": [144,0], "f": 0, "t": 9, "d": [73,271] }
 					],
 					"seed": 1747349,
 					"overrideTilesetUid": null,

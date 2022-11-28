@@ -2,6 +2,15 @@ namespace MyGame.Utils;
 
 public static class ReflectionUtils
 {
+    public static string GetDisplayName(Type? type)
+    {
+        if (type == null)
+            return "Global";
+        if (type.DeclaringType != null)
+            return type.DeclaringType.Name + "." + type.Name;
+        return type.Name;
+    }
+
     public static T CreateInstance<T>(Type type) where T : notnull
     {
         return (T)(Activator.CreateInstance(type) ?? throw new InvalidOperationException($"Received null value when creating an instance of type {type.Name}"));

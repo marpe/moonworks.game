@@ -19,24 +19,23 @@ public class SlugBehaviour : EnemyBehaviour
 
         if (Parent.Mover.IsGrounded(Parent.Velocity))
         {
-            var curPos = Parent.GridCoords;
-            var nextCellPosX = curPos.CellPos.X + Parent.Velocity.X * deltaSeconds / World.DefaultGridSize; 
+            var nextPosition = Parent.Position.Current + Parent.Velocity * deltaSeconds;
 
-            var dropRight = Parent.Velocity.X > 0 &&
-                            !Parent.Collider.HasCollision(curPos.Cell.X + 1, curPos.Cell.Y + 1) &&
-                            nextCellPosX + (Parent.Size.X / (float)World.DefaultGridSize) > 1f;
-            var dropLeft = Parent.Velocity.X < 0 &&
-                           !Parent.Collider.HasCollision(curPos.Cell.X - 1, curPos.Cell.Y + 1) &&
-                           nextCellPosX < 0;
-        
-            if (dropRight || dropLeft)
+            if (Parent.Velocity.X > 0)
+                nextPosition.X += Parent.Size.X - 1;
+            else
+                nextPosition.X -= Parent.Size.X;
+
+            var nextCellPosition = Entity.ToCell(nextPosition);
+
+            if (!Parent.HasCollision(nextCellPosition.X, nextCellPosition.Y + 1))
             {
                 Parent.Velocity.X *= -1;
                 Parent.FreezeMovement(1.0f);
                 return;
             }
         }
-        
+
         Parent.Mover.PerformMove(Parent.Velocity, deltaSeconds);
 
         if (Mover.HasCollisionInDirection(CollisionDir.Left, Parent.Mover.MoveCollisions))

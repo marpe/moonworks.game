@@ -15,10 +15,9 @@ public unsafe class EnumInspector : Inspector
 
     public override void Initialize()
     {
-        base.Initialize();
         if (_valueType == null)
         {
-            throw new InvalidOperationException();
+            throw new InvalidOperationException($"Value type must be set by calling {nameof(SetTarget)}");
         }
 
         _isFlag = _valueType.GetCustomAttribute<FlagsAttribute>() != null;
@@ -40,6 +39,7 @@ public unsafe class EnumInspector : Inspector
         }
 
         _numValues = _enumValues.Length;
+        base.Initialize();
     }
 
     public override void Draw()
@@ -63,7 +63,7 @@ public unsafe class EnumInspector : Inspector
 
             if (ImGui.BeginTable("#Matrix", 2, flags, default))
             {
-                ImGui.TableSetupColumn(Name);
+                ImGui.TableSetupColumn(_name);
                 ImGui.TableSetupColumn(value.ToString());
                 ImGui.TableHeadersRow();
 

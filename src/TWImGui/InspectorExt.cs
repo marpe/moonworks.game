@@ -4,9 +4,9 @@ namespace MyGame.TWImGui;
 
 public static class InspectorExt
 {
-    private static bool GetCustomAttributeInspector(MemberInfo type, [NotNullWhen(true)] out Inspector? inspector)
+    private static bool GetCustomAttributeInspector(MemberInfo type, bool checkInheritedCustomInspectorAttributes, [NotNullWhen(true)] out Inspector? inspector)
     {
-        var customInspectorForFieldAttr = type.GetCustomAttribute<CustomInspectorAttribute>(true);
+        var customInspectorForFieldAttr = type.GetCustomAttribute<CustomInspectorAttribute>(checkInheritedCustomInspectorAttributes);
         if (customInspectorForFieldAttr != null)
         {
             inspector = ReflectionUtils.CreateInstance<Inspector>(customInspectorForFieldAttr.InspectorType);
@@ -17,9 +17,9 @@ public static class InspectorExt
         return false;
     }
 
-    private static Inspector? GetInspectorForType(Type type)
+    private static Inspector? GetInspectorForType(Type type, bool checkInheritedCustomInspectorAttributes)
     {
-        if (GetCustomAttributeInspector(type, out var inspector))
+        if (GetCustomAttributeInspector(type, checkInheritedCustomInspectorAttributes, out var inspector))
         {
             return inspector;
         }
@@ -74,24 +74,19 @@ public static class InspectorExt
         while (type != null && type != typeof(object))
         {
             // check if there's a custom inspector for this type
-            var inspectorForType = GetInspectorForType(type);
+            var inspectorForType = GetInspectorForType(type, false);
             if (inspectorForType != null)
             {
-                inspectorForType.SetTarget(target, type);
-                inspectorForType.Initialize();
+                inspectorForType.SetTarget(target, type, null);
                 inspectors.Add(inspectorForType);
                 type = type.BaseType;
                 continue;
             }
-            
+
             // if no custom inspector was found iterate through fields and properties to create inspectors per member
             var inspector = GetInspectorForTargetAndType(target, type);
             if (inspector != null)
-            {
                 inspectors.Add(inspector);
-            }
-            
-            Logger.LogWarn($"Could not find any inspectors for {target.ToString()} ({type.Name})");
 
             type = type.BaseType;
         }
@@ -100,25 +95,34 @@ public static class InspectorExt
 
         if (inspectors.Count == 0)
         {
-            return new PlaceholderInspector($"Could not find any inspectors for {target.ToString()} ({target.GetType().Name})");
+            return new PlaceholderInspector($"Could not find any inspectors for {target.ToString()} ({ReflectionUtils.GetDisplayName(target.GetType())})");
         }
 
         if (inspectors.Count == 1)
         {
-            return inspectors[0];
+            var first = inspectors[0];
+            if (first is GroupInspector grpInspector)
+            {
+                grpInspector.Initialize();
+            }
+            return first;
         }
 
         var groupInspector = new GroupInspector(inspectors);
-        groupInspector.SetTarget(target, target.GetType());
+        groupInspector.SetTarget(target, target.GetType(), null);
         groupInspector.Initialize();
         return groupInspector;
     }
 
-    public static IInspector? GetInspectorForTargetAndType(object? target, Type type)
+    /// <summary>
+    /// type specifies at which subclass level of target to inspect. E. g if target is of type Car which inherits from Vehicle,
+    /// then supplying typeof(Car) will only check for members declared at that level.  
+    /// </summary>
+    public static IInspector? GetInspectorForTargetAndType(object target, Type type)
     {
         // no inspector found for the "entire" type, iterate through fields and properties to create inspectors per member
         var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
-        if (target != null)
+        // if (target != null)
         {
             bindingFlags |= BindingFlags.Instance;
         }
@@ -145,7 +149,7 @@ public static class InspectorExt
                 continue;
             }
 
-            var inspector = GetInspectorForType(field.FieldType);
+            var inspector = GetInspectorForType(field.FieldType, false);
             if (inspector != null)
             {
                 inspector.SetTarget(target, type, field);
@@ -153,7 +157,9 @@ public static class InspectorExt
             }
             else
             {
-                Logger.LogWarn($"Could not find an inspector for field: {field}");
+                var msg = $"Could not find an inspector for field: \"{field.Name}\" ({ReflectionUtils.GetDisplayName(field.FieldType)}), " +
+                          $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
+                Logger.LogWarn(msg);
             }
         }
 
@@ -174,7 +180,7 @@ public static class InspectorExt
                 continue;
             }
 
-            var inspector = GetInspectorForType(prop.PropertyType);
+            var inspector = GetInspectorForType(prop.PropertyType, false);
             if (inspector != null)
             {
                 inspector.SetTarget(target, type, prop);
@@ -182,7 +188,9 @@ public static class InspectorExt
             }
             else
             {
-                Logger.LogWarn($"Could not find an inspector for property: {prop}");
+                var msg = $"Could not find an inspector for property: \"{prop.Name}\" ({ReflectionUtils.GetDisplayName(prop.PropertyType)}), " +
+                          $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
+                Logger.LogWarn(msg);
             }
         }
 
@@ -212,11 +220,6 @@ public static class InspectorExt
             }
         }
 
-        foreach (var inspector in inspectors)
-        {
-            inspector.Initialize();
-        }
-
         if (inspectors.Count == 0)
         {
             return null;
@@ -238,8 +241,7 @@ public static class InspectorExt
 
         var ordered = inspectors.OrderByNatural(i => i.InspectorOrder).Cast<IInspector>().ToList();
         var groupInspector = new GroupInspector(ordered);
-        groupInspector.SetTarget(target, type);
-        groupInspector.Initialize();
+        groupInspector.SetTarget(target, type, null);
         return groupInspector;
     }
 }

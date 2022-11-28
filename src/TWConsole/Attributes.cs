@@ -1,5 +1,8 @@
+using JetBrains.Annotations;
+
 namespace MyGame.TWConsole;
 
+[MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class CVarAttribute : Attribute
 {
@@ -13,6 +16,7 @@ public class CVarAttribute : Attribute
     }
 }
 
+[MeansImplicitUse]
 [AttributeUsage(AttributeTargets.Method, AllowMultiple = true, Inherited = false)]
 public class ConsoleHandlerAttribute : Attribute
 {

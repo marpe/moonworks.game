@@ -21,64 +21,128 @@ public static class Temp
 
 public unsafe class GroupInspector : Inspector
 {
+    private static ulong IdCounter;
     private readonly List<IInspector> _inspectors = new();
 
-    private bool _isInitialized;
     public Color HeaderColor = Color.DarkBlue;
-    public bool ShowHeader = false;
+    public bool ShowHeader;
+    public bool _drawInSeparateWindow;
+    private readonly string _id;
 
     public GroupInspector()
     {
+        _id = IdCounter.ToString();
+        IdCounter++;
     }
 
-    public GroupInspector(List<IInspector> inspectors)
+    public GroupInspector(List<IInspector> inspectors) : this()
     {
         _inspectors = inspectors;
-        _isInitialized = true;
     }
 
-    public int ChildCount => _inspectors.Count;
+    private void AddInspector(IInspector inspector)
+    {
+        if (inspector is GroupInspector childGroup)
+        {
+            foreach (var child in childGroup._inspectors)
+            {
+                _inspectors.Add(child);
+            }
+
+            return;
+        }
+
+        _inspectors.Add(inspector);
+    }
+
+    private void AddInspectorsForEntireClassHierarchy(object value, Type type)
+    {
+        var t = type;
+        while (t != null && t != typeof(object))
+        {
+            var inspector = InspectorExt.GetInspectorForTargetAndType(value, t);
+            if (inspector != null)
+            {
+                AddInspector(inspector);
+            }
+
+            t = t.BaseType;
+        }
+
+        // reverse so that most primitive class members are at the top
+        _inspectors.Reverse();
+    }
 
     public override void Initialize()
     {
-        if (_isInitialized)
-            return;
+        base.Initialize();
 
-        ShowHeader = true;
-        var value = GetValue();
-
-        if (value != null)
+        if (_inspectors.Count == 0 && _target != null && _targetType != null)
         {
-            var targetType = value.GetType();
-                
-            while (targetType != null && targetType != typeof(object))
+            // having _valueType set means that this group inspector was created
+            // for a member of another object (_memberInfo should also be set)
+            // so we should continue the reflection
+            if (_valueType != null)
             {
-                var inspector = InspectorExt.GetInspectorForTargetAndType(value, targetType);
+                var value = GetValue();
+                if (value != null)
+                {
+                    AddInspectorsForEntireClassHierarchy(value, _valueType);
+                }
+            }
+            else
+            {
+                var inspector = InspectorExt.GetInspectorForTargetAndType(_target, _targetType);
                 if (inspector != null)
                 {
-                    _inspectors.Add(inspector);
+                    AddInspector(inspector);
                 }
-
-                targetType = targetType.BaseType;
             }
-
-            _inspectors.Reverse();
         }
 
-        _isInitialized = true;
+        foreach (var inspector in _inspectors)
+        {
+            if (inspector is Inspector inspectorImpl)
+            {
+                inspectorImpl.Initialize();
+            }
+        }
     }
 
     public override void Draw()
     {
-        Draw(0);
+        Draw(0, "root");
     }
 
-    private void Draw(int depth)
+    private void Draw(int depth, string path)
+    {
+        var id = path + "_grp" + _id;
+        DrawInternal(depth, id, false);
+
+        if (!_drawInSeparateWindow)
+            return;
+
+        if (ImGuiExt.Begin(_name + "###" + id, ref _drawInSeparateWindow))
+        {
+            if (ImGui.BeginPopupContextWindow("ContextWindow"))
+            {
+                ImGui.MenuItem($"Pop-out \"{_name}\"", default, ImGuiExt.RefPtr(ref _drawInSeparateWindow));
+                ImGui.EndPopup();
+            }
+
+            DrawInternal(depth, id, true);
+        }
+
+        ImGui.End();
+    }
+
+    private void DrawInternal(int depth, string id, bool isWindowed)
     {
         var value = GetValue();
-        if (value == null && ChildCount == 0)
+
+        if (value == null)
         {
-            ImGuiExt.DrawLabelWithCenteredText(Name, "NULL");
+            ImGuiExt.DrawLabelWithCenteredText(_name, "NULL");
             return;
         }
 
@@ -87,35 +151,50 @@ public unsafe class GroupInspector : Inspector
             DrawDebug();
             if (ImGuiExt.Fold("GroupInspector Debug"))
             {
-                var color = ImGui.GetColorU32(ImGuiCol.TextDisabled);
                 ImGui.TextUnformatted($"NumSubInspectors: {_inspectors.Count}");
                 ImGui.Checkbox("Show Header", ImGuiExt.RefPtr(ref ShowHeader));
                 ImGuiExt.ColorEdit("Header Color", ref HeaderColor);
+                ImGui.TextUnformatted($"IsWindowed: {isWindowed.ToString()}");
+                ImGui.TextUnformatted($"DrawInSeparateWindow: {_drawInSeparateWindow.ToString()}");
             }
         }
 
-        if (ShowHeader)
+        if (_inspectors.Count == 0)
         {
-            if (ChildCount == 0)
+            // ImGuiExt.DrawCollapsableLeaf(_name, HeaderColor);
+            if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor))
             {
-                ImGuiExt.DrawCollapsableLeaf(_name, HeaderColor);
+                ImGuiExt.SeparatorText("No inspectors found");
+                ImGuiExt.EndCollapsingHeader();
             }
-            else
-            {
-                if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor))
-                {
-                    DrawInspectors(ShowHeader, depth);
-                    ImGuiExt.EndCollapsingHeader();
-                }
-            }
+
+            return;
         }
-        else
+
+        // always skip first header in window mode
+        if ((isWindowed && depth == 0) || !ShowHeader)
         {
-            DrawInspectors(ShowHeader, depth);
+            DrawInspectors(depth, id, isWindowed);
+            return;
+        }
+
+
+        var result = ImGuiExt.BeginCollapsingHeader(_name + "##CollapsingHeader", HeaderColor, ImGuiTreeNodeFlags.AllowItemOverlap | ImGuiTreeNodeFlags.SpanFullWidth);
+
+        if (ImGui.BeginPopupContextItem("HeaderContextMenu"))
+        {
+            ImGui.MenuItem($"Pop-out \"{_name}\"", default, ImGuiExt.RefPtr(ref _drawInSeparateWindow));
+            ImGui.EndPopup();
+        }
+
+        if (result)
+        {
+            DrawInspectors(depth, id, isWindowed);
+            ImGuiExt.EndCollapsingHeader();
         }
     }
 
-    private void DrawInspectors(bool hasHeader, int depth)
+    private void DrawInspectors(int depth, string id, bool isWindowed)
     {
         for (var i = 0; i < _inspectors.Count; i++)
         {
@@ -124,9 +203,10 @@ public unsafe class GroupInspector : Inspector
             if (_inspectors[i] is GroupInspector grpInspector)
             {
                 grpInspector.HeaderColor = Temp.Colors[depth % Temp.Colors.Length];
-                grpInspector.Draw(depth + 1);
-                // if (hasHeader && grpInspector._inspectors.Count > 0)
-                //     ImGuiExt.SeparatorText(_name + " End", HeaderColor, HeaderColor);
+                if (isWindowed)
+                    grpInspector.DrawInternal(depth + 1, id, isWindowed);
+                else
+                    grpInspector.Draw(depth + 1, "root");
             }
             else
             {
@@ -134,21 +214,6 @@ public unsafe class GroupInspector : Inspector
             }
 
             ImGui.PopID();
-        }
-    }
-
-    public void Filter(Func<MemberInfo?, bool> filter)
-    {
-        for (var i = _inspectors.Count - 1; i >= 0; i--)
-        {
-            if (filter(((Inspector)_inspectors[i]).MemberInfo))
-            {
-                _inspectors.RemoveAt(i);
-            }
-            else if (_inspectors[i] is GroupInspector grpInspector)
-            {
-                grpInspector.Filter(filter);
-            }
         }
     }
 }

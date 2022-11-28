@@ -46,9 +46,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 
                 ImGui.Separator();
 
-                var playerGrid = world.Player.GridCoords;
-                ImGui.TextUnformatted($"Cell {playerGrid.Cell.ToString()}");
-                ImGui.TextUnformatted($"CellRel {playerGrid.CellPos.ToString()}");
+                var playerGrid = world.Player.Cell;
+                ImGui.TextUnformatted($"Cell {playerGrid.ToString()}");
                 ImGui.TextUnformatted($"Pos {world.Player.Position.Current.ToString()}");
                 
                 var mousePosition = Shared.Game.InputHandler.MousePosition;
@@ -57,9 +56,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
                 ImGui.TextUnformatted($"MousePos {mouseInWorld.ToString()}");
                 
-                var mouseGrid = new GridCoords(mouseInWorld);
-                ImGui.TextUnformatted($"MouseCel {mouseGrid.Cell.ToString()}");
-                ImGui.TextUnformatted($"MouseCelPos {mouseGrid.CellPos.ToString()}");
+                var mouseCell = Entity.ToCell(mouseInWorld);
+                ImGui.TextUnformatted($"MouseCel {mouseCell.ToString()}");
 
                 ImGui.EndTabItem();
             }

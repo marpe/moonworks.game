@@ -25,10 +25,15 @@ public class CustomDrawInspector : Inspector
         {
             _drawMethodInfo = _memberInfo as MethodInfo;
         }
+        
+        base.Initialize();
     }
 
     public override void Draw()
     {
+        if (!IsInitialized)
+            throw new InvalidOperationException("Inspector has already been initialized");
+
         if (ImGuiExt.DebugInspectors)
         {
             DrawDebug();

@@ -35,7 +35,12 @@ public class GameScreen
     [ConsoleHandler("restart")]
     public static void Restart()
     {
-        Shared.Game.GameScreen.LoadWorld(() => new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk));
+        /*Shared.Game.GameScreen._queuedActions.Enqueue(() =>
+        {
+        });*/
+        Shared.Game.ConsoleScreen.IsHidden = true;
+        Shared.Menus.RemoveAll();
+        Shared.Game.GameScreen.World = new World(Shared.Game.GameScreen, Shared.Game.GraphicsDevice, ContentPaths.ldtk.Example.World_ldtk);
     }
 
     [ConsoleHandler("step")]
@@ -169,8 +174,8 @@ public class GameScreen
         renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // TODO (marpe): Rneder post processing
-        
-         DrawViewBounds(renderer, commandBuffer, renderDestination);
+
+        DrawViewBounds(renderer, commandBuffer, renderDestination);
     }
 
     private void DrawViewBounds(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)

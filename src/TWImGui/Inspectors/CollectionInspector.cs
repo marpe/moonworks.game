@@ -4,6 +4,9 @@ namespace MyGame.TWImGui.Inspectors;
 
 public unsafe class CollectionInspector : Inspector
 {
+    private Dictionary<object, IInspector> _inspectors = new();
+    private HashSet<object> _inactiveItems = new();
+
     public Color HeaderColor { get; set; } = Color.Indigo;
 
     public static void DrawItemCount(int count)
@@ -29,21 +32,22 @@ public unsafe class CollectionInspector : Inspector
 
         if (value is not ICollection collection)
         {
-            ImGuiExt.DrawLabelWithCenteredText(_name, "Value is not of type ICollection");
-            return;
+            throw new InvalidOperationException("Value is not of type ICollection");
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.IndentSpacing, 0);
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+        PushStyle();
         if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor, ImGuiTreeNodeFlags.None))
         {
+            foreach (var item in _inspectors.Keys)
+                _inactiveItems.Add(item);
+
             DrawItemCount(collection.Count);
 
             if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags, new Num.Vector2(0, 0)))
             {
                 var keyLabel = collection is IDictionary ? "Key" : "#";
 
-                ImGui.TableSetupColumn(keyLabel, ImGuiTableColumnFlags.WidthFixed, 20f);
+                ImGui.TableSetupColumn(keyLabel, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
                 ImGui.TableSetupColumn("Value");
 
                 ImGui.TableHeadersRow();
@@ -80,6 +84,10 @@ public unsafe class CollectionInspector : Inspector
                 ImGui.EndTable();
             }
 
+            foreach (var item in _inactiveItems)
+                _inspectors.Remove(item);
+            _inactiveItems.Clear();
+
             ImGuiExt.MediumVerticalSpace();
 
             ImGuiExt.EndCollapsingHeader();
@@ -89,11 +97,20 @@ public unsafe class CollectionInspector : Inspector
             DrawItemCount(collection.Count);
         }
 
-        ImGui.PopStyleVar(2);
+        PopStyle();
         ImGui.Spacing();
     }
 
-    private Dictionary<object, IInspector> _inspectors = new();
+    private static void PushStyle()
+    {
+        ImGui.PushStyleVar(ImGuiStyleVar.IndentSpacing, 0);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+    }
+
+    private static void PopStyle()
+    {
+        ImGui.PopStyleVar(2);
+    }
 
     private void DrawItem(string key, object? item)
     {
@@ -129,7 +146,12 @@ public unsafe class CollectionInspector : Inspector
         {
             if (!_inspectors.ContainsKey(item))
                 _inspectors.Add(item, InspectorExt.GetGroupInspectorForTarget(item));
+
+            PopStyle();
             _inspectors[item].Draw();
+            PushStyle();
+
+            _inactiveItems.Remove(item);
         }
         else
         {
