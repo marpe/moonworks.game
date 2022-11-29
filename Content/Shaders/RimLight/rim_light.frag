@@ -27,18 +27,15 @@ void main()
 		discard;
 	}
 
-    float depth = texture(depthMap, texCoord).r;
+	float depth = texture(depthMap,	texCoord).r;
 
 	c = vec4(0, 0, 0, 0);
-	
 	vec2 rim = vec2(0, 0);
 	float addedAlpha = 0;
- 
 	float value = 0;
-	vec2 dx = vec2(Uniforms.texelSize.x, 0);
-	vec2 dy = vec2(0, Uniforms.texelSize.y);
-
     float inFrontOf = 0;
+    vec2 dx = vec2(Uniforms.texelSize.x, 0);
+	vec2 dy = vec2(0, Uniforms.texelSize.y);
 
 	// negative values = we're behind, 0 = we're same depth, positive = we're in front
 	value = texture(depthMap, texCoord + dx).r - depth;

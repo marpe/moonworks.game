@@ -6,10 +6,15 @@ public class Position
     public string DebugDisplayString => string.Concat(Current.X.ToString(), " ", Current.Y.ToString());
 
     public Vector2 Current;
+    
+    [HideInInspector]
     public Vector2 Previous { get; private set; }
+
+    [HideInInspector]
     public Vector2 Initial { get; private set; } = Vector2.Zero;
 
     /// Position used during render
+    [HideInInspector]
     public Vector2 ViewPosition { get; private set; }
 
     /// Lerp between previous and current using alpha and update previous

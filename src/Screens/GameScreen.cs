@@ -21,11 +21,15 @@ public class GameScreen
     public static bool IsPaused = false;
     public static bool DebugViewBounds = false;
 
+    private Texture _copyRender;
+
     public GameScreen(MyGameMain game)
     {
         _game = game;
 
         Content = new ContentManager(game.GraphicsDevice);
+
+        _copyRender = TextureUtils.CreateTexture(game.GraphicsDevice, _game.GameRender);
 
         Camera = new Camera(this)
         {
@@ -185,6 +189,12 @@ public class GameScreen
         circleLoad.CenterY = playerInScreen.Y;
     }
 
+    public Vector2 GetWorldPositionInScreen(Vector2 worldPosition)
+    {
+        var viewProjection = Camera.GetViewProjection(_game.GameRender.Width, _game.GameRender.Height);
+        return Vector2.Transform(worldPosition, viewProjection);
+    }
+
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (World == null)
@@ -193,11 +203,58 @@ public class GameScreen
             return;
         }
 
-        World.Draw(renderer, Camera.Bounds, alpha);
+        {
+            World.Draw(renderer, Camera.Bounds, alpha);
+            var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
+        }
 
-        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
-        
+        {
+            World.DrawEntities(renderer, alpha);
+            var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
+            /*TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Size());
+            commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);*/
+
+            var lights = new List<(Vector2, Vector3)>();
+
+            for (var i = 0; i < 10; i++)
+            {
+                var a = MathHelper.TwoPi / i;
+                lights.Add((World.Player.Position.Current + MathF.AngleToVector(a, 16),
+                    new Vector3(Random.Shared.NextSingle(), Random.Shared.NextSingle(), Random.Shared.NextSingle())));
+            }
+
+            foreach (var (position, color) in lights)
+            {
+                renderer.DrawRect(Vector2.Zero, (Vector2.One * renderDestination.Size()), Color.Black);
+                renderer.UpdateBuffers(ref commandBuffer);
+                renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
+                
+                
+                var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
+                var fragmentBindings = new[] { new TextureSamplerBinding(), new TextureSamplerBinding(_copyRender, Renderer.PointClamp) };
+                var fragUniform = new Pipelines.RimLightUniforms()
+                {
+                    LightColor = new Vector4(color.X, color.Y, color.Z, 1.0f),
+                    LightIntensity = 1f,
+                    LightRadius = 50f,
+                    TexelSize = new Vector4(
+                        1.0f / renderDestination.Width,
+                        1.0f / renderDestination.Height,
+                        renderDestination.Width,
+                        renderDestination.Height
+                    ),
+                    ScreenSpaceLightPos = GetWorldPositionInScreen(position),
+                };
+                
+                
+                renderer.DrawIndexedSprites(ref commandBuffer, vertUniform, fragUniform, fragmentBindings);
+                renderer.EndRenderPass(ref commandBuffer);
+            }
+        }
+
+
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);
     }
 

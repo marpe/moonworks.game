@@ -21,7 +21,6 @@ public partial class Entity
 
     public CoroutineManager CoroutineManager = new();
 
-    [HideInInspector]
     public Position Position = new();
 
     public Point Cell => ToCell(Position);

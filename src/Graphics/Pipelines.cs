@@ -105,10 +105,22 @@ public class Pipelines
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<RimLightUniforms>(fragmentShader, "main", 2);
 
+        var blendState = new ColorAttachmentBlendState()
+        {
+            SourceAlphaBlendFactor = BlendFactor.SourceAlpha,
+            DestinationAlphaBlendFactor = BlendFactor.SourceAlpha,
+            SourceColorBlendFactor = BlendFactor.One,
+            DestinationColorBlendFactor = BlendFactor.One,
+            BlendEnable = true,
+            AlphaBlendOp = BlendOp.Add,
+            ColorBlendOp = BlendOp.Add,
+            ColorWriteMask = ColorComponentFlags.RGBA
+        };
+        
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,

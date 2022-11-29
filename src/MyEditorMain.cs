@@ -91,6 +91,10 @@ public unsafe class MyEditorMain : MyGameMain
                 });
             });
         }
+        else if (extension == ".spv")
+        {
+            Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
+        }
     }
 
     private void AddDefaultMenus()

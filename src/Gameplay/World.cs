@@ -243,9 +243,7 @@ public class World
     public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
     {
         DrawLevel(renderer, Level, cameraBounds);
-        DrawEnemies(renderer, alpha);
-        DrawPlayer(renderer, alpha);
-        DrawBullets(renderer, alpha);
+        DrawEntities(renderer, alpha);
         DrawCameraBounds(renderer, cameraBounds);
 
         if (Debug)
@@ -253,6 +251,13 @@ public class World
             DrawMousePosition(renderer);
             _debugDraw.Render(renderer);
         }
+    }
+
+    public void DrawEntities(Renderer renderer, double alpha)
+    {
+        DrawEnemies(renderer, alpha);
+        DrawPlayer(renderer, alpha);
+        DrawBullets(renderer, alpha);
     }
 
     private void DrawMousePosition(Renderer renderer)
