@@ -4,7 +4,7 @@ public static class CameraBinds
 {
     public static ButtonBind ZoomIn = new();
     public static ButtonBind ZoomOut = new();
-    
+
     public static ButtonBind Up = new();
     public static ButtonBind Down = new();
     public static ButtonBind Right = new();
@@ -98,7 +98,7 @@ public class Camera
     public bool ClampToLevelBounds;
     private GameScreen _gameScreen;
 
-    private Point WorldSize => _gameScreen.World?.WorldSize ?? new Point(512, 256);
+    public Rectangle LevelBounds = Rectangle.Empty;
 
     public Camera(GameScreen gameScreen)
     {
@@ -149,15 +149,20 @@ public class Camera
 
         Velocity.Friction = InitialFriction;
 
-        if (ClampToLevelBounds)
+        if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
             var cameraSize = new Vector2(Width, Height);
             var brakeDist = cameraSize * BrakeDistNearBounds;
 
-            var left = MathF.Clamp01((Position.X - Width * 0.5f) / brakeDist.X);
-            var right = MathF.Clamp01((WorldSize.X - Width * 0.5f - Position.X) / brakeDist.X);
-            var top = MathF.Clamp01((Position.Y - Height * 0.5f) / brakeDist.Y);
-            var bottom = MathF.Clamp01((WorldSize.Y - Height * 0.5f - Position.Y) / brakeDist.Y);
+            var position = new Vector2(
+                MathF.Loop(Position.X, LevelBounds.Width),
+                MathF.Loop(Position.Y, LevelBounds.Height)
+            );
+
+            var left = MathF.Clamp01((position.X - Width * 0.5f) / brakeDist.X);
+            var right = MathF.Clamp01((LevelBounds.Width - Width * 0.5f - position.X) / brakeDist.X);
+            var top = MathF.Clamp01((position.Y - Height * 0.5f) / brakeDist.Y);
+            var bottom = MathF.Clamp01((LevelBounds.Height - Height * 0.5f - position.Y) / brakeDist.Y);
 
             if (Velocity.X < 0)
             {
@@ -183,24 +188,32 @@ public class Camera
         Velocity.ApplyFriction(Velocity);
 
         // Bounds clamping
-        if (ClampToLevelBounds)
+        if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
-            if (WorldSize.X < Width)
+            if (LevelBounds.Width < Width)
             {
-                Position.X = WorldSize.X * 0.5f; // centered small level
+                Position.X = LevelBounds.X + LevelBounds.Width * 0.5f; // centered small level
             }
             else
             {
-                Position.X = MathF.Clamp(Position.X, Width * 0.5f, WorldSize.X - Width * 0.5f);
+                Position.X = MathF.Clamp(
+                    Position.X,
+                    LevelBounds.X + Width * 0.5f,
+                    LevelBounds.X + LevelBounds.Width - Width * 0.5f
+                );
             }
 
-            if (WorldSize.Y < Height)
+            if (LevelBounds.Height < Height)
             {
-                Position.Y = WorldSize.Y * 0.5f; // centered small level
+                Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f; // centered small level
             }
             else
             {
-                Position.Y = MathF.Clamp(Position.Y, Height * 0.5f, WorldSize.Y - Height * 0.5f);
+                Position.Y = MathF.Clamp(
+                    Position.Y,
+                    LevelBounds.Y + Height * 0.5f,
+                    LevelBounds.Y + LevelBounds.Height - Height * 0.5f
+                );
             }
         }
 

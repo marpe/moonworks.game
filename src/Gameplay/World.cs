@@ -72,6 +72,9 @@ public class World
         Bullets.Clear();
 
         Level = level;
+        
+        _gameScreen.Camera.LevelBounds = Level.Bounds;
+
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
         Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
@@ -395,6 +398,7 @@ public class World
             return;
 
         _gameScreen.Camera.TrackEntity(null);
+        _gameScreen.Camera.LevelBounds = Rectangle.Empty;
 
         IsDisposed = true;
     }
