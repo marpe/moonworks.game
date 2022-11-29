@@ -217,8 +217,8 @@ public class MyGameMain : Game
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
             Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
-            Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
-            Renderer.Submit(commandBuffer);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
+            Renderer.Submit(ref commandBuffer);
         }
     }
 
@@ -228,9 +228,9 @@ public class MyGameMain : Game
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
 
-        GameScreen.Draw(Renderer, commandBuffer, GameRender, alpha);
+        GameScreen.Draw(Renderer, ref commandBuffer, GameRender, alpha);
 
-        Shared.Menus.Draw(Renderer, commandBuffer, _menuRender, alpha);
+        Shared.Menus.Draw(Renderer, ref commandBuffer, _menuRender, alpha);
 
         if (RenderScale != 1)
         {
@@ -247,15 +247,15 @@ public class MyGameMain : Game
         }
 
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
-        Renderer.Flush(commandBuffer, renderDestination, Color.Black, null);
+        Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null);
 
         DrawFPS(Renderer, commandBuffer, renderDestination);
 
-        RenderConsole(Renderer, commandBuffer, renderDestination, alpha);
+        RenderConsole(Renderer, ref commandBuffer, renderDestination, alpha);
 
-        Shared.LoadingScreen.Draw(Renderer, commandBuffer, renderDestination, GameRender, _menuRender, alpha);
+        Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, GameRender, _menuRender, alpha);
 
-        Renderer.Submit(commandBuffer);
+        Renderer.Submit(ref commandBuffer);
     }
 
     private void DrawFPS(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
@@ -266,13 +266,13 @@ public class MyGameMain : Game
         var bg = RectangleExt.FromFloats(position.X - strSize.X, 0, strSize.X, strSize.Y);
         renderer.DrawRect(bg, Color.Black * 0.66f);
         renderer.DrawText(FontType.ConsolasMonoMedium, str, new Vector2(position.X - strSize.X, 0), 0, Color.Yellow);
-        renderer.Flush(commandBuffer, renderDestination, null, null);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 
-    private void RenderConsole(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    private void RenderConsole(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        ConsoleToast.Draw(renderer, commandBuffer, renderDestination);
-        ConsoleScreen.Draw(renderer, commandBuffer, renderDestination, alpha);
+        ConsoleToast.Draw(renderer, ref commandBuffer, renderDestination);
+        ConsoleScreen.Draw(renderer, ref commandBuffer, renderDestination, alpha);
     }
 
     protected override void Destroy()

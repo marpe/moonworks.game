@@ -58,7 +58,7 @@ public class MenuHandler
         }
     }
 
-    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (Menus.Count > 0)
         {
@@ -67,10 +67,10 @@ public class MenuHandler
                 menu.Draw(renderer, alpha);
             }
 
-            renderer.Flush(commandBuffer, renderDestination, Color.Transparent, null);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Transparent, null);
             return;
         }
 
-        renderer.Clear(commandBuffer, renderDestination, Color.Transparent);
+        renderer.Clear(ref commandBuffer, renderDestination, Color.Transparent);
     }
 }

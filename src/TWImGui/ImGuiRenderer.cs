@@ -362,7 +362,7 @@ public unsafe class ImGuiRenderer : IDisposable
         ImGui.Render();
 
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-        Render(commandBuffer, renderDestination, ImGui.GetDrawData());
+        Render(ref commandBuffer, renderDestination, ImGui.GetDrawData());
         _game.GraphicsDevice.Submit(commandBuffer);
 
         var io = ImGui.GetIO();
@@ -389,23 +389,23 @@ public unsafe class ImGuiRenderer : IDisposable
                     continue;
                 }
 
-                Render(windowCommandBuffer, windowTexture, vp->DrawData);
+                Render(ref windowCommandBuffer, windowTexture, vp->DrawData);
                 _game.GraphicsDevice.Submit(windowCommandBuffer);
             }
         }
     }
 
-    private void Render(CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawData* drawData)
+    private void Render(ref CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawData* drawData)
     {
-        UpdateBuffers(commandBuffer, drawData);
+        UpdateBuffers(ref commandBuffer, drawData);
         commandBuffer.BeginRenderPass(
             new ColorAttachmentInfo(swapchainTexture, Color.Transparent)
         );
-        RenderDrawData(commandBuffer, drawData);
+        RenderDrawData(ref commandBuffer, drawData);
         commandBuffer.EndRenderPass();
     }
 
-    private void UpdateBuffers(CommandBuffer commandBuffer, ImDrawData* drawData)
+    private void UpdateBuffers(ref CommandBuffer commandBuffer, ImDrawData* drawData)
     {
         var totalVtxBufferSize =
             (uint)(drawData->TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>()); // Unsafe.SizeOf<ImDrawVert>());
@@ -443,7 +443,7 @@ public unsafe class ImGuiRenderer : IDisposable
         }
     }
 
-    private void RenderDrawData(CommandBuffer commandBuffer, ImDrawData* drawData)
+    private void RenderDrawData(ref CommandBuffer commandBuffer, ImDrawData* drawData)
     {
         if (drawData->CmdListsCount == 0)
         {

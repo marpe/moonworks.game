@@ -128,12 +128,12 @@ public static class TextureUtils
     public static Texture LoadAseprite(GraphicsDevice device, string path)
     {
         var commandBuffer = device.AcquireCommandBuffer();
-        var texture = LoadAseprite(device, commandBuffer, path);
+        var texture = LoadAseprite(device, ref commandBuffer, path);
         device.Submit(commandBuffer);
         return texture;
     }
 
-    public static Texture LoadAseprite(GraphicsDevice device, CommandBuffer commandBuffer, string path)
+    public static Texture LoadAseprite(GraphicsDevice device, ref CommandBuffer commandBuffer, string path)
     {
         var aseprite = AsepriteFile.LoadAsepriteFile(path);
         var (data, rects) = AsepriteToTextureAtlasConverter.GetTextureData(aseprite);

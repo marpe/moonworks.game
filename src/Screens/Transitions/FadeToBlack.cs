@@ -2,7 +2,7 @@
 
 public class FadeToBlack : SceneTransition
 {
-    public override void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
+    public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
         Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
     {
         var isLoading = state is TransitionState.TransitionOn or TransitionState.Active;

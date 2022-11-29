@@ -24,7 +24,7 @@ public class ContentManager
             var extension = Path.GetExtension(texturePath);
             if (extension == ".aseprite")
             {
-                texturesPendingSubmit.Add(texturePath, TextureUtils.LoadAseprite(_device, commandBuffer, texturePath));
+                texturesPendingSubmit.Add(texturePath, TextureUtils.LoadAseprite(_device, ref commandBuffer, texturePath));
             }
             else if(extension == ".png")
             {

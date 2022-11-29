@@ -77,6 +77,8 @@ public static class ContentPaths
         }
         public static class RimLight
         {
+            public const string rim_light_frag_spv = @"Content\Shaders\RimLight\rim_light.frag.spv";
+            public const string rim_light_vert_spv = @"Content\Shaders\RimLight\rim_light.vert.spv";
         }
         public static class Sprite
         {

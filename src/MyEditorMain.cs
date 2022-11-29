@@ -11,8 +11,6 @@ public unsafe class MyEditorMain : MyGameMain
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
 
-    private readonly string[] _blendStateNames;
-
     private readonly ImGuiRenderer _imGuiRenderer;
     public ImGuiRenderer ImGuiRenderer => _imGuiRenderer;
 
@@ -54,7 +52,6 @@ public unsafe class MyEditorMain : MyGameMain
 
         var timer = Stopwatch.StartNew();
         _imGuiRenderer = new ImGuiRenderer(this);
-        _blendStateNames = Enum.GetNames<BlendState>();
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         AddDefaultMenus();
@@ -639,16 +636,16 @@ public unsafe class MyEditorMain : MyGameMain
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
             Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
-            Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
         }
 
         if (_imGuiDrawCount > 0)
         {
             Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White);
-            Renderer.Flush(commandBuffer, swapTexture, null, null);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, null, null);
         }
 
-        Renderer.Submit(commandBuffer);
+        Renderer.Submit(ref commandBuffer);
 
         if (Screenshot)
         {

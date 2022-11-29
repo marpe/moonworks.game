@@ -1,97 +1,69 @@
-sampler s0;
+#version 450
 
-texture _depthMap;
-sampler _depthMapSampler = sampler_state { Texture = <_depthMap>; };
+layout (set = 1, binding = 0) uniform sampler2D uniformTexture;
+layout (set = 1, binding = 1) uniform sampler2D depthMap;
 
-float4x4 MatrixTransform;
-
-float4x4 _WorldToObject;
-
-float2 _ScreenSpaceLightPos0;
-float4 _MainTex_TexelSize;
-
-float _lightIntensity;
-float _lightRadius;
-float4 _lightColor;
-
-struct VertexShaderInput
+layout (set = 3, binding = 0) uniform UniformBlock
 {
-	float4 vertex : SV_Position;
-	float2 texCoord : TEXCOORD0;
-};
+    float lightIntensity;
+	float lightRadius;
+    vec4 lightColor;
+    vec4 texelSize; // 1 / renderTargetWith, 1 / renderTargetHeight, renderTargetWidth, renderTargetHeight
+	vec2 screenSpaceLightPos;
+} Uniforms;
 
-struct VertexShaderOutput
-{
-    float4 vertex: SV_Position;
-    float2 texCoord: TEXCOORD0;
-    float2 screenPos: TEXCOORD1;
-};
+layout (location = 0) in vec2 texCoord;
+layout (location = 1) in vec4 color;
 
-VertexShaderOutput vert(VertexShaderInput vsIn)
-{
-	VertexShaderOutput vsOut;
-	vsOut.vertex = mul(vsIn.vertex, MatrixTransform);
-	vsOut.texCoord = vsIn.texCoord; 
-	vsOut.screenPos = vsOut.vertex;
-	return vsOut;
-}
+layout (location = 0) out vec4 fragColor;
 
-float4 frag(VertexShaderOutput input): COLOR0
+
+void main()
 {
-    float4 c = tex2D(s0, input.texCoord);
+    vec4 c = texture(uniformTexture, texCoord);
  
 	if (c.a == 0)
 	{
 		discard;
 	}
 
-    float depth = tex2D(_depthMapSampler, input.texCoord).r;
+    float depth = texture(depthMap, texCoord).r;
 
-	c = float4(0, 0, 0, 0);
+	c = vec4(0, 0, 0, 0);
 	
-	float2 rim = float2(0, 0);
+	vec2 rim = vec2(0, 0);
 	float addedAlpha = 0;
  
 	float value = 0;
-	float2 dx = float2(_MainTex_TexelSize.xy.x, 0);
-	float2 dy = float2(0, _MainTex_TexelSize.xy.y);
+	vec2 dx = vec2(Uniforms.texelSize.x, 0);
+	vec2 dy = vec2(0, Uniforms.texelSize.y);
 
     float inFrontOf = 0;
 
 	// negative values = we're behind, 0 = we're same depth, positive = we're in front
-	value = tex2D(_depthMapSampler, input.texCoord + dx).r - depth;
+	value = texture(depthMap, texCoord + dx).r - depth;
 	rim.x += sign(value);
 	inFrontOf += value;
 
-	value = tex2D(_depthMapSampler, input.texCoord - dx).r - depth;
+	value = texture(depthMap, texCoord - dx).r - depth;
 	rim.x -= sign(value);
 	inFrontOf += value;
  
-	value = tex2D(_depthMapSampler, input.texCoord + dy).r - depth;
+	value = texture(depthMap, texCoord + dy).r - depth;
 	rim.y += sign(value);
 	inFrontOf += value;
     
-    value = tex2D(_depthMapSampler, input.texCoord - dy).r - depth;
+    value = texture(depthMap, texCoord - dy).r - depth;
 	rim.y -= sign(value);
 	inFrontOf += value;
 
     if (inFrontOf > 0)
     {
-        float2 lightOffset = _ScreenSpaceLightPos0 - input.texCoord;
-        float2 lightDir = normalize(lightOffset);
-        float attenuation = saturate( 1.0f - length(lightOffset) / _lightRadius );
-        c.rgb = attenuation * _lightIntensity * _lightColor * saturate(dot(lightDir, rim.xy));
+        vec2 lightOffset = Uniforms.screenSpaceLightPos - texCoord;
+        vec2 lightDir = normalize(lightOffset);
+        float attenuation = clamp(1.0 - length(lightOffset) / Uniforms.lightRadius, 0, 1);
+        c.rgb = attenuation * Uniforms.lightIntensity * Uniforms.lightColor.rgb * clamp(dot(lightDir, rim.xy), 0, 1);
     }
     
-    return c;
-}
-
-
-technique Technique1
-{
-    pass Pass1
-    {
-		VertexShader = compile vs_2_0 vert();
-        PixelShader = compile ps_2_0 frag();
-    }
+    fragColor = c;
 }

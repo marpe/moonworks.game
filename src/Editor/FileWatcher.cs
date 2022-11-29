@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Threading;
 
 namespace MyGame.Editor;
@@ -9,9 +10,10 @@ public sealed class FileWatcher : IDisposable
     private Action<FileEvent>? _callback;
     private FileSystemWatcher? _watcher;
 
-    private Dictionary<string, FileEvent> _eventQueue = new();
+    private ConcurrentDictionary<string, FileEvent> _eventQueue = new();
     private readonly string _fullPath;
     private readonly Timer _timer;
+    private List<string> _tempKeysToRemove = new();
 
     public bool IsDisposed { get; private set; }
 
@@ -24,13 +26,8 @@ public sealed class FileWatcher : IDisposable
         _fullPath = Path.GetFullPath(path);
         _watcher = new FileSystemWatcher(_fullPath);
 
-        _watcher.NotifyFilter = NotifyFilters.Attributes
-                                | NotifyFilters.CreationTime
-                                | NotifyFilters.DirectoryName
-                                | NotifyFilters.FileName
-                                | NotifyFilters.LastAccess
+        _watcher.NotifyFilter = NotifyFilters.FileName
                                 | NotifyFilters.LastWrite
-                                | NotifyFilters.Security
                                 | NotifyFilters.Size;
 
         _watcher.Changed += OnChanged;
@@ -48,19 +45,19 @@ public sealed class FileWatcher : IDisposable
 
     private void TimerCallback(object? state)
     {
-        var keysToRemove = new List<string>();
+        _tempKeysToRemove.Clear();
         foreach (var kvp in _eventQueue)
         {
             if (kvp.Value.CallAtTime <= Shared.Game.Time.TotalElapsedTime)
             {
                 InvokeCallback(kvp.Value);
-                keysToRemove.Add(kvp.Key);
+                _tempKeysToRemove.Add(kvp.Key);
             }
         }
 
-        foreach (var key in keysToRemove)
+        foreach (var key in _tempKeysToRemove)
         {
-            _eventQueue.Remove(key);
+            _eventQueue.TryRemove(key, out _);
         }
 
         _timer.Change(500, Timeout.Infinite);
@@ -124,7 +121,16 @@ public sealed class FileWatcher : IDisposable
     private void QueueFileEvent(string fullPath, WatcherChangeTypes changeType)
     {
         var deferredDuration = 1f;
-        _eventQueue[fullPath] = new FileEvent(fullPath, Shared.Game.Time.TotalElapsedTime + deferredDuration, changeType);
+        var addValue = new FileEvent(fullPath, Shared.Game.Time.TotalElapsedTime + deferredDuration, changeType);
+
+        _ = _eventQueue.AddOrUpdate(
+            fullPath,
+            addValue,
+            (fileEvent, existingEvent) =>
+            {
+                existingEvent.CallAtTime += 1f;
+                return existingEvent;
+            });
     }
 
     private static void PrintException(Exception? ex)
@@ -153,6 +159,7 @@ public sealed class FileWatcher : IDisposable
 
         if (disposing)
         {
+            _eventQueue.Clear();
             _timer.Dispose();
             _watcher?.Dispose();
             _watcher = null;

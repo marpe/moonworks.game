@@ -76,10 +76,10 @@ public class LoadingScreen
         _backgroundSprite = new Sprite(backgroundTexture);
         _blankSprite = new Sprite(blankTexture);
 
-        SceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition(game.GraphicsDevice));
+        SceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition());
         SceneTransitions.Add(TransitionType.FadeToBlack, new FadeToBlack());
-        SceneTransitions.Add(TransitionType.Pixelize, new PixelizeTransition(game.GraphicsDevice));
-        SceneTransitions.Add(TransitionType.CircleCrop, new CircleCropTransition(game.GraphicsDevice));
+        SceneTransitions.Add(TransitionType.Pixelize, new PixelizeTransition());
+        SceneTransitions.Add(TransitionType.CircleCrop, new CircleCropTransition());
     }
 
     [ConsoleHandler("test_load", "Test loading screen")]
@@ -192,7 +192,7 @@ public class LoadingScreen
         }
     }
 
-    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
+    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
     {
         if (_shouldCopyRender)
         {
@@ -213,19 +213,19 @@ public class LoadingScreen
 
         if (Debug)
         {
-            SceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, DebugProgress, DebugState, _gameOldCopy, _menuOldCopy,
+            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, DebugProgress, DebugState, _gameOldCopy, _menuOldCopy,
                 _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
-            DrawLoadingText(renderer, commandBuffer, renderDestination);
+            DrawLoadingText(renderer, ref commandBuffer, renderDestination);
         }
         else
         {
-            SceneTransitions[TransitionType].Draw(renderer, commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy,
+            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy,
                 gameRender, menuRender, _compositeNewCopy);
-            DrawLoadingText(renderer, commandBuffer, renderDestination);
+            DrawLoadingText(renderer, ref commandBuffer, renderDestination);
         }
     }
 
-    private void DrawLoadingText(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
+    private void DrawLoadingText(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
     {
         ReadOnlySpan<char> loadingStr = "Loading...";
         var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
@@ -234,7 +234,7 @@ public class LoadingScreen
         var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
         renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _progress);
-        renderer.Flush(commandBuffer, renderDestination, null, null);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 
     public void Unload()

@@ -185,29 +185,28 @@ public class GameScreen
         circleLoad.CenterY = playerInScreen.Y;
     }
 
-    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (World == null)
         {
-            renderer.Clear(commandBuffer, renderDestination, Color.Black);
+            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
             return;
         }
 
         World.Draw(renderer, Camera.Bounds, alpha);
+
         var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
-
-        // TODO (marpe): Rneder post processing
-
-        DrawViewBounds(renderer, commandBuffer, renderDestination);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
+        
+        DrawViewBounds(renderer, ref commandBuffer, renderDestination);
     }
 
-    private void DrawViewBounds(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
+    private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
     {
         if (!World.Debug) return;
         if (!DebugViewBounds) return;
 
         renderer.DrawRectOutline(Vector2.Zero, _game.CompositeRender.Size(), Color.LimeGreen, 10f);
-        renderer.Flush(commandBuffer, renderDestination, null, null);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }

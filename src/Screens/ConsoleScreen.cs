@@ -424,7 +424,7 @@ public class ConsoleScreen
         }
     }
 
-    public void Draw(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (ConsoleScreenState == ConsoleScreenState.Hidden)
             return;
@@ -433,7 +433,7 @@ public class ConsoleScreen
         {
             _hasRender = true;
             DrawInternal(renderer, alpha);
-            renderer.Flush(commandBuffer, _renderTarget, Color.Transparent, null);
+            renderer.RunRenderPass(ref commandBuffer, _renderTarget, Color.Transparent, null);
         }
 
         if (!_hasRender)
@@ -441,7 +441,7 @@ public class ConsoleScreen
 
         var sprite = new Sprite(_renderTarget);
         renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage);
-        renderer.Flush(commandBuffer, renderDestination, null, null);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 
     public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';

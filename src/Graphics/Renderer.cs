@@ -1,16 +1,5 @@
 ﻿namespace MyGame.Graphics;
 
-public enum BlendState
-{
-    Additive,
-    AlphaBlend,
-    NonPremultiplied,
-    Opaque,
-    None,
-    Disable,
-    Custom,
-}
-
 public class Renderer
 {
     public BMFont[] BMFonts { get; }
@@ -18,36 +7,23 @@ public class Renderer
     public static Sampler PointClamp = null!;
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
-
     public Sprite BlankSprite => _blankSprite;
 
     private readonly GraphicsDevice _device;
 
     private readonly MyGameMain _game;
-    private readonly GraphicsPipeline[] _pipelines;
 
     public readonly SpriteBatch SpriteBatch;
     public readonly TextBatcher TextBatcher;
 
-    private BlendState BlendState = BlendState.AlphaBlend;
     private ColorAttachmentInfo ColorAttachmentInfo;
-
-    public ColorAttachmentBlendState CustomBlendState = new()
-    {
-        BlendEnable = true,
-        AlphaBlendOp = BlendOp.Add,
-        ColorBlendOp = BlendOp.Add,
-        ColorWriteMask = ColorComponentFlags.RGBA,
-        SourceColorBlendFactor = BlendFactor.One,
-        SourceAlphaBlendFactor = BlendFactor.SourceAlpha,
-        DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
-        DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha,
-    };
 
     public Color DefaultClearColor = Color.CornflowerBlue;
 
     public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
     public Texture DepthTexture;
+
+    public Dictionary<PipelineType, GraphicsPipeline> Pipelines;
 
     public Renderer(MyGameMain game)
     {
@@ -60,40 +36,7 @@ public class Renderer
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _blankSprite = new Sprite(_blankTexture);
 
-        var blendStates = Enum.GetValues<BlendState>();
-        _pipelines = new GraphicsPipeline[blendStates.Length];
-        for (var i = 0; i < blendStates.Length; i++)
-        {
-            var blendState = blendStates[i] switch
-            {
-                BlendState.Additive => ColorAttachmentBlendState.Additive,
-                BlendState.AlphaBlend => ColorAttachmentBlendState.AlphaBlend,
-                BlendState.NonPremultiplied => ColorAttachmentBlendState.NonPremultiplied,
-                BlendState.Opaque => ColorAttachmentBlendState.Opaque,
-                BlendState.None => ColorAttachmentBlendState.None,
-                BlendState.Disable => ColorAttachmentBlendState.Disable,
-                BlendState.Custom => CustomBlendState,
-                _ => throw new ArgumentOutOfRangeException(),
-            };
-            _pipelines[i] = CreateGraphicsPipeline(_device, blendState);
-        }
-
-        var bmFontTypes = new[]
-        {
-            (BMFontType.ConsolasMonoSmall, ContentPaths.bmfonts.consolas_fnt),
-            (BMFontType.ConsolasMonoMedium, ContentPaths.bmfonts.consolas48_fnt),
-            (BMFontType.ConsolasMonoLarge, ContentPaths.bmfonts.consolas60_fnt),
-            (BMFontType.ConsolasMonoHuge, ContentPaths.bmfonts.consolas72_fnt),
-            (BMFontType.PixellariLarge, ContentPaths.bmfonts.pixellari48_fnt),
-            (BMFontType.PixellariHuge, ContentPaths.bmfonts.pixellari72_fnt),
-        };
-
-        BMFonts = new BMFont[bmFontTypes.Length];
-        for (var i = 0; i < bmFontTypes.Length; i++)
-        {
-            var (type, path) = bmFontTypes[i];
-            BMFonts[i] = new BMFont(game.GraphicsDevice, path);
-        }
+        BMFonts = CreateBMFonts(_device);
 
         DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
         DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
@@ -111,6 +54,30 @@ public class Renderer
             ClearColor = Color.CornflowerBlue,
             LoadOp = LoadOp.Clear,
         };
+
+        Pipelines = Graphics.Pipelines.CreatePipelines(_device);
+    }
+
+    private static BMFont[] CreateBMFonts(GraphicsDevice device)
+    {
+        var bmFontTypes = new[]
+        {
+            (BMFontType.ConsolasMonoSmall, ContentPaths.bmfonts.consolas_fnt),
+            (BMFontType.ConsolasMonoMedium, ContentPaths.bmfonts.consolas48_fnt),
+            (BMFontType.ConsolasMonoLarge, ContentPaths.bmfonts.consolas60_fnt),
+            (BMFontType.ConsolasMonoHuge, ContentPaths.bmfonts.consolas72_fnt),
+            (BMFontType.PixellariLarge, ContentPaths.bmfonts.pixellari48_fnt),
+            (BMFontType.PixellariHuge, ContentPaths.bmfonts.pixellari72_fnt),
+        };
+
+        var fonts = new BMFont[bmFontTypes.Length];
+        for (var i = 0; i < bmFontTypes.Length; i++)
+        {
+            var (type, path) = bmFontTypes[i];
+            fonts[i] = new BMFont(device, path);
+        }
+
+        return fonts;
     }
 
     public BMFont GetFont(BMFontType fontType)
@@ -229,7 +196,7 @@ public class Renderer
         return (commandBuffer, swapTexture);
     }
 
-    public void Clear(CommandBuffer commandBuffer, Texture renderTarget, Color clearColor)
+    public void Clear(ref CommandBuffer commandBuffer, Texture renderTarget, Color clearColor)
     {
         var cai = new ColorAttachmentInfo()
         {
@@ -241,25 +208,56 @@ public class Renderer
         commandBuffer.EndRenderPass();
     }
 
-    public void Flush(CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection)
+    public void UpdateBuffers(ref CommandBuffer commandBuffer)
     {
         TextBatcher.FlushToSpriteBatch(SpriteBatch);
-        SpriteBatch.UpdateBuffers(commandBuffer);
+        SpriteBatch.UpdateBuffers(ref commandBuffer);
+    }
 
-        ColorAttachmentInfo.Texture = renderTarget;
+    public void BeginRenderPass(ref CommandBuffer commandBuffer, Texture texture, Color? clearColor, PipelineType pipelineType)
+    {
+        ColorAttachmentInfo.Texture = texture;
         ColorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
         ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
-
+        // TODO (marpe): Sawptexture specify that it should take entire screen?
         TextureUtils.EnsureTextureSize(ref DepthTexture, _device, ColorAttachmentInfo.Texture.Size());
         DepthStencilAttachmentInfo.Texture = DepthTexture;
 
-        commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
-        commandBuffer.BindGraphicsPipeline(_pipelines[(int)BlendState]);
-        SpriteBatch.Flush(commandBuffer, viewProjection ?? GetViewProjection(ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height));
+        var pipeline = Pipelines[pipelineType];
+        if (pipeline.AttachmentInfo.HasDepthStencilAttachment)
+            commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
+        else
+            commandBuffer.BeginRenderPass(ColorAttachmentInfo);
+        commandBuffer.BindGraphicsPipeline(pipeline);
+    }
+
+    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection,
+        PipelineType pipeline = PipelineType.Sprite)
+    {
+        UpdateBuffers(ref commandBuffer);
+        BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipeline);
+        DrawIndexedSprites(ref commandBuffer, viewProjection);
+        EndRenderPass(ref commandBuffer);
+    }
+
+
+    public void EndRenderPass(ref CommandBuffer commandBuffer)
+    {
         commandBuffer.EndRenderPass();
     }
 
-    public void Submit(CommandBuffer commandBuffer)
+    public void DrawIndexedSprites<TVert, TFrag>(ref CommandBuffer commandBuffer, TVert vertUniforms, TFrag fragUniforms,
+        TextureSamplerBinding[] fragmentSamplerBindings) where TVert : unmanaged where TFrag : unmanaged
+    {
+        SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, fragUniforms, fragmentSamplerBindings);
+    }
+
+    public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection)
+    {
+        SpriteBatch.DrawIndexed(ref commandBuffer, viewProjection ?? GetViewProjection(ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height));
+    }
+
+    public void Submit(ref CommandBuffer commandBuffer)
     {
         _device.Submit(commandBuffer);
     }
@@ -271,76 +269,18 @@ public class Renderer
             BMFonts[i].Dispose();
         }
 
-        for (var i = 0; i < _pipelines.Length; i++)
+        foreach (var (_, pipeline) in Pipelines)
         {
-            _pipelines[i].Dispose();
+            pipeline.Dispose();
         }
 
+        Pipelines.Clear();
         _blankTexture.Dispose();
         TextBatcher.Unload();
         SpriteBatch.Unload();
         PointClamp.Dispose();
 
         DepthTexture.Dispose();
-    }
-
-    public static VertexInputState GetVertexInputState()
-    {
-        var myVertexBindings = new[]
-        {
-            VertexBinding.Create<Position3DTextureColorVertex>(),
-        };
-
-        var myVertexAttributes = new[]
-        {
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Position), 0),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.TexCoord), 1),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
-        };
-
-        return new VertexInputState
-        {
-            VertexBindings = myVertexBindings,
-            VertexAttributes = myVertexAttributes,
-        };
-    }
-
-    public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
-    {
-        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_vert_spv);
-        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_frag_spv);
-
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false,
-        };
-
-        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1);
-
-        var myGraphicsPipelineCreateInfo = new GraphicsPipelineCreateInfo
-        {
-            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
-            ),
-            DepthStencilState = myDepthStencilState,
-            VertexShaderInfo = vertexShaderInfo,
-            FragmentShaderInfo = fragmentShaderInfo,
-            MultisampleState = MultisampleState.None,
-            RasterizerState = RasterizerState.CCW_CullNone,
-            PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = GetVertexInputState(),
-        };
-
-        return new GraphicsPipeline(
-            device,
-            myGraphicsPipelineCreateInfo
-        );
     }
 
     public static (Matrix4x4, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)
