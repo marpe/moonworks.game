@@ -15,6 +15,17 @@ public class BeeBehaviour : EnemyBehaviour
 
     public override void Update(float deltaSeconds)
     {
+        if (Parent.IsDead)
+        {
+            Parent.Position.Current += Parent.Velocity * deltaSeconds;
+            
+            if (Parent.Position.Current.Y >= Parent.World.Level.Bounds.Bottom)
+                Parent.IsDestroyed = true;
+            
+            Parent.Velocity.Y += Parent.World.Gravity * deltaSeconds;
+            return;
+        }
+
         var t = Parent.TimeOffset + Parent.TotalTimeActive * _speed;
         var deltaMove = new Vector2(MathF.Cos(t) * 2.0f, MathF.Cos(t) * MathF.Cos(t) - MathF.Sin(t) * MathF.Sin(t)) * 2.0f * _radius;
         Parent.Velocity.Delta = deltaMove;

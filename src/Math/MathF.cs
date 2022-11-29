@@ -45,7 +45,13 @@ public static class MathF
     {
         return (float)Math.Tan(d);
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Min(float a, float b)
+    {
+        return Math.Min(a, b);
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float MinOf(float a, float b, float c)
     {
@@ -56,6 +62,12 @@ public static class MathF
     public static float MinOf(float a, float b, float c, float d)
     {
         return Math.Min(a, Math.Min(b, Math.Min(c, d)));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Max(float a, float b)
+    {
+        return Math.Max(a, b);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -1,5 +1,11 @@
 namespace MyGame;
 
+public enum FacingDirection
+{
+    Left,
+    Right
+}
+
 public partial class Enemy : Entity
 {
     public Velocity Velocity = new();
@@ -19,7 +25,9 @@ public partial class Enemy : Entity
     public Mover Mover = new();
 
     [HideInInspector]
-    public Point FacingDirection = new Point(1, 0);
+    public FacingDirection FacingDirection = FacingDirection.Right;
+
+    public bool IsDead;
 
     public override void Initialize(World world)
     {

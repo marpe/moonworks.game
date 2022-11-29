@@ -147,14 +147,18 @@ public class GameScreen
             return;
         }
 
-        var doUpdate = IsStepping || (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
+        var doUpdate = IsStepping ||
+                       (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
 
         if (doUpdate)
         {
             World.Update(deltaSeconds, _game.InputHandler);
         }
-
-        Camera.Update(deltaSeconds, _game.InputHandler);
+        else
+        {
+            if (Camera.NoClip)
+                Camera.Update(deltaSeconds, _game.InputHandler);
+        }
 
         SetCircleCropPosition();
 
@@ -170,9 +174,11 @@ public class GameScreen
         if (World == null)
             return;
 
-        var playerTransform = World.Player.LastTransform;
+        var entity = World.Player;
+        var transform = entity.LastTransform;
         var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
-        var playerInScreen = Vector2.Transform(new Vector2(8, 8), playerTransform * viewProjection);
+        var halfSize = entity.Size.ToVec2() * 0.5f;
+        var playerInScreen = Vector2.Transform(halfSize, transform * viewProjection);
         playerInScreen = Vector2.Half + playerInScreen * 0.5f;
         var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
         circleLoad.CenterX = playerInScreen.X;

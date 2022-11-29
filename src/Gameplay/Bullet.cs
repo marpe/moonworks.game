@@ -52,7 +52,8 @@ public class Bullet : Entity
             if (offset.LengthSquared() <= distance * distance)
             {
                 IsDestroyed = true;
-                World.Enemies[i].IsDestroyed = true;
+                World.Enemies[i].IsDead = true;
+                World.FreezeFrame(0.5f);
                 return;
             }
         }

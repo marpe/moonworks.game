@@ -21,11 +21,6 @@ public class World
 
     public readonly LdtkJson LdtkRaw;
 
-    public Point WorldSize;
-
-    public Point Start = new Point(10, 10);
-    public Point End = new Point(40, 30);
-
     public Player Player;
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
@@ -41,6 +36,7 @@ public class World
     public Level Level;
     public Level[] Levels;
     private readonly Dictionary<long, string> _tileSetTextureMapping;
+    public float FreezeFrameTimer;
 
     public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
     {
@@ -55,8 +51,6 @@ public class World
         };
 
         gameScreen.Content.LoadTextures(textures);
-
-        WorldSize = GetWorldSize(LdtkRaw);
 
         _debugDraw = new DebugDrawItems();
 
@@ -180,14 +174,26 @@ public class World
         Shared.Console.Print("Killed all enemies");
     }
 
+    private void UpdateFreezeTime(float deltaSeconds)
+    {
+        if (FreezeFrameTimer > 0)
+            FreezeFrameTimer = MathF.Max(0, FreezeFrameTimer - deltaSeconds);
+    }
+
     public void Update(float deltaSeconds, InputHandler input)
     {
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
 
+        UpdateFreezeTime(deltaSeconds);
+
+        if (FreezeFrameTimer > 0)
+            return;
+
         UpdatePlayer(deltaSeconds, input);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
+        _gameScreen.Camera.Update(deltaSeconds, input);
     }
 
     private void UpdateBullets(float deltaSeconds)
@@ -477,37 +483,6 @@ public class World
         }
     }
 
-    private static Point WorldToTilePosition(Vector2 worldPosition, int gridSize, long width, long height)
-    {
-        var x = MathF.FastFloorToInt(worldPosition.X / gridSize);
-        var y = MathF.FastFloorToInt(worldPosition.Y / gridSize);
-        return new Point((int)MathF.Clamp(x, 0, width - 1), (int)MathF.Clamp(y, 0, height - 1));
-    }
-
-    private static Point GetWorldSize(LdtkJson ldtk)
-    {
-        var isMultiWorld = ldtk.Worlds.Length > 0;
-        var levels = isMultiWorld ? ldtk.Worlds[0].Levels : ldtk.Levels;
-
-        var worldSize = Point.Zero;
-
-        for (var i = 0; i < levels.Length; i++)
-        {
-            var max = levels[i].Position + levels[i].Size;
-            if (worldSize.X < max.X)
-            {
-                worldSize.X = max.X;
-            }
-
-            if (worldSize.Y < max.Y)
-            {
-                worldSize.Y = max.Y;
-            }
-        }
-
-        return worldSize;
-    }
-
     private static Dictionary<long, string> LoadTilesets(ReadOnlySpan<char> ldtkPath, TilesetDefinition[] tilesets)
     {
         var mapping = new Dictionary<long, string>();
@@ -573,5 +548,10 @@ public class World
         {
             Shared.Game.GameScreen.World.Player.Mover.Unstuck();
         }
+    }
+
+    public void FreezeFrame(float duration, bool force = false)
+    {
+        FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 }
