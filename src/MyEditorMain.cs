@@ -41,6 +41,9 @@ public unsafe class MyEditorMain : MyGameMain
     private int _imGuiUpdateCount;
     private FileWatcher _fileWatcher;
 
+    private Buffer _screenshotBuffer;
+    private byte[] _screenshotPixels;
+
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
@@ -55,6 +58,9 @@ public unsafe class MyEditorMain : MyGameMain
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         AddDefaultMenus();
+
+        _screenshotBuffer = Buffer.Create<byte>(GraphicsDevice, BufferUsageFlags.Index, GameRender.Width * GameRender.Height * sizeof(uint));
+        _screenshotPixels = new byte[_screenshotBuffer.Size];
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
@@ -603,14 +609,6 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
-        // TODO (marpe): Move
-        if (Screenshot)
-        {
-            SaveRender(GraphicsDevice, CompositeRender);
-            Logger.LogInfo("Render saved!");
-            Screenshot = false;
-        }
-
         RenderGame(alpha, CompositeRender);
 
         if (((int)Time.UpdateCount % _updateRate == 0) && _imGuiUpdateCount > 0)
@@ -630,6 +628,11 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
+        if (Screenshot)
+        {
+            commandBuffer.CopyTextureToBuffer(CompositeRender, _screenshotBuffer);
+        }
+
         {
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
@@ -646,18 +649,22 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         Renderer.Submit(commandBuffer);
-    }
 
-    private static void SaveRender(GraphicsDevice device, Texture render)
-    {
-        var commandBuffer = device.AcquireCommandBuffer();
-        var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, render.Width * render.Height * sizeof(uint));
-        commandBuffer.CopyTextureToBuffer(render, buffer);
-        device.Submit(commandBuffer);
-        device.Wait();
-        var pixels = new byte[buffer.Size];
-        buffer.GetData(pixels, (uint)pixels.Length);
-        Texture.SavePNG("test.png", (int)render.Width, (int)render.Height, render.Format, pixels);
+        if (Screenshot)
+        {
+            Logs.LogInfo("Saving screenshot...");
+
+            Task.Run(() =>
+            {
+                GraphicsDevice.Wait();
+                _screenshotBuffer.GetData(_screenshotPixels, _screenshotBuffer.Size);
+                var filename = "test.png";
+                Texture.SavePNG(filename, (int)CompositeRender.Width, (int)CompositeRender.Height, CompositeRender.Format, _screenshotPixels);
+                Logger.LogInfo($"Screenshot saved to {filename}");
+            });
+
+            Screenshot = false;
+        }
     }
 
     protected override void Destroy()
@@ -669,5 +676,6 @@ public unsafe class MyEditorMain : MyGameMain
         Logger.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
         _imGuiRenderer.Dispose();
         _fileWatcher.Dispose();
+        _screenshotBuffer.Dispose();
     }
 }
