@@ -86,6 +86,10 @@ public sealed class FileWatcher : IDisposable
         {
             return true;
         }
+        catch (UnauthorizedAccessException)
+        {
+            return true;
+        }
 
         return false;
     }
