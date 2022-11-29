@@ -308,7 +308,7 @@ public class World
         {
             var layer = level.LayerInstances[layerIndex];
             var layerDef = GetLayerDefinition(LdtkRaw, layer.LayerDefUid);
-            DrawLayer(renderer, level, layer, layerDef, cameraBounds);
+            DrawLayer(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
         if (Debug)

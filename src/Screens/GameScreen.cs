@@ -176,7 +176,7 @@ public class GameScreen
 
         var entity = World.Player;
         var transform = entity.LastTransform;
-        var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
+        var viewProjection = Camera.GetViewProjection(_game.GameRender.Width, _game.GameRender.Height);
         var halfSize = entity.Size.ToVec2() * 0.5f;
         var playerInScreen = Vector2.Transform(halfSize, transform * viewProjection);
         playerInScreen = Vector2.Half + playerInScreen * 0.5f;
@@ -194,7 +194,7 @@ public class GameScreen
         }
 
         World.Draw(renderer, Camera.Bounds, alpha);
-        var viewProjection = Camera.GetViewProjection(MyGameMain.DesignResolution.X, MyGameMain.DesignResolution.Y);
+        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
         renderer.Flush(commandBuffer, renderDestination, Color.Black, viewProjection);
 
         // TODO (marpe): Rneder post processing
@@ -207,7 +207,7 @@ public class GameScreen
         if (!World.Debug) return;
         if (!DebugViewBounds) return;
 
-        renderer.DrawRectOutline(Vector2.Zero, MyGameMain.DesignResolution, Color.LimeGreen, 10f);
+        renderer.DrawRectOutline(Vector2.Zero, _game.CompositeRender.Size(), Color.LimeGreen, 10f);
         renderer.Flush(commandBuffer, renderDestination, null, null);
     }
 }

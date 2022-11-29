@@ -307,8 +307,8 @@ public class Renderer
 
     public static GraphicsPipeline CreateGraphicsPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.sg2_sprite_vert_spv);
-        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.sprite_frag_spv);
+        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_vert_spv);
+        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_frag_spv);
 
         var myDepthStencilState = new DepthStencilState
         {

@@ -8,8 +8,6 @@ namespace MyGame;
 
 public unsafe class MyEditorMain : MyGameMain
 {
-    private Texture _gameRender;
-
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
 
@@ -18,7 +16,6 @@ public unsafe class MyEditorMain : MyGameMain
     private readonly ImGuiRenderer _imGuiRenderer;
     public ImGuiRenderer ImGuiRenderer => _imGuiRenderer;
 
-    private readonly Sampler _sampler;
     private readonly float _alpha = 1.0f;
     private ulong _imGuiDrawCount;
     private readonly float _mainMenuPaddingY = 6f;
@@ -48,13 +45,11 @@ public unsafe class MyEditorMain : MyGameMain
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
     {
-        var sz = DesignResolution;
-        _gameRender = Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
-        _imGuiRenderTarget =
-            Texture.CreateTexture2D(GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8, TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        var windowSize = MainWindow.Size;
+        _imGuiRenderTarget = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
         var timer = Stopwatch.StartNew();
-        _sampler = new Sampler(GraphicsDevice, SamplerCreateInfo.PointClamp);
         _imGuiRenderer = new ImGuiRenderer(this);
         _blendStateNames = Enum.GetNames<BlendState>();
         ImGuiThemes.DarkTheme();
@@ -182,8 +177,14 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void SetInputViewport()
     {
-        if (IsHidden)
+        if (!IsHidden && IsHoveringGameWindow)
+        {
+            InputHandler.SetViewportTransform(_gameRenderViewportTransform);
+        }
+        else
+        {
             base.SetInputViewport();
+        }
     }
 
     private void DrawGameWindow(ImGuiEditorWindow window)
@@ -198,21 +199,21 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
         if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen), flags))
         {
-            if (_gameRenderTextureId != null && _gameRenderTextureId != _gameRender.Handle)
+            if (_gameRenderTextureId != null && _gameRenderTextureId != CompositeRender.Handle)
             {
                 _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
                 _gameRenderTextureId = null;
-                Logger.LogInfo("Unbinding gameRender texture");
+                Logger.LogInfo("Unbinding compositeRender texture");
             }
 
             if (_gameRenderTextureId == null)
             {
-                Logger.LogInfo("Binding gameRender texture");
-                _gameRenderTextureId = _imGuiRenderer.BindTexture(_gameRender);
+                Logger.LogInfo("Binding _compositeRender texture");
+                _gameRenderTextureId = _imGuiRenderer.BindTexture(CompositeRender);
             }
 
             var windowSize = ImGui.GetWindowSize();
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(new Point((int)windowSize.X, (int)windowSize.Y), DesignResolution);
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), CompositeRender.Size());
 
             ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
             var cursorScreenPos = ImGui.GetCursorScreenPos();
@@ -573,8 +574,6 @@ public unsafe class MyEditorMain : MyGameMain
 
         var wasHidden = IsHidden;
 
-        InputHandler.SetViewportTransform(IsHoveringGameWindow ? _gameRenderViewportTransform : Matrix4x4.Identity);
-
         base.Update(dt);
 
 
@@ -607,12 +606,12 @@ public unsafe class MyEditorMain : MyGameMain
         // TODO (marpe): Move
         if (Screenshot)
         {
-            SaveRender(GraphicsDevice, _gameRender);
+            SaveRender(GraphicsDevice, CompositeRender);
             Logger.LogInfo("Render saved!");
             Screenshot = false;
         }
 
-        RenderGame(alpha, _gameRender);
+        RenderGame(alpha, CompositeRender);
 
         if (((int)Time.UpdateCount % _updateRate == 0) && _imGuiUpdateCount > 0)
         {
@@ -632,14 +631,11 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         {
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(
-                swapTexture.Size(),
-                DesignResolution
-            );
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(_gameRender, viewportTransform, Color.White);
+            Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
             Renderer.Flush(commandBuffer, swapTexture, Color.Black, view * projection);
         }
 

@@ -35,12 +35,14 @@ public abstract class MenuScreen
     protected Spring _spring;
 
     private float XOffset = 500f;
-    private Vector2 InitialPosition = MyGameMain.DesignResolution.ToVec2() * 0.5f;
+    private Vector2 InitialPosition;
     private bool _wasCoveredByOtherScreen;
     private int _lastSelectedIndex;
 
     public MenuScreen(MyGameMain game)
     {
+        InitialPosition = game.CompositeRender.Size().ToVec2() * 0.5f;
+
         _game = game;
         _spring = new Spring();
 

@@ -2,6 +2,8 @@
 
 public struct UPoint
 {
+    public static readonly UPoint One = new(1u, 1u);
+
     public uint X;
     public uint Y;
 
@@ -9,6 +11,11 @@ public struct UPoint
     {
         X = x;
         Y = y;
+    }
+
+    public static UPoint operator +(UPoint a, UPoint b)
+    {
+        return new UPoint(a.X + b.X, a.Y + b.Y);
     }
 
     public static UPoint operator /(UPoint p, int n)

@@ -131,8 +131,9 @@ public class TextBatcher
                     var srcPos = topLeftVert.TexCoord * fontTextureSize;
                     var srcDim = (bottomRightVert.TexCoord - topLeftVert.TexCoord) * fontTextureSize;
                     var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);
+                    
                     sprite.SrcRect = srcRect;
-                    Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, sprite.SrcRect);
+                    Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, srcRect);
                     var color = topLeftVert.Color;
                     spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform.ToMatrix4x4(), Renderer.PointClamp);
                 }

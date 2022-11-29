@@ -1907,48 +1907,6 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [15,9],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "8f3e6f80-5110-11ed-9fac-f54ac2eb0ce7",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [248,152],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [19,8],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "92c26620-5110-11ed-9fac-83002513adf4",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [312,136],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
 							"__grid": [22,8],
 							"__pivot": [0.5,1],
 							"__tags": [],
@@ -1991,28 +1949,7 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [29,3],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "76794e60-5110-11ed-b5e9-b55be8f682e5",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [472,64],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [32,4],
+							"__grid": [15,4],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
@@ -2021,112 +1958,7 @@
 							"width": 16,
 							"height": 16,
 							"defUid": 98,
-							"px": [520,80],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [25,5],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "77e38cc0-5110-11ed-b5e9-afc665418e48",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [408,96],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [21,4],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "781bb3c0-5110-11ed-b5e9-a77540bb8d94",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [344,80],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [20,7],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "783de1c0-5110-11ed-b5e9-5fe1c8075978",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [328,128],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [16,5],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "786e8eb0-5110-11ed-b5e9-4d8c001574e5",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [264,96],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [13,5],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "788d6150-5110-11ed-b5e9-b3044c4a8720",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [216,96],
+							"px": [248,80],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
@@ -2159,90 +1991,6 @@
 						},
 						{
 							"__identifier": "Enemy",
-							"__grid": [15,13],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "78edd0d0-5110-11ed-b5e9-61b5dee5bdb6",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [248,224],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [17,13],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "790c7c60-5110-11ed-b5e9-5ff77b6c629a",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [280,224],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [20,13],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "79307f20-5110-11ed-b5e9-33bfb8e9eb45",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [328,224],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [21,13],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "79559350-5110-11ed-b5e9-739b865559dc",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [344,224],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
 							"__grid": [23,6],
 							"__pivot": [0.5,1],
 							"__tags": [],
@@ -2253,48 +2001,6 @@
 							"height": 16,
 							"defUid": 98,
 							"px": [376,112],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [21,5],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "79de2440-5110-11ed-b5e9-41503a84a069",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [344,96],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [29,14],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "7a05a970-5110-11ed-b5e9-410cc007c050",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [472,240],
 							"fieldInstances": [
 								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
@@ -2342,48 +2048,6 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [26,12],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "7a792bc0-5110-11ed-b5e9-0765a8df9ce7",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [424,208],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
-							]
-						},
-						{
-							"__identifier": "Enemy",
-							"__grid": [28,6],
-							"__pivot": [0.5,1],
-							"__tags": [],
-							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
-							"iid": "7aa3be30-5110-11ed-b5e9-7beda3c226b6",
-							"width": 16,
-							"height": 16,
-							"defUid": 98,
-							"px": [456,112],
-							"fieldInstances": [
-								{ "__identifier": "Wander", "__value": [], "__type": "Array<Point>", "__tile": null, "defUid": 100, "realEditorValues": [] },
-								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
 								}] },
 								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
 							]

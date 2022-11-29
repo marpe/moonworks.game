@@ -26,6 +26,11 @@ public static class RectangleExt
     {
         return new Point(rect.X + rect.Width, rect.Y);
     }
+    
+    public static Vector2 TopRightVec(this Rectangle rect)
+    {
+        return new Vector2(rect.X + rect.Width, rect.Y);
+    }
 
     public static Point Max(this Rectangle rect)
     {

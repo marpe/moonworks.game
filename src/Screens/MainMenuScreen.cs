@@ -39,8 +39,8 @@ public class MainMenuScreen : MenuScreen
     public override void Draw(Renderer renderer, double alpha)
     {
         var scale = new Vector2(
-            MyGameMain.DesignResolution.X / (float)_background.Width,
-            MyGameMain.DesignResolution.Y / (float)_background.Height
+            _game.CompositeRender.Width / (float)_background.Width,
+            _game.CompositeRender.Height / (float)_background.Height
         );
 
         renderer.DrawSprite(_background, Matrix4x4.CreateScale(scale.X, scale.Y, 1.0f), Color.White);

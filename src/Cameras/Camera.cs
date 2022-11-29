@@ -25,7 +25,7 @@ public class Camera
     private readonly float _lerpSpeed = 1f;
     private float _lerpT = 0;
 
-    private float _zoom = 4.0f;
+    private float _zoom = 1.0f;
     public Vector2 BumpOffset;
 
     public Vector2 DeadZoneInPercentOfViewport = new(0.004f, 0.001f);
@@ -44,12 +44,25 @@ public class Camera
     /// <summary>This is the "true" position, that was used for the view projection calculation Which has shake and bump and crap applied</summary>
     public Vector2 ViewPosition;
 
-    public int Width => MathF.CeilToInt(Size.X / Zoom);
-    public int Height => MathF.CeilToInt(Size.Y / Zoom);
 
-    public Point Size = MyGameMain.DesignResolution;
+    public Point Size;
 
-    public Bounds Bounds => new(Position.X - Width / 2f, Position.Y - Height / 2f, Width, Height);
+    public Vector2 ZoomedSize => Size.ToVec2() / Zoom;
+
+    public Bounds Bounds
+    {
+        get
+        {
+            var size = ZoomedSize;
+            var bounds = new Bounds(
+                Position.X - size.X / 2f,
+                Position.Y - size.Y / 2f,
+                size.X,
+                size.Y
+            );
+            return bounds;
+        }
+    }
 
     public Entity? TrackingEntity;
 
@@ -64,10 +77,15 @@ public class Camera
         set => _zoom = MathF.Clamp(value, 0.001f, 50f);
     }
 
+    public bool FloorViewPosition;
+    public Vector2 FloorRemainder => ViewPosition - FlooredViewPosition;
+    public Vector2 FlooredViewPosition => ViewPosition.Floor();
+
     public Matrix3x2 GetView()
     {
         ViewPosition = Position + ShakeOffset + BumpOffset;
-        return Matrix3x2.CreateTranslation(-ViewPosition.X, -ViewPosition.Y) *
+        var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
+        return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
                Matrix3x2.CreateRotation(Rotation) *
                Matrix3x2.CreateScale(_zoom) *
                Matrix3x2.CreateTranslation(Size.X * 0.5f, Size.Y * 0.5f);
@@ -105,6 +123,10 @@ public class Camera
         _gameScreen = gameScreen;
         InitialFriction = Velocity.Friction;
         Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+
+        Size = gameScreen.Game.GameRenderSize;
+        Zoom = (float)Size.X / 480;
+        FloorViewPosition = MyGameMain.RenderScale != 1;
     }
 
     public void Update(float deltaSeconds, InputHandler input)
@@ -151,7 +173,7 @@ public class Camera
 
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
-            var cameraSize = new Vector2(Width, Height);
+            var cameraSize = ZoomedSize;
             var brakeDist = cameraSize * BrakeDistNearBounds;
 
             var position = new Vector2(
@@ -159,10 +181,10 @@ public class Camera
                 MathF.Loop(Position.Y, LevelBounds.Height)
             );
 
-            var left = MathF.Clamp01((position.X - Width * 0.5f) / brakeDist.X);
-            var right = MathF.Clamp01((LevelBounds.Width - Width * 0.5f - position.X) / brakeDist.X);
-            var top = MathF.Clamp01((position.Y - Height * 0.5f) / brakeDist.Y);
-            var bottom = MathF.Clamp01((LevelBounds.Height - Height * 0.5f - position.Y) / brakeDist.Y);
+            var left = MathF.Clamp01((position.X - cameraSize.X * 0.5f) / brakeDist.X);
+            var right = MathF.Clamp01((LevelBounds.Width - cameraSize.X * 0.5f - position.X) / brakeDist.X);
+            var top = MathF.Clamp01((position.Y - cameraSize.Y * 0.5f) / brakeDist.Y);
+            var bottom = MathF.Clamp01((LevelBounds.Height - cameraSize.Y * 0.5f - position.Y) / brakeDist.Y);
 
             if (Velocity.X < 0)
             {
@@ -190,7 +212,8 @@ public class Camera
         // Bounds clamping
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
-            if (LevelBounds.Width < Width)
+            var cameraSize = ZoomedSize;
+            if (LevelBounds.Width < cameraSize.X)
             {
                 Position.X = LevelBounds.X + LevelBounds.Width * 0.5f; // centered small level
             }
@@ -198,12 +221,12 @@ public class Camera
             {
                 Position.X = MathF.Clamp(
                     Position.X,
-                    LevelBounds.X + Width * 0.5f,
-                    LevelBounds.X + LevelBounds.Width - Width * 0.5f
+                    LevelBounds.X + cameraSize.X * 0.5f,
+                    LevelBounds.X + LevelBounds.Width - cameraSize.X * 0.5f
                 );
             }
 
-            if (LevelBounds.Height < Height)
+            if (LevelBounds.Height < cameraSize.X)
             {
                 Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f; // centered small level
             }
@@ -211,8 +234,8 @@ public class Camera
             {
                 Position.Y = MathF.Clamp(
                     Position.Y,
-                    LevelBounds.Y + Height * 0.5f,
-                    LevelBounds.Y + LevelBounds.Height - Height * 0.5f
+                    LevelBounds.Y + cameraSize.Y * 0.5f,
+                    LevelBounds.Y + LevelBounds.Height - cameraSize.Y * 0.5f
                 );
             }
         }

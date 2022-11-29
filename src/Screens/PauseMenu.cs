@@ -38,14 +38,14 @@ public class PauseMenu : MenuScreen
         {
             Shared.Game.GameScreen.Unload();
             Shared.Menus.RemoveAll();
-            Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);   
+            Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);
         });
     }
 
     public override void Draw(Renderer renderer, double alpha)
     {
         var bgAlpha = State == MenuScreenState.Active ? 1.0f : _transitionPercentage;
-        renderer.DrawRect(new Rectangle(0, 0, (int)MyGameMain.DesignResolution.X, (int)MyGameMain.DesignResolution.Y), Color.Black * bgAlpha * 0.5f);
+        renderer.DrawRect(new Rectangle(0, 0, (int)_game.CompositeRender.Width, (int)_game.CompositeRender.Height), Color.Black * bgAlpha * 0.5f);
         base.Draw(renderer, alpha);
     }
 }

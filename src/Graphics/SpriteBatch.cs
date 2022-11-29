@@ -10,6 +10,7 @@ public enum SpriteFlip
 
 public class SpriteBatch
 {
+    [CVar("batch_round", "Toggle rounding of destinations when rendering with SpriteBatch")]
     public static bool ShouldRoundPositions;
     private static Color[] _tempColors = new Color[4];
 
@@ -173,6 +174,13 @@ public class SpriteBatch
     public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, uint vertexOffset, in Sprite sprite, Matrix4x4 transform, float depth,
         Color[] colors, SpriteFlip flip)
     {
+        /*
+        var topLeft = sprite.DstRect.MinVec();
+        var bottomLeft = sprite.DstRect.BottomLeftVec();
+        var topRight = sprite.DstRect.TopRightVec();
+        var bottomRight = sprite.DstRect.MaxVec();
+        */
+        
         var topLeft = Vector2.Zero;
         var bottomLeft = new Vector2(0, sprite.SrcRect.Height);
         var topRight = new Vector2(sprite.SrcRect.Width, 0);

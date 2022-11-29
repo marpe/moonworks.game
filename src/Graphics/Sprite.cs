@@ -3,7 +3,7 @@
 public struct Sprite
 {
     public Texture Texture;
-    public Rectangle SrcRect;
+    public Bounds SrcRect;
     public UV UV;
 
     public Sprite(Texture texture) : this(texture, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height))
@@ -14,7 +14,11 @@ public struct Sprite
     {
     }
 
-    public Sprite(Texture texture, Rectangle srcRect)
+    public Sprite(Texture texture, Rectangle srcRect) : this(texture, (Bounds)srcRect)
+    {
+    }
+
+    public Sprite(Texture texture, Bounds srcRect)
     {
         Texture = texture;
         SrcRect = srcRect;
@@ -22,13 +26,13 @@ public struct Sprite
         GenerateUVs(ref UV, texture, srcRect);
     }
 
-    public static void GenerateUVs(ref UV uv, in Texture texture, in Rectangle srcRect)
+    public static void GenerateUVs(ref UV uv, in Texture texture, in Bounds srcRect)
     {
-        var posX = (float)srcRect.X / texture.Width;
-        var posY = (float)srcRect.Y / texture.Height;
+        var posX = srcRect.X / texture.Width;
+        var posY = srcRect.Y / texture.Height;
 
-        var dimX = (float)srcRect.Width / texture.Width;
-        var dimY = (float)srcRect.Height / texture.Height;
+        var dimX = srcRect.Width / texture.Width;
+        var dimY = srcRect.Height / texture.Height;
 
         uv.Position.X = posX;
         uv.Position.Y = posY;

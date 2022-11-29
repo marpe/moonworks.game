@@ -12,7 +12,13 @@ public struct Bounds
     public float Right => Max.X;
     public float Bottom => Max.Y;
     public float Left => Min.X;
-    
+
+    public float Height => Size.Y;
+    public float Width => Size.X;
+
+    public float X => Min.X;
+    public float Y => Min.Y;
+
     public Bounds(float x, float y, float w, float h)
     {
         Min = new Vector2(x, y);
@@ -23,11 +29,16 @@ public struct Bounds
     {
     }
 
-    public static implicit operator Rectangle(Bounds b)
+    public static implicit operator Bounds(Rectangle r)
+    {
+        return new Bounds(r.X, r.Y, r.Width, r.Height);
+    }
+
+    public static explicit operator Rectangle(Bounds b)
     {
         return new Rectangle((int)b.Min.X, (int)b.Min.Y, (int)b.Size.X, (int)b.Size.Y);
     }
-
+    
     public static Bounds Lerp(Bounds a, Bounds b, double alpha)
     {
         var min = Vector2.Lerp(a.Min, b.Min, (float)alpha);

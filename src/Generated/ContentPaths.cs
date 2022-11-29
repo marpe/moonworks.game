@@ -75,9 +75,14 @@ public static class ContentPaths
             public const string pixelize_transition_frag_spv = @"Content\Shaders\Pixelize\pixelize_transition.frag.spv";
             public const string pixelize_transition_vert_spv = @"Content\Shaders\Pixelize\pixelize_transition.vert.spv";
         }
-        public const string sg2_sprite_vert_spv = @"Content\Shaders\sg2_sprite.vert.spv";
-        public const string sprite_frag_spv = @"Content\Shaders\sprite.frag.spv";
-        public const string sprite_vert_spv = @"Content\Shaders\sprite.vert.spv";
+        public static class RimLight
+        {
+        }
+        public static class Sprite
+        {
+            public const string sprite_frag_spv = @"Content\Shaders\Sprite\sprite.frag.spv";
+            public const string sprite_vert_spv = @"Content\Shaders\Sprite\sprite.vert.spv";
+        }
     }
     public static class Textures
     {

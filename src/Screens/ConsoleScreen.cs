@@ -57,9 +57,9 @@ public class ConsoleScreen
     {
         _game = game;
 
-        var sz = MyGameMain.DesignResolution;
+        var sz = game.MainWindow.Size;
         _renderTarget = Texture.CreateTexture2D(
-            game.GraphicsDevice, sz.X, sz.Y, TextureFormat.B8G8R8A8,
+            game.GraphicsDevice, (uint)sz.X, (uint)sz.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
     }
@@ -79,7 +79,7 @@ public class ConsoleScreen
     {
         var inputState = _game.InputHandler;
 
-        var sz = MyGameMain.DesignResolution;
+        var sz = new UPoint(_renderTarget.Width, _renderTarget.Height);
         UpdateTransition(deltaSeconds, sz.X, sz.Y);
 
         if (IsHidden)
@@ -445,7 +445,7 @@ public class ConsoleScreen
     }
 
     public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';
-    
+
     private void DrawInternal(Renderer renderer, double alpha)
     {
         renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha);

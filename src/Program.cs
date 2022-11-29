@@ -10,11 +10,10 @@ internal class Program
 
         CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
         
-        var sz = MyGameMain.DesignResolution;
         var windowCreateInfo = new WindowCreateInfo
         {
-            WindowWidth = sz.X,
-            WindowHeight = sz.Y,
+            WindowWidth = 1920,
+            WindowHeight = 1080,
             WindowTitle = "ProjectName",
             ScreenMode = ScreenMode.Windowed,
             PresentMode = PresentMode.FIFO,

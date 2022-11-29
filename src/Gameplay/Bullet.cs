@@ -48,11 +48,14 @@ public class Bullet : Entity
 
         for (var i = World.Enemies.Count - 1; i >= 0; i--)
         {
-            var offset = World.Enemies[i].Bounds.Center - Bounds.Center;
+            var enemy = World.Enemies[i];
+            if (enemy.IsDead || enemy.IsDestroyed)
+                continue;
+            var offset = enemy.Bounds.Center - Bounds.Center;
             if (offset.LengthSquared() <= distance * distance)
             {
                 IsDestroyed = true;
-                World.Enemies[i].IsDead = true;
+                enemy.IsDead = true;
                 World.FreezeFrame(0.5f);
                 return;
             }
