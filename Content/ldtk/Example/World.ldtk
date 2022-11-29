@@ -1511,6 +1511,20 @@
 							"defUid": 107,
 							"px": [40,96],
 							"fieldInstances": []
+						},
+						{
+							"__identifier": "Player",
+							"__grid": [12,8],
+							"__pivot": [0.5,1],
+							"__tags": [],
+							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
+							"__smartColor": "#94D9B3",
+							"iid": "9971cab0-5110-11ed-b5e9-dff8e27a9b7f",
+							"width": 8,
+							"height": 12,
+							"defUid": 120,
+							"px": [200,144],
+							"fieldInstances": []
 						}
 					]
 				},
@@ -2652,7 +2666,7 @@
 					"entityInstances": [
 						{
 							"__identifier": "Player",
-							"__grid": [20,15],
+							"__grid": [20,18],
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 80, "y": 0, "w": 16, "h": 16 },
@@ -2661,7 +2675,7 @@
 							"width": 8,
 							"height": 12,
 							"defUid": 120,
-							"px": [328,256],
+							"px": [328,304],
 							"fieldInstances": []
 						}
 					]

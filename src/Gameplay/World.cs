@@ -39,6 +39,7 @@ public class World
     private static Vector2 SavedPos;
 
     public Level Level;
+    public Level[] Levels;
     private readonly Dictionary<long, string> _tileSetTextureMapping;
 
     public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
@@ -60,9 +61,20 @@ public class World
         _debugDraw = new DebugDrawItems();
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
-        Level[] levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-        var firstLevel = FindLevel("World_Level_1", levels);
+        Levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
+        var firstLevel = FindLevel("World_Level_1", Levels);
         StartLevel(firstLevel);
+    }
+
+    public static Level FindLevel(string identifier, Level[] levels)
+    {
+        for (var i = 0; i < levels.Length; i++)
+        {
+            if (levels[i].Identifier == identifier)
+                return levels[i];
+        }
+
+        throw new InvalidOperationException($"Level not found: {identifier}");
     }
 
     [MemberNotNull(nameof(Level), nameof(Player))]
@@ -72,12 +84,46 @@ public class World
         Bullets.Clear();
 
         Level = level;
-        
+
         _gameScreen.Camera.LevelBounds = Level.Bounds;
 
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
         Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
+    }
+
+    [ConsoleHandler("next_level")]
+    public static void NextLevel()
+    {
+        var world = Shared.Game.GameScreen.World;
+        if (world == null)
+        {
+            Logger.LogInfo("Requires a world to be loaded");
+            return;
+        }
+
+        var currIndex = Array.IndexOf(world.Levels, world.Level);
+        var nextIndex = (currIndex + 1) % world.Levels.Length;
+        var nextLevel = world.Levels[nextIndex];
+        world.StartLevel(nextLevel);
+        Logger.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
+    }
+
+    [ConsoleHandler("prev_level")]
+    public static void PrevLevel()
+    {
+        var world = Shared.Game.GameScreen.World;
+        if (world == null)
+        {
+            Logger.LogInfo("Requires a world to be loaded");
+            return;
+        }
+
+        var currIndex = Array.IndexOf(world.Levels, world.Level);
+        var prevIndex = (world.Levels.Length + (currIndex - 1)) % world.Levels.Length;
+        var prevLevel = world.Levels[prevIndex];
+        world.StartLevel(prevLevel);
+        Logger.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
     private static List<Entity> LoadEntitiesInLevel(Level level)
@@ -486,17 +532,6 @@ public class World
         bullet.Pivot = new Vector2(0.5f, 0.5f);
         bullet.Size = new Point(8, 8);
         Bullets.Add(bullet);
-    }
-
-    public static Level FindLevel(string identifier, Level[] levels)
-    {
-        for (var i = 0; i < levels.Length; i++)
-        {
-            if (levels[i].Identifier == identifier)
-                return levels[i];
-        }
-
-        throw new InvalidOperationException($"Level not found: {identifier}");
     }
 
     public static LayerDefinition GetLayerDefinition(LdtkJson ldtkRaw, long layerDefUid)

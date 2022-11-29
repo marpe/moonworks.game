@@ -361,6 +361,9 @@ public static class MathF
         return Math.Abs(value);
     }
 
+    /// <summary>
+    /// Returns the decimal part of a number, Frac(-0.1f) = 0.1f, Frac(0.3f) = 0.3f
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float Frac(float value)
     {

@@ -63,10 +63,10 @@ public class PlayerBehaviour
             Player.World.SpawnBullet(Player.Position.Current, direction);
         }
 
-        if (Player.Position.Current.Y > 300)
+        /*if (Player.Position.Current.Y > 300)
         {
             Player.Position.SetPrevAndCurrent(Player.Position.Initial);
-        }
+        }*/
 
         if (Player.Mover.IsGrounded(Player.Velocity))
         {
