@@ -51,7 +51,7 @@ public class Pipelines
         public Vector4 TexelSize;
         public Vector4 Bounds;
         public Vector3 LightColor;
-        public float Padding1;
+        public float Debug;
     }
     
     [StructLayout(LayoutKind.Sequential)]

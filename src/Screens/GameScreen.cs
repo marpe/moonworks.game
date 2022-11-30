@@ -174,7 +174,12 @@ public class GameScreen
             for (var i = 0; i < _lights.Count; i++)
             {
                 var light = _lights[i];
-                light.Position = World.Player.Position + MathF.AngleToVector(_game.Time.TotalElapsedTime + ((float)i / _lights.Count) * MathHelper.TwoPi, 40);
+                var halfSize = new Vector2(World.Player.Size.X, World.Player.Size.Y) * 0.5f;
+                light.Position = World.Player.Position + halfSize +
+                                 MathF.AngleToVector(
+                                     ((float)i / _lights.Count) * MathHelper.TwoPi,
+                                     30 + MathF.Sin(_game.Time.TotalElapsedTime + (float)i / _lights.Count * MathHelper.TwoPi) * 60f
+                                 );
             }
 
             World.Update(deltaSeconds, _game.InputHandler);
@@ -233,10 +238,10 @@ public class GameScreen
         {
             renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
             World.Draw(renderer, Camera.Bounds, alpha);
-            
+
             // draw ambient background color
-            renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.5f);
-            
+            renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);
+
             var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
         }
@@ -244,12 +249,12 @@ public class GameScreen
         {
             World.DrawEntities(renderer, alpha);
             var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-            renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Black, viewProjection);
+            renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
             /*TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Size());
             commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);*/
 
 
-            renderer.DrawRect(Vector2.Zero, (Vector2.One * renderDestination.Size()), Color.Black);
+            renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Black);
             renderer.UpdateBuffers(ref commandBuffer);
             renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
             for (var i = 0; i < _lights.Count; i++)
@@ -264,8 +269,8 @@ public class GameScreen
                 var fragUniform = new Pipelines.RimLightUniforms()
                 {
                     LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
-                    LightIntensity = 5f,
-                    LightRadius = 50f,
+                    LightIntensity = 1f,
+                    LightRadius = 30f,
                     TexelSize = new Vector4(
                         1.0f / renderDestination.Width,
                         1.0f / renderDestination.Height,
@@ -278,7 +283,8 @@ public class GameScreen
                         Camera.Position.Y - Camera.ZoomedSize.Y * 0.5f,
                         Camera.ZoomedSize.X,
                         Camera.ZoomedSize.Y
-                    )
+                    ),
+                    Debug = 0
                 };
                 var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
                 var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
