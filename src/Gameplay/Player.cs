@@ -51,7 +51,7 @@ public partial class Player : Entity
 
         var xform = Matrix3x2.CreateTranslation(Pivot * (Size - World.DefaultGridSize)) *
                     squash *
-                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+                    Matrix3x2.CreateTranslation(Vector2.Lerp(Position.LastUpdatePosition, Position.Current, (float)alpha));
         LastTransform = xform.ToMatrix4x4();
         return LastTransform;
     }

@@ -6,24 +6,14 @@ public class Position
     public string DebugDisplayString => string.Concat(Current.X.ToString(), " ", Current.Y.ToString());
 
     public Vector2 Current;
-    
-    [HideInInspector]
-    public Vector2 Previous { get; private set; }
 
-    [HideInInspector]
-    public Vector2 Initial { get; private set; } = Vector2.Zero;
+    [HideInInspector] public Vector2 Previous { get; private set; }
 
-    /// Position used during render
-    [HideInInspector]
-    public Vector2 ViewPosition { get; private set; }
+    [HideInInspector] public Vector2 Initial { get; private set; } = Vector2.Zero;
 
-    /// Lerp between previous and current using alpha and update previous
-    public Vector2 Lerp(double alpha)
-    {
-        ViewPosition = Vector2.Lerp(Previous, Current, (float)alpha);
-        Previous = Current;
-        return ViewPosition;
-    }
+    /// Position used during render to interpolate with
+    [HideInInspector]
+    public Vector2 LastUpdatePosition { get; private set; }
 
     public Position()
     {
@@ -47,5 +37,10 @@ public class Position
     public static implicit operator Vector2(Position position)
     {
         return position.Current;
+    }
+
+    public void SetLastUpdatePosition()
+    {
+        LastUpdatePosition = Current;
     }
 }

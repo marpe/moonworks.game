@@ -9,23 +9,19 @@ public enum FacingDirection
 public partial class Enemy : Entity
 {
     public Velocity Velocity = new();
-    
-    [HideInInspector]
-    public SpriteFlip Flip;
-    
-    [HideInInspector]
-    public float TimeOffset;
+
+    [HideInInspector] public SpriteFlip Flip;
+
+    [HideInInspector] public float TimeOffset;
 
     private EnemyBehaviour? _behaviour;
     public EnemyBehaviour Behaviour => _behaviour ?? throw new InvalidOperationException();
-    
-    [HideInInspector]
-    public float FreezeMovementUntil;
-    
+
+    [HideInInspector] public float FreezeMovementUntil;
+
     public Mover Mover = new();
 
-    [HideInInspector]
-    public FacingDirection FacingDirection = FacingDirection.Right;
+    [HideInInspector] public FacingDirection FacingDirection = FacingDirection.Right;
 
     public bool IsDead;
 
@@ -56,7 +52,7 @@ public partial class Enemy : Entity
     public Matrix4x4 GetTransform(double alpha)
     {
         var xform = Matrix3x2.CreateTranslation(Size * Pivot - Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize)) *
-                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+                    Matrix3x2.CreateTranslation(Vector2.Lerp(Position.LastUpdatePosition, Position.Current, (float)alpha));
         return xform.ToMatrix4x4();
     }
 

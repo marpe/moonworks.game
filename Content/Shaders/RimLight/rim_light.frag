@@ -53,6 +53,9 @@ void main()
 	rim.y -= sign(value);
 	inFrontOf += value;
 
+	if (inFrontOf == 0)
+		discard;
+
 	vec2 worldPos = Uniforms.bounds.xy + texCoord * Uniforms.bounds.zw;
 	vec2 offset = Uniforms.lightPos - worldPos;
 	vec2 dir = normalize(offset);

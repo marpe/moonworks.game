@@ -33,7 +33,7 @@ public class Bullet : Entity
     public Matrix4x4 GetTransform(double alpha)
     {
         var xform = Matrix3x2.CreateTranslation(Size * Pivot - Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize)) *
-                    Matrix3x2.CreateTranslation(Position.Lerp(alpha));
+                    Matrix3x2.CreateTranslation(Vector2.Lerp(Position.LastUpdatePosition, Position.Current, (float)alpha));
         return xform.ToMatrix4x4();
     }
 

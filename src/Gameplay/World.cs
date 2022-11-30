@@ -180,10 +180,21 @@ public class World
             FreezeFrameTimer = MathF.Max(0, FreezeFrameTimer - deltaSeconds);
     }
 
+    public void UpdateLastPositions()
+    {
+        Player.Position.SetLastUpdatePosition();
+        for (var i = 0; i < Enemies.Count; i++)
+            Enemies[i].Position.SetLastUpdatePosition();
+        for (var i = 0; i < Bullets.Count; i++)
+            Bullets[i].Position.SetLastUpdatePosition();
+    }
+
     public void Update(float deltaSeconds, InputHandler input)
     {
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
+
+        UpdateLastPositions();
 
         UpdateFreezeTime(deltaSeconds);
 

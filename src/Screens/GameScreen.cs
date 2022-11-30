@@ -178,7 +178,7 @@ public class GameScreen
                 light.Position = World.Player.Position + halfSize +
                                  MathF.AngleToVector(
                                      ((float)i / _lights.Count) * MathHelper.TwoPi,
-                                     30 + MathF.Sin(_game.Time.TotalElapsedTime + (float)i / _lights.Count * MathHelper.TwoPi) * 60f
+                                     30 + MathF.Sin(_game.Time.TotalElapsedTime * 5f + (float)i / _lights.Count * MathHelper.TwoPi) * 60f
                                  );
             }
 
@@ -240,62 +240,70 @@ public class GameScreen
             World.Draw(renderer, Camera.Bounds, alpha);
 
             // draw ambient background color
-            renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);
+            // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);
 
             var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
         }
 
         {
-            World.DrawEntities(renderer, alpha);
-            var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-            renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
-            /*TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Size());
-            commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);*/
-
-
-            renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Black);
-            renderer.UpdateBuffers(ref commandBuffer);
-            renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
-            for (var i = 0; i < _lights.Count; i++)
-            {
-                var light = _lights[i];
-                var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
-                var fragmentBindings = new[]
-                {
-                    new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_copyRender, Renderer.PointClamp)
-                };
-                commandBuffer.BindFragmentSamplers(fragmentBindings);
-                var fragUniform = new Pipelines.RimLightUniforms()
-                {
-                    LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
-                    LightIntensity = 1f,
-                    LightRadius = 30f,
-                    TexelSize = new Vector4(
-                        1.0f / renderDestination.Width,
-                        1.0f / renderDestination.Height,
-                        renderDestination.Width,
-                        renderDestination.Height
-                    ),
-                    LightPos = light.Position,
-                    Bounds = new Vector4(
-                        Camera.Position.X - Camera.ZoomedSize.X * 0.5f,
-                        Camera.Position.Y - Camera.ZoomedSize.Y * 0.5f,
-                        Camera.ZoomedSize.X,
-                        Camera.ZoomedSize.Y
-                    ),
-                    Debug = 0
-                };
-                var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
-                var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
-                SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
-            }
-
-            renderer.EndRenderPass(ref commandBuffer);
+            DrawLights(renderer, ref commandBuffer, renderDestination, alpha);
         }
 
 
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);
+    }
+
+    private void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        if (World == null)
+            return;
+
+        World.DrawEntities(renderer, alpha);
+        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
+        /*TextureUtils.EnsureTextureSize(ref _copyRender, _game.GraphicsDevice, renderDestination.Size());
+            commandBuffer.CopyTextureToTexture(renderDestination, _copyRender, Filter.Nearest);*/
+
+
+        renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
+        renderer.UpdateBuffers(ref commandBuffer);
+        renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
+        for (var i = 0; i < _lights.Count; i++)
+        {
+            var light = _lights[i];
+            var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            var fragmentBindings = new[]
+            {
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_copyRender, Renderer.PointClamp)
+            };
+            commandBuffer.BindFragmentSamplers(fragmentBindings);
+            var fragUniform = new Pipelines.RimLightUniforms()
+            {
+                LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
+                LightIntensity = 1f,
+                LightRadius = 30f,
+                TexelSize = new Vector4(
+                    1.0f / renderDestination.Width,
+                    1.0f / renderDestination.Height,
+                    renderDestination.Width,
+                    renderDestination.Height
+                ),
+                LightPos = light.Position,
+                Bounds = new Vector4(
+                    Camera.Position.X - Camera.ZoomedSize.X * 0.5f,
+                    Camera.Position.Y - Camera.ZoomedSize.Y * 0.5f,
+                    Camera.ZoomedSize.X,
+                    Camera.ZoomedSize.Y
+                ),
+                Debug = 0
+            };
+            var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
+            var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
+            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
+        }
+
+        renderer.EndRenderPass(ref commandBuffer);
     }
 
     private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
