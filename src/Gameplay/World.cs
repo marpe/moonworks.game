@@ -193,9 +193,7 @@ public class World
     {
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
-
-        UpdateLastPositions();
-
+        
         UpdateFreezeTime(deltaSeconds);
 
         if (FreezeFrameTimer > 0)

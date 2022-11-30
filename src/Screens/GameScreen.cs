@@ -160,6 +160,8 @@ public class GameScreen
         if (World == null)
             return;
 
+        World.UpdateLastPositions();
+
         if (_game.InputHandler.IsKeyPressed(KeyCode.Escape))
         {
             Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
