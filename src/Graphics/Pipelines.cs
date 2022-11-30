@@ -47,9 +47,11 @@ public class Pipelines
     {
         public float LightIntensity;
         public float LightRadius;
-        public Vector4 LightColor;
+        public Vector2 LightPos;
         public Vector4 TexelSize;
-        public Vector2 ScreenSpaceLightPos;
+        public Vector4 Bounds;
+        public Vector3 LightColor;
+        public float Padding1;
     }
     
     [StructLayout(LayoutKind.Sequential)]
@@ -117,6 +119,8 @@ public class Pipelines
             ColorWriteMask = ColorComponentFlags.RGBA
         };
         
+        // var blendState = ColorAttachmentBlendState.Additive;
+
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(

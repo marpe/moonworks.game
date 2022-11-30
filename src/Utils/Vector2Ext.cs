@@ -13,4 +13,10 @@ public static class Vector2Ext
     {
         return new Vector2(MathF.Floor(self.X), MathF.Floor(self.Y));
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 Ceil(this Vector2 self)
+    {
+        return new Vector2(MathF.Ceil(self.X), MathF.Ceil(self.Y));
+    }
 }

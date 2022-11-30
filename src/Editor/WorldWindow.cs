@@ -55,9 +55,13 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 Matrix3x2.Invert(view, out var invertedView);
                 var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
                 ImGui.TextUnformatted($"MousePos {mouseInWorld.ToString()}");
+                ImGui.TextUnformatted($"MouseInScreen {Shared.Game.GameScreen.GetWorldPositionInScreen(mouseInWorld).ToString()}");
 
                 var mouseCell = Entity.ToCell(mouseInWorld);
                 ImGui.TextUnformatted($"MouseCel {mouseCell.ToString()}");
+
+                var playerScreen = Shared.Game.GameScreen.GetWorldPositionInScreen(Shared.Game.GameScreen.World!.Player.Position.Current);
+                ImGui.TextUnformatted($"PlayerScreen {playerScreen.ToString()}");
 
                 ImGui.EndTabItem();
             }
