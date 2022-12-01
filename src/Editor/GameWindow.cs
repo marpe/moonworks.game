@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
@@ -27,7 +28,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
         if (!IsOpen)
             return;
 
-        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse;
+        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
+                    ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;
 
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
@@ -43,11 +45,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 Logger.LogInfo("Binding _compositeRender texture");
                 _gameRenderTextureId = _editor.ImGuiRenderer.BindTexture(_editor.CompositeRender);
             }
-
-            HandleInput();
-
-            var dl = ImGui.GetWindowDrawList();
-
+            
             var windowSize = ImGui.GetWindowSize();
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.CompositeRender.Size());
 
@@ -60,6 +58,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var gameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - _gameRenderScale * viewportHalfSize +
                                 _gameRenderScale * _gameRenderPosition;
             var gameRenderMax = gameRenderMin + _gameRenderScale * viewportSize;
+            
+            var dl = ImGui.GetWindowDrawList();
             dl->AddImage(
                 (void*)_gameRenderTextureId.Value,
                 gameRenderMin,
@@ -68,14 +68,40 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 Vector2.One
             );
 
+            ImGui.SetCursorScreenPos(gameRenderMin);
+
+            ImGui.InvisibleButton(
+                "GameRender",
+                viewportSize * _gameRenderScale,
+                ImGuiButtonFlags.MouseButtonLeft |
+                ImGuiButtonFlags.MouseButtonMiddle |
+                ImGuiButtonFlags.MouseButtonRight |
+                (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap
+            );
+
+            /*ImGui.Image(
+                (void*)_gameRenderTextureId.Value,
+                viewportSize * _gameRenderScale,
+                Vector2.Zero,
+                Vector2.One,
+                Num.Vector4.One,
+                Num.Vector4.Zero
+            );*/
+
+            var isActive = ImGui.IsItemActive();
+            var isHovered = ImGui.IsItemHovered();
+            HandleInput(isActive, isHovered);
+            
+            ImGui.SetItemAllowOverlap();
+            DrawButtons();
+
             var gameRenderOffset = SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
 
-            DrawButtons();
             DrawDebugOverlay(gameRenderMin, gameRenderMax, gameRenderOffset);
 
             if (ImGui.BeginPopupContextWindow("GameContextMenu"))
             {
-                ImGui.Selectable("Show window debug", ImGuiExt.RefPtr(ref _showDebug), ImGuiSelectableFlags.None, default);
+                ImGui.MenuItem("Show window debug", default, ImGuiExt.RefPtr(ref _showDebug));
                 ImGui.EndPopup();
             }
         }
@@ -85,6 +111,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void DrawButtons()
     {
+        var startPos = ImGui.GetCursorStartPos();
+        ImGui.SetCursorPos(startPos);
         if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsRotate, Color.Black, "Reset pan & zoom"))
         {
             _gameRenderScale = 1.0f;
@@ -106,15 +134,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
         return gameRenderOffset;
     }
 
-    private void HandleInput()
+    private void HandleInput(bool isActive, bool isHovered)
     {
-        if (ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
+        if (isActive && ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
         {
             _gameRenderPosition += ImGui.GetMouseDragDelta(ImGuiMouseButton.Middle) * 1.0f / _gameRenderScale;
             ImGui.ResetMouseDragDelta(ImGuiMouseButton.Middle);
         }
 
-        if (ImGui.GetIO()->MouseWheel != 0)
+        if (isHovered && ImGui.GetIO()->MouseWheel != 0)
         {
             _gameRenderScale += ImGui.GetIO()->MouseWheel * 0.1f * _gameRenderScale;
             if (_gameRenderScale < 1.0f)
@@ -128,15 +156,31 @@ public unsafe class GameWindow : ImGuiEditorWindow
             return;
 
         var windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize |
-                          ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoNav;
+                          ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoNav;
 
-        var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
-        ImGui.SetNextWindowBgAlpha(0.35f);
+        ImGui.SetNextWindowBgAlpha(0.5f);
+
+        var cursorStart = ImGui.GetCursorStartPos();
+        ImGui.SetCursorPos(cursorStart);
+        var contentMin = ImGui.GetWindowContentRegionMin();
+        var contentMax = ImGui.GetWindowContentRegionMax();
+        
+        var windowPos = ImGui.GetWindowPos();
+        var windowPadding = 10f;
+        var overlayPos = new Vector2(
+            windowPos.X + contentMax.X - windowPadding,
+            windowPos.Y + contentMin.Y + windowPadding
+        );
+        var windowPosPivot = new Vector2(
+            1.0f,
+            0
+        );
+        ImGui.SetNextWindowPos(overlayPos, ImGuiCond.Always, windowPosPivot);
+        ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);
         if (ImGui.Begin("GameWindowOverlay", ImGuiExt.RefPtr(ref _showDebug), windowFlags))
         {
             ImGui.Text(
                 $"Min: {gameRenderMin.ToString()}, Max: {gameRenderMax.ToString()}\n" +
-                $"WinViewport: {windowViewportPosition.ToString()}\n" +
                 $"GameRenderOffset: {gameRenderOffset.ToString()}");
 
             if (ImGui.BeginPopupContextWindow())
