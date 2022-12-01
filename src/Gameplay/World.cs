@@ -96,8 +96,6 @@ public class World
 
         Level = level;
 
-        _gameScreen.Camera.LevelBounds = Level.Bounds;
-
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
         Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
@@ -209,6 +207,12 @@ public class World
 
     public void Update(float deltaSeconds, InputHandler input)
     {
+        // first update stuff
+        if (WorldUpdateCount == 0)
+        {
+            _gameScreen.Camera.LevelBounds = Level.Bounds;
+        }
+
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
 
