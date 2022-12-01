@@ -89,6 +89,12 @@ public class Mover
         return false;
     }
 
+    private void SanityCheck(Vector2 position)
+    {
+        if (Parent.HasCollision(position, Parent.Size))
+            Logger.LogInfo("Moved into collision tile!");
+    }
+
     public void Unstuck()
     {
         if (TryGetValidPosition(out var validPosition))
@@ -136,8 +142,7 @@ public class Mover
                     var resolved = position;
                     resolved.X -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(intersection, 0), resolved));
-                    if (Parent.HasCollision(resolved, Parent.Size))
-                        Logger.LogInfo("Moved into collision tile!");
+                    SanityCheck(resolved);
                     position = resolved;
                     velocity.X = deltaMove.X = 0;
                 }
@@ -160,8 +165,7 @@ public class Mover
                     var resolved = position;
                     resolved.Y -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(0, intersection), resolved));
-                    if (Parent.HasCollision(resolved, Parent.Size))
-                        Logger.LogInfo("Moved into collision tile!");
+                    SanityCheck(resolved);
                     position = resolved;
                     velocity.Y = deltaMove.Y = 0;
                 }
@@ -169,8 +173,7 @@ public class Mover
         }
 
         Parent.Position.Current = position;
-        if (Parent.HasCollision(Parent.Position.Current, Parent.Size))
-            Logger.LogInfo("Moved into collision tile!");
+        SanityCheck(Parent.Position.Current); // one last check, because I don't trust anyone, including myself
 
         Velocity.ApplyFriction(velocity);
 
