@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using MyGame.Cameras;
 
 namespace MyGame;
 
@@ -8,6 +9,7 @@ public class World
 
     public bool IsDisposed { get; private set; }
 
+    [CVar("mouse.debug", "Toggle mouse debugging", false)]
     public static bool DebugMouse;
 
     [CVar("world.debug", "Toggle world debugging")]
@@ -15,6 +17,12 @@ public class World
 
     [CVar("level.debug", "Toggle level debugging")]
     public static bool DebugLevel;
+
+    [CVar("lights.debug", "Toggle light debugging", false)]
+    public static bool DebugLights;
+
+    [CVar("camera.debug", "Toggle camera debugging")]
+    public static bool DebugCamera;
 
     private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
@@ -37,13 +45,13 @@ public class World
     public Vector2 MousePivot = new Vector2(0f, 0f);
     public Point MouseSize = new Point(8, 12);
 
-    public static bool DebugCameraBounds;
     private static Vector2 SavedPos;
 
     public Level Level;
     public Level[] Levels;
     private readonly Dictionary<long, string> _tileSetTextureMapping;
     public float FreezeFrameTimer;
+    private Texture? _copyRender;
 
     public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
     {
@@ -63,8 +71,7 @@ public class World
 
         var isMultiWorld = LdtkRaw.Worlds.Length > 0;
         Levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-        var firstLevel = FindLevel("World_Level_1", Levels);
-        StartLevel(firstLevel);
+        StartLevel("World_Level_1");
     }
 
     public static Level FindLevel(string identifier, Level[] levels)
@@ -79,8 +86,10 @@ public class World
     }
 
     [MemberNotNull(nameof(Level), nameof(Player))]
-    private void StartLevel(Level level)
+    public void StartLevel(string levelIdentifier)
     {
+        var level = FindLevel(levelIdentifier, Levels);
+
         Enemies.Clear();
         Bullets.Clear();
         Lights.Clear();
@@ -108,7 +117,7 @@ public class World
         var currIndex = Array.IndexOf(world.Levels, world.Level);
         var nextIndex = (currIndex + 1) % world.Levels.Length;
         var nextLevel = world.Levels[nextIndex];
-        world.StartLevel(nextLevel);
+        world.StartLevel(nextLevel.Identifier);
         Logger.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
     }
 
@@ -125,7 +134,7 @@ public class World
         var currIndex = Array.IndexOf(world.Levels, world.Level);
         var prevIndex = (world.Levels.Length + (currIndex - 1)) % world.Levels.Length;
         var prevLevel = world.Levels[prevIndex];
-        world.StartLevel(prevLevel);
+        world.StartLevel(prevLevel.Identifier);
         Logger.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
@@ -202,7 +211,7 @@ public class World
     {
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
-        
+
         UpdateFreezeTime(deltaSeconds);
 
         if (FreezeFrameTimer > 0)
@@ -258,16 +267,28 @@ public class World
         }
     }
 
-    public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
+    public void Draw(Renderer renderer, Camera camera, double alpha)
     {
-        DrawLevel(renderer, Level, cameraBounds);
+        DrawLevel(renderer, Level, camera.ZoomedBounds);
         DrawEntities(renderer, alpha);
-        DrawCameraBounds(renderer, cameraBounds);
 
         if (Debug)
         {
+            DrawCameraBounds(renderer, camera);
+            DrawLightBounds(renderer);
             DrawMousePosition(renderer);
             _debugDraw.Render(renderer);
+        }
+    }
+
+    private void DrawLightBounds(Renderer renderer)
+    {
+        if (!Debug || !DebugLights)
+            return;
+        for (var i = 0; i < Lights.Count; i++)
+        {
+            var light = Lights[i];
+            renderer.DrawRectOutline(light.Bounds.Min, light.Bounds.Max, light.Color);
         }
     }
 
@@ -315,13 +336,55 @@ public class World
         // renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
     }
 
-    private static void DrawCameraBounds(Renderer renderer, Bounds cameraBounds)
+    private static void DrawCameraBounds(Renderer renderer, Camera camera)
     {
-        if (!Debug || !DebugCameraBounds)
+        if (!Debug || !DebugCamera)
             return;
 
+        var cameraBounds = camera.ZoomedBounds;
         var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
         renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
+
+        var offset = camera.TargetPosition - camera.Position;
+        var dz = camera.DeadZone / 2;
+        var lengthX = MathF.Abs(offset.X) - dz.X;
+        var lengthY = MathF.Abs(offset.Y) - dz.Y;
+        var isDeadZoneActive = lengthX > 0 || lengthY > 0;
+        if (isDeadZoneActive)
+        {
+            var pointOnDeadZone = new Vector2(
+                MathF.Clamp(camera.TargetPosition.X, camera.Position.X - dz.X, camera.Position.X + dz.X),
+                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Y - dz.Y, camera.Position.Y + dz.Y)
+            );
+            renderer.DrawLine(pointOnDeadZone, camera.TargetPosition, Color.Red);
+        }
+
+        renderer.DrawRectOutline(camera.Position - dz, camera.Position + dz, Color.Magenta * (isDeadZoneActive ? 1.0f : 0.33f));
+        renderer.DrawPoint(camera.TargetPosition, Color.Cyan, 4f);
+
+        var posInLevel = camera.Position - camera.LevelBounds.MinVec();
+        var cameraMin = posInLevel - camera.ZoomedSize * 0.5f;
+        var cameraMax = posInLevel + camera.ZoomedSize * 0.5f;
+        
+        if (camera.Velocity.X < 0 && cameraMin.X < camera.BrakeZone.X)
+        {
+            renderer.DrawLine(camera.Position, camera.Position - new Vector2(camera.BrakeZone.X - cameraMin.X, 0), Color.Red);
+        }
+        else if (camera.Velocity.X > 0 && cameraMax.X > camera.LevelBounds.Width - camera.BrakeZone.X)
+        {
+            renderer.DrawLine(camera.Position, camera.Position + new Vector2(cameraMax.X - (camera.LevelBounds.Width - camera.BrakeZone.X), 0), Color.Red);
+        }
+
+        if (camera.Velocity.Y < 0 && cameraMin.Y < camera.BrakeZone.Y)
+        {
+            renderer.DrawLine(camera.Position, camera.Position - new Vector2(0, camera.BrakeZone.Y - cameraMin.Y), Color.Red);
+        }
+        else if (camera.Velocity.Y > 0 && cameraMax.Y > camera.LevelBounds.Height - camera.BrakeZone.Y)
+        {
+            renderer.DrawLine(camera.Position, camera.Position + new Vector2(0, cameraMax.Y - (camera.LevelBounds.Height - camera.BrakeZone.Y)), Color.Red);
+        }
+
+        renderer.DrawRectOutline(camera.LevelBounds.MinVec() + camera.BrakeZone, camera.LevelBounds.MaxVec() - camera.BrakeZone, Color.Green);
     }
 
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
@@ -580,8 +643,6 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    private Texture? _copyRender;
-
     public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         _copyRender ??= TextureUtils.CreateTexture(_gameScreen.Game.GraphicsDevice, _gameScreen.Game.GameRender);
@@ -614,14 +675,14 @@ public class World
                     renderDestination.Width,
                     renderDestination.Height
                 ),
-                LightPos = light.Position,
+                LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
                 Bounds = new Vector4(
                     cameraBounds.Min.X,
                     cameraBounds.Min.Y,
                     cameraBounds.Width,
                     cameraBounds.Height
                 ),
-                Debug = light.Debug
+                Debug = DebugLights || light.Debug ? 1.0f : 0,
             };
             var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
             var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);

@@ -1,6 +1,6 @@
 namespace MyGame;
 
-[CustomInspector(typeof(GroupInspector))]
+[CustomInspector<GroupInspector>]
 public partial class Player : Entity
 {
     public bool EnableSquash = true;

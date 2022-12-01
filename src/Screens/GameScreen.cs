@@ -197,7 +197,7 @@ public class GameScreen
 
         {
             renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
-            World.Draw(renderer, Camera.ZoomedBounds, alpha);
+            World.Draw(renderer, Camera, alpha);
 
             // draw ambient background color
             // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);

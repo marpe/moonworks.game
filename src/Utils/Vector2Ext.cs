@@ -19,4 +19,13 @@ public static class Vector2Ext
     {
         return new Vector2(MathF.Ceil(self.X), MathF.Ceil(self.Y));
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 ToNormal(this Vector2 vector)
+    {
+        var lengthSquared = vector.X * vector.X + vector.Y * vector.Y;
+        if (lengthSquared < MathF.Epsilon * MathF.Epsilon)
+            return Vector2.Zero;
+        return vector / MathF.Sqrt(lengthSquared);
+    }
 }

@@ -74,7 +74,7 @@ public class TWConsole
                 $"Cannot use CVar attribute on non-static property: {prop.DeclaringType?.Name}.{prop.Name}");
         }
 
-        var cvar = new CVar(cvarAttribute.Name, prop);
+        var cvar = new CVar(cvarAttribute.Name, prop, cvarAttribute.SaveToCfg);
         RegisterCVar(cvar, cvarAttribute);
     }
 
@@ -83,10 +83,10 @@ public class TWConsole
         if (!field.IsStatic)
         {
             throw new InvalidOperationException(
-                $"Cannot use CVar attribute on non-static fields: {field.DeclaringType?.Name}.{field.Name}");
+                $"Cannot use CVar attribute on non-static field: {field.DeclaringType?.Name}.{field.Name}");
         }
 
-        var cvar = new CVar(cvarAttribute.Name, field);
+        var cvar = new CVar(cvarAttribute.Name, field, cvarAttribute.SaveToCfg);
 
         RegisterCVar(cvar, cvarAttribute);
     }
@@ -448,6 +448,8 @@ public class TWConsole
     {
         foreach (var (key, value) in CVars)
         {
+            if (!value.SaveToCfg) 
+                continue;
             sb.AppendLine($"{key} \"{value.GetStringValue()}\"");
         }
     }
@@ -504,7 +506,7 @@ public class TWConsole
         Print(cfgAsText);
     }
 
-    public void SaveCVars()
+    public void SaveConfig()
     {
         Execute("cfg.save " + kCvarsFilename, false);
         Logger.LogInfo($"cfg saved to {kCvarsFilename}");

@@ -29,13 +29,18 @@ public class HideInInspectorAttribute : Attribute
     }
 }
 
+[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+public class ReadOnlyAttribute : Attribute
+{
+}
+
 public readonly record struct RangeSettings(float MinValue, float MaxValue, float StepSize, bool UseDragVersion);
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class RangeAttribute : Attribute
 {
     public RangeSettings Settings;
-    
+
     public RangeAttribute(float minValue, float maxValue, float stepSize = .1f, bool useDragFloat = false)
     {
         Settings = new RangeSettings(minValue, maxValue, stepSize, useDragFloat);
@@ -53,14 +58,21 @@ public class StepSizeAttribute : Attribute
     }
 }
 
-[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property)]
-public class CustomInspectorAttribute : Attribute
+public abstract class CustomInspectorAttribute : Attribute
 {
     public Type InspectorType;
 
-    public CustomInspectorAttribute(Type inspectorType)
+    protected CustomInspectorAttribute(Type inspectorType)
     {
         InspectorType = inspectorType;
+    }
+}
+
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field | AttributeTargets.Property)]
+public class CustomInspectorAttribute<T> : CustomInspectorAttribute where T : IInspector
+{
+    public CustomInspectorAttribute() : base(typeof(T))
+    {
     }
 }
 

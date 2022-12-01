@@ -12,7 +12,7 @@ public struct DampedSpringMotionParams
     public float VelVelCoef;
 }
 
-[CustomInspector(typeof(GroupInspector))]
+[CustomInspector<GroupInspector>]
 public class Spring
 {
     private bool _motionParamsDirty = true;

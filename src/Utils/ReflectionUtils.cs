@@ -16,26 +16,23 @@ public static class ReflectionUtils
         return (T)(Activator.CreateInstance(type) ?? throw new InvalidOperationException($"Received null value when creating an instance of type {type.Name}"));
     }
 
-    public static MethodInfo? GetMethodInfo(object targetObject, string methodName)
-    {
-        return GetMethodInfo(targetObject.GetType(), methodName);
-    }
-
-    public static MethodInfo? GetMethodInfo(object targetObject, string methodName, Type[] parameters)
-    {
-        return GetMethodInfo(targetObject.GetType(), methodName, parameters);
-    }
-
     public static MethodInfo? GetMethodInfo(Type type, string methodName, Type[]? parameters = null)
     {
+        var flags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public |
+                    BindingFlags.Static | BindingFlags.DeclaredOnly;
+
         if (parameters == null)
         {
-            return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+            return type.GetMethod(methodName, flags);
         }
 
-        return type.GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+        return type.GetMethod(
+            methodName,
+            flags,
             Type.DefaultBinder,
-            parameters, null);
+            parameters,
+            null
+        );
     }
 
     public static List<Type> GetAllSubclassesOfType<T>()

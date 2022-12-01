@@ -69,6 +69,14 @@ public unsafe class MyEditorMain : MyGameMain
                 Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
                 var world = new World(GameScreen, e.FullPath);
                 GameScreen.QueueSetWorld(world);
+                if (GameScreen.World != null)
+                {
+                    var levelIdentifier = GameScreen.World.Level.Identifier;
+                    GameScreen.QueueAction(() =>
+                    {
+                        world.StartLevel(levelIdentifier);
+                    });
+                }
             });
         }
         else if (extension == ".aseprite")

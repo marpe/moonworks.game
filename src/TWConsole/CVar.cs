@@ -5,19 +5,22 @@ public class CVar
     private readonly MemberInfo _memberInfo;
     public readonly object? DefaultValue;
     public readonly string Key;
+    public bool SaveToCfg;
 
-    public CVar(string key, FieldInfo field)
+    public CVar(string key, FieldInfo field, bool saveToCfg) : this(key, field, field.GetValue(null), saveToCfg)
     {
-        Key = key;
-        _memberInfo = field;
-        DefaultValue = field.GetValue(null);
     }
 
-    public CVar(string key, PropertyInfo prop)
+    public CVar(string key, PropertyInfo prop, bool saveToCfg) : this(key, prop, prop.GetValue(null), saveToCfg)
+    {
+    }
+
+    private CVar(string key, MemberInfo memberInfo, object? defaultValue, bool saveToCfg)
     {
         Key = key;
-        _memberInfo = prop;
-        DefaultValue = prop.GetValue(null);
+        _memberInfo = memberInfo;
+        DefaultValue = defaultValue;
+        SaveToCfg = saveToCfg;
     }
 
     public Type VarType

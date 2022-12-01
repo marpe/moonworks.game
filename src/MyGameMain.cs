@@ -287,6 +287,6 @@ public class MyGameMain : Game
 
         Shared.LoadingScreen.Unload();
 
-        Shared.Console.SaveCVars();
+        Shared.Console.SaveConfig();
     }
 }

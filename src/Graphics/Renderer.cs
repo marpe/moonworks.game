@@ -106,7 +106,7 @@ public class Renderer
         SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
 
-    public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness)
+    public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness = 1.0f)
     {
         var length = (from - to).Length();
         var origin = Matrix3x2.CreateTranslation(0, 0);
@@ -133,7 +133,7 @@ public class Renderer
         DrawRectOutline(bounds.Min, bounds.Max, color, thickness);
     }
 
-    public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness)
+    public void DrawRectOutline(Vector2 min, Vector2 max, Color color, float thickness = 1.0f)
     {
         ReadOnlySpan<Vector2> points = stackalloc Vector2[]
         {

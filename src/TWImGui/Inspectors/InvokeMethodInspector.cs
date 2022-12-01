@@ -2,11 +2,16 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public class InvokeMethodInspector : Inspector
+public class InvokeMethodInspector : IInspectorWithTarget, IInspectorWithMemberInfo
 {
+    public string? InspectorOrder { get; set; }
+
     private ParameterData[] _paramData = Array.Empty<ParameterData>();
     private string _buttonLabel = "Invoke";
     private string _headerLabel = "Invoke Method";
+
+    private object _target = null!;
+    private MethodInfo _methodInfo = null!;
 
     private struct ParameterData
     {
@@ -17,12 +22,14 @@ public class InvokeMethodInspector : Inspector
         public Type ParameterType;
     }
 
-    public override void Initialize()
+    public void SetMemberInfo(MemberInfo memberInfo)
     {
-        var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
-        _buttonLabel = _callableAttr?.Label ?? methodInfo.Name;
+        _methodInfo = (MethodInfo)memberInfo;
+        var attr = _methodInfo.GetCustomAttribute<InspectorCallableAttribute>() ?? throw new InvalidOperationException("Attribute not found");
+        _buttonLabel = attr.Label ?? _methodInfo.Name;
         _headerLabel = $"Method: {_buttonLabel}";
-        var methodParams = methodInfo.GetParameters();
+
+        var methodParams = _methodInfo.GetParameters();
         if (methodParams.Length > 0)
         {
             _paramData = new ParameterData[methodParams.Length];
@@ -32,8 +39,11 @@ public class InvokeMethodInspector : Inspector
                 _paramData[i] = CreateParamData(methodParams[i], i);
             }
         }
+    }
 
-        base.Initialize();
+    public void SetTarget(object target)
+    {
+        _target = target;
     }
 
     private ParameterData CreateParamData(ParameterInfo parameter, int index)
@@ -50,19 +60,14 @@ public class InvokeMethodInspector : Inspector
         };
     }
 
-    public override void Draw()
+    public void Draw()
     {
-        if (ImGuiExt.DebugInspectors)
-        {
-            DrawDebug();
-        }
-
         if (_paramData.Length == 0)
         {
             DrawInvokeButton();
             return;
         }
-        
+
         if (ImGuiExt.BeginCollapsingHeader(_headerLabel, ImGuiExt.Colors[1], ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont.Tiny))
         {
             for (var i = 0; i < _paramData.Length; i++)
@@ -90,8 +95,7 @@ public class InvokeMethodInspector : Inspector
         if (ImGuiExt.ColoredButton(_buttonLabel, ImGuiExt.Colors[0], new Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
             var parameters = _paramData.Select(x => x.Value).ToArray();
-            var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
-            methodInfo.Invoke(_target, parameters);
+            _methodInfo.Invoke(_target, parameters);
         }
     }
 }

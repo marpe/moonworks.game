@@ -2,5 +2,5 @@
 
 public partial class Light : Entity
 {
-    public float Debug;
+    public bool Debug;
 }

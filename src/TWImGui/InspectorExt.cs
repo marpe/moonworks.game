@@ -1,32 +1,47 @@
-using System.Diagnostics.CodeAnalysis;
-
 namespace MyGame.TWImGui;
 
 public static class InspectorExt
 {
-    private static bool GetCustomAttributeInspector(MemberInfo type, bool checkInheritedCustomInspectorAttributes, [NotNullWhen(true)] out Inspector? inspector)
+    private static IInspector? GetCustomInspectorForType(MemberInfo type, bool checkInheritedAttributes)
     {
-        var customInspectorForFieldAttr = type.GetCustomAttribute<CustomInspectorAttribute>(checkInheritedCustomInspectorAttributes);
-        if (customInspectorForFieldAttr != null)
-        {
-            inspector = ReflectionUtils.CreateInstance<Inspector>(customInspectorForFieldAttr.InspectorType);
-            return true;
-        }
-
-        inspector = null;
-        return false;
+        var attr = type.GetCustomAttribute<CustomInspectorAttribute>(checkInheritedAttributes);
+        return attr != null ? ReflectionUtils.CreateInstance<IInspector>(attr.InspectorType) : null;
     }
 
-    private static Inspector? GetInspectorForType(Type type, bool checkInheritedCustomInspectorAttributes)
+    private static IInspector? GetCustomDrawInspectorForType(MemberInfo type, bool checkInheritedAttributes)
     {
-        if (GetCustomAttributeInspector(type, checkInheritedCustomInspectorAttributes, out var inspector))
+        var attr = type.GetCustomAttribute<CustomDrawInspectorAttribute>(checkInheritedAttributes);
+        return attr != null ? new CustomDrawInspector() : null;
+    }
+
+    private static IInspector? GetInvokeMethodInspectorForType(MemberInfo type, bool checkInheritedAttributes)
+    {
+        var attr = type.GetCustomAttribute<InspectorCallableAttribute>(checkInheritedAttributes);
+        return attr != null ? new InvokeMethodInspector() : null;
+    }
+
+    private static IInspector? GetInspectorForType(Type type, bool checkInheritedAttributes)
+    {
+        var drawInspector = GetCustomDrawInspectorForType(type, checkInheritedAttributes);
+        if (drawInspector != null)
         {
-            return inspector;
+            return drawInspector;
+        }
+
+        var customInspector = GetCustomInspectorForType(type, checkInheritedAttributes);
+        if (customInspector != null)
+        {
+            return customInspector;
         }
 
         if (type.IsEnum)
         {
             return new EnumInspector();
+        }
+
+        if (type == typeof(Color[]))
+        {
+            return new GradientInspector();
         }
 
         if (type.IsArray && type.GetArrayRank() == 1)
@@ -44,13 +59,6 @@ public static class InspectorExt
             return new CollectionInspector();
         }
 
-        if (type == typeof(Color[]))
-        {
-            return new GradientInspector();
-        }
-
-        /*if (type == typeof(Timeline))
-            return new TimelineInspector();*/
         if (SimpleTypeInspector.SupportedTypes.Contains(type))
         {
             return new SimpleTypeInspector();
@@ -77,7 +85,16 @@ public static class InspectorExt
             var inspectorForType = GetInspectorForType(type, false);
             if (inspectorForType != null)
             {
-                inspectorForType.SetTarget(target, type, null);
+                if (inspectorForType is IInspectorWithTarget withTarget)
+                {
+                    withTarget.SetTarget(target);
+                }
+
+                if (inspectorForType is IInspectorWithType withType)
+                {
+                    withType.SetType(type);
+                }
+
                 inspectors.Add(inspectorForType);
                 type = type.BaseType;
                 continue;
@@ -112,7 +129,7 @@ public static class InspectorExt
         }
 
         var groupInspector = new GroupInspector(inspectors);
-        groupInspector.SetTarget(target, target.GetType(), null);
+        groupInspector.SetTarget(target);
         groupInspector.Initialize();
         groupInspector.SetShowHeaders(true, 2);
         return groupInspector;
@@ -134,29 +151,34 @@ public static class InspectorExt
         var fields = type.GetFields(bindingFlags);
         var properties = type.GetProperties(bindingFlags);
         var methods = type.GetMethods(bindingFlags);
-        var inspectors = new List<Inspector>();
+        var inspectors = new List<IInspector>();
 
         foreach (var field in fields)
         {
             if (!field.IsPublic && !field.IsDefined(typeof(InspectableAttribute)))
-            {
                 continue;
-            }
 
             if (field.IsInitOnly && !field.IsDefined(typeof(InspectableAttribute)))
-            {
                 continue;
-            }
 
             if (field.IsDefined(typeof(HideInInspectorAttribute)))
-            {
                 continue;
-            }
 
-            var inspector = GetInspectorForType(field.FieldType, false);
+            var inspector = GetCustomDrawInspectorForType(field, false) ??
+                            GetCustomInspectorForType(field, false) ??
+                            GetInspectorForType(field.FieldType, false);
+
             if (inspector != null)
             {
-                inspector.SetTarget(target, type, field);
+                if (inspector is IInspectorWithTarget withTarget)
+                    withTarget.SetTarget(target);
+
+                if (inspector is IInspectorWithMemberInfo withMemberInfo)
+                    withMemberInfo.SetMemberInfo(field);
+
+                if (inspector is IInspectorWithType withType)
+                    withType.SetType(type);
+
                 inspectors.Add(inspector);
             }
             else
@@ -170,24 +192,29 @@ public static class InspectorExt
         foreach (var prop in properties)
         {
             if (!prop.CanRead)
-            {
                 continue;
-            }
 
             if (prop.GetMethod != null && !prop.GetMethod.IsPublic && !prop.IsDefined(typeof(InspectableAttribute)))
-            {
                 continue;
-            }
 
             if (prop.IsDefined(typeof(HideInInspectorAttribute)))
-            {
                 continue;
-            }
 
-            var inspector = GetInspectorForType(prop.PropertyType, false);
+            var inspector = GetCustomDrawInspectorForType(prop, false) ??
+                            GetCustomInspectorForType(prop, false) ??
+                            GetInspectorForType(prop.PropertyType, false);
+
             if (inspector != null)
             {
-                inspector.SetTarget(target, type, prop);
+                if (inspector is IInspectorWithTarget withTarget)
+                    withTarget.SetTarget(target);
+
+                if (inspector is IInspectorWithMemberInfo withMemberInfo)
+                    withMemberInfo.SetMemberInfo(prop);
+
+                if (inspector is IInspectorWithType withType)
+                    withType.SetType(type);
+
                 inspectors.Add(inspector);
             }
             else
@@ -206,21 +233,21 @@ public static class InspectorExt
                 continue;
             }
 
-            var customDraw = methodInfo.GetCustomAttribute<CustomDrawInspectorAttribute>(false);
-            if (customDraw != null)
-            {
-                var customDrawInspector = new CustomDrawInspector();
-                customDrawInspector.SetTarget(target, type, methodInfo);
-                inspectors.Add(customDrawInspector);
-                continue;
-            }
+            var inspector = GetCustomDrawInspectorForType(methodInfo, false) ??
+                            GetInvokeMethodInspectorForType(methodInfo, false);
 
-            var callable = methodInfo.GetCustomAttribute<InspectorCallableAttribute>(false);
-            if (callable != null)
+            if (inspector != null)
             {
-                var methodInspector = new InvokeMethodInspector();
-                methodInspector.SetTarget(target, type, methodInfo);
-                inspectors.Add(methodInspector);
+                if (inspector is IInspectorWithTarget withTarget)
+                    withTarget.SetTarget(target);
+
+                if (inspector is IInspectorWithMemberInfo withMemberInfo)
+                    withMemberInfo.SetMemberInfo(methodInfo);
+
+                if (inspector is IInspectorWithType withType)
+                    withType.SetType(type);
+
+                inspectors.Add(inspector);
             }
         }
 
@@ -243,9 +270,10 @@ public static class InspectorExt
             }
         }
 
-        var ordered = inspectors.OrderByNatural(i => i.InspectorOrder).Cast<IInspector>().ToList();
+        var ordered = inspectors.OrderByNatural(i => i.InspectorOrder).ToList();
         var groupInspector = new GroupInspector(ordered);
-        groupInspector.SetTarget(target, type, null);
+        groupInspector.SetTarget(target);
+        groupInspector.SetType(type);
         return groupInspector;
     }
 }

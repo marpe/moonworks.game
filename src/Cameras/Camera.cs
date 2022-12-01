@@ -22,13 +22,19 @@ public class Camera
     [CVar("noclip", "Toggle camera controls")]
     public static bool NoClip;
 
+
     private readonly float _lerpSpeed = 1f;
     private float _lerpT = 0;
 
     private float _zoom = 1.0f;
     public Vector2 BumpOffset;
 
-    public Vector2 DeadZoneInPercentOfViewport = new(0.004f, 0.001f);
+    public Vector2 DeadZoneInPercentOfViewport = new(0.2f, 0.2f);
+
+    public Vector2 DeadZone => DeadZoneInPercentOfViewport * ZoomedSize;
+
+    public Vector2 BrakeZone => BrakeZoneInPercentOfViewport * ZoomedSize;
+    public float BrakeZoneInPercentOfViewport = 0.2f;
 
     public Vector2 Position;
 
@@ -107,7 +113,6 @@ public class Camera
     private float _freezeCameraTimer;
     private float _timer = 0;
 
-    public float BrakeDistNearBounds = 0.1f;
     public float BumpFrict = 0.85f;
     private float _shakeDuration = 0;
     private float _shakePower = 4f;
@@ -152,18 +157,18 @@ public class Camera
             TargetPosition = TrackingEntity.Center + TargetOffset;
 
             var offset = TargetPosition - Position;
-            var angleToTarget = offset.Angle();
-            var deadZone = DeadZoneInPercentOfViewport * Size;
-            var distX = Math.Abs(offset.X);
-            if (distX >= deadZone.X)
+            var direction = offset.ToNormal();
+            var deadZone = DeadZone / 2; // divide by 2 since position is the center of the camera
+            var distX = Math.Abs(offset.X) - deadZone.X;
+            if (distX > 0)
             {
-                Velocity.X += MathF.Cos(angleToTarget) * (0.8f * distX - deadZone.X) * trackSpeed.X * deltaSeconds;
+                Velocity.X += direction.X * distX * trackSpeed.X * deltaSeconds;
             }
 
-            var distY = Math.Abs(offset.Y);
-            if (distY >= deadZone.Y)
+            var distY = Math.Abs(offset.Y) - deadZone.Y;
+            if (distY > 0)
             {
-                Velocity.Y += MathF.Sin(angleToTarget) * (0.8f * distY - deadZone.Y) * trackSpeed.Y * deltaSeconds;
+                Velocity.Y += direction.Y * distY * trackSpeed.Y * deltaSeconds;
             }
         }
 
@@ -171,35 +176,33 @@ public class Camera
 
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
-            var cameraSize = ZoomedSize;
-            var brakeDist = cameraSize * BrakeDistNearBounds;
+            var brakeZone = BrakeZone;
+            var offset = Position - LevelBounds.MinVec();
 
-            var position = new Vector2(
-                MathF.Loop(Position.X, LevelBounds.Width),
-                MathF.Loop(Position.Y, LevelBounds.Height)
-            );
+            var cameraMin = offset - ZoomedSize * 0.5f;
+            var cameraMax = offset + ZoomedSize * 0.5f;
 
-            var left = MathF.Clamp01((position.X - cameraSize.X * 0.5f) / brakeDist.X);
-            var right = MathF.Clamp01((LevelBounds.Width - cameraSize.X * 0.5f - position.X) / brakeDist.X);
-            var top = MathF.Clamp01((position.Y - cameraSize.Y * 0.5f) / brakeDist.Y);
-            var bottom = MathF.Clamp01((LevelBounds.Height - cameraSize.Y * 0.5f - position.Y) / brakeDist.Y);
-
-            if (Velocity.X < 0)
+            var brakePower = 0.9f;
+            if (Velocity.X < 0 && cameraMin.X < brakeZone.X)
             {
-                Velocity.Friction.X *= left;
+                var left = (brakeZone.X - cameraMin.X) / brakeZone.X;
+                Velocity.Friction.X *= (1.0f - left * brakePower);
             }
-            else if (Velocity.X > 0)
+            else if (Velocity.X > 0 && cameraMax.X > LevelBounds.Width - brakeZone.X)
             {
-                Velocity.Friction.X *= right;
+                var right = (cameraMax.X - (LevelBounds.Width - brakeZone.X)) / brakeZone.X;
+                Velocity.Friction.X *= (1.0f - right * brakePower);
             }
 
-            if (Velocity.Y < 0)
+            if (Velocity.Y < 0 && cameraMin.Y < brakeZone.Y)
             {
-                Velocity.Friction.Y *= top;
+                var top = (brakeZone.Y - cameraMin.Y) / brakeZone.Y;
+                Velocity.Friction.Y *= (1.0f - top * brakePower);
             }
-            else if (Velocity.Y > 0)
+            else if (Velocity.Y > 0 && cameraMax.Y > LevelBounds.Height - brakeZone.Y)
             {
-                Velocity.Friction.Y *= bottom;
+                var bottom = (cameraMax.Y - (LevelBounds.Height - brakeZone.Y)) / brakeZone.Y;
+                Velocity.Friction.Y *= (1.0f - bottom * brakePower);
             }
         }
 
@@ -207,12 +210,12 @@ public class Camera
 
         Velocity.ApplyFriction(Velocity);
 
-        // Bounds clamping
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
             var cameraSize = ZoomedSize;
             if (LevelBounds.Width < cameraSize.X)
             {
+                // if the level width is less than the camera width, center the camera
                 Position.X = LevelBounds.X + LevelBounds.Width * 0.5f;
             }
             else
@@ -226,6 +229,7 @@ public class Camera
 
             if (LevelBounds.Height < cameraSize.Y)
             {
+                // if the level height is less than the camera height, center the camera
                 Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f;
             }
             else

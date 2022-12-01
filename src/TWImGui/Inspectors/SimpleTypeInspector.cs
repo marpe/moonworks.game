@@ -129,7 +129,7 @@ public unsafe class SimpleTypeInspector : Inspector
         if (ImGuiExt.DebugInspectors)
             DrawDebug();
 
-        if (HideInInspectorAttribute != null)
+        if (IsHidden)
             return;
 
         if (HideReadOnly && IsReadOnly)

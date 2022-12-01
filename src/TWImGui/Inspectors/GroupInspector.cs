@@ -87,6 +87,7 @@ public unsafe class GroupInspector : Inspector
                 if (value != null)
                 {
                     AddInspectorsForEntireClassHierarchy(value, _valueType);
+                    ShowHeader = true;
                 }
             }
             else

@@ -2,10 +2,8 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public abstract class Inspector : IInspector
+public abstract class Inspector : IInspectorWithTarget, IInspectorWithMemberInfo, IInspectorWithType
 {
-    protected InspectorCallableAttribute? _callableAttr;
-    protected CustomDrawInspectorAttribute? _customDrawAttr;
     protected MemberInfo? _memberInfo;
     protected string _name = string.Empty;
 
@@ -18,7 +16,7 @@ public abstract class Inspector : IInspector
 
     protected bool IsReadOnly;
 
-    protected HideInInspectorAttribute? HideInInspectorAttribute;
+    protected bool IsHidden;
 
     public bool IsInitialized { get; private set; }
 
@@ -26,43 +24,44 @@ public abstract class Inspector : IInspector
 
     public abstract void Draw();
 
-    public void SetTarget(object? target, Type targetType, MemberInfo? memberInfo)
+    public void SetType(Type type)
     {
-        _target = target;
-        _targetType = targetType;
-        _name = targetType.Name;
-        // memberInfo will be null for inspectors not targeting a single member e.g GroupInspector
-        if (memberInfo != null)
-        {
-            SetTarget(memberInfo);
-        }
+        _targetType = type;
+        if (_name == string.Empty)
+            _name = ReflectionUtils.GetDisplayName(type);
     }
 
-    private void SetTarget(MemberInfo memberInfo)
+    public void SetTarget(object target)
+    {
+        _target = target;
+        if (_name == string.Empty)
+            _name = _target.ToString() ?? ReflectionUtils.GetDisplayName(target.GetType());
+    }
+
+    public void SetMemberInfo(MemberInfo memberInfo)
     {
         _memberInfo = memberInfo;
         _name = memberInfo.Name;
         _rangeAttribute = memberInfo.GetCustomAttribute<RangeAttribute>();
         _stepSizeAttribute = memberInfo.GetCustomAttribute<StepSizeAttribute>();
-        _customDrawAttr = memberInfo.GetCustomAttribute<CustomDrawInspectorAttribute>();
-        _callableAttr = memberInfo.GetCustomAttribute<InspectorCallableAttribute>();
-        HideInInspectorAttribute = memberInfo.GetCustomAttribute<HideInInspectorAttribute>();
+        IsReadOnly = memberInfo.GetCustomAttribute<ReadOnlyAttribute>() != null;
+        IsHidden = memberInfo.GetCustomAttribute<HideInInspectorAttribute>() != null;
 
         if (memberInfo is FieldInfo field)
         {
             _valueType = field.FieldType;
-            IsReadOnly = field.IsInitOnly || field.IsLiteral;
+            IsReadOnly |= field.IsInitOnly || field.IsLiteral;
         }
         else if (memberInfo is PropertyInfo prop)
         {
             _valueType = prop.PropertyType;
             var hasPrivateSet = prop.SetMethod?.IsPrivate ?? false;
-            IsReadOnly = (hasPrivateSet && !prop.IsDefined(typeof(InspectableAttribute))) || !prop.CanWrite;
+            IsReadOnly |= (hasPrivateSet && !prop.IsDefined(typeof(InspectableAttribute))) || !prop.CanWrite;
         }
-        else if (memberInfo is Type type)
+        else
         {
-            _valueType = type;
-            IsReadOnly = true;
+            var displayName = ReflectionUtils.GetDisplayName(memberInfo.GetType());
+            throw new InvalidOperationException($"Unexpected memberInfo type: {displayName}");
         }
     }
 
@@ -87,6 +86,7 @@ public abstract class Inspector : IInspector
                 ImGuiExt.PropRow("Target", _target?.GetType().Name ?? "NULL");
                 ImGuiExt.PropRow("TargetType", _targetType?.Name ?? "NULL");
                 ImGuiExt.PropRow("IsReadOnly", IsReadOnly.ToString());
+                ImGuiExt.PropRow("IsHidden", IsHidden.ToString());
 
                 var memberType = _memberInfo switch
                 {

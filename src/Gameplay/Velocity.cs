@@ -1,6 +1,6 @@
 ﻿namespace MyGame;
 
-[CustomInspector(typeof(GroupInspector))]
+[CustomInspector<GroupInspector>]
 [DebuggerDisplay("{DebugDisplayString,nq}")]
 public class Velocity
 {

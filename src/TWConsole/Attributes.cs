@@ -8,11 +8,13 @@ public class CVarAttribute : Attribute
 {
     public string Description;
     public string Name;
+    public readonly bool SaveToCfg;
 
-    public CVarAttribute(string name, string description)
+    public CVarAttribute(string name, string description, bool saveToCfg = true)
     {
         Name = name;
         Description = description;
+        SaveToCfg = saveToCfg;
     }
 }
 

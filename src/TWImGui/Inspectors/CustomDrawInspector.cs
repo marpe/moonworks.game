@@ -1,47 +1,65 @@
 namespace MyGame.TWImGui.Inspectors;
 
-public class CustomDrawInspector : Inspector
+public class CustomDrawInspector : IInspectorWithTarget, IInspectorWithType, IInspectorWithMemberInfo
 {
-    private MethodInfo? _drawMethodInfo;
+    public string? InspectorOrder { get; set; }
+    private Action? _callback;
 
-    public override void Initialize()
+    private object? _target;
+    private Type? _targetType;
+    private MemberInfo? _memberInfo;
+    private bool _isInitialized;
+
+    private void Initialize()
     {
-        var targetType = _target?.GetType() ?? _memberInfo?.DeclaringType;
-        if (targetType == null)
-        {
-            throw new InvalidOperationException("Could not get target type");
-        }
+        var attr = _memberInfo?.GetCustomAttribute<CustomDrawInspectorAttribute>() ??
+                   _targetType?.GetCustomAttribute<CustomDrawInspectorAttribute>() ??
+                   _target?.GetType().GetCustomAttribute<CustomDrawInspectorAttribute>() ??
+                   throw new Exception("Attribute not found");
 
-        if (_customDrawAttr == null)
+        MethodInfo? methodInfo;
+        if (attr.MethodName == null)
         {
-            throw new InvalidOperationException($"{nameof(CustomDrawInspectorAttribute)} was not found");
+            methodInfo = _memberInfo as MethodInfo ?? throw new Exception("Expected type to be MethodInfo");
         }
-
-        if (_customDrawAttr.MethodName != null)
+        else if (_memberInfo is MethodInfo info)
         {
-            _drawMethodInfo = ReflectionUtils.GetMethodInfo(targetType, _customDrawAttr.MethodName);
+            methodInfo = info;
         }
         else
         {
-            _drawMethodInfo = _memberInfo as MethodInfo;
+            var type = _targetType ?? _target?.GetType() ??
+                (_memberInfo as FieldInfo)?.FieldType ??
+                (_memberInfo as PropertyInfo)?.PropertyType ??
+                throw new Exception("Could not get type");
+            methodInfo = ReflectionUtils.GetMethodInfo(type, attr.MethodName) ?? throw new Exception("Draw method not found");
         }
-        
-        base.Initialize();
+
+        _callback = () => methodInfo.Invoke(_target, null);
+
+        _isInitialized = true;
     }
 
-    public override void Draw()
+    public void SetMemberInfo(MemberInfo memberInfo)
     {
-        if (!IsInitialized)
-            throw new InvalidOperationException("Inspector has already been initialized");
+        _memberInfo = memberInfo;
+    }
 
-        if (ImGuiExt.DebugInspectors)
-        {
-            DrawDebug();
-        }
+    public void SetType(Type type)
+    {
+        _targetType = type;
+    }
 
-        if (_drawMethodInfo != null)
-        {
-            _drawMethodInfo.Invoke(_target, null);
-        }
+    public void SetTarget(object target)
+    {
+        _target = target;
+    }
+
+    public void Draw()
+    {
+        if (!_isInitialized)
+            Initialize();
+
+        _callback!.Invoke();
     }
 }
