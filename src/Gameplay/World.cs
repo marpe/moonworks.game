@@ -88,6 +88,8 @@ public class World
     [MemberNotNull(nameof(Level), nameof(Player))]
     public void StartLevel(string levelIdentifier)
     {
+        WorldTotalElapsedTime = WorldUpdateCount = 0;
+
         var level = FindLevel(levelIdentifier, Levels);
 
         Enemies.Clear();
@@ -470,7 +472,7 @@ public class World
         var boundsMax = cameraBounds
             .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
 
-        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles" && Debug)
+        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles" && Debug && DebugLevel)
         {
             for (var i = 0; i < layer.IntGridCsv.Length; i++)
             {

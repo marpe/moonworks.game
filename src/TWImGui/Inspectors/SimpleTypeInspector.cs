@@ -106,7 +106,7 @@ public unsafe class SimpleTypeInspector : Inspector
             }
 
             var size = value.Size.ToNumerics();
-            if (ImGuiExt.DrawXy("Size", ref size, "Width", "Height"))
+            if (ImGuiExt.DrawXy("Size", ref size, "W", "H"))
             {
                 value.Width = (int)size.X;
                 value.Height = (int)size.Y;

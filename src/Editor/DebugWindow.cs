@@ -35,12 +35,16 @@ public unsafe class DebugWindow : ImGuiEditorWindow
             ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
             ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-
             ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {_editor.Renderer.SpriteBatch.MaxNumAddedSprites}");
-
-            ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
-            ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
             ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _editor.UpdateRate), 1, 10, default);
+
+            if (ImGuiExt.BeginCollapsingHeader("FancyText", ImGuiExt.Colors[0]))
+            {
+                ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
+                ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 10, default);    
+                ImGui.SliderFloat("WaveAmplitudeScale", ImGuiExt.RefPtr(ref FancyTextComponent.WaveAmplitudeScale), 0, 10, default);    
+                ImGuiExt.EndCollapsingHeader();
+            }
 
             ImGui.Separator();
 

@@ -93,6 +93,7 @@ public class FancyTextComponent
     /// <~>Wavy</~>
     /// <#rrggbb>Colored</#>
     /// <*>Shaking</*>
+    /// <!>Rainbow Gradient</!>
     /// </summary>
     private static (char[], FancyTextPart[]) ParseText(ReadOnlySpan<char> text)
     {

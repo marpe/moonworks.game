@@ -69,9 +69,6 @@ public class InputHandler
     public bool KeyboardEnabled = true;
     public bool MouseEnabled = true;
     private Matrix4x4 _viewportInvert = Matrix4x4.Identity;
-
-    private Dictionary<string, ButtonBind> _inputBinds = new();
-
     public InputHandler(Inputs inputs)
     {
         _inputs = inputs;
