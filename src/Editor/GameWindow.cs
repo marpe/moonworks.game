@@ -16,10 +16,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private bool _showDebug;
 
+    public bool IsHoveringGame = false;
+
     public GameWindow(MyEditorMain editor) : base(WindowTitle)
     {
         _editor = editor;
-        KeyboardShortcut = "^F3";
+        KeyboardShortcut = "^F1";
         IsOpen = true;
     }
 
@@ -29,7 +31,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             return;
 
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
-                    ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;
+                    ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;
 
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
@@ -45,7 +47,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 Logger.LogInfo("Binding _compositeRender texture");
                 _gameRenderTextureId = _editor.ImGuiRenderer.BindTexture(_editor.CompositeRender);
             }
-            
+
             var windowSize = ImGui.GetWindowSize();
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.CompositeRender.Size());
 
@@ -58,7 +60,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var gameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - _gameRenderScale * viewportHalfSize +
                                 _gameRenderScale * _gameRenderPosition;
             var gameRenderMax = gameRenderMin + _gameRenderScale * viewportSize;
-            
+
             var dl = ImGui.GetWindowDrawList();
             dl->AddImage(
                 (void*)_gameRenderTextureId.Value,
@@ -91,7 +93,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var isActive = ImGui.IsItemActive();
             var isHovered = ImGui.IsItemHovered();
             HandleInput(isActive, isHovered);
-            
+
             ImGui.SetItemAllowOverlap();
             DrawButtons();
 
@@ -99,9 +101,18 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             DrawDebugOverlay(gameRenderMin, gameRenderMax, gameRenderOffset);
 
+            var contentMin = ImGui.GetWindowContentRegionMin();
+            var contentMax = ImGui.GetWindowContentRegionMax();
+            var windowPos = ImGui.GetWindowPos();
+            var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
+            IsHoveringGame = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
+
             if (ImGui.BeginPopupContextWindow("GameContextMenu"))
             {
                 ImGui.MenuItem("Show window debug", default, ImGuiExt.RefPtr(ref _showDebug));
+                if (ImGui.MenuItem("Reset pan & zoom", default))
+                    ResetPanAndZoom();
+
                 ImGui.EndPopup();
             }
         }
@@ -109,15 +120,18 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
+    private void ResetPanAndZoom()
+    {
+        _gameRenderScale = 1.0f;
+        _gameRenderPosition = Vector2.Zero;
+    }
+
     private void DrawButtons()
     {
         var startPos = ImGui.GetCursorStartPos();
         ImGui.SetCursorPos(startPos);
         if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsRotate, Color.Black, "Reset pan & zoom"))
-        {
-            _gameRenderScale = 1.0f;
-            _gameRenderPosition = Vector2.Zero;
-        }
+            ResetPanAndZoom();
     }
 
     private Vector2 SetGameRenderViewportTransform(Vector2 gameRenderMin, Matrix4x4 viewportTransform)
@@ -148,6 +162,14 @@ public unsafe class GameWindow : ImGuiEditorWindow
             if (_gameRenderScale < 1.0f)
                 _gameRenderScale = 1.0f;
         }
+        
+        // imgui sets WantCaptureKeyboard when an item is active which we don't want for the game window
+        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) ||
+            ImGui.IsMouseDown(ImGuiMouseButton.Middle) ||
+            ImGui.IsMouseDown(ImGuiMouseButton.Right))
+        {
+            ImGui.SetNextFrameWantCaptureKeyboard(false);
+        }
     }
 
     private void DrawDebugOverlay(Vector2 gameRenderMin, Vector2 gameRenderMax, Vector2 gameRenderOffset)
@@ -164,7 +186,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.SetCursorPos(cursorStart);
         var contentMin = ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowContentRegionMax();
-        
+
         var windowPos = ImGui.GetWindowPos();
         var windowPadding = 10f;
         var overlayPos = new Vector2(
@@ -175,13 +197,18 @@ public unsafe class GameWindow : ImGuiEditorWindow
             1.0f,
             0
         );
-        ImGui.SetNextWindowPos(overlayPos, ImGuiCond.Always, windowPosPivot);
+        ImGui.SetNextWindowPos(overlayPos, ImGuiCond.Appearing, windowPosPivot);
         ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);
         if (ImGui.Begin("GameWindowOverlay", ImGuiExt.RefPtr(ref _showDebug), windowFlags))
         {
-            ImGui.Text(
+            /*ImGui.Text(
                 $"Min: {gameRenderMin.ToString()}, Max: {gameRenderMax.ToString()}\n" +
+                $"IsHoveringGame: {IsHoveringGame.ToString()}\n" +
                 $"GameRenderOffset: {gameRenderOffset.ToString()}");
+
+            ImGui.Separator();*/
+            
+            ImGui.Text($"MousePos: {_editor.InputHandler.MousePosition.ToString()}");
 
             if (ImGui.BeginPopupContextWindow())
             {

@@ -78,15 +78,12 @@ public class InputHandler
         Inputs.TextInput += OnTextInput;
     }
 
-    public Point MouseDelta => MouseEnabled ? new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY) : Point.Zero;
+    public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
 
     public Point MousePosition
     {
         get
         {
-            if (!MouseEnabled)
-                return Point.Zero;
-
             var mousePosition = new Vector2(_inputs.Mouse.X, _inputs.Mouse.Y);
             Vector2.Transform(ref mousePosition, ref _viewportInvert, out var mouseInViewport);
             return mouseInViewport.ToPoint();

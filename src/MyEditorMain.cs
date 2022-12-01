@@ -10,6 +10,7 @@ public unsafe class MyEditorMain : MyGameMain
 {
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
+
     public ImGuiRenderer ImGuiRenderer;
 
     private ulong _imGuiDrawCount;
@@ -28,7 +29,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private Buffer _screenshotBuffer;
     private byte[] _screenshotPixels;
-    
+
     private GameWindow _gameWindow;
     private DebugWindow _debugWindow;
 
@@ -42,7 +43,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
-        
+
         var timer = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiThemes.DarkTheme();
@@ -103,7 +104,6 @@ public unsafe class MyEditorMain : MyGameMain
 
     private static void ShowImGuiDemoWindow(ImGuiEditorWindow window)
     {
-
     }
 
     private void AddDefaultWindows()
@@ -122,14 +122,9 @@ public unsafe class MyEditorMain : MyGameMain
         }
     }
 
-    private void DrawLoadingDebugWindow(ImGuiEditorWindow window)
-    {
-
-    }
-
     protected override void SetInputViewport()
     {
-        if (!IsHidden && IsHoveringGame())
+        if (!IsHidden && _gameWindow.IsOpen)
         {
             InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform);
         }
@@ -233,6 +228,20 @@ public unsafe class MyEditorMain : MyGameMain
         ImGui.EndMainMenuBar();
     }
 
+    private static string LoadingIndicator(string labelWhenNotLoading, bool isLoading)
+    {
+        if (!isLoading)
+            return labelWhenNotLoading;
+        var n = (int)(Shared.Game.Time.TotalElapsedTime * 4 % 4);
+        return n switch
+        {
+            0 => FontAwesome6.ArrowRight,
+            1 => FontAwesome6.ArrowDown,
+            2 => FontAwesome6.ArrowLeft,
+            _ => FontAwesome6.ArrowUp,
+        };
+    }
+
     private void DrawMainMenuButtons()
     {
         var max = ImGui.GetContentRegionMax();
@@ -243,6 +252,14 @@ public unsafe class MyEditorMain : MyGameMain
             true => (FontAwesome6.Play, Color.Green, "Play"),
             _ => (FontAwesome6.Pause, Color.Yellow, "Pause")
         };
+
+        ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
+        if (ImGuiExt.ColoredButton(LoadingIndicator(FontAwesome6.ArrowsRotate, Shared.LoadingScreen.IsLoading), Color.Blue, "Reload World"))
+        {
+            GameScreen.Restart();
+        }
+
+        ImGui.EndDisabled();
 
         if (ImGuiExt.ColoredButton(icon, color, tooltip))
         {
@@ -316,14 +333,6 @@ public unsafe class MyEditorMain : MyGameMain
         }
     }
 
-    private static bool IsHoveringGame()
-    {
-        var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
-        if (hoveredWindow == null)
-            return true;
-        return ImGuiExt.StringFromPtr(hoveredWindow->Name) == "Game";
-    }
-
     protected override void Update(TimeSpan dt)
     {
         if (!IsHidden)
@@ -333,7 +342,7 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-            if (io->NavActive || !IsHoveringGame())
+            if (io->NavActive || (_gameWindow.IsOpen && !_gameWindow.IsHoveringGame))
                 InputHandler.MouseEnabled = false;
 
             _imGuiUpdateCount++;

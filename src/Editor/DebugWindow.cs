@@ -13,20 +13,6 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         KeyboardShortcut = "^F3";
         IsOpen = true;
     }
-
-    private static string LoadingIndicator(bool isLoading)
-    {
-        if (!isLoading)
-            return "";
-        var n = (int)(Shared.Game.Time.TotalElapsedTime * 4 % 4);
-        return " " + n switch
-        {
-            0 => FontAwesome6.ArrowRight,
-            1 => FontAwesome6.ArrowDown,
-            2 => FontAwesome6.ArrowLeft,
-            _ => FontAwesome6.ArrowUp,
-        };
-    }
     
     private static void DrawCollision(CollisionResult collision)
     {
@@ -46,25 +32,19 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();
+            // ImGui.TextUnformatted($"ActiveId: {ImGui.GetCurrentContext()->ActiveId.ToString()}");
             ImGui.TextUnformatted($"MousePosRaw: {_editor.InputHandler.MousePositionRaw.ToString()}");
             ImGui.TextUnformatted($"MousePos: {_editor.InputHandler.MousePosition.ToString()}");
             ImGui.TextUnformatted($"MouseEnabled: {_editor.InputHandler.MouseEnabled.ToString()}");
             ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
             ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
+            ImGui.TextUnformatted($"WantTextInput: {(io->WantTextInput ? "Y" : "N")}");
             ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
             ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
             ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {_editor.Renderer.SpriteBatch.MaxNumAddedSprites}");
-
-            ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
-            if (ImGui.Button("Reload World" + LoadingIndicator(Shared.LoadingScreen.IsLoading), default))
-            {
-                GameScreen.Restart();
-            }
-
-            ImGui.EndDisabled();
 
             ImGui.TextUnformatted("MouseWheel:" + ImGui.GetIO()->MouseWheel);
 
