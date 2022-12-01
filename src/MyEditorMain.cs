@@ -10,37 +10,27 @@ public unsafe class MyEditorMain : MyGameMain
 {
     [CVar("imgui.hidden", "Toggle ImGui screen")]
     public static bool IsHidden = true;
+    public ImGuiRenderer ImGuiRenderer;
 
-    private readonly ImGuiRenderer _imGuiRenderer;
-    public ImGuiRenderer ImGuiRenderer => _imGuiRenderer;
-
-    private readonly float _alpha = 1.0f;
     private ulong _imGuiDrawCount;
     private readonly float _mainMenuPaddingY = 6f;
     private readonly List<ImGuiMenu> _menuItems = new();
-    private int _updateRate = 1;
+    public int UpdateRate = 1;
     internal SortedList<string, ImGuiEditorWindow> Windows = new();
     private bool _firstTime = true;
-    private static readonly string _debugWindowName = "MyGame Debug";
-    private static string _imguiDemoWindowName = "ImGui Demo Window";
-    private string _gameWindowName = "Game";
-    private IntPtr? _gameRenderTextureId;
     private Texture _imGuiRenderTarget;
 
     [CVar("screenshot", "Save a screenshot")]
     public static bool Screenshot;
 
-    private static string[] _transitionTypeNames = Enum.GetNames<TransitionType>();
-    private IInspector? _loadingScreenInspector;
-    private string _loadingDebugWindowName = "LoadingDebug";
-    private bool IsHoveringGameWindow;
-    private Matrix4x4 _gameRenderViewportTransform;
-    private NumVector2 _gameRenderOffset;
     private int _imGuiUpdateCount;
     private FileWatcher _fileWatcher;
 
     private Buffer _screenshotBuffer;
     private byte[] _screenshotPixels;
+    
+    private GameWindow _gameWindow;
+    private DebugWindow _debugWindow;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -50,8 +40,11 @@ public unsafe class MyEditorMain : MyGameMain
         _imGuiRenderTarget = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
 
+        _gameWindow = new GameWindow(this);
+        _debugWindow = new DebugWindow(this);
+        
         var timer = Stopwatch.StartNew();
-        _imGuiRenderer = new ImGuiRenderer(this);
+        ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         AddDefaultMenus();
@@ -93,6 +86,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
         else if (extension == ".spv")
         {
+            Renderer.Pipelines[PipelineType.RimLight].Dispose();
             Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
         }
     }
@@ -109,40 +103,18 @@ public unsafe class MyEditorMain : MyGameMain
 
     private static void ShowImGuiDemoWindow(ImGuiEditorWindow window)
     {
-        if (!window.IsOpen)
-            return;
 
-        fixed (bool* isOpen = &window.IsOpen)
-        {
-            ImGui.ShowDemoWindow(isOpen);
-        }
     }
 
     private void AddDefaultWindows()
     {
         var windows = new ImGuiEditorWindow[]
         {
-            new ImGuiEditorCallbackWindow(_debugWindowName, DrawDebugWindow)
-            {
-                IsOpen = true,
-                KeyboardShortcut = "^F1",
-            },
-            new ImGuiEditorCallbackWindow(_imguiDemoWindowName, ShowImGuiDemoWindow)
-            {
-                IsOpen = false,
-                KeyboardShortcut = "^F2",
-            },
-            new ImGuiEditorCallbackWindow(_gameWindowName, DrawGameWindow)
-            {
-                IsOpen = true,
-                KeyboardShortcut = "^F3",
-            },
-            new ImGuiEditorCallbackWindow(_loadingDebugWindowName, DrawLoadingDebugWindow)
-            {
-                IsOpen = true,
-                KeyboardShortcut = "^F4",
-            },
+            new LoadingScreenDebugWindow(),
             new WorldWindow(),
+            _gameWindow,
+            _debugWindow,
+            new ImGuiDemoWindow(),
         };
         foreach (var window in windows)
         {
@@ -152,229 +124,19 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void DrawLoadingDebugWindow(ImGuiEditorWindow window)
     {
-        if (!window.IsOpen)
-        {
-            return;
-        }
 
-        if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen)))
-        {
-            ImGui.Checkbox("Debug Loading", ImGuiExt.RefPtr(ref LoadingScreen.Debug));
-            if (ImGui.SliderFloat("Progress", ImGuiExt.RefPtr(ref LoadingScreen.DebugProgress), 0, 1.0f, "%g"))
-            {
-            }
-
-            ImGui.TextUnformatted($"State: {LoadingScreen.DebugState.ToString()}");
-
-            var transitionType = (int)LoadingScreen.TransitionType;
-            if (BlendStateEditor.ComboStep("TransitionType", ref transitionType, _transitionTypeNames))
-            {
-                LoadingScreen.TransitionType = (TransitionType)transitionType;
-
-                _loadingScreenInspector = InspectorExt.GetGroupInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
-            }
-
-
-            _loadingScreenInspector ??= InspectorExt.GetGroupInspectorForTarget(LoadingScreen.SceneTransitions[LoadingScreen.TransitionType]);
-            _loadingScreenInspector?.Draw();
-        }
-
-        ImGui.End();
     }
 
     protected override void SetInputViewport()
     {
-        if (!IsHidden && IsHoveringGameWindow)
+        if (!IsHidden && IsHoveringGame())
         {
-            InputHandler.SetViewportTransform(_gameRenderViewportTransform);
+            InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform);
         }
         else
         {
             base.SetInputViewport();
         }
-    }
-
-    private void DrawGameWindow(ImGuiEditorWindow window)
-    {
-        IsHoveringGameWindow = false;
-
-        if (!window.IsOpen)
-            return;
-
-        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse;
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
-        if (ImGui.Begin(window.Title, ImGuiExt.RefPtr(ref window.IsOpen), flags))
-        {
-            if (_gameRenderTextureId != null && _gameRenderTextureId != CompositeRender.Handle)
-            {
-                _imGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
-                _gameRenderTextureId = null;
-                Logger.LogInfo("Unbinding compositeRender texture");
-            }
-
-            if (_gameRenderTextureId == null)
-            {
-                Logger.LogInfo("Binding _compositeRender texture");
-                _gameRenderTextureId = _imGuiRenderer.BindTexture(CompositeRender);
-            }
-
-            var windowSize = ImGui.GetWindowSize();
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), CompositeRender.Size());
-
-            ImGui.SetCursorPos(new Num.Vector2(viewport.X, viewport.Y));
-            var cursorScreenPos = ImGui.GetCursorScreenPos();
-            var borderColor = new Num.Vector4(1.0f, 0, 0, 0.0f);
-            ImGui.Image((void*)_gameRenderTextureId.Value, new Num.Vector2(viewport.Width, viewport.Height), Num.Vector2.Zero, Num.Vector2.One, Num.Vector4.One,
-                borderColor);
-
-
-            ImGui.SetCursorPos(ImGui.GetCursorStartPos());
-
-            var viewportPos = ImGui.GetWindowViewport()->Pos;
-            _gameRenderOffset = cursorScreenPos - viewportPos;
-            IsHoveringGameWindow = ImGui.IsWindowHovered();
-
-            viewportTransform.Decompose(out var scale, out _, out _);
-            _gameRenderViewportTransform = (Matrix3x2.CreateScale(scale.X, scale.Y) *
-                                            Matrix3x2.CreateTranslation(_gameRenderOffset.X, _gameRenderOffset.Y)).ToMatrix4x4();
-        }
-
-        ImGui.PopStyleVar();
-        ImGui.End();
-    }
-
-    private static string LoadingIndicator(bool isLoading)
-    {
-        if (!isLoading)
-            return "";
-        var n = (int)(Shared.Game.Time.TotalElapsedTime * 4 % 4);
-        return " " + n switch
-        {
-            0 => FontAwesome6.ArrowRight,
-            1 => FontAwesome6.ArrowDown,
-            2 => FontAwesome6.ArrowLeft,
-            _ => FontAwesome6.ArrowUp,
-        };
-    }
-
-    private void DrawDebugWindow(ImGuiEditorWindow window)
-    {
-        if (!window.IsOpen)
-        {
-            return;
-        }
-
-        ImGui.SetNextWindowBgAlpha(_alpha);
-
-        if (ImGuiExt.Begin(window.Title, ref window.IsOpen))
-        {
-            var io = ImGui.GetIO();
-            ImGui.TextUnformatted($"MousePos: {InputHandler.MousePosition.ToString()}");
-            ImGui.TextUnformatted($"MouseEnabled: {InputHandler.MouseEnabled.ToString()}");
-            ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
-            ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
-            ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
-            ImGui.TextUnformatted($"DrawFps: {Time.DrawFps}");
-            ImGui.TextUnformatted($"UpdateFps: {Time.UpdateFps}");
-            ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-
-            ImGui.TextUnformatted($"NumDrawCalls: {Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {Renderer.SpriteBatch.MaxNumAddedSprites}");
-
-            ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
-            if (ImGui.Button("Reload World" + LoadingIndicator(Shared.LoadingScreen.IsLoading), default))
-            {
-                GameScreen.Restart();
-            }
-
-            ImGui.EndDisabled();
-
-            ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
-            ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
-            ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _updateRate), 1, 10, default);
-
-            ImGui.Separator();
-
-            if (Shared.Game.GameScreen.World != null)
-            {
-                var player = Shared.Game.GameScreen.World.Player;
-
-                if (ImGuiExt.BeginCollapsingHeader("Ground", Color.LightBlue))
-                {
-                    ImGui.Text("GroundCollisions");
-
-                    foreach (var collision in player.Mover.GroundCollisions)
-                    {
-                        if (ImGuiExt.BeginPropTable("GroundCollisions"))
-                        {
-                            DrawCollision(collision);
-                            ImGui.EndTable();
-                        }
-                    }
-
-                    ImGui.Text("ContinuedGroundCollisions");
-
-                    foreach (var collision in player.Mover.ContinuedGroundCollisions)
-                    {
-                        if (ImGuiExt.BeginPropTable("ContinuedGroundCollisions"))
-                        {
-                            DrawCollision(collision);
-                            ImGui.EndTable();
-                        }
-                    }
-
-                    ImGuiExt.EndCollapsingHeader();
-                }
-
-                if (ImGuiExt.BeginCollapsingHeader("Move", Color.LightBlue))
-                {
-                    ImGui.Text("MoveCollisions");
-
-                    foreach (var collision in player.Mover.MoveCollisions)
-                    {
-                        if (ImGuiExt.BeginPropTable("MoveCollisions"))
-                        {
-                            DrawCollision(collision);
-                            ImGui.EndTable();
-                        }
-                    }
-
-                    ImGui.Text("ContinuedMoveCollisions");
-                    for (var i = 0; i < player.Mover.ContinuedMoveCollisions.Count; i++)
-                    {
-                        var collision = player.Mover.ContinuedMoveCollisions[i];
-                        if (ImGuiExt.BeginPropTable("ContinuedMoveCollisions"))
-                        {
-                            DrawCollision(collision);
-                            ImGui.EndTable();
-                        }
-                    }
-
-                    ImGuiExt.EndCollapsingHeader();
-                }
-            }
-
-            /*_mainMenuInspector ??= InspectorExt.GetInspectorForTarget(Shared.Menus.MainMenuScreen);
-            _mainMenuInspector.Draw();
-            ImGui.SliderFloat("GoalPosition", ImGuiExt.RefPtr(ref Shared.Menus.MainMenuScreen.Spring.EquilibriumPosition), -1, 1, default);
-            public Spring Spring = new();
-            public Vector2 Position;
-            public Vector2 Scale = Vector2.One;
-            public float MoveOffset = 500;
-            public Vector2 Size = new Vector2(50, 25);
-            public float ScaleFactor = 2f;
-            public Vector2 InitialPosition = new Vector2(960, 100);*/
-        }
-
-        ImGui.End();
-    }
-
-    private static void DrawCollision(CollisionResult collision)
-    {
-        ImGuiExt.PropRow("Direction", collision.Direction.ToString());
-        ImGuiExt.PropRow("PreviousPosition", collision.PreviousPosition.ToString());
-        ImGuiExt.PropRow("Position", collision.Position.ToString());
-        ImGuiExt.PropRow("Intersection", collision.Intersection.ToString());
     }
 
     private void DrawMenu(ImGuiMenu menu, int depth = 0)
@@ -506,16 +268,14 @@ public unsafe class MyEditorMain : MyGameMain
             var dockLeft = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, null, &dockId);
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             var dockDown = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
-            ImGuiInternal.DockBuilderDockWindow(_debugWindowName, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow(_loadingDebugWindowName, dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeft);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockDown);
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;
         }
 
         DrawMenu();
-
-        var drawList = ImGui.GetBackgroundDrawList();
 
         DrawWindows(dockId);
 
@@ -568,7 +328,7 @@ public unsafe class MyEditorMain : MyGameMain
     {
         if (!IsHidden)
         {
-            _imGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputState.Create(InputHandler));
+            ImGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputState.Create(InputHandler));
 
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
@@ -582,7 +342,6 @@ public unsafe class MyEditorMain : MyGameMain
         var wasHidden = IsHidden;
 
         base.Update(dt);
-
 
         if (wasHidden != IsHidden)
         {
@@ -612,13 +371,13 @@ public unsafe class MyEditorMain : MyGameMain
 
         RenderGame(alpha, CompositeRender);
 
-        if (((int)Time.UpdateCount % _updateRate == 0) && _imGuiUpdateCount > 0)
+        if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
             _imGuiDrawCount++;
-            _imGuiRenderer.Begin();
+            ImGuiRenderer.Begin();
             DrawInternal();
             TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size);
-            _imGuiRenderer.End(_imGuiRenderTarget);
+            ImGuiRenderer.End(_imGuiRenderTarget);
         }
 
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
@@ -634,19 +393,19 @@ public unsafe class MyEditorMain : MyGameMain
             commandBuffer.CopyTextureToBuffer(CompositeRender, _screenshotBuffer);
         }
 
-        {
+        /*{
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
             Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
-        }
+        }*/
 
         if (_imGuiDrawCount > 0)
         {
             Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, null, null);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null);
         }
 
         Renderer.Submit(ref commandBuffer);
@@ -675,7 +434,7 @@ public unsafe class MyEditorMain : MyGameMain
         var fileName = ImGuiExt.StringFromPtr(ImGui.GetIO()->IniFilename);
         ImGui.SaveIniSettingsToDisk(fileName);
         Logger.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
-        _imGuiRenderer.Dispose();
+        ImGuiRenderer.Dispose();
         _fileWatcher.Dispose();
         _screenshotBuffer.Dispose();
     }

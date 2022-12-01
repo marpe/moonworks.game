@@ -45,11 +45,11 @@ public class Camera
     public Vector2 ViewPosition;
 
 
-    public Point Size;
+    public UPoint Size;
 
     public Vector2 ZoomedSize => Size.ToVec2() / Zoom;
 
-    public Bounds Bounds
+    public Bounds ZoomedBounds
     {
         get
         {
@@ -114,17 +114,15 @@ public class Camera
     private float _shakeTime = 0;
     public Vector2 TrackingSpeed = new(5f, 5f);
     public bool ClampToLevelBounds;
-    private GameScreen _gameScreen;
 
     public Rectangle LevelBounds = Rectangle.Empty;
 
-    public Camera(GameScreen gameScreen)
+    public Camera(uint width, uint height)
     {
-        _gameScreen = gameScreen;
         InitialFriction = Velocity.Friction;
         Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
 
-        Size = gameScreen.Game.GameRenderSize;
+        Size = new UPoint(width, height);
         Zoom = (float)Size.X / 480;
         FloorViewPosition = MyGameMain.RenderScale != 1;
     }
@@ -299,32 +297,32 @@ public class Camera
         {
             if (input.MouseWheelDelta != 0)
             {
-                Zoom += 0.1f * Zoom * input.MouseWheelDelta;
+                // Zoom += 0.1f * Zoom * input.MouseWheelDelta;
             }
 
             var cameraSpeed = 500f;
 
             if (CameraBinds.Pan.Active)
             {
-                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
+                // Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }
 
             var moveDelta = cameraSpeed * deltaSeconds;
 
             if (input.IsKeyPressed(KeyCode.Home))
             {
-                Zoom = 1.0f;
+                Zoom = 4.0f;
                 Position = Vector2.Zero;
             }
 
             if (CameraBinds.ZoomIn.Active)
             {
-                Zoom += 0.025f * Zoom;
+                // Zoom += 0.025f * Zoom;
             }
 
             if (CameraBinds.ZoomOut.Active)
             {
-                Zoom -= 0.025f * Zoom;
+                // Zoom -= 0.025f * Zoom;
             }
 
             if (CameraBinds.Up.Active)

@@ -11,6 +11,9 @@ public class World
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
+    [CVar("level.debug", "Toggle level debugging")]
+    public static bool DebugLevel;
+
     private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private readonly GameScreen _gameScreen;
@@ -24,6 +27,8 @@ public class World
     public Player Player;
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
+
+    public List<Light> Lights { get; } = new();
 
     public ulong WorldUpdateCount;
     public float WorldTotalElapsedTime;
@@ -76,6 +81,7 @@ public class World
     {
         Enemies.Clear();
         Bullets.Clear();
+        Lights.Clear();
 
         Level = level;
 
@@ -84,6 +90,7 @@ public class World
         var entities = LoadEntitiesInLevel(level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
         Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
+        Lights.AddRange(entities.Where(x => x.EntityType == EntityType.Light).Cast<Light>());
     }
 
     [ConsoleHandler("next_level")]
@@ -325,8 +332,8 @@ public class World
             DrawLayer(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
-        if (Debug)
-            renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Red, 1.0f);
+        if (Debug && DebugLevel)
+            renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Blue, 1.0f);
     }
 
     private void DrawBullets(Renderer renderer, double alpha)
@@ -567,5 +574,56 @@ public class World
     public void FreezeFrame(float duration, bool force = false)
     {
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
+    }
+
+    private Texture? _copyRender;
+
+    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        _copyRender ??= TextureUtils.CreateTexture(_gameScreen.Game.GraphicsDevice, _gameScreen.Game.GameRender);
+
+        DrawEntities(renderer, alpha);
+        var viewProjection = _gameScreen.Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
+
+        renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
+        renderer.UpdateBuffers(ref commandBuffer);
+        renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
+        var cameraBounds = _gameScreen.Camera.ZoomedBounds;
+        for (var i = 0; i < Lights.Count; i++)
+        {
+            var light = Lights[i];
+            var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            var fragmentBindings = new[]
+            {
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_copyRender, Renderer.PointClamp)
+            };
+            commandBuffer.BindFragmentSamplers(fragmentBindings);
+            var fragUniform = new Pipelines.RimLightUniforms()
+            {
+                LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
+                LightIntensity = light.Intensity,
+                LightRadius = Math.Max(light.Width, light.Height),
+                TexelSize = new Vector4(
+                    1.0f / renderDestination.Width,
+                    1.0f / renderDestination.Height,
+                    renderDestination.Width,
+                    renderDestination.Height
+                ),
+                LightPos = light.Position,
+                Bounds = new Vector4(
+                    cameraBounds.Min.X,
+                    cameraBounds.Min.Y,
+                    cameraBounds.Width,
+                    cameraBounds.Height
+                ),
+                Debug = light.Debug
+            };
+            var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
+            var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
+            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
+        }
+
+        renderer.EndRenderPass(ref commandBuffer);
     }
 }

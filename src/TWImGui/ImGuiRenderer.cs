@@ -100,7 +100,7 @@ public unsafe class ImGuiRenderer : IDisposable
 
         SetupMouseCursors();
 
-        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
+        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
         BlendState = new ColorAttachmentBlendState()
         {
             BlendEnable = true,

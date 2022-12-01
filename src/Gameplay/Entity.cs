@@ -10,7 +10,13 @@ public partial class Entity
     public bool IsDestroyed;
 
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
+
+    [HideInInspector]
+    public int Width => Size.X;
     
+    [HideInInspector]
+    public int Height => Size.Y;
+
     [HideInInspector]
     public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 
