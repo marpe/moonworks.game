@@ -889,35 +889,6 @@
 					"allowedRefs": "OnlySame",
 					"allowedRefTags": [],
 					"tilesetUid": null
-				},
-				{
-					"identifier": "Color",
-					"__type": "Color",
-					"uid": 143,
-					"type": "F_Color",
-					"isArray": false,
-					"canBeNull": false,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": true,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": { "id": "V_Int", "params": [10899536] },
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
 				}
 			]
 		},
@@ -1631,7 +1602,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#FF0000",
+							"__smartColor": "#FF6B19",
 							"iid": "203900c1-8dc0-11ec-a0e2-5d1dc3c7917f",
 							"width": 16,
 							"height": 16,
@@ -1645,8 +1616,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#FF0000", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [{ "id": "V_Int", "params": [16711680] }] }
+								}] }
 							]
 						},
 						{
@@ -1655,7 +1625,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#18FF00",
+							"__smartColor": "#FF6B19",
 							"iid": "203900c2-8dc0-11ec-a0e2-038e052b6b4c",
 							"width": 16,
 							"height": 16,
@@ -1672,8 +1642,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#18FF00", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [{ "id": "V_Int", "params": [1638144] }] }
+								}] }
 							]
 						},
 						{
@@ -1682,7 +1651,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#003BFF",
+							"__smartColor": "#FF6B19",
 							"iid": "203927d0-8dc0-11ec-a0e2-17db39629243",
 							"width": 16,
 							"height": 16,
@@ -1705,8 +1674,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#003BFF", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [{ "id": "V_Int", "params": [15359] }] }
+								}] }
 							]
 						},
 						{
@@ -2030,7 +1998,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "2039eb23-8dc0-11ec-a0e2-5bd3ece113c6",
 							"width": 16,
 							"height": 16,
@@ -2047,8 +2015,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2057,7 +2024,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "2039eb24-8dc0-11ec-a0e2-f32448e21f7b",
 							"width": 16,
 							"height": 16,
@@ -2074,8 +2041,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2084,7 +2050,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "2039eb25-8dc0-11ec-a0e2-b3e5c192dfa7",
 							"width": 16,
 							"height": 16,
@@ -2122,8 +2088,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2146,7 +2111,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "203a1230-8dc0-11ec-a0e2-9bd99f75636d",
 							"width": 16,
 							"height": 16,
@@ -2163,8 +2128,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [null] }
+								}] }
 							]
 						},
 						{
@@ -2232,7 +2196,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "e7c3a7a0-5110-11ed-b5e9-4f7bfff8f79b",
 							"width": 16,
 							"height": 16,
@@ -2243,8 +2207,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2253,7 +2216,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "93083070-5110-11ed-b5e9-dff7c6313ead",
 							"width": 16,
 							"height": 16,
@@ -2264,8 +2227,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2274,7 +2236,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "7797b6b0-5110-11ed-b5e9-2ffe09ecd1a9",
 							"width": 16,
 							"height": 16,
@@ -2285,8 +2247,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2295,7 +2256,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "78ac33f0-5110-11ed-b5e9-4f23bd726e50",
 							"width": 16,
 							"height": 16,
@@ -2306,8 +2267,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2316,7 +2276,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "79c1c2a0-5110-11ed-b5e9-8d3d738dee93",
 							"width": 16,
 							"height": 16,
@@ -2327,8 +2287,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2337,7 +2296,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "7a2bcf10-5110-11ed-b5e9-4929282f14c5",
 							"width": 16,
 							"height": 16,
@@ -2348,8 +2307,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2358,7 +2316,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "7a4ec060-5110-11ed-b5e9-4b4366ad9f3b",
 							"width": 16,
 							"height": 16,
@@ -2369,8 +2327,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						}
 					]
@@ -2694,7 +2651,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccf5283-5110-11ed-91f0-712e63a10086",
 							"width": 16,
 							"height": 16,
@@ -2711,8 +2668,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2721,7 +2677,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccf7990-5110-11ed-91f0-b56c9d30708f",
 							"width": 16,
 							"height": 16,
@@ -2738,8 +2694,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2748,7 +2703,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccf7991-5110-11ed-91f0-6b603d2edae0",
 							"width": 16,
 							"height": 16,
@@ -2786,8 +2741,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2810,7 +2764,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b0-5110-11ed-91f0-8f60fbe519d2",
 							"width": 16,
 							"height": 16,
@@ -2827,8 +2781,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [null] }
+								}] }
 							]
 						},
 						{
@@ -2896,7 +2849,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b3-5110-11ed-91f0-5ff00e73963b",
 							"width": 16,
 							"height": 16,
@@ -2907,8 +2860,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2917,7 +2869,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b4-5110-11ed-91f0-81961e0ec2d9",
 							"width": 16,
 							"height": 16,
@@ -2928,8 +2880,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2938,7 +2889,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b5-5110-11ed-91f0-9bee4d797261",
 							"width": 16,
 							"height": 16,
@@ -2949,8 +2900,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2959,7 +2909,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b6-5110-11ed-91f0-951c19051246",
 							"width": 16,
 							"height": 16,
@@ -2970,8 +2920,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2980,7 +2929,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b7-5110-11ed-91f0-678219096d34",
 							"width": 16,
 							"height": 16,
@@ -2991,8 +2940,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3001,7 +2949,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b8-5110-11ed-91f0-ffc7d7155d53",
 							"width": 16,
 							"height": 16,
@@ -3012,8 +2960,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3022,7 +2969,7 @@
 							"__pivot": [0.5,1],
 							"__tags": [],
 							"__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 },
-							"__smartColor": "#A65050",
+							"__smartColor": "#FF6B19",
 							"iid": "9ccfc7b9-5110-11ed-91f0-a9ac2abcf223",
 							"width": 16,
 							"height": 16,
@@ -3033,8 +2980,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Color", "__value": "#A65050", "__type": "Color", "__tile": null, "defUid": 143, "realEditorValues": [] }
+								}] }
 							]
 						}
 					]

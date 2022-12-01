@@ -4,17 +4,17 @@ public static class CameraBinds
 {
     public static ButtonBind ZoomIn = new();
     public static ButtonBind ZoomOut = new();
-
     public static ButtonBind Up = new();
     public static ButtonBind Down = new();
     public static ButtonBind Right = new();
     public static ButtonBind Left = new();
     public static ButtonBind Pan = new();
+    public static ButtonBind Reset = new();
 }
 
 public class Camera
 {
-    [Inspectable] protected Vector2 _cameraRotation = new(0, MathHelper.Pi);
+    private Vector2 _cameraRotation3D = new(0, MathHelper.Pi);
 
     [CVar("camera.use3d", "Use 3D Camera")]
     public static bool Use3D;
@@ -120,7 +120,7 @@ public class Camera
     public Camera(uint width, uint height)
     {
         InitialFriction = Velocity.Friction;
-        Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+        Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
 
         Size = new UPoint(width, height);
         Zoom = (float)Size.X / 480;
@@ -213,7 +213,7 @@ public class Camera
             var cameraSize = ZoomedSize;
             if (LevelBounds.Width < cameraSize.X)
             {
-                Position.X = LevelBounds.X + LevelBounds.Width * 0.5f; // centered small level
+                Position.X = LevelBounds.X + LevelBounds.Width * 0.5f;
             }
             else
             {
@@ -224,9 +224,9 @@ public class Camera
                 );
             }
 
-            if (LevelBounds.Height < cameraSize.X)
+            if (LevelBounds.Height < cameraSize.Y)
             {
-                Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f; // centered small level
+                Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f;
             }
             else
             {
@@ -255,74 +255,69 @@ public class Camera
     {
         if (Use3D)
         {
-            if (input.IsMouseButtonHeld(MouseButtonCode.Right))
+            if (CameraBinds.Pan.Active)
             {
                 var rotationSpeed = 0.1f;
-                _cameraRotation += new Vector2(input.MouseDelta.X, -input.MouseDelta.Y) * rotationSpeed * deltaSeconds;
-                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+                _cameraRotation3D += new Vector2(input.MouseDelta.X, -input.MouseDelta.Y) * rotationSpeed * deltaSeconds;
+                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
                 Rotation3D = rotation;
             }
 
-            if (input.IsKeyPressed(KeyCode.Home))
+            if (CameraBinds.Reset.Active)
             {
-                _cameraRotation = new Vector2(0, MathHelper.Pi);
-                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation.X, _cameraRotation.Y, 0);
+                _cameraRotation3D = new Vector2(0, MathHelper.Pi);
+                var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
                 Rotation3D = rotation;
                 Position3D = new Vector3(0, 0, -1000);
             }
 
             var camera3DSpeed = 750f;
             var moveDelta = camera3DSpeed * deltaSeconds;
-            if (input.IsKeyDown(KeyCode.W))
+            if (CameraBinds.Up.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.S))
+            if (CameraBinds.Down.Active)
             {
                 Position3D -= Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.A))
+            if (CameraBinds.Left.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Left, Rotation3D) * moveDelta;
             }
 
-            if (input.IsKeyDown(KeyCode.D))
+            if (CameraBinds.Right.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Right, Rotation3D) * moveDelta;
             }
         }
         else
         {
-            if (input.MouseWheelDelta != 0)
-            {
-                // Zoom += 0.1f * Zoom * input.MouseWheelDelta;
-            }
-
             var cameraSpeed = 500f;
 
             if (CameraBinds.Pan.Active)
             {
-                // Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
+                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
             }
 
             var moveDelta = cameraSpeed * deltaSeconds;
 
-            if (input.IsKeyPressed(KeyCode.Home))
+            if (CameraBinds.Reset.Active)
             {
-                Zoom = 4.0f;
+                Zoom = (float)Size.X / 480; // TODO (marpe): remove 480
                 Position = Vector2.Zero;
             }
 
             if (CameraBinds.ZoomIn.Active)
             {
-                // Zoom += 0.025f * Zoom;
+                Zoom += 0.025f * Zoom;
             }
 
             if (CameraBinds.ZoomOut.Active)
             {
-                // Zoom -= 0.025f * Zoom;
+                Zoom -= 0.025f * Zoom;
             }
 
             if (CameraBinds.Up.Active)

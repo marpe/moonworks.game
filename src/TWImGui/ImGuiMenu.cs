@@ -7,13 +7,15 @@ public class ImGuiMenu
     public bool? IsEnabled;
     public string? Shortcut;
     public string Text;
+    public Func<bool>? IsSelectedCallback;
 
-    public ImGuiMenu(string text, string? shortcut = null, Action? callback = null, bool? isEnabled = null)
+    public ImGuiMenu(string text, string? shortcut = null, Action? callback = null, bool? isEnabled = null, Func<bool>? isSelectedCallback = null)
     {
         Text = text;
         Shortcut = shortcut;
         IsEnabled = isEnabled;
         Callback = callback;
+        IsSelectedCallback = isSelectedCallback;
     }
 
     public ImGuiMenu AddChild(params ImGuiMenu[] children)

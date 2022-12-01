@@ -187,18 +187,6 @@ public class GameScreen
         circleLoad.CenterY = playerInScreen.Y;
     }
 
-    public Vector2 GetWorldPositionInScreen(Vector2 worldPosition)
-    {
-        if (World == null)
-            throw new InvalidOperationException("World cannot be null");
-
-        // var x = MathF.Loop(World.Level.WorldX + worldPosition.X, World.Level.PxWid) / World.Level.PxWid;
-        // var y = MathF.Loop(World.Level.WorldY + worldPosition.Y, World.Level.PxHei) / World.Level.PxHei;
-        // return (new Vector2(x, y) - Vector2.Half) * 2f;
-        var viewProjection = Camera.GetViewProjection(_game.GameRender.Width, _game.GameRender.Height);
-        return Vector2.Transform(worldPosition, viewProjection);
-    }
-
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (World == null)

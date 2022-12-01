@@ -26,7 +26,7 @@ public class Position
 
     public void Initialize()
     {
-        Initial = Previous = Current;
+        Initial = LastUpdatePosition = Previous = Current;
     }
 
     public void SetPrevAndCurrent(Vector2 position)

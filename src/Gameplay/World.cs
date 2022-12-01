@@ -8,6 +8,8 @@ public class World
 
     public bool IsDisposed { get; private set; }
 
+    public static bool DebugMouse;
+
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
 
@@ -278,6 +280,8 @@ public class World
 
     private void DrawMousePosition(Renderer renderer)
     {
+        if (!Debug || !DebugMouse)
+            return;
         var mousePosition = Shared.Game.InputHandler.MousePosition;
         var view = Shared.Game.GameScreen.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);

@@ -2,43 +2,20 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public static class Temp
-{
-    public static Color[] Colors =
-    {
-        new(32, 109, 255),
-        new(11, 117, 196),
-        new(0xA6, 0x1D, 0x1D),
-        new(0x13, 0xAE, 0xB5),
-        new(0xB5, 0x70, 0x27),
-        new(0xAB, 0x10, 0x8F),
-        Color.Fuchsia,
-        Color.GreenYellow,
-        Color.LightGray,
-        Color.LightGreen,
-        Color.Linen,
-        Color.MintCream,
-        Color.MistyRose,
-        Color.NavajoWhite,
-        Color.MediumBlue,
-        Color.OliveDrab,
-    };
-}
-
 public unsafe class GroupInspector : Inspector
 {
-    private static ulong IdCounter;
+    private static ulong _idCounter;
     private readonly List<IInspector> _inspectors = new();
 
     public Color HeaderColor = new(32, 109, 255);
     public bool ShowHeader;
-    public bool _drawInSeparateWindow;
+    private bool _drawInSeparateWindow;
     private readonly string _id;
 
     public GroupInspector()
     {
-        _id = IdCounter.ToString();
-        IdCounter++;
+        _id = _idCounter.ToString();
+        _idCounter++;
     }
 
     public GroupInspector(List<IInspector> inspectors) : this()
@@ -167,7 +144,7 @@ public unsafe class GroupInspector : Inspector
                 if (_inspectors[i] is GroupInspector grpInspector)
                 {
                     var depth = GetDepth(path);
-                    grpInspector.HeaderColor = Temp.Colors[depth % Temp.Colors.Length];
+                    grpInspector.HeaderColor = ImGuiExt.Colors[depth % ImGuiExt.Colors.Length];
                     grpInspector.Draw(path, drawWindow, rootIsWindow);
                 }
                 else
@@ -200,6 +177,9 @@ public unsafe class GroupInspector : Inspector
         {
             ImGui.MenuItem($"Pop-out \"{_name}\"", default, ImGuiExt.RefPtr(ref _drawInSeparateWindow));
             ImGui.MenuItem($"Show Header for {_name}", default, ImGuiExt.RefPtr(ref ShowHeader));
+            ImGui.Separator();
+            ImGui.MenuItem($"Debug Inspectors", default, ImGuiExt.RefPtr(ref ImGuiExt.DebugInspectors));
+            ImGui.MenuItem($"Hide read-only fields", default, ImGuiExt.RefPtr(ref SimpleTypeInspector.HideReadOnly));
             ImGui.EndPopup();
         }
     }

@@ -2,36 +2,52 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public unsafe class InspectorCallableInspector : Inspector
+public class InspectorCallableInspector : Inspector
 {
-    private string[] _invokeParamNames = Array.Empty<string>();
-    private object?[] _invokeParams = Array.Empty<object>();
+    private ParameterData[] _paramData = Array.Empty<ParameterData>();
+    private string _buttonLabel = "Invoke";
+    private string _headerLabel = "Invoke Method";
+
+    private struct ParameterData
+    {
+        public string Name;
+        public Func<object> Getter;
+        public Action<object> Setter;
+        public object Value;
+        public Type ParameterType;
+    }
 
     public override void Initialize()
     {
         var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
-
+        _buttonLabel = _callableAttr?.Label ?? methodInfo.Name;
+        _headerLabel = $"Method: {_buttonLabel}";
         var methodParams = methodInfo.GetParameters();
         if (methodParams.Length > 0)
         {
-            _invokeParams = new object[methodParams.Length];
-            _invokeParamNames = new string[methodParams.Length];
+            _paramData = new ParameterData[methodParams.Length];
+
             for (var i = 0; i < methodParams.Length; i++)
             {
-                var parameter = methodParams[i];
-                if (parameter.HasDefaultValue)
-                {
-                    _invokeParams[i] = parameter.DefaultValue;
-                }
-                else
-                {
-                    _invokeParams[i] = Activator.CreateInstance(parameter.ParameterType);
-                }
-
-                _invokeParamNames[i] = parameter.Name ?? parameter.ParameterType.Name;
+                _paramData[i] = CreateParamData(methodParams[i], i);
             }
         }
+
         base.Initialize();
+    }
+
+    private ParameterData CreateParamData(ParameterInfo parameter, int index)
+    {
+        string name = parameter.Name ?? parameter.ParameterType.Name;
+        object? value = parameter.HasDefaultValue ? parameter.DefaultValue : Activator.CreateInstance(parameter.ParameterType);
+        return new ParameterData()
+        {
+            Getter = () => _paramData[index].Value,
+            Setter = newValue => _paramData[index].Value = newValue,
+            Name = name,
+            Value = value ?? throw new InvalidOperationException(),
+            ParameterType = parameter.ParameterType,
+        };
     }
 
     public override void Draw()
@@ -41,47 +57,41 @@ public unsafe class InspectorCallableInspector : Inspector
             DrawDebug();
         }
 
-        var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
-
-        for (var i = 0; i < _invokeParams.Length; i++)
+        if (_paramData.Length == 0)
         {
-            var invokeParam = _invokeParams[i];
-            if (invokeParam is string strParam)
-            {
-                var inputBuffer = new ImGuiInputBuffer(strParam, 255);
-
-                if (ImGui.InputText(_invokeParamNames[i], inputBuffer.Data, inputBuffer.Length))
-                {
-                    _invokeParams[i] = inputBuffer.ToString();
-                }
-            }
-            else if (invokeParam is bool boolParam)
-            {
-                if (ImGui.Checkbox(_invokeParamNames[i], ImGuiExt.RefPtr(ref boolParam)))
-                {
-                    _invokeParams[i] = boolParam;
-                }
-            }
-            else if (invokeParam is Vector2 vectorParam)
-            {
-                var asNumeric = vectorParam.ToNumerics();
-                if (ImGui.DragFloat2(_name, ImGuiExt.RefPtr(ref asNumeric), 1.0f, 0, 0, "%g"))
-                {
-                    _invokeParams[i] = asNumeric.ToXNA();
-                }
-            }
-            else if (invokeParam is float floatParam)
-            {
-                if (ImGui.InputFloat(_invokeParamNames[i], ImGuiExt.RefPtr(ref floatParam), default, default, default))
-                {
-                    _invokeParams[i] = floatParam;
-                }
-            }
+            DrawInvokeButton();
+            return;
         }
-
-        if (ImGuiExt.ColoredButton(_callableAttr?.Label ?? methodInfo.Name))
+        
+        if (ImGuiExt.BeginCollapsingHeader(_headerLabel, ImGuiExt.Colors[1], ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont.Tiny))
         {
-            methodInfo.Invoke(_target, _invokeParams);
+            for (var i = 0; i < _paramData.Length; i++)
+            {
+                var param = _paramData[i];
+
+                SimpleTypeInspector.DrawSimpleInspector(
+                    param.ParameterType,
+                    param.Name,
+                    param.Getter,
+                    param.Setter,
+                    false,
+                    null
+                );
+            }
+
+            DrawInvokeButton();
+
+            ImGuiExt.EndCollapsingHeader();
+        }
+    }
+
+    private void DrawInvokeButton()
+    {
+        if (ImGuiExt.ColoredButton(_buttonLabel, ImGuiExt.Colors[0], new Vector2(-ImGuiExt.FLT_MIN, 0)))
+        {
+            var parameters = _paramData.Select(x => x.Value).ToArray();
+            var methodInfo = _memberInfo as MethodInfo ?? throw new InvalidOperationException();
+            methodInfo.Invoke(_target, parameters);
         }
     }
 }

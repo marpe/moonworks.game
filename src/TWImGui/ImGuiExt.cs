@@ -5,6 +5,9 @@ namespace MyGame.TWImGui;
 
 public static unsafe class ImGuiExt
 {
+    public const float FLT_MIN = 1.175494351e-38F;
+    public const float FLT_MAX = 3.402823466e+38F;
+    
     public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                      ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
                                                      ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
@@ -19,6 +22,26 @@ public static unsafe class ImGuiExt
 
     private static readonly Stack<Color> _colorStack = new();
     public static Vector2 ButtonPadding => new(6f, 4f);
+    
+    public static Color[] Colors =
+    {
+        new(32, 109, 255),
+        new(11, 117, 196),
+        new(0xA6, 0x1D, 0x1D),
+        new(0x13, 0xAE, 0xB5),
+        new(0xB5, 0x70, 0x27),
+        new(0xAB, 0x10, 0x8F),
+        Color.Fuchsia,
+        Color.GreenYellow,
+        Color.LightGray,
+        Color.LightGreen,
+        Color.Linen,
+        Color.MintCream,
+        Color.MistyRose,
+        Color.NavajoWhite,
+        Color.MediumBlue,
+        Color.OliveDrab,
+    };
 
     public static bool Begin(string name, ref bool isOpen, ImGuiWindowFlags flags = ImGuiWindowFlags.None)
     {
@@ -624,9 +647,14 @@ public static unsafe class ImGuiExt
         SeparatorText(text, textDisabledColor, textDisabledColor);
     }
 
+    public static void SeparatorText(string text, Color textColor)
+    {
+        var textDisabledColor = ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled].ToColor();
+        SeparatorText(text, textColor, textDisabledColor);
+    }
+
     public static void SeparatorText(string text, Color textColor, Color separatorColor)
     {
-        ImGui.Spacing();
         var draw = ImGui.GetWindowDrawList();
         var halfLine = new Num.Vector2(0, ImGui.GetTextLineHeight() * 0.5f);
         draw->AddLine(
@@ -643,7 +671,6 @@ public static unsafe class ImGuiExt
             separatorColor.PackedValue
         );
         ImGui.NewLine();
-        ImGui.Spacing();
     }
 
     public static void ItemTooltip(ReadOnlySpan<char> tooltip)

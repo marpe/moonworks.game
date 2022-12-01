@@ -6,6 +6,7 @@ namespace MyGame.TWImGui;
 public enum ImGuiFont
 {
     Tiny,
+
     // TinyBold,
     // Small,
     // SmallBold,
@@ -26,7 +27,11 @@ public unsafe class ImGuiRenderer : IDisposable
     private readonly MyGameMain _game;
 
     private readonly Dictionary<ImGuiMouseCursor, IntPtr> _mouseCursors = new();
-    private readonly Sampler _sampler;
+
+    private readonly Sampler _linearSampler;
+    private readonly Sampler _pointSampler;
+
+    public bool UsePointSampler;
 
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
     private readonly Dictionary<IntPtr, Texture> _textures = new();
@@ -100,7 +105,9 @@ public unsafe class ImGuiRenderer : IDisposable
 
         SetupMouseCursors();
 
-        _sampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
+        _linearSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.LinearClamp);
+        _pointSampler = new Sampler(game.GraphicsDevice, SamplerCreateInfo.PointClamp);
+
         BlendState = new ColorAttachmentBlendState()
         {
             BlendEnable = true,
@@ -335,7 +342,8 @@ public unsafe class ImGuiRenderer : IDisposable
 
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
-            _sampler.Dispose();
+            _linearSampler.Dispose();
+            _pointSampler.Dispose();
             _pipeline.Dispose();
         }
 
@@ -497,7 +505,8 @@ public unsafe class ImGuiRenderer : IDisposable
                     );
                 }
 
-                var textureSamplerBindings = new TextureSamplerBinding(_textures[(IntPtr)drawCmd.TextureId], _sampler);
+                var sampler = UsePointSampler ? _pointSampler : _linearSampler;
+                var textureSamplerBindings = new TextureSamplerBinding(_textures[(IntPtr)drawCmd.TextureId], sampler);
                 commandBuffer.BindFragmentSamplers(textureSamplerBindings);
 
                 // Project scissor/clipping rectangles into framebuffer space

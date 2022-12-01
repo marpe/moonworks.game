@@ -60,11 +60,12 @@ public static class Binds
             ("cam_down", "Move camera down", KeyCode.K, CameraBinds.Down),
             ("cam_left", "Move camera left", KeyCode.J, CameraBinds.Left),
             ("cam_right", "Move camera right", KeyCode.L, CameraBinds.Right),
+            ("cam_reset", "Reset camera", KeyCode.Home, CameraBinds.Reset),
         };
 
         var mouseBinds = new[]
         {
-            ("mb_middle", "cam_pan", "Pan camera", CameraBinds.Pan)
+            ("", "cam_pan", "Pan camera", CameraBinds.Pan),
         };
 
         for (var i = 0; i < defaultBinds.Length; i++)
@@ -83,7 +84,8 @@ public static class Binds
         for (var i = 0; i < mouseBinds.Length; i++)
         {
             var (button, cmd, description, bind) = mouseBinds[i];
-            Bind(button, $"+{cmd}");
+            if (button != "")
+                Bind(button, $"+{cmd}");
             RegisterConsoleCommandForBind(cmd, description, bind);
         }
 

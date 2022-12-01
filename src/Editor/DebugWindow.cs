@@ -32,21 +32,11 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();
-            // ImGui.TextUnformatted($"ActiveId: {ImGui.GetCurrentContext()->ActiveId.ToString()}");
-            ImGui.TextUnformatted($"MousePosRaw: {_editor.InputHandler.MousePositionRaw.ToString()}");
-            ImGui.TextUnformatted($"MousePos: {_editor.InputHandler.MousePosition.ToString()}");
-            ImGui.TextUnformatted($"MouseEnabled: {_editor.InputHandler.MouseEnabled.ToString()}");
-            ImGui.TextUnformatted($"Nav: {(io->NavActive ? "Y" : "N")}");
-            ImGui.TextUnformatted($"WantCaptureMouse: {(io->WantCaptureMouse ? "Y" : "N")}");
-            ImGui.TextUnformatted($"WantCaptureKeyboard: {(io->WantCaptureKeyboard ? "Y" : "N")}");
-            ImGui.TextUnformatted($"WantTextInput: {(io->WantTextInput ? "Y" : "N")}");
             ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
             ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
             ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
 
             ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {_editor.Renderer.SpriteBatch.MaxNumAddedSprites}");
-
-            ImGui.TextUnformatted("MouseWheel:" + ImGui.GetIO()->MouseWheel);
 
             ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
             ImGui.SliderFloat("ShakeAmount", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeAmount), 0, 500, default);
@@ -58,7 +48,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
             {
                 var player = Shared.Game.GameScreen.World.Player;
 
-                if (ImGuiExt.BeginCollapsingHeader("Ground", Color.LightBlue))
+                if (ImGuiExt.BeginCollapsingHeader("Ground", ImGuiExt.Colors[0]))
                 {
                     ImGui.Text("GroundCollisions");
 
@@ -85,7 +75,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
                     ImGuiExt.EndCollapsingHeader();
                 }
 
-                if (ImGuiExt.BeginCollapsingHeader("Move", Color.LightBlue))
+                if (ImGuiExt.BeginCollapsingHeader("Move", ImGuiExt.Colors[0]))
                 {
                     ImGui.Text("MoveCollisions");
 

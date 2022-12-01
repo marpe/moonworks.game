@@ -11,49 +11,74 @@ public unsafe class SimpleTypeInspector : Inspector
         typeof(Rectangle),
     };
 
-    [CVar("imgui.hide_const", "Toggle visibility of const values in inspector")]
+    [CVar("imgui.hide_readonly", "Toggle visibility of readonly values in inspector")]
     public static bool HideReadOnly = true;
 
-    private bool InspectFloat(ref float value)
+    public static readonly RangeSettings DefaultRangeSettings = new RangeSettings(-(ImGuiExt.FLT_MAX / 2), ImGuiExt.FLT_MAX / 2, 1, true);
+
+    private Func<object> _getter = null!;
+    private Action<object> _setter = null!;
+
+    public override void Initialize()
     {
-        if (_rangeAttribute != null)
-        {
-            if (_rangeAttribute.UseDragVersion)
-            {
-                return ImGui.DragFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, _rangeAttribute.MinValue,
-                    _rangeAttribute.MaxValue, "%g");
-            }
+        base.Initialize();
 
-            return ImGui.SliderFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.MinValue, _rangeAttribute.MaxValue, "%.4g");
-        }
-
-        var stepSize = _stepSizeAttribute?.StepSize ?? 1f;
-        return ImGui.DragFloat(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), stepSize, 0, 0, "%g");
+        _getter = () => GetValue() ?? throw new InvalidOperationException("Type cannot be null");
+        _setter = SetValue;
     }
 
-    private bool InspectInt(ref int value)
+    private static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings)
     {
-        if (_rangeAttribute != null)
+        if (rangeSettings.UseDragVersion)
         {
-            if (_rangeAttribute.UseDragVersion)
-            {
-                return ImGui.DragInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), _rangeAttribute.StepSize, (int)_rangeAttribute.MinValue,
-                    (int)_rangeAttribute.MaxValue, default);
-            }
-
-            return ImGui.SliderInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), (int)_rangeAttribute.MinValue, (int)_rangeAttribute.MaxValue,
-                default);
+            return ImGui.DragFloat(
+                ImGuiExt.LabelPrefix(name),
+                ImGuiExt.RefPtr(ref value),
+                rangeSettings.StepSize,
+                rangeSettings.MinValue,
+                rangeSettings.MaxValue,
+                "%g"
+            );
         }
 
-        var stepSize = _stepSizeAttribute != null ? _stepSizeAttribute.StepSize : 1f;
-        return ImGui.DragInt(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), stepSize, default, default, default);
+        return ImGui.SliderFloat(
+            ImGuiExt.LabelPrefix(name),
+            ImGuiExt.RefPtr(ref value),
+            rangeSettings.MinValue,
+            rangeSettings.MaxValue,
+            "%.4g"
+        );
     }
 
-    private bool InspectUInt(ref uint value)
+
+    private static bool InspectInt(string name, ref int value, RangeSettings rangeSettings)
+    {
+        if (rangeSettings.UseDragVersion)
+        {
+            return ImGui.DragInt(
+                ImGuiExt.LabelPrefix(name),
+                ImGuiExt.RefPtr(ref value),
+                rangeSettings.StepSize,
+                (int)rangeSettings.MinValue,
+                (int)rangeSettings.MaxValue,
+                default
+            );
+        }
+
+        return ImGui.SliderInt(
+            ImGuiExt.LabelPrefix(name),
+            ImGuiExt.RefPtr(ref value),
+            (int)rangeSettings.MinValue,
+            (int)rangeSettings.MaxValue,
+            default
+        );
+    }
+
+    private static bool InspectUInt(string name, ref uint value)
     {
         var result = false;
         var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
-        if (ImGui.DragScalar(ImGuiExt.LabelPrefix(_name), ImGuiDataType.U32, valuePtr, default, default, default, default))
+        if (ImGui.DragScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, valuePtr, default, default, default, default))
         {
             result = true;
         }
@@ -61,13 +86,13 @@ public unsafe class SimpleTypeInspector : Inspector
         return result;
     }
 
-    private bool InspectRectangle(ref Rectangle value)
+    private static bool InspectRectangle(string name, ref Rectangle value, bool isReadOnly)
     {
         var result = false;
 
-        if (ImGuiExt.BeginCollapsingHeader(_name, Color.Transparent))
+        if (ImGuiExt.BeginCollapsingHeader(name, ImGuiExt.Colors[0], ImGuiTreeNodeFlags.None, ImGuiFont.Tiny))
         {
-            if (IsReadOnly)
+            if (isReadOnly)
             {
                 ImGui.BeginDisabled();
             }
@@ -88,7 +113,7 @@ public unsafe class SimpleTypeInspector : Inspector
                 result = true;
             }
 
-            if (IsReadOnly)
+            if (isReadOnly)
             {
                 ImGui.EndDisabled();
             }
@@ -104,147 +129,175 @@ public unsafe class SimpleTypeInspector : Inspector
         if (ImGuiExt.DebugInspectors)
             DrawDebug();
 
-        var hideInInspector = HideInInspectorAttribute != null;
-        if (hideInInspector)
+        if (HideInInspectorAttribute != null)
             return;
 
         if (HideReadOnly && IsReadOnly)
             return;
 
-        if (_valueType == typeof(Rectangle))
+        DrawSimpleInspector(
+            _valueType ?? throw new InvalidOperationException(),
+            _name,
+            _getter,
+            _setter,
+            IsReadOnly,
+            _rangeAttribute?.Settings
+        );
+    }
+
+    public static bool DrawSimpleInspector(Type type, string name, Func<object> getter, Action<object> setter, bool isReadOnly,
+        RangeSettings? rangeSettings = null)
+    {
+        rangeSettings ??= DefaultRangeSettings;
+        var result = false;
+
+        if (type == typeof(Rectangle))
         {
-            var value = GetValue<Rectangle>();
-            if (InspectRectangle(ref value))
+            var value = (Rectangle)getter();
+
+            if (InspectRectangle(name, ref value, isReadOnly))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
 
-            return;
+            return result;
         }
 
-        if (IsReadOnly)
+        if (isReadOnly)
         {
             ImGui.BeginDisabled();
         }
 
-        if (_valueType == typeof(int))
+        if (type == typeof(int))
         {
-            var value = GetValue<int>();
+            var value = (int)getter();
 
-            if (InspectInt(ref value))
+            if (InspectInt(name, ref value, rangeSettings.Value))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(uint))
+        else if (type == typeof(uint))
         {
-            var value = GetValue<uint>();
+            var value = (uint)getter();
 
-            if (InspectUInt(ref value))
+            if (InspectUInt(name, ref value))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(bool))
+        else if (type == typeof(bool))
         {
-            var value = GetValue<bool>();
+            var value = (bool)getter();
 
-            if (ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(_name), ref value))
+            if (ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(name), ref value))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(string))
+        else if (type == typeof(string))
         {
-            var value = GetValue<string>() ?? string.Empty;
+            var value = (string)getter();
 
             var inputBuffer = new ImGuiInputBuffer(value, 100);
 
-            if (ImGui.InputText(ImGuiExt.LabelPrefix(_name), inputBuffer.Data, inputBuffer.Length))
+            if (ImGui.InputText(ImGuiExt.LabelPrefix(name), inputBuffer.Data, inputBuffer.Length))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(Point))
+        else if (type == typeof(Point))
         {
-            var value = GetValue<Point>();
+            var value = (Point)getter();
             var tuple = new ValueTuple<int, int>(value.X, value.Y);
             var xy = &tuple;
-            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(_name), xy, 1.0f, 0, 0, "%11d"))
+            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%11d"))
             {
-                SetValue(new Point(xy->Item1, xy->Item2));
+                setter(new Point(xy->Item1, xy->Item2));
+                result = true;
             }
         }
-        else if (_valueType == typeof(UPoint))
+        else if (type == typeof(UPoint))
         {
-            var value = GetValue<UPoint>();
+            var value = (UPoint)getter();
             var tuple = new ValueTuple<int, int>((int)value.X, (int)value.Y);
             var xy = &tuple;
-            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(_name), xy, 1.0f, 0, 0, "%u"))
+            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%u"))
             {
-                SetValue(new UPoint((uint)xy->Item1, (uint)xy->Item2));
+                setter(new UPoint((uint)xy->Item1, (uint)xy->Item2));
+                result = true;
             }
         }
-        else if (_valueType == typeof(Vector2))
+        else if (type == typeof(Vector2))
         {
-            var value = GetValue<Vector2>().ToNumerics();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%g"))
+            var value = ((Vector2)getter()).ToNumerics();
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%g"))
             {
-                SetValue(value.ToXNA());
+                setter(value.ToXNA());
+                result = true;
             }
         }
-        else if (_valueType == typeof(Num.Vector2))
+        else if (type == typeof(Num.Vector2))
         {
-            var value = GetValue<Num.Vector2>();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%g"))
+            var value = (Num.Vector2)getter();
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%g"))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(Vector3))
+        else if (type == typeof(Vector3))
         {
-            var value = GetValue<Vector3>().ToNumerics();
-            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), default, default, default, default))
+            var value = ((Vector3)getter()).ToNumerics();
+            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), default, default, default, default))
             {
-                SetValue(value.ToXNA());
+                setter(value.ToXNA());
+                result = true;
             }
         }
-        else if (_valueType == typeof(Vector4))
+        else if (type == typeof(Vector4))
         {
-            var value = GetValue<Vector4>().ToNumerics();
-            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(_name), ImGuiExt.RefPtr(ref value), default, default, default, default))
+            var value = ((Vector4)getter()).ToNumerics();
+            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), default, default, default, default))
             {
-                SetValue(value.ToXNA());
+                setter(value.ToXNA());
+                result = true;
             }
         }
-        else if (_valueType == typeof(Color))
+        else if (type == typeof(Color))
         {
-            var value = GetValue<Color>();
-            if (ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(_name, true), ref value))
+            var value = (Color)getter();
+            if (ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(name, true), ref value))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else if (_valueType == typeof(float))
+        else if (type == typeof(float))
         {
-            var value = GetValue<float>();
+            var value = (float)getter();
 
-            if (InspectFloat(ref value))
+            if (InspectFloat(name, ref value, rangeSettings.Value))
             {
-                SetValue(value);
+                setter(value);
+                result = true;
             }
         }
-        else
+        else if (ImGuiExt.DebugInspectors)
         {
-            if (ImGuiExt.DebugInspectors)
-            {
-                ImGui.TextColored(Color.Red.ToNumerics(), $"No inspector defined for type: {_valueType?.Name}");
-            }
+            ImGui.TextColored(Color.Red.ToNumerics(), $"No inspector defined for type: {type.Name}");
         }
 
-        if (IsReadOnly)
+        if (isReadOnly)
         {
             ImGui.EndDisabled();
         }
+
+        return result;
     }
 }

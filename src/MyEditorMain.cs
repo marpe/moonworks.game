@@ -98,7 +98,10 @@ public unsafe class MyEditorMain : MyGameMain
             .AddChild(new ImGuiMenu("Quit", "^Q", () => Quit()));
         _menuItems.Add(file);
         var imgui = new ImGuiMenu("ImGui")
-            .AddChild(new ImGuiMenu("Debug Inspectors", null, () => { ImGuiExt.DebugInspectors = !ImGuiExt.DebugInspectors; }));
+            .AddChild(new ImGuiMenu("Debug Inspectors", null, () => { ImGuiExt.DebugInspectors = !ImGuiExt.DebugInspectors; }, null,
+                () => ImGuiExt.DebugInspectors))
+            .AddChild(new ImGuiMenu("Use Point Sampler", null, () => { ImGuiRenderer.UsePointSampler = !ImGuiRenderer.UsePointSampler; }, null,
+                () => ImGuiRenderer.UsePointSampler));
         _menuItems.Add(imgui);
     }
 
@@ -163,7 +166,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
         else
         {
-            if (ImGui.MenuItem(menu.Text, menu.Shortcut))
+            if (ImGui.MenuItem(menu.Text, menu.Shortcut, menu.IsSelectedCallback?.Invoke() ?? false))
             {
                 menu.Callback?.Invoke();
             }
@@ -245,7 +248,9 @@ public unsafe class MyEditorMain : MyGameMain
     private void DrawMainMenuButtons()
     {
         var max = ImGui.GetContentRegionMax();
-        ImGui.SetCursorPosX(max.X / 2 - 29);
+        var numButtons = 3;
+        var buttonWidth = 29;
+        ImGui.SetCursorPosX(max.X / 2 - numButtons * buttonWidth);
 
         var (icon, color, tooltip) = GameScreen.IsPaused switch
         {
@@ -305,6 +310,9 @@ public unsafe class MyEditorMain : MyGameMain
             return;
 
         if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
+            return;
+
+        if (_gameWindow.IsHoveringGame && _gameWindow.IsWindowFocused)
             return;
 
         var cursor = ImGui.GetCurrentContext()->HoveredIdDisabled switch

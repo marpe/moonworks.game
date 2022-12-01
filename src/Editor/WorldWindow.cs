@@ -27,7 +27,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         var world = Shared.Game.GameScreen.World;
         if (world == null)
         {
-            ImGui.TextUnformatted("World is null");
+            ImGui.TextDisabled("NULL");
             ImGui.End();
             return;
         }
@@ -43,25 +43,6 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
                 _prevWorld = world;
                 _worldInspector.Draw();
-
-                ImGui.Separator();
-
-                var playerGrid = world.Player.Cell;
-                ImGui.TextUnformatted($"Cell {playerGrid.ToString()}");
-                ImGui.TextUnformatted($"Pos {world.Player.Position.Current.ToString()}");
-
-                var mousePosition = Shared.Game.InputHandler.MousePosition;
-                var view = Shared.Game.GameScreen.Camera.GetView();
-                Matrix3x2.Invert(view, out var invertedView);
-                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-                ImGui.TextUnformatted($"MousePos {mouseInWorld.ToString()}");
-                ImGui.TextUnformatted($"MouseInScreen {Shared.Game.GameScreen.GetWorldPositionInScreen(mouseInWorld).ToString()}");
-
-                var mouseCell = Entity.ToCell(mouseInWorld);
-                ImGui.TextUnformatted($"MouseCel {mouseCell.ToString()}");
-
-                var playerScreen = Shared.Game.GameScreen.GetWorldPositionInScreen(Shared.Game.GameScreen.World!.Player.Position.Current);
-                ImGui.TextUnformatted($"PlayerScreen {playerScreen.ToString()}");
 
                 ImGui.EndTabItem();
             }

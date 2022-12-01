@@ -1,6 +1,5 @@
 ﻿using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
-using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -11,12 +10,13 @@ public unsafe class GameWindow : ImGuiEditorWindow
     public Matrix4x4 GameRenderViewportTransform;
 
     private float _gameRenderScale = 1f;
-    private Vector2 _gameRenderPosition = Vector2.Zero;
+    private Num.Vector2 _gameRenderPosition = Num.Vector2.Zero;
     private MyEditorMain _editor;
 
     private bool _showDebug;
 
     public bool IsHoveringGame = false;
+    public bool IsWindowFocused;
 
     public GameWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -52,7 +52,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var windowSize = ImGui.GetWindowSize();
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.CompositeRender.Size());
 
-            var viewportPosition = new Vector2(viewport.X, viewport.Y);
+            var viewportPosition = new Num.Vector2(viewport.X, viewport.Y);
             var cursorScreenPosition = ImGui.GetCursorScreenPos();
 
             var viewportSize = viewport.Size.ToNumerics();
@@ -67,8 +67,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 (void*)_gameRenderTextureId.Value,
                 gameRenderMin,
                 gameRenderMax,
-                Vector2.Zero,
-                Vector2.One
+                Num.Vector2.Zero,
+                Num.Vector2.One
             );
 
             ImGui.SetCursorScreenPos(gameRenderMin);
@@ -96,7 +96,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             var gameRenderOffset = SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
 
-            DrawDebugOverlay(gameRenderMin, gameRenderMax, gameRenderOffset);
+            DrawDebugOverlay();
 
             var contentMin = ImGui.GetWindowContentRegionMin();
             var contentMax = ImGui.GetWindowContentRegionMax();
@@ -104,9 +104,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
             IsHoveringGame = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
 
+            IsWindowFocused = ImGui.IsWindowFocused();
+
             if (ImGui.BeginPopupContextWindow("GameContextMenu"))
             {
                 ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
+                ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref World.DebugMouse));
                 if (ImGui.MenuItem("Reset pan & zoom", default))
                     ResetPanAndZoom();
 
@@ -124,10 +127,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
     private void ResetPanAndZoom()
     {
         _gameRenderScale = 1.0f;
-        _gameRenderPosition = Vector2.Zero;
+        _gameRenderPosition = Num.Vector2.Zero;
     }
 
-    private Vector2 SetGameRenderViewportTransform(Vector2 gameRenderMin, Matrix4x4 viewportTransform)
+    private Num.Vector2 SetGameRenderViewportTransform(Num.Vector2 gameRenderMin, Matrix4x4 viewportTransform)
     {
         var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
         var gameRenderOffset = gameRenderMin - windowViewportPosition;
@@ -165,7 +168,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         }
     }
 
-    private void DrawDebugOverlay(Vector2 gameRenderMin, Vector2 gameRenderMax, Vector2 gameRenderOffset)
+    private void DrawDebugOverlay()
     {
         if (!_showDebug)
             return;
@@ -182,11 +185,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         var windowPos = ImGui.GetWindowPos();
         var windowPadding = 10f;
-        var overlayPos = new Vector2(
+        var overlayPos = new Num.Vector2(
             windowPos.X + contentMax.X - windowPadding,
             windowPos.Y + contentMin.Y + windowPadding
         );
-        var windowPosPivot = new Vector2(
+        var windowPosPivot = new Num.Vector2(
             1.0f,
             0
         );
@@ -200,14 +203,48 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 $"GameRenderOffset: {gameRenderOffset.ToString()}");
 
             ImGui.Separator();*/
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+            ImGui.PushFont(_editor.ImGuiRenderer.GetFont(ImGuiFont.Tiny));
 
-            ImGui.Text($"MousePos: {_editor.InputHandler.MousePosition.ToString()}");
+            void PrintVector(string label, Vector2 v)
+            {
+                var avail = ImGui.GetContentRegionAvail();
+                ImGui.Text(label);
+                ImGui.SameLine(0.33f * avail.X);
+                ImGui.Text($"{v.X:0.##}");
+                ImGui.SameLine(0.66f * avail.X);
+                ImGui.Text($"{v.Y:0.##}");
+            }
+
+            ImGuiExt.SeparatorText("Mouse", Color.White);
+            var mousePosition = _editor.InputHandler.MousePosition;
+            PrintVector("Pos", mousePosition);
+            var view = _editor.GameScreen.Camera.GetView();
+            Matrix3x2.Invert(view, out var invertedView);
+            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+            PrintVector("World", mouseInWorld);
+            var mouseCell = Entity.ToCell(mouseInWorld);
+            PrintVector("Cel", mouseCell);
+
+            var world = _editor.GameScreen.World;
+            if (world != null)
+            {
+                var playerCell = world.Player.Cell;
+                ImGuiExt.SeparatorText("Player", Color.White);
+                PrintVector("Cell", playerCell);
+                PrintVector("Pos", world.Player.Position.Current);
+            }
 
             if (ImGui.BeginPopupContextWindow())
             {
                 if (ImGui.MenuItem("Close", default)) _showDebug = !_showDebug;
                 ImGui.EndPopup();
             }
+
+            ImGui.Dummy(new Num.Vector2(200, 0));
+
+            ImGui.PopFont();
+            ImGui.PopStyleVar();
         }
 
         ImGui.End();

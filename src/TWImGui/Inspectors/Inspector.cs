@@ -31,6 +31,7 @@ public abstract class Inspector : IInspector
         _target = target;
         _targetType = targetType;
         _name = targetType.Name;
+        // memberInfo will be null for inspectors not targeting a single member e.g GroupInspector
         if (memberInfo != null)
         {
             SetTarget(memberInfo);
@@ -76,7 +77,7 @@ public abstract class Inspector : IInspector
     {
         if (!IsInitialized)
             throw new InvalidOperationException("Inspector has not been initialized");
-        
+
         var label = $"[{GetType().Name}] {_name}";
 
         if (ImGuiExt.Fold(label))
@@ -117,6 +118,25 @@ public abstract class Inspector : IInspector
         return value;
     }
 
+    protected void SetValue(object? value)
+    {
+        if (!IsInitialized)
+            throw new InvalidOperationException("Inspector has not been initialized");
+        if (IsReadOnly)
+            return;
+
+        if (_memberInfo is FieldInfo fieldInfo)
+            fieldInfo.SetValue(_target, value);
+        else if (_memberInfo is PropertyInfo propInfo)
+            propInfo.SetValue(_target, value);
+        else if (_memberInfo == null)
+            throw new InvalidOperationException("Value cannot be set when MemberInfo is null");
+        else
+            throw new InvalidOperationException(
+                "Value cannot be set if MemberInfo isn't of type FieldInfo or PropertyInfo"
+            );
+    }
+
     protected T? GetValue<T>()
     {
         var value = GetValue();
@@ -125,25 +145,6 @@ public abstract class Inspector : IInspector
 
     protected void SetValue<T>(T value)
     {
-        if (!IsInitialized)
-            throw new InvalidOperationException("Inspector has not been initialized");
-        
-        if (IsReadOnly)
-        {
-            return;
-        }
-
-        if (_memberInfo is FieldInfo fieldInfo)
-        {
-            fieldInfo.SetValue(_target, value);
-        }
-        else if (_memberInfo is PropertyInfo propInfo)
-        {
-            propInfo.SetValue(_target, value);
-        }
-        else
-        {
-            Logger.LogError($"Value cannot be set since MemberInfo ({_memberInfo?.GetType().Name ?? "null"}) is neither FieldInfo nor PropertyInfo");
-        }
+        SetValue((object?)value);
     }
 }

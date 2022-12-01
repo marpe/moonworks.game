@@ -29,20 +29,16 @@ public class HideInInspectorAttribute : Attribute
     }
 }
 
+public readonly record struct RangeSettings(float MinValue, float MaxValue, float StepSize, bool UseDragVersion);
+
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class RangeAttribute : Attribute
 {
-    public float MaxValue;
-    public float MinValue;
-    public float StepSize;
-    public bool UseDragVersion;
-
+    public RangeSettings Settings;
+    
     public RangeAttribute(float minValue, float maxValue, float stepSize = .1f, bool useDragFloat = false)
     {
-        MinValue = minValue;
-        MaxValue = maxValue;
-        StepSize = stepSize;
-        UseDragVersion = useDragFloat;
+        Settings = new RangeSettings(minValue, maxValue, stepSize, useDragFloat);
     }
 }
 
