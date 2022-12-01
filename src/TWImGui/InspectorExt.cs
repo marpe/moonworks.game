@@ -218,7 +218,7 @@ public static class InspectorExt
             var callable = methodInfo.GetCustomAttribute<InspectorCallableAttribute>(false);
             if (callable != null)
             {
-                var methodInspector = new InspectorCallableInspector();
+                var methodInspector = new InvokeMethodInspector();
                 methodInspector.SetTarget(target, type, methodInfo);
                 inspectors.Add(methodInspector);
             }

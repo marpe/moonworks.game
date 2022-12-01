@@ -2,7 +2,7 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public class InspectorCallableInspector : Inspector
+public class InvokeMethodInspector : Inspector
 {
     private ParameterData[] _paramData = Array.Empty<ParameterData>();
     private string _buttonLabel = "Invoke";
