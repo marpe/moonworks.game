@@ -1,5 +1,11 @@
 ﻿namespace MyGame.Graphics;
 
+public struct GfxPipeline
+{
+    public GraphicsPipeline Pipeline;
+    public GraphicsPipelineCreateInfo CreateInfo;
+}
+
 public class Renderer
 {
     public BMFont[] BMFonts { get; }
@@ -23,7 +29,7 @@ public class Renderer
     public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
     public Texture DepthTexture;
 
-    public Dictionary<PipelineType, GraphicsPipeline> Pipelines;
+    public Dictionary<PipelineType, GfxPipeline> Pipelines;
 
     public Renderer(MyGameMain game)
     {
@@ -224,11 +230,11 @@ public class Renderer
         DepthStencilAttachmentInfo.Texture = DepthTexture;
 
         var pipeline = Pipelines[pipelineType];
-        if (pipeline.AttachmentInfo.HasDepthStencilAttachment)
+        if (pipeline.CreateInfo.AttachmentInfo.HasDepthStencilAttachment)
             commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
         else
             commandBuffer.BeginRenderPass(ColorAttachmentInfo);
-        commandBuffer.BindGraphicsPipeline(pipeline);
+        commandBuffer.BindGraphicsPipeline(pipeline.Pipeline);
     }
 
     public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection,
@@ -271,7 +277,7 @@ public class Renderer
 
         foreach (var (_, pipeline) in Pipelines)
         {
-            pipeline.Dispose();
+            pipeline.Pipeline.Dispose();
         }
 
         Pipelines.Clear();

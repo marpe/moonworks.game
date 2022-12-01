@@ -95,7 +95,7 @@ public unsafe class MyEditorMain : MyGameMain
         }
         else if (extension == ".spv")
         {
-            Renderer.Pipelines[PipelineType.RimLight].Dispose();
+            Renderer.Pipelines[PipelineType.RimLight].Pipeline.Dispose();
             Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
         }
     }
