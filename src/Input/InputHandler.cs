@@ -48,31 +48,53 @@ public class InputHandler
 
     public static readonly char ControlV = (char)22;
 
-    public static KeyCode[] KeyCodes = Enum.GetValues<KeyCode>();
-    public static Dictionary<KeyCode, string> KeyStrings = new();
-
-    public static MouseButtonCode[] MouseButtonsCodes = Enum.GetValues<MouseButtonCode>();
-
-    static InputHandler()
-    {
-        foreach (var keyCode in KeyCodes)
-            KeyStrings.Add(keyCode, keyCode.ToString());
-    }
-
     private readonly Inputs _inputs;
 
     private readonly Dictionary<KeyCode, RepeatableKey> _repeatableKeys = new();
 
     private char[] _textInput = new char[128];
-    private int _numTextInputChars = 0;
+    private int _numTextInputChars;
 
     public bool KeyboardEnabled = true;
     public bool MouseEnabled = true;
     private Matrix4x4 _viewportInvert = Matrix4x4.Identity;
+
+    public record struct CheckBindCallbacks(
+        Func<int, string> GetButtonName,
+        Func<int, bool> IsButtonDown,
+        Func<int, bool> IsButtonReleased,
+        Func<int, bool> IsButtonPressed
+    );
+
+    private CheckBindCallbacks _mouseCallbacks;
+    private CheckBindCallbacks _mouseWheelCallbacks;
+    private CheckBindCallbacks _keyboardCallbacks;
+
     public InputHandler(Inputs inputs)
     {
         _inputs = inputs;
         Inputs.TextInput += OnTextInput;
+
+        _mouseCallbacks = new CheckBindCallbacks(
+            buttonId => Binds.MouseButtonCodeToName[(MouseButtonCode)buttonId],
+            buttonId => IsMouseButtonDown((MouseButtonCode)buttonId),
+            buttonId => IsMouseButtonReleased((MouseButtonCode)buttonId),
+            buttonId => IsMouseButtonPressed((MouseButtonCode)buttonId)
+        );
+
+        _mouseWheelCallbacks = new CheckBindCallbacks(
+            buttonId => Binds.MouseWheelCodeToName[buttonId],
+            buttonId => buttonId == Binds.MouseWheelUp ? MouseWheelDelta > 0 : MouseWheelDelta < 0,
+            buttonId => MouseWheelDelta == 0,
+            buttonId => buttonId == Binds.MouseWheelUp ? MouseWheelDelta > 0 : MouseWheelDelta < 0
+        );
+
+        _keyboardCallbacks = new CheckBindCallbacks(
+            buttonId => Binds.KeyCodeToName[(KeyCode)buttonId],
+            buttonId => IsKeyDown((KeyCode)buttonId),
+            buttonId => IsKeyReleased((KeyCode)buttonId),
+            buttonId => IsKeyPressed((KeyCode)buttonId)
+        );
     }
 
     public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
@@ -112,152 +134,99 @@ public class InputHandler
         HandleBoundKeys();
     }
 
-    // TODO (marpe): Cleanup and optimize
     private void HandleBoundKeys()
     {
-        for (var i = 0; i < MouseButtonsCodes.Length; i++)
+        foreach (var (code, _) in Binds.MouseWheelCodeToName)
         {
-            var buttonCode = MouseButtonsCodes[i];
-            var buttonStr = Binds.MouseButtonCodeToName[buttonCode];
-            if (!IsMouseButtonDown(buttonCode))
-            {
-                if (!IsMouseButtonReleased(buttonCode))
-                    continue;
-                if (!Binds.TryGetBind(buttonStr, out var bind))
-                    continue;
-                var split = ConsoleUtils.SplitArgs(bind);
-                var cmdKey = split[0];
-
-                if (!cmdKey.StartsWith('+'))
-                    continue;
-
-                var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
-                if (Shared.Console.Commands.ContainsKey(upCmdKey))
-                {
-                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, buttonStr });
-                }
-            }
-            else
-            {
-                if (!IsMouseButtonPressed(buttonCode))
-                    continue;
-
-                // ignore if console is down
-                if (!Shared.Game.ConsoleScreen.IsHidden)
-                    continue;
-
-                if (!Binds.TryGetBind(buttonStr, out var bind))
-                    continue;
-
-                var split = ConsoleUtils.SplitArgs(bind);
-                var cmdKey = split[0];
-
-                if (Shared.Console.CVars.ContainsKey(cmdKey))
-                {
-                    var cvar = Shared.Console.CVars[cmdKey];
-                    if (cvar.VarType == typeof(bool))
-                    {
-                        var curr = cvar.GetValue<bool>();
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
-                        continue;
-                    }
-                }
-
-                if (Shared.Console.Commands.ContainsKey(cmdKey))
-                {
-                    if (cmdKey.StartsWith('+') || cmdKey.StartsWith('-'))
-                    {
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, buttonStr });
-                    }
-                    else
-                    {
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
-                    }
-                }
-                else
-                {
-                    Logger.LogError($"Command not found: {buttonStr} -> {cmdKey}");
-                }
-            }
+            HandleButtonBind(code, _mouseWheelCallbacks);
         }
 
-        for (var i = 0; i < KeyCodes.Length; i++)
+        foreach (var (code, _) in Binds.MouseButtonCodeToName)
         {
-            var keyCode = KeyCodes[i];
+            HandleButtonBind((int)code, _mouseCallbacks);
+        }
 
+        foreach (var (code, _) in Binds.KeyCodeToName)
+        {
             // console key handled separately
-            if (keyCode == KeyCode.Grave && IsKeyPressed(keyCode))
+            if (code == KeyCode.Grave && IsKeyPressed(code))
             {
                 ConsoleScreen.ToggleConsole();
                 continue;
             }
 
-            var keyStr = KeyStrings[keyCode];
-            if (!IsKeyDown(keyCode))
+            HandleButtonBind((int)code, _keyboardCallbacks);
+        }
+    }
+
+    // TODO (marpe): Cleanup and optimize
+    public void HandleButtonBind(int buttonId, in CheckBindCallbacks callbacks)
+    {
+        var keyStr = callbacks.GetButtonName(buttonId);
+        if (!callbacks.IsButtonDown(buttonId))
+        {
+            if (!callbacks.IsButtonReleased(buttonId))
+                return;
+
+            if (!Binds.TryGetBind(keyStr, out var bind))
+                return;
+
+            var split = ConsoleUtils.SplitArgs(bind);
+            var cmdKey = split[0];
+
+            if (!cmdKey.StartsWith('+'))
+                return;
+
+            var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
+            if (Shared.Console.Commands.ContainsKey(upCmdKey))
             {
-                if (!IsKeyReleased(keyCode))
-                    continue;
+                Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, keyStr });
+            }
+            else
+            {
+                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+            }
+        }
+        else
+        {
+            if (!callbacks.IsButtonPressed(buttonId))
+                return;
 
-                if (!Binds.TryGetBind(keyStr, out var bind))
-                    continue;
+            // ignore if console is down
+            if (!Shared.Game.ConsoleScreen.IsHidden)
+                return;
 
-                var split = ConsoleUtils.SplitArgs(bind);
-                var cmdKey = split[0];
+            if (!Binds.TryGetBind(keyStr, out var bind))
+                return;
 
-                if (!cmdKey.StartsWith('+'))
-                    continue;
+            var split = ConsoleUtils.SplitArgs(bind);
+            var cmdKey = split[0];
 
-                var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
-                if (Shared.Console.Commands.ContainsKey(upCmdKey))
+            if (Shared.Console.CVars.ContainsKey(cmdKey))
+            {
+                var cvar = Shared.Console.CVars[cmdKey];
+                if (cvar.VarType == typeof(bool))
                 {
-                    Shared.Console.ExecuteCommand(Shared.Console.Commands[upCmdKey], new[] { cmdKey, keyStr });
+                    var curr = cvar.GetValue<bool>();
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
+                    return;
+                }
+            }
+
+            if (Shared.Console.Commands.ContainsKey(cmdKey))
+            {
+                if (cmdKey.StartsWith('+') || cmdKey.StartsWith('-'))
+                {
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, buttonId.ToString() });
                 }
                 else
                 {
-                    Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                    Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
                 }
             }
             else
             {
-                if (!IsKeyPressed(keyCode))
-                    continue;
-
-                // ignore if console is down
-                if (!Shared.Game.ConsoleScreen.IsHidden)
-                    continue;
-
-                if (!Binds.TryGetBind(keyStr, out var bind))
-                    continue;
-
-                var split = ConsoleUtils.SplitArgs(bind);
-                var cmdKey = split[0];
-
-                if (Shared.Console.CVars.ContainsKey(cmdKey))
-                {
-                    var cvar = Shared.Console.CVars[cmdKey];
-                    if (cvar.VarType == typeof(bool))
-                    {
-                        var curr = cvar.GetValue<bool>();
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, (!curr).ToString() });
-                        continue;
-                    }
-                }
-
-                if (Shared.Console.Commands.ContainsKey(cmdKey))
-                {
-                    if (cmdKey.StartsWith('+') || cmdKey.StartsWith('-'))
-                    {
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], new[] { cmdKey, keyCode.ToString() });
-                    }
-                    else
-                    {
-                        Shared.Console.ExecuteCommand(Shared.Console.Commands[cmdKey], split);
-                    }
-                }
-                else
-                {
-                    Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
-                }
+                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
             }
         }
     }

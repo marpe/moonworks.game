@@ -2,6 +2,9 @@
 
 public struct InputState
 {
+    private static KeyCode[] AllKeyCodes = Enum.GetValues<KeyCode>();
+    private static MouseButtonCode[] AllMouseButtonCodes = Enum.GetValues<MouseButtonCode>();
+    
     public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
     public HashSet<KeyCode> KeyboardState = new();
     public HashSet<MouseButtonCode> MouseState = new();
@@ -100,9 +103,9 @@ public struct InputState
             state.TextInput[i] = textInput[i];
         }
 
-        for (var i = 0; i < InputHandler.KeyCodes.Length; i++)
+        for (var i = 0; i < AllKeyCodes.Length; i++)
         {
-            var keyCode = InputHandler.KeyCodes[i];
+            var keyCode = AllKeyCodes[i];
             if (input.IsKeyDown(keyCode))
                 state.KeyboardState.Add(keyCode);
         }
@@ -110,9 +113,9 @@ public struct InputState
         SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
         state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
         state.MouseWheelDelta = input.MouseWheelDelta;
-        for (var i = 0; i < InputHandler.MouseButtonsCodes.Length; i++)
+        for (var i = 0; i < AllMouseButtonCodes.Length; i++)
         {
-            var mouseButton = InputHandler.MouseButtonsCodes[i];
+            var mouseButton = AllMouseButtonCodes[i];
             if (input.IsMouseButtonDown(mouseButton))
                 state.MouseState.Add(mouseButton);
         }
