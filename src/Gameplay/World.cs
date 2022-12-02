@@ -3,14 +3,114 @@ using MyGame.Cameras;
 
 namespace MyGame;
 
-public class World
+public static class MouseDebug
 {
-    public const int DefaultGridSize = 16;
-
-    public bool IsDisposed { get; private set; }
+    public static Vector2 MousePivot = new Vector2(0f, 0f);
+    public static Point MouseSize = new Point(8, 12);
 
     [CVar("mouse.debug", "Toggle mouse debugging", false)]
     public static bool DebugMouse;
+
+    public static void DrawMousePosition(Renderer renderer)
+    {
+        if (!DebugMouse)
+            return;
+
+        var mousePosition = Shared.Game.InputHandler.MousePosition;
+        var view = Shared.Game.GameScreen.Camera.GetView();
+        Matrix3x2.Invert(view, out var invertedView);
+        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+        var mouseCell = Entity.ToCell(mouseInWorld);
+
+        var mouseCellRect = new Rectangle(
+            mouseCell.X * World.DefaultGridSize,
+            mouseCell.Y * World.DefaultGridSize,
+            World.DefaultGridSize,
+            World.DefaultGridSize
+        );
+        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f, 1f);
+
+        var mousePosRect = new Bounds(
+            mouseInWorld.X,
+            mouseInWorld.Y,
+            MouseSize.X,
+            MouseSize.Y
+        );
+        renderer.DrawRectOutline(mousePosRect, Color.Blue * 0.5f);
+
+        var mouseRenderRect = new Bounds(
+            mouseInWorld.X,
+            mouseInWorld.Y,
+            MouseSize.X,
+            MouseSize.Y
+        );
+        renderer.DrawRectOutline(mouseRenderRect, Color.Magenta * 0.5f);
+
+        // renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
+    }
+}
+
+public static class CameraDebug
+{
+    [CVar("camera.debug", "Toggle camera debugging")]
+    public static bool DebugCamera;
+    
+    public static void DrawCameraBounds(Renderer renderer, Camera camera)
+    {
+        if (!DebugCamera)
+            return;
+
+        var cameraBounds = camera.ZoomedBounds;
+        var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
+        renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
+
+        var offset = camera.TargetPosition - camera.Position;
+        var dz = camera.DeadZone / 2;
+        var lengthX = MathF.Abs(offset.X) - dz.X;
+        var lengthY = MathF.Abs(offset.Y) - dz.Y;
+        var isDeadZoneActive = lengthX > 0 || lengthY > 0;
+        if (isDeadZoneActive)
+        {
+            var pointOnDeadZone = new Vector2(
+                MathF.Clamp(camera.TargetPosition.X, camera.Position.X - dz.X, camera.Position.X + dz.X),
+                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Y - dz.Y, camera.Position.Y + dz.Y)
+            );
+            renderer.DrawLine(pointOnDeadZone, camera.TargetPosition, Color.Red);
+        }
+
+        renderer.DrawRectOutline(camera.Position - dz, camera.Position + dz, Color.Magenta * (isDeadZoneActive ? 1.0f : 0.33f));
+        renderer.DrawPoint(camera.TargetPosition, Color.Cyan, 4f);
+
+        var posInLevel = camera.Position - camera.LevelBounds.MinVec();
+        var cameraMin = posInLevel - camera.ZoomedSize * 0.5f;
+        var cameraMax = posInLevel + camera.ZoomedSize * 0.5f;
+
+        if (camera.Velocity.X < 0 && cameraMin.X < camera.BrakeZone.X)
+        {
+            renderer.DrawLine(camera.Position, camera.Position - new Vector2(camera.BrakeZone.X - cameraMin.X, 0), Color.Red);
+        }
+        else if (camera.Velocity.X > 0 && cameraMax.X > camera.LevelBounds.Width - camera.BrakeZone.X)
+        {
+            renderer.DrawLine(camera.Position, camera.Position + new Vector2(cameraMax.X - (camera.LevelBounds.Width - camera.BrakeZone.X), 0), Color.Red);
+        }
+
+        if (camera.Velocity.Y < 0 && cameraMin.Y < camera.BrakeZone.Y)
+        {
+            renderer.DrawLine(camera.Position, camera.Position - new Vector2(0, camera.BrakeZone.Y - cameraMin.Y), Color.Red);
+        }
+        else if (camera.Velocity.Y > 0 && cameraMax.Y > camera.LevelBounds.Height - camera.BrakeZone.Y)
+        {
+            renderer.DrawLine(camera.Position, camera.Position + new Vector2(0, cameraMax.Y - (camera.LevelBounds.Height - camera.BrakeZone.Y)), Color.Red);
+        }
+
+        renderer.DrawRectOutline(camera.LevelBounds.MinVec() + camera.BrakeZone, camera.LevelBounds.MaxVec() - camera.BrakeZone, Color.Green);
+    }
+}
+
+public class World
+{
+    public const int DefaultGridSize = 16;
+    public bool IsDisposed { get; private set; }
 
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
@@ -20,10 +120,7 @@ public class World
 
     [CVar("lights.debug", "Toggle light debugging", false)]
     public static bool DebugLights;
-
-    [CVar("camera.debug", "Toggle camera debugging")]
-    public static bool DebugCamera;
-
+    
     private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private readonly GameScreen _gameScreen;
@@ -40,12 +137,13 @@ public class World
 
     public List<Light> Lights { get; } = new();
 
+    [HideInInspector]
     public ulong WorldUpdateCount;
+    
+    [HideInInspector]
     public float WorldTotalElapsedTime;
-    public Vector2 MousePivot = new Vector2(0f, 0f);
-    public Point MouseSize = new Point(8, 12);
 
-    private static Vector2 SavedPos;
+    private static Vector2 _savedPos;
 
     public Level Level;
     public Level[] Levels;
@@ -280,9 +378,9 @@ public class World
 
         if (Debug)
         {
-            DrawCameraBounds(renderer, camera);
+            CameraDebug.DrawCameraBounds(renderer, camera);
             DrawLightBounds(renderer);
-            DrawMousePosition(renderer);
+            MouseDebug.DrawMousePosition(renderer);
             _debugDraw.Render(renderer);
         }
     }
@@ -305,93 +403,7 @@ public class World
         DrawBullets(renderer, alpha);
     }
 
-    private void DrawMousePosition(Renderer renderer)
-    {
-        if (!Debug || !DebugMouse)
-            return;
-        var mousePosition = Shared.Game.InputHandler.MousePosition;
-        var view = Shared.Game.GameScreen.Camera.GetView();
-        Matrix3x2.Invert(view, out var invertedView);
-        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var mouseCell = Entity.ToCell(mouseInWorld);
-
-        var mouseCellRect = new Rectangle(
-            mouseCell.X * DefaultGridSize,
-            mouseCell.Y * DefaultGridSize,
-            DefaultGridSize,
-            DefaultGridSize
-        );
-        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f, 1f);
-
-        var mousePosRect = new Bounds(
-            mouseInWorld.X,
-            mouseInWorld.Y,
-            MouseSize.X,
-            MouseSize.Y
-        );
-        renderer.DrawRectOutline(mousePosRect, Color.Blue * 0.5f);
-
-        var mouseRenderRect = new Bounds(
-            mouseInWorld.X,
-            mouseInWorld.Y,
-            MouseSize.X,
-            MouseSize.Y
-        );
-        renderer.DrawRectOutline(mouseRenderRect, Color.Magenta * 0.5f);
-
-        // renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
-    }
-
-    private static void DrawCameraBounds(Renderer renderer, Camera camera)
-    {
-        if (!Debug || !DebugCamera)
-            return;
-
-        var cameraBounds = camera.ZoomedBounds;
-        var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
-        renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
-
-        var offset = camera.TargetPosition - camera.Position;
-        var dz = camera.DeadZone / 2;
-        var lengthX = MathF.Abs(offset.X) - dz.X;
-        var lengthY = MathF.Abs(offset.Y) - dz.Y;
-        var isDeadZoneActive = lengthX > 0 || lengthY > 0;
-        if (isDeadZoneActive)
-        {
-            var pointOnDeadZone = new Vector2(
-                MathF.Clamp(camera.TargetPosition.X, camera.Position.X - dz.X, camera.Position.X + dz.X),
-                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Y - dz.Y, camera.Position.Y + dz.Y)
-            );
-            renderer.DrawLine(pointOnDeadZone, camera.TargetPosition, Color.Red);
-        }
-
-        renderer.DrawRectOutline(camera.Position - dz, camera.Position + dz, Color.Magenta * (isDeadZoneActive ? 1.0f : 0.33f));
-        renderer.DrawPoint(camera.TargetPosition, Color.Cyan, 4f);
-
-        var posInLevel = camera.Position - camera.LevelBounds.MinVec();
-        var cameraMin = posInLevel - camera.ZoomedSize * 0.5f;
-        var cameraMax = posInLevel + camera.ZoomedSize * 0.5f;
-        
-        if (camera.Velocity.X < 0 && cameraMin.X < camera.BrakeZone.X)
-        {
-            renderer.DrawLine(camera.Position, camera.Position - new Vector2(camera.BrakeZone.X - cameraMin.X, 0), Color.Red);
-        }
-        else if (camera.Velocity.X > 0 && cameraMax.X > camera.LevelBounds.Width - camera.BrakeZone.X)
-        {
-            renderer.DrawLine(camera.Position, camera.Position + new Vector2(cameraMax.X - (camera.LevelBounds.Width - camera.BrakeZone.X), 0), Color.Red);
-        }
-
-        if (camera.Velocity.Y < 0 && cameraMin.Y < camera.BrakeZone.Y)
-        {
-            renderer.DrawLine(camera.Position, camera.Position - new Vector2(0, camera.BrakeZone.Y - cameraMin.Y), Color.Red);
-        }
-        else if (camera.Velocity.Y > 0 && cameraMax.Y > camera.LevelBounds.Height - camera.BrakeZone.Y)
-        {
-            renderer.DrawLine(camera.Position, camera.Position + new Vector2(0, cameraMax.Y - (camera.LevelBounds.Height - camera.BrakeZone.Y)), Color.Red);
-        }
-
-        renderer.DrawRectOutline(camera.LevelBounds.MinVec() + camera.BrakeZone, camera.LevelBounds.MaxVec() - camera.BrakeZone, Color.Green);
-    }
+    
 
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
@@ -619,8 +631,8 @@ public class World
     {
         if (Shared.Game.GameScreen.World != null)
         {
-            SavedPos = position ?? Shared.Game.GameScreen.World.Player.Position;
-            Shared.Console.Print($"Saved position: {SavedPos.ToString()}");
+            _savedPos = position ?? Shared.Game.GameScreen.World.Player.Position;
+            Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
         }
     }
 
@@ -629,7 +641,7 @@ public class World
     {
         if (Shared.Game.GameScreen.World != null)
         {
-            var loadPos = position ?? SavedPos;
+            var loadPos = position ?? _savedPos;
             Shared.Game.GameScreen.World.Player.Position.SetPrevAndCurrent(loadPos);
             Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
         }

@@ -80,7 +80,10 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
             Initialize();
 
         if (_collection == null)
-            throw new Exception();
+        {
+            ImGui.TextDisabled("NULL");
+            return;
+        }
 
         PushStyle();
 

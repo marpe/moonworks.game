@@ -188,6 +188,7 @@ public static class InspectorExt
             {
                 var msg = $"Could not find an inspector for field: \"{field.Name}\" ({ReflectionUtils.GetDisplayName(field.FieldType)}), " +
                           $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
+                inspectors.Add(new PlaceholderInspector(msg, true));
                 Logs.LogVerbose(msg);
             }
         }
@@ -224,6 +225,7 @@ public static class InspectorExt
             {
                 var msg = $"Could not find an inspector for property: \"{prop.Name}\" ({ReflectionUtils.GetDisplayName(prop.PropertyType)}), " +
                           $"target: \"{target}\" ({ReflectionUtils.GetDisplayName(target.GetType())})";
+                inspectors.Add(new PlaceholderInspector(msg, true));
                 Logs.LogVerbose(msg);
             }
         }

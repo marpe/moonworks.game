@@ -36,7 +36,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         {
             if (ImGui.BeginTabItem("World"))
             {
-                if (_prevWorld != world || _worldInspector == null)
+                // var refreshInspector = ImGuiExt.ColoredButton("Refresh");
+                if (_prevWorld != world || _worldInspector == null) /* || refreshInspector)*/
                 {
                     _worldInspector = InspectorExt.GetGroupInspectorForTarget(world);
                 }

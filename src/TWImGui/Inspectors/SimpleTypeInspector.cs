@@ -85,6 +85,18 @@ public unsafe class SimpleTypeInspector : Inspector
 
         return result;
     }
+    
+    private static bool InspectULong(string name, ref ulong value)
+    {
+        var result = false;
+        var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
+        if (ImGui.DragScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U64, valuePtr, default, default, default, default))
+        {
+            result = true;
+        }
+
+        return result;
+    }
 
     private static bool InspectRectangle(string name, ref Rectangle value, bool isReadOnly)
     {
@@ -184,6 +196,16 @@ public unsafe class SimpleTypeInspector : Inspector
             var value = (uint)getter();
 
             if (InspectUInt(name, ref value))
+            {
+                setter(value);
+                result = true;
+            }
+        }
+        else if (type == typeof(ulong))
+        {
+            var value = (ulong)getter();
+
+            if (InspectULong(name, ref value))
             {
                 setter(value);
                 result = true;

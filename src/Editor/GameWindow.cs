@@ -112,7 +112,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         if (ImGui.BeginPopupContextWindow("GameContextMenu"))
         {
             ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
-            ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref World.DebugMouse));
+            ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref MouseDebug.DebugMouse));
             ImGui.MenuItem("Enable mouse pan & zoom", default, ImGuiExt.RefPtr(ref IsMouseCameraControlsEnabled));
             if (ImGui.MenuItem("Reset pan & zoom", default))
                 ResetPanAndZoom();
