@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Buffers;
+using System.Globalization;
 using Mochi.DearImGui;
 
 namespace MyGame.TWImGui;
@@ -7,7 +8,7 @@ public static unsafe class ImGuiExt
 {
     public const float FLT_MIN = 1.175494351e-38F;
     public const float FLT_MAX = 3.402823466e+38F;
-    
+
     public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                      ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
                                                      ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg |
@@ -22,7 +23,7 @@ public static unsafe class ImGuiExt
 
     private static readonly Stack<Color> _colorStack = new();
     public static Vector2 ButtonPadding => new(6f, 4f);
-    
+
     public static Color[] Colors =
     {
         new(32, 109, 255),
@@ -561,6 +562,16 @@ public static unsafe class ImGuiExt
     public static bool BeginCollapsingHeader(string header, Color color,
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont font = ImGuiFont.Medium, bool hideHeader = false)
     {
+        if (hideHeader)
+        {
+            ImGui.BeginGroup();
+            ImGui.Spacing();
+            Indent();
+            ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
+            _colorStack.Push(Color.Transparent);
+            return true;
+        }
+
         var (h, s, v) = ColorExt.RgbToHsv(color);
 
         var (normal, hovered, active, border) = (
@@ -571,12 +582,6 @@ public static unsafe class ImGuiExt
         );
 
         var framePadding = new Num.Vector2(6, 4);
-
-        if (hideHeader)
-        {
-            normal.A = hovered.A = active.A = border.A = 0;
-            framePadding.Y = 0;
-        }
 
         void PushStyles()
         {
@@ -599,8 +604,7 @@ public static unsafe class ImGuiExt
         ImGui.BeginGroup();
 
         PushStyles();
-        var id = hideHeader ? "##" + header : header;
-        flags |= hideHeader ? ImGuiTreeNodeFlags.Leaf : ImGuiTreeNodeFlags.None;
+        var id = header;
         var result = ImGui.CollapsingHeader(id, flags);
         PopStyles();
 
@@ -713,25 +717,26 @@ public static unsafe class ImGuiExt
     }
 }
 
-public unsafe ref struct ImGuiInputBuffer
+public ref struct ImGuiInputBuffer
 {
-    public readonly byte* Data;
-    public readonly nuint Length;
+    private byte[] _bufferArray;
+    public Span<byte> Bytes => _bufferArray;
+    public readonly int MaxLength;
+    public int Length;
 
-    public ImGuiInputBuffer(ReadOnlySpan<char> str, int maxLength)
+    public ImGuiInputBuffer(ReadOnlySpan<char> str, int maxMaxLength)
     {
-        var strByteCount = Encoding.UTF8.GetByteCount(str);
-        var spanByteCount = Math.Max(strByteCount, maxLength) + 1;
-        var data = stackalloc byte[spanByteCount];
-        var span = new Span<byte>(data, spanByteCount);
-        var encodedBytesCount = Encoding.UTF8.GetBytes(str, span);
-        span[encodedBytesCount] = 0;
-        Data = data;
-        Length = (nuint)encodedBytesCount;
+        _bufferArray = ArrayPool<byte>.Shared.Rent(maxMaxLength);
+        var encodedBytesCount = Encoding.UTF8.GetBytes(str, Bytes);
+        Bytes[encodedBytesCount] = 0;
+        Length = encodedBytesCount;
+        MaxLength = maxMaxLength;
     }
-
-    public override string ToString()
+    
+    public void Dispose()
     {
-        return ImGuiExt.StringFromPtr(Data);
+        ArrayPool<byte>.Shared.Return(_bufferArray);
     }
+    
+    public override string ToString() => Encoding.UTF8.GetString(Bytes.Slice(0, Length));
 }

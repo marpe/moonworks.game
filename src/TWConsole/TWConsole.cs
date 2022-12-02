@@ -174,10 +174,8 @@ public class TWConsole
                     console.Print($"^4An error occurred while invoking the set handler for {cmd.Key}:\n{e}");
                 }
             }
-            else
-            {
-                console.Print($"{cmd.Key} = {ConsoleUtils.Colorize(cvar.GetStringValue())}");
-            }
+
+            console.Print($"{cmd.Key} = {ConsoleUtils.Colorize(cvar.GetValueRaw())}");
         };
     }
 
@@ -448,7 +446,7 @@ public class TWConsole
     {
         foreach (var (key, value) in CVars)
         {
-            if (!value.SaveToCfg) 
+            if (!value.SaveToCfg)
                 continue;
             sb.AppendLine($"{key} \"{value.GetStringValue()}\"");
         }

@@ -38,7 +38,8 @@ public unsafe class CollectionInspector : Inspector
         }
 
         PushStyle();
-        if (ImGuiExt.BeginCollapsingHeader(_name, HeaderColor, ImGuiTreeNodeFlags.None, ImGuiFont.Tiny))
+        
+        if (ImGuiExt.Fold(_name))
         {
             foreach (var item in _inspectors.Keys)
                 _inactiveItems.Add(item);
@@ -98,8 +99,6 @@ public unsafe class CollectionInspector : Inspector
             _inactiveItems.Clear();
 
             ImGuiExt.MediumVerticalSpace();
-
-            ImGuiExt.EndCollapsingHeader();
         }
         else
         {
@@ -136,24 +135,7 @@ public unsafe class CollectionInspector : Inspector
         {
             ImGui.TextDisabled("NULL");
         }
-        else if (item is FancyTextPart fancyTextPart)
-        {
-            if (ImGuiExt.BeginPropTable("FancyText"))
-            {
-                ImGuiExt.PropRow("Alpha", $"{fancyTextPart.Alpha:0.00}");
-                ImGuiExt.PropRow("Character", fancyTextPart.Character);
-                ImGui.EndTable();
-            }
-        }
-        else if (item is Vector2 vector)
-        {
-            ImGui.Text($"{vector.X:0.##}, {vector.Y:0.##}");
-        }
-        else if (item is float fvalue)
-        {
-            ImGui.DragFloat("##Value", ImGuiExt.RefPtr(ref fvalue), default, default, default, default);
-        }
-        else if (item is Enemy)
+        else if (!item.GetType().IsValueType)
         {
             if (!_inspectors.ContainsKey(item))
             {

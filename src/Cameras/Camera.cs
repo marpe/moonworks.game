@@ -311,7 +311,8 @@ public class Camera
             if (CameraBinds.Reset.Active)
             {
                 Zoom = (float)Size.X / 480; // TODO (marpe): remove 480
-                Position = Vector2.Zero;
+                TargetPosition = TrackingEntity != null ? TrackingEntity.Center + TargetOffset : TargetPosition;
+                Position = TargetPosition;
             }
 
             if (CameraBinds.ZoomIn.Active)

@@ -23,7 +23,7 @@ public unsafe class SimpleTypeInspector : Inspector
     {
         base.Initialize();
 
-        _getter = () => GetValue() ?? throw new InvalidOperationException("Type cannot be null");
+        _getter = () => GetValue()!;
         _setter = SetValue;
     }
 
@@ -201,15 +201,20 @@ public unsafe class SimpleTypeInspector : Inspector
         }
         else if (type == typeof(string))
         {
-            var value = (string)getter();
+            // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
+            var value = (string)(getter() ?? "");
 
             var inputBuffer = new ImGuiInputBuffer(value, 100);
-
-            if (ImGui.InputText(ImGuiExt.LabelPrefix(name), inputBuffer.Data, inputBuffer.Length))
+            fixed (byte* data = inputBuffer.Bytes)
             {
-                setter(value);
-                result = true;
+                if (ImGui.InputText(ImGuiExt.LabelPrefix(name), data, (nuint)inputBuffer.MaxLength))
+                {
+                    setter(ImGuiExt.StringFromPtr(data));
+                    result = true;
+                }
             }
+            inputBuffer.Dispose();
+
         }
         else if (type == typeof(Point))
         {

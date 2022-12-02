@@ -72,6 +72,8 @@ public partial class Entity
     public Point Size;
     public Vector2 Pivot;
     public Color SmartColor;
+
+    [HideInInspector]
     public static Dictionary<EntityType, Type> TypeMap = new()
     {
         { EntityType.Enemy, typeof(Enemy) },
@@ -87,7 +89,6 @@ public partial class Enemy
 {
     public Point[] Wander;
     public EnemyType Type;
-    public Color Color;
 }
 
 public partial class Gun_Pickup

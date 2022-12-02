@@ -317,8 +317,12 @@ public unsafe class MyEditorMain : MyGameMain
         if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
             return;
 
-        if (_gameWindow.IsHoveringGame && _gameWindow.IsWindowFocused)
-            return;
+        if (_gameWindow.IsHoveringGame)
+        {
+            var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
+            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.WindowTitle)
+                return;
+        }
 
         var cursor = ImGui.GetCurrentContext()->HoveredIdDisabled switch
         {

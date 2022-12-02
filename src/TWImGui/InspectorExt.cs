@@ -22,6 +22,9 @@ public static class InspectorExt
 
     private static IInspector? GetInspectorForType(Type type, bool checkInheritedAttributes)
     {
+        if (type.IsDefined(typeof(HideInInspectorAttribute), checkInheritedAttributes))
+            return null;
+
         var drawInspector = GetCustomDrawInspectorForType(type, checkInheritedAttributes);
         if (drawInspector != null)
         {
@@ -155,13 +158,13 @@ public static class InspectorExt
 
         foreach (var field in fields)
         {
-            if (!field.IsPublic && !field.IsDefined(typeof(InspectableAttribute)))
+            if (!field.IsPublic && !field.IsDefined(typeof(InspectableAttribute), false))
                 continue;
 
-            if (field.IsInitOnly && !field.IsDefined(typeof(InspectableAttribute)))
+            if (field.IsInitOnly && !field.IsDefined(typeof(InspectableAttribute), false))
                 continue;
 
-            if (field.IsDefined(typeof(HideInInspectorAttribute)))
+            if (field.IsDefined(typeof(HideInInspectorAttribute), false))
                 continue;
 
             var inspector = GetCustomDrawInspectorForType(field, false) ??
@@ -194,10 +197,10 @@ public static class InspectorExt
             if (!prop.CanRead)
                 continue;
 
-            if (prop.GetMethod != null && !prop.GetMethod.IsPublic && !prop.IsDefined(typeof(InspectableAttribute)))
+            if (prop.GetMethod != null && !prop.GetMethod.IsPublic && !prop.IsDefined(typeof(InspectableAttribute), false))
                 continue;
 
-            if (prop.IsDefined(typeof(HideInInspectorAttribute)))
+            if (prop.IsDefined(typeof(HideInInspectorAttribute), false))
                 continue;
 
             var inspector = GetCustomDrawInspectorForType(prop, false) ??
@@ -227,11 +230,8 @@ public static class InspectorExt
 
         foreach (var methodInfo in methods)
         {
-            var hideAttr = methodInfo.GetCustomAttribute<HideInInspectorAttribute>(false);
-            if (hideAttr != null)
-            {
+            if (methodInfo.IsDefined(typeof(HideInInspectorAttribute), false))
                 continue;
-            }
 
             var inspector = GetCustomDrawInspectorForType(methodInfo, false) ??
                             GetInvokeMethodInspectorForType(methodInfo, false);
