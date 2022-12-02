@@ -84,6 +84,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
             ImGuiButtonFlags.MouseButtonRight
         );
 
+        // reset cursor position, otherwise imgui will complain since v1.89
+        // where a check was added to prevent the window from being resized by just setting the cursor position 
+        ImGui.SetCursorPos(ImGui.GetCursorStartPos());
+
         /*ImGui.Image(
             (void*)_gameRenderTextureId.Value,
             viewportSize * _gameRenderScale,
@@ -136,6 +140,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         {
             ResetPanAndZoom();
         }
+
         ImGui.SameLine();
         var (icon, color, tooltip) = IsMouseCameraControlsEnabled switch
         {
