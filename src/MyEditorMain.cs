@@ -202,7 +202,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (_gameWindow.IsHoveringGame)
         {
             var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
-            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.WindowTitle)
+            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameViewTitle)
                 return;
         }
 

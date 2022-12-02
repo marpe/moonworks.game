@@ -6,6 +6,7 @@ namespace MyGame.Editor;
 public unsafe class GameWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "Game";
+    public const string GameViewTitle = "GameView";
     private IntPtr? _gameRenderTextureId;
     public Matrix4x4 GameRenderViewportTransform;
 
@@ -40,6 +41,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
         workspaceWindowClass.DockingAllowUnclassed = false;
 
         ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
+        
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
         ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
 
         if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
@@ -52,13 +55,14 @@ public unsafe class GameWindow : ImGuiEditorWindow
             uint upNode, downNode;
             ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Up, 0.05f, &upNode, &downNode);
             ImGuiInternal.DockBuilderDockWindow("GameToolbar", upNode);
-            ImGuiInternal.DockBuilderDockWindow("GameView", downNode);
+            ImGuiInternal.DockBuilderDockWindow(GameViewTitle, downNode);
             ImGuiInternal.DockBuilderFinish(dockspaceID);
         }
 
-        ImGui.DockSpace(dockspaceID, new Num.Vector2(0, 0), ImGuiDockNodeFlags.None, &workspaceWindowClass);
+        ImGui.DockSpace(dockspaceID, new Num.Vector2(0, 0), ImGuiDockNodeFlags.None, &workspaceWindowClass); // ImGuiDockNodeFlags.NoResize
 
         ImGui.End();
+        ImGui.PopStyleVar();
 
         DrawGameView();
         DrawButtons();
@@ -71,7 +75,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
         ImGui.SetNextWindowClass(&windowClass);*/
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse |ImGuiWindowFlags.NoScrollbar;
-        ImGui.Begin("GameView", default, flags);
+        ImGui.Begin(GameViewTitle, default, flags);
         ImGui.PopStyleVar();
         if (_gameRenderTextureId != null && _gameRenderTextureId != _editor.CompositeRender.Handle)
         {
