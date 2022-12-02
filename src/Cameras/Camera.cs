@@ -40,7 +40,7 @@ public class Camera
 
     public Vector3 Position3D = new(0, 0, -1000);
 
-    public float Rotation = 0;
+    public float RotationDegrees = 0;
 
     public Quaternion Rotation3D;
     public Vector2 ShakeOffset;
@@ -92,7 +92,7 @@ public class Camera
         ViewPosition = Position + ShakeOffset + BumpOffset;
         var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
         return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
-               Matrix3x2.CreateRotation(Rotation) *
+               Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
                Matrix3x2.CreateScale(_zoom) *
                Matrix3x2.CreateTranslation(Size.X * 0.5f, Size.Y * 0.5f);
     }

@@ -21,8 +21,7 @@ public unsafe class MyEditorMain : MyGameMain
     private bool _firstTime = true;
     private Texture _imGuiRenderTarget;
 
-    [CVar("screenshot", "Save a screenshot")]
-    public static bool Screenshot;
+    private bool _screenshot;
 
     private int _imGuiUpdateCount;
     private FileWatcher _fileWatcher;
@@ -32,6 +31,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private GameWindow _gameWindow;
     private DebugWindow _debugWindow;
+    private Task _screenshotTask;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -43,7 +43,8 @@ public unsafe class MyEditorMain : MyGameMain
 
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
-
+        _screenshotTask = Task.CompletedTask;
+        
         var timer = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiThemes.DarkTheme();
@@ -73,6 +74,7 @@ public unsafe class MyEditorMain : MyGameMain
                     var levelIdentifier = GameScreen.World.Level.Identifier;
                     world.StartLevel(levelIdentifier);
                 }
+
                 GameScreen.QueueSetWorld(world);
             });
         }
@@ -414,7 +416,7 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
-        if (Screenshot)
+        if (_screenshot)
         {
             commandBuffer.CopyTextureToBuffer(CompositeRender, _screenshotBuffer);
         }
@@ -436,20 +438,28 @@ public unsafe class MyEditorMain : MyGameMain
 
         Renderer.Submit(ref commandBuffer);
 
-        if (Screenshot)
+        if (_screenshot)
         {
             Logs.LogInfo("Saving screenshot...");
 
-            Task.Run(() =>
+            _screenshotTask = _screenshotTask.ContinueWith((_) =>
             {
                 GraphicsDevice.Wait();
                 _screenshotBuffer.GetData(_screenshotPixels, _screenshotBuffer.Size);
-                var filename = "test.png";
+                var i = 1;
+                var dirname = "screenshots";
+                Directory.CreateDirectory(dirname);
+                var filename = Path.Combine(dirname, "screenshot_0.png");
+                while (File.Exists(filename) && i < 100)
+                {
+                    filename = Path.Combine(dirname, "screenshot_" + (i++) + ".png");
+                }
+
                 Texture.SavePNG(filename, (int)CompositeRender.Width, (int)CompositeRender.Height, CompositeRender.Format, _screenshotPixels);
                 Logger.LogInfo($"Screenshot saved to {filename}");
             });
 
-            Screenshot = false;
+            _screenshot = false;
         }
     }
 
@@ -463,5 +473,11 @@ public unsafe class MyEditorMain : MyGameMain
         ImGuiRenderer.Dispose();
         _fileWatcher.Dispose();
         _screenshotBuffer.Dispose();
+    }
+
+    [ConsoleHandler("screenshot", "Save a screenshot")]
+    public static void Screenshot()
+    {
+        ((MyEditorMain)Shared.Game)._screenshot = true;
     }
 }

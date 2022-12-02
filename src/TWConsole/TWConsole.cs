@@ -9,7 +9,7 @@ public class TWConsole
     public readonly SortedDictionary<string, ConsoleCommand> Aliases = new(StringComparer.InvariantCultureIgnoreCase);
     public readonly RingBuffer<string> CommandHistory = new(MAX_COMMAND_HISTORY_COUNT);
     public readonly SortedDictionary<string, ConsoleCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);
-    public readonly Dictionary<string, CVar> CVars = new();
+    public readonly Dictionary<string, CVar> CVars = new(StringComparer.InvariantCultureIgnoreCase);
     public readonly ConsoleScreenBuffer ScreenBuffer;
     public static event Action<StringBuilder>? OnCfgSave;
     public string DefaultConfig = "";

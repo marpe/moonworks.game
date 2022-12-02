@@ -153,6 +153,7 @@ public static class Binds
             ("f9", "step"),
             ("f8", "restart"),
             ("f10", "pause"),
+            ("f12", "screenshot"),
             ("page_up", "speed_up"),
             ("page_down", "speed_down"),
             ("p", "pause"),
