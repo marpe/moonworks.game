@@ -2,91 +2,113 @@ using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
 
-public unsafe class CollectionInspector : Inspector
+public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMemberInfo, IInspectorWithType
 {
+    public string? InspectorOrder { get; set; }
     private Dictionary<object, IInspector> _inspectors = new();
     private HashSet<object> _inactiveItems = new();
 
-    public Color HeaderColor { get; set; } = Color.Indigo;
+    private bool _isInitialized;
+    private string _name = "";
+    private Type? _type;
+    private MemberInfo? _memberInfo;
+    private object? _target;
+    private string _keyHeader = "#";
 
-    public static void DrawItemCount(int count)
+    private ICollection? _collection;
+
+    public void SetType(Type type)
     {
-        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
-        ImGui.SameLine();
-        var itemCountLabel = $"({count} items)";
-        var itemCountLabelSize = ImGui.CalcTextSize(itemCountLabel);
-        ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - itemCountLabelSize.X);
-        ImGui.Text(itemCountLabel);
-        ImGui.PopFont();
+        _type = type;
     }
 
-    public override void Draw()
+    public void SetMemberInfo(MemberInfo memberInfo)
     {
-        if (ImGuiExt.DebugInspectors)
-            DrawDebug();
+        _memberInfo = memberInfo;
+    }
 
-        var value = GetValue();
-        if (value == null)
+    public void SetTarget(object target)
+    {
+        _target = target;
+    }
+
+    private void Initialize()
+    {
+        if (_memberInfo is FieldInfo field)
         {
-            ImGuiExt.DrawLabelWithCenteredText(_name, "NULL");
-            return;
+            _collection = field.GetValue(_target) as ICollection;
+            _name = field.Name + "[ ]";
+        }
+        else if (_memberInfo is PropertyInfo prop)
+        {
+            _collection = prop.GetValue(_target) as ICollection;
+            _name = prop.Name + "[ ]";
+        }
+        else
+        {
+            throw new Exception();
+        }
+        
+        // TODO (marpe): Check type and _target
+
+        _isInitialized = true;
+    }
+
+    private static IEnumerable<(object key, object? item)> Enumerate(ICollection collection)
+    {
+        if (collection is IDictionary dictionary)
+        {
+            foreach (var key in dictionary.Keys)
+            {
+                yield return (key, dictionary[key]);
+            }
+
+            yield break;
         }
 
-        if (value is not ICollection collection)
+        var i = 0;
+        foreach (var value in collection)
         {
-            throw new InvalidOperationException("Value is not of type ICollection");
+            yield return (i, value);
+            i++;
         }
+    }
+
+    public void Draw()
+    {
+        if (!_isInitialized)
+            Initialize();
+
+        if (_collection == null)
+            throw new Exception();
 
         PushStyle();
-        
+
         if (ImGuiExt.Fold(_name))
         {
             foreach (var item in _inspectors.Keys)
                 _inactiveItems.Add(item);
 
-            DrawItemCount(collection.Count);
-
+            DrawItemCount(_collection.Count);
 
             if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags, new Num.Vector2(0, 0)))
             {
-                var keyLabel = collection is IDictionary ? "Key" : "#";
-
-                ImGui.TableSetupColumn(keyLabel, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
+                ImGui.TableSetupColumn(_keyHeader, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
                 ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.NoHide);
 
-                ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
+                /*ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
                 ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
                 ImGui.TableSetColumnIndex(0);
-                ImGui.TableHeader(keyLabel);
+                ImGui.TableHeader(_keyHeader);
                 ImGui.TableSetColumnIndex(1);
                 ImGui.TableHeader("Value");
-                ImGui.PopFont();
-
-                IEnumerable enumerable;
-
-                {
-                    if (collection is IDictionary dictionary)
-                        enumerable = dictionary.Keys;
-                    else
-                        enumerable = collection;
-                }
+                ImGui.PopFont();*/
 
                 var i = 0;
-                foreach (var item in enumerable)
+                foreach (var (key, value) in Enumerate(_collection))
                 {
                     ImGui.PushID(i);
-
-                    if (collection is IDictionary dictionary)
-                    {
-                        var keyStr = item.ToString() ?? "";
-                        DrawItem(keyStr, dictionary[item]);
-                    }
-                    else
-                    {
-                        var keyStr = i.ToString();
-                        DrawItem(keyStr, item);
-                    }
-
+                    DrawItem(key, value);
                     i++;
                     ImGui.PopID();
                 }
@@ -102,7 +124,7 @@ public unsafe class CollectionInspector : Inspector
         }
         else
         {
-            DrawItemCount(collection.Count);
+            DrawItemCount(_collection.Count);
         }
 
         PopStyle();
@@ -122,18 +144,40 @@ public unsafe class CollectionInspector : Inspector
         ImGui.PopStyleVar(4);
     }
 
-    private void DrawItem(string key, object? item)
+    private void SetValue(object key, object? item)
+    {
+        if (_collection is IDictionary dictionary)
+        {
+            dictionary[key] = item;
+        }
+        else if (_collection is IList list)
+        {
+            list[(int)key] = item;
+        }
+    }
+
+    private void DrawItem(object key, object? item)
     {
         ImGui.TableNextRow();
 
         ImGui.TableSetColumnIndex(0);
-        ImGui.Text(key);
+        ImGui.Text(key.ToString());
 
         ImGui.TableSetColumnIndex(1);
 
         if (item == null)
         {
             ImGui.TextDisabled("NULL");
+        }
+        else if (SimpleTypeInspector.SupportedTypes.Contains(item.GetType()))
+        {
+            SimpleTypeInspector.DrawSimpleInspector(
+                item.GetType(),
+                "##Value",
+                () => item!,
+                (newValue) => SetValue(key, newValue),
+                false
+            );
         }
         else if (!item.GetType().IsValueType)
         {
@@ -153,5 +197,16 @@ public unsafe class CollectionInspector : Inspector
         {
             ImGui.TextUnformatted(item.ToString());
         }
+    }
+
+    public static void DrawItemCount(int count)
+    {
+        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
+        ImGui.SameLine();
+        var itemCountLabel = $"({count} items)";
+        var itemCountLabelSize = ImGui.CalcTextSize(itemCountLabel);
+        ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - itemCountLabelSize.X);
+        ImGui.Text(itemCountLabel);
+        ImGui.PopFont();
     }
 }

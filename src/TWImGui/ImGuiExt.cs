@@ -545,6 +545,12 @@ public static unsafe class ImGuiExt
 
     public static string LabelPrefix(string label, bool preserveLabel = false)
     {
+        if (label.StartsWith("##"))
+        {
+            ImGui.SetNextItemWidth(-1);
+            return label;
+        }
+        
         var width = ImGui.CalcItemWidth();
         float x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
