@@ -85,6 +85,22 @@ public unsafe class SimpleTypeInspector : Inspector
 
         return result;
     }
+
+    public static bool InspectString(string name, ref string value)
+    {
+        var result = false;
+        var inputBuffer = new ImGuiInputBuffer(value, 100);
+        fixed (byte* data = inputBuffer.Bytes)
+        {
+            if (ImGui.InputText(ImGuiExt.LabelPrefix(name), data, (nuint)inputBuffer.MaxLength))
+            {
+                value = ImGuiExt.StringFromPtr(data);
+                result = true;
+            }
+        }
+        inputBuffer.Dispose();
+        return result;
+    } 
     
     private static bool InspectULong(string name, ref ulong value)
     {
@@ -225,18 +241,11 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
             var value = (string)(getter() ?? "");
-
-            var inputBuffer = new ImGuiInputBuffer(value, 100);
-            fixed (byte* data = inputBuffer.Bytes)
+            if (InspectString(name, ref value))
             {
-                if (ImGui.InputText(ImGuiExt.LabelPrefix(name), data, (nuint)inputBuffer.MaxLength))
-                {
-                    setter(ImGuiExt.StringFromPtr(data));
-                    result = true;
-                }
+                setter(value);
+                result = true;
             }
-            inputBuffer.Dispose();
-
         }
         else if (type == typeof(Point))
         {

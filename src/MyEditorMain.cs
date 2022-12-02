@@ -125,6 +125,7 @@ public unsafe class MyEditorMain : MyGameMain
             _gameWindow,
             _debugWindow,
             new ImGuiDemoWindow(),
+            new EntityEditorWindow(this)
         };
         foreach (var window in windows)
         {
