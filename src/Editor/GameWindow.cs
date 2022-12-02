@@ -30,14 +30,48 @@ public unsafe class GameWindow : ImGuiEditorWindow
     {
         if (!IsOpen)
             return;
+        var flags = ImGuiWindowFlags.NoCollapse; /*ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
+                    ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;*/
 
-        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
-                    ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
-        ImGuiWindowClass windowClass;
-        windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
-        ImGui.SetNextWindowClass(&windowClass);
+        var dockspaceID = ImGui.GetID("GameViewDockspace");
+
+        ImGuiWindowClass workspaceWindowClass;
+        workspaceWindowClass.ClassId = dockspaceID;
+        workspaceWindowClass.DockingAllowUnclassed = false;
+
+        ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
         ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
+
+        if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
+        {
+            var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
+                            ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
+            ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
+            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, ImGui.GetContentRegionAvail());
+
+            uint upNode, downNode;
+            ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Up, 0.05f, &upNode, &downNode);
+            ImGuiInternal.DockBuilderDockWindow("GameToolbar", upNode);
+            ImGuiInternal.DockBuilderDockWindow("GameView", downNode);
+            ImGuiInternal.DockBuilderFinish(dockspaceID);
+        }
+
+        ImGui.DockSpace(dockspaceID, new Num.Vector2(0, 0), ImGuiDockNodeFlags.None, &workspaceWindowClass);
+
+        ImGui.End();
+
+        DrawGameView();
+        DrawButtons();
+    }
+
+    private void DrawGameView()
+    {
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
+        /*ImGuiWindowClass windowClass;
+        windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
+        ImGui.SetNextWindowClass(&windowClass);*/
+        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse |ImGuiWindowFlags.NoScrollbar;
+        ImGui.Begin("GameView", default, flags);
         ImGui.PopStyleVar();
         if (_gameRenderTextureId != null && _gameRenderTextureId != _editor.CompositeRender.Handle)
         {
@@ -88,20 +122,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
         // where a check was added to prevent the window from being resized by just setting the cursor position 
         ImGui.SetCursorPos(ImGui.GetCursorStartPos());
 
-        /*ImGui.Image(
-            (void*)_gameRenderTextureId.Value,
-            viewportSize * _gameRenderScale,
-            Vector2.Zero,
-            Vector2.One,
-            Num.Vector4.One,
-            Num.Vector4.Zero
-        );*/
-
         var isActive = ImGui.IsItemActive();
         var isHovered = ImGui.IsItemHovered();
         HandleInput(isActive, isHovered);
 
-        var gameRenderOffset = SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
+        SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
 
         var contentMin = ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowContentRegionMax();
@@ -120,22 +145,21 @@ public unsafe class GameWindow : ImGuiEditorWindow
             ImGui.EndPopup();
         }
 
-        DrawButtons();
         DrawDebugOverlay();
+        
+        var dockNode = ImGuiInternal.GetWindowDockNode();
+        if (dockNode != null)
+        {
+            dockNode->LocalFlags = 0;
+            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
+            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
+        }
         ImGui.End();
     }
 
     private void DrawButtons()
     {
-        var windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize |
-                          /*ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus |*/ ImGuiWindowFlags.NoSavedSettings |
-                          ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoBackground;
-        var windowPos = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMin();
-        ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);
-        ImGui.SetNextWindowPos(windowPos, ImGuiCond.Always, default);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-        ImGui.Begin("GameWindowButtons", default, windowFlags);
-        ImGui.PopStyleVar();
+        ImGui.Begin("GameToolbar");
         if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
         {
             ResetPanAndZoom();
@@ -152,6 +176,13 @@ public unsafe class GameWindow : ImGuiEditorWindow
             IsMouseCameraControlsEnabled = !IsMouseCameraControlsEnabled;
         }
 
+        var dockNode = ImGuiInternal.GetWindowDockNode();
+        if (dockNode != null)
+        {
+            dockNode->LocalFlags = 0;
+            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
+            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
+        }
         ImGui.End();
     }
 
@@ -161,7 +192,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         _gameRenderPosition = Num.Vector2.Zero;
     }
 
-    private Num.Vector2 SetGameRenderViewportTransform(Num.Vector2 gameRenderMin, Matrix4x4 viewportTransform)
+    private void SetGameRenderViewportTransform(System.Numerics.Vector2 gameRenderMin, Matrix4x4 viewportTransform)
     {
         var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
         var gameRenderOffset = gameRenderMin - windowViewportPosition;
@@ -172,19 +203,19 @@ public unsafe class GameWindow : ImGuiEditorWindow
             Matrix3x2.CreateScale(viewportScale.X * _gameRenderScale) *
             Matrix3x2.CreateTranslation(gameRenderOffset.X, gameRenderOffset.Y)
         ).ToMatrix4x4();
-        return gameRenderOffset;
     }
 
     private void HandleInput(bool isActive, bool isHovered)
     {
         if (IsMouseCameraControlsEnabled)
         {
+            // panning
             if (isActive && ImGui.IsMouseDragging(ImGuiMouseButton.Middle))
             {
-                _gameRenderPosition += ImGui.GetMouseDragDelta(ImGuiMouseButton.Middle) * 1.0f / _gameRenderScale;
-                ImGui.ResetMouseDragDelta(ImGuiMouseButton.Middle);
+                _gameRenderPosition += ImGui.GetIO()->MouseDelta * 1.0f / _gameRenderScale;
             }
 
+            // zooming
             if (isHovered && ImGui.GetIO()->MouseWheel != 0)
             {
                 _gameRenderScale += ImGui.GetIO()->MouseWheel * 0.1f * _gameRenderScale;
@@ -206,7 +237,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
     {
         if (!_showDebug)
             return;
-
+        
         var windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize |
                           /*ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus |*/ ImGuiWindowFlags.NoSavedSettings |
                           ImGuiWindowFlags.NoNav;

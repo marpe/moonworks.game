@@ -27,7 +27,7 @@ public unsafe class SimpleTypeInspector : Inspector
         _setter = SetValue;
     }
 
-    private static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings)
+    public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings)
     {
         if (rangeSettings.UseDragVersion)
         {
@@ -51,7 +51,7 @@ public unsafe class SimpleTypeInspector : Inspector
     }
 
 
-    private static bool InspectInt(string name, ref int value, RangeSettings rangeSettings)
+    public static bool InspectInt(string name, ref int value, RangeSettings rangeSettings)
     {
         if (rangeSettings.UseDragVersion)
         {
@@ -74,7 +74,7 @@ public unsafe class SimpleTypeInspector : Inspector
         );
     }
 
-    private static bool InspectUInt(string name, ref uint value)
+    public static bool InspectUInt(string name, ref uint value)
     {
         var result = false;
         var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
@@ -102,7 +102,7 @@ public unsafe class SimpleTypeInspector : Inspector
         return result;
     } 
     
-    private static bool InspectULong(string name, ref ulong value)
+    public static bool InspectULong(string name, ref ulong value)
     {
         var result = false;
         var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
@@ -114,7 +114,7 @@ public unsafe class SimpleTypeInspector : Inspector
         return result;
     }
 
-    private static bool InspectRectangle(string name, ref Rectangle value, bool isReadOnly)
+    public static bool InspectRectangle(string name, ref Rectangle value, bool isReadOnly)
     {
         var result = false;
 

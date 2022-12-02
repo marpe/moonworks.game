@@ -14,7 +14,6 @@ public unsafe class MyEditorMain : MyGameMain
     public ImGuiRenderer ImGuiRenderer;
 
     private ulong _imGuiDrawCount;
-    private readonly float _mainMenuPaddingY = 6f;
     private readonly List<ImGuiMenu> _menuItems = new();
     public int UpdateRate = 1;
     internal SortedList<string, ImGuiEditorWindow> Windows = new();
@@ -38,6 +37,7 @@ public unsafe class MyEditorMain : MyGameMain
     public float _imGuiRenderDurationMs;
     public float _renderDurationMs;
     public float _updateDurationMs;
+    private ImGuiDemoWindow _demoWindow;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -46,6 +46,8 @@ public unsafe class MyEditorMain : MyGameMain
         var windowSize = MainWindow.Size;
         _imGuiRenderTarget = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+
+        _demoWindow = new ImGuiDemoWindow();
 
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
@@ -120,7 +122,8 @@ public unsafe class MyEditorMain : MyGameMain
                 () => ImGuiExt.DebugInspectors))
             .AddChild(new ImGuiMenu("Use Point Sampler", null, () => { ImGuiRenderer.UsePointSampler = !ImGuiRenderer.UsePointSampler; }, null,
                 () => ImGuiRenderer.UsePointSampler))
-            .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless));
+            .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless))
+            .AddChild(new ImGuiMenu("Show ImGui Demo Window", "^F2", () => _demoWindow.IsOpen = !_demoWindow.IsOpen, null, () => _demoWindow.IsOpen));
         _menuItems.Add(imgui);
     }
 
@@ -130,10 +133,10 @@ public unsafe class MyEditorMain : MyGameMain
         {
             new LoadingScreenDebugWindow(),
             new WorldWindow(),
+            new EntityEditorWindow(this),
             _gameWindow,
             _debugWindow,
-            new ImGuiDemoWindow(),
-            new EntityEditorWindow(this)
+            _demoWindow,
         };
         foreach (var window in windows)
         {
@@ -151,156 +154,6 @@ public unsafe class MyEditorMain : MyGameMain
         {
             base.SetInputViewport();
         }
-    }
-
-    private void DrawMenu(ImGuiMenu menu, int depth = 0)
-    {
-        if (menu.Children.Count > 0)
-        {
-            if (depth == 0)
-            {
-                var style = ImGui.GetStyle();
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
-            }
-
-            var result = ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true);
-            if (depth == 0)
-            {
-                ImGui.PopStyleVar(2);
-            }
-
-            if (result)
-            {
-                foreach (var child in menu.Children)
-                {
-                    DrawMenu(child, depth + 1);
-                }
-
-                ImGui.EndMenu();
-            }
-        }
-        else
-        {
-            if (ImGui.MenuItem(menu.Text, menu.Shortcut, menu.IsSelectedCallback?.Invoke() ?? false))
-            {
-                menu.Callback?.Invoke();
-            }
-        }
-    }
-
-    private void CheckMenuShortcuts(ImGuiMenu menu)
-    {
-        if (!(menu.IsEnabled ?? true))
-        {
-            return;
-        }
-
-        if (ImGuiExt.IsKeyboardShortcutPressed(menu.Shortcut))
-        {
-            menu.Callback?.Invoke();
-        }
-
-        foreach (var child in menu.Children)
-        {
-            CheckMenuShortcuts(child);
-        }
-    }
-
-    private void DrawMenu()
-    {
-        var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
-        var result = ImGui.BeginMainMenuBar();
-        ImGui.PopStyleVar();
-        if (!result)
-        {
-            return;
-        }
-
-        for (var i = 0; i < _menuItems.Count - 1; i++)
-        {
-            DrawMenu(_menuItems[i]);
-        }
-
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
-        var windowMenu = ImGui.BeginMenu("Window");
-        ImGui.PopStyleVar(2);
-        if (windowMenu)
-        {
-            foreach (var (_, window) in Windows)
-            {
-                ImGui.MenuItem(window.Title, window.KeyboardShortcut, ImGuiExt.RefPtr(ref window.IsOpen));
-            }
-
-            ImGui.EndMenu();
-        }
-
-        DrawMenu(_menuItems[^1]);
-
-        DrawMainMenuButtons();
-
-        foreach (var menu in _menuItems)
-        {
-            CheckMenuShortcuts(menu);
-        }
-
-        ImGui.EndMainMenuBar();
-    }
-
-    private static string LoadingIndicator(string labelWhenNotLoading, bool isLoading)
-    {
-        if (!isLoading)
-            return labelWhenNotLoading;
-        var n = (int)(Shared.Game.Time.TotalElapsedTime * 4 % 4);
-        return n switch
-        {
-            0 => FontAwesome6.ArrowRight,
-            1 => FontAwesome6.ArrowDown,
-            2 => FontAwesome6.ArrowLeft,
-            _ => FontAwesome6.ArrowUp,
-        };
-    }
-
-    private void DrawMainMenuButtons()
-    {
-        var max = ImGui.GetContentRegionMax();
-        var numButtons = 4;
-        var buttonWidth = 29;
-        ImGui.SetCursorPosX((max.X - numButtons * buttonWidth) / 2);
-
-        var (icon, color, tooltip) = GameScreen.IsPaused switch
-        {
-            true => (FontAwesome6.Play, Color.Green, "Play"),
-            _ => (FontAwesome6.Pause, Color.Yellow, "Pause")
-        };
-
-        ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
-        if (ImGuiExt.ColoredButton(LoadingIndicator(FontAwesome6.ArrowsRotate, Shared.LoadingScreen.IsLoading), Color.Blue, "Reload World"))
-        {
-            GameScreen.Restart();
-        }
-
-        ImGui.EndDisabled();
-
-        if (ImGuiExt.ColoredButton(icon, color, tooltip))
-        {
-            GameScreen.IsPaused = !GameScreen.IsPaused;
-        }
-
-        if (ImGuiExt.ColoredButton(FontAwesome6.ForwardStep, Color.Orange, "Step"))
-        {
-            GameScreen.IsPaused = GameScreen.IsStepping = true;
-        }
-
-        ImGui.BeginDisabled(Shared.Game.GameScreen.World == null);
-        if (ImGuiExt.ColoredButton(FontAwesome6.Stop, Color.Red, "Stop"))
-        {
-            Shared.Game.GameScreen.Unload();
-        }
-
-        ImGui.EndDisabled();
     }
 
     private void DrawInternal()
@@ -328,57 +181,10 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (MainWindow.IsBorderless)
         {
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
-            ImGuiInternal.BeginViewportSideBar("SideBar", mainViewport, ImGuiDir.Up, 34, ImGuiWindowFlags.NoDecoration);
-            ImGui.PopStyleVar();
-            var avail = ImGui.GetContentRegionAvail();
-            ImGui.InvisibleButton("Title", avail, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap);
-            if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
-            {
-                var windowPos = ImGui.GetWindowPos();
-                var newPos = windowPos + ImGui.GetMouseDragDelta(ImGuiMouseButton.Left);
-                ImGui.ResetMouseDragDelta(ImGuiMouseButton.Left);
-                SDL.SDL_SetWindowPosition(MainWindow.Handle, (int)newPos.X, (int)newPos.Y);
-            }
-
-            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-            {
-                if (MainWindow.IsMaximized)
-                    SDL.SDL_RestoreWindow(MainWindow.Handle);
-                else
-                    SDL.SDL_MaximizeWindow(MainWindow.Handle);
-            }
-
-            ImGui.SetItemAllowOverlap();
-
-            ImGui.SetCursorPos(new Num.Vector2(avail.X - 29 * 3 - 6, 6));
-            if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent)) // "Minimize"
-            {
-                MainWindow.IsMinimized = true;
-            }
-
-            ImGui.SameLine();
-            var icon = MainWindow.IsMaximized ? FontAwesome6.WindowRestore : FontAwesome6.WindowMaximize;
-            if (ImGuiExt.ColoredButton(icon, Color.White * 0.5f, Color.Transparent)) // "Maximize"
-            {
-                var isFullScreenDesktop = ((SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(MainWindow.Handle) &
-                                           SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
-                if (MainWindow.IsMaximized || isFullScreenDesktop)
-                    SDL.SDL_RestoreWindow(MainWindow.Handle);
-                else
-                    MainWindow.IsMaximized = true;
-            }
-
-            ImGui.SameLine();
-            if (ImGuiExt.ColoredButton(FontAwesome6.Xmark, Color.White * 0.5f, Color.Transparent)) // "Close"
-            {
-                Quit();
-            }
-
-            ImGui.End();
+            ImGuiBorderlessTitle.Draw(MainWindow, this);
         }
 
-        DrawMenu();
+        ImGuiMainMenu.DrawMenu(_menuItems, Windows);
 
         DrawWindows(dockId);
 
@@ -447,7 +253,7 @@ public unsafe class MyEditorMain : MyGameMain
         base.Update(dt);
         _updateStopwatch.Stop();
         _updateDurationMs = (float)((double)_updateStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
-        
+
         if (wasHidden != IsHidden)
         {
             var platformIO = ImGui.GetPlatformIO();
