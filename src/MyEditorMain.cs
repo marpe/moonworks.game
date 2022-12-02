@@ -44,7 +44,7 @@ public unsafe class MyEditorMain : MyGameMain
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
         _screenshotTask = Task.CompletedTask;
-        
+
         var timer = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiThemes.DarkTheme();
@@ -99,6 +99,11 @@ public unsafe class MyEditorMain : MyGameMain
         }
     }
 
+    private void SetWindowBorder()
+    {
+        SDL.SDL_SetWindowBordered(MainWindow.Handle, MainWindow.IsBorderless ? SDL.SDL_bool.SDL_TRUE : SDL.SDL_bool.SDL_FALSE);
+    }
+
     private void AddDefaultMenus()
     {
         var file = new ImGuiMenu("File")
@@ -108,7 +113,8 @@ public unsafe class MyEditorMain : MyGameMain
             .AddChild(new ImGuiMenu("Debug Inspectors", null, () => { ImGuiExt.DebugInspectors = !ImGuiExt.DebugInspectors; }, null,
                 () => ImGuiExt.DebugInspectors))
             .AddChild(new ImGuiMenu("Use Point Sampler", null, () => { ImGuiRenderer.UsePointSampler = !ImGuiRenderer.UsePointSampler; }, null,
-                () => ImGuiRenderer.UsePointSampler));
+                () => ImGuiRenderer.UsePointSampler))
+            .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless));
         _menuItems.Add(imgui);
     }
 
@@ -210,14 +216,9 @@ public unsafe class MyEditorMain : MyGameMain
             return;
         }
 
-        foreach (var menu in _menuItems)
+        for (var i = 0; i < _menuItems.Count - 1; i++)
         {
-            DrawMenu(menu);
-        }
-
-        foreach (var menu in _menuItems)
-        {
-            CheckMenuShortcuts(menu);
+            DrawMenu(_menuItems[i]);
         }
 
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, _mainMenuPaddingY));
@@ -234,7 +235,14 @@ public unsafe class MyEditorMain : MyGameMain
             ImGui.EndMenu();
         }
 
+        DrawMenu(_menuItems[^1]);
+
         DrawMainMenuButtons();
+
+        foreach (var menu in _menuItems)
+        {
+            CheckMenuShortcuts(menu);
+        }
 
         ImGui.EndMainMenuBar();
     }
@@ -256,9 +264,9 @@ public unsafe class MyEditorMain : MyGameMain
     private void DrawMainMenuButtons()
     {
         var max = ImGui.GetContentRegionMax();
-        var numButtons = 3;
+        var numButtons = 4;
         var buttonWidth = 29;
-        ImGui.SetCursorPosX(max.X / 2 - numButtons * buttonWidth);
+        ImGui.SetCursorPosX((max.X - numButtons * buttonWidth) / 2);
 
         var (icon, color, tooltip) = GameScreen.IsPaused switch
         {
@@ -283,11 +291,21 @@ public unsafe class MyEditorMain : MyGameMain
         {
             GameScreen.IsPaused = GameScreen.IsStepping = true;
         }
+
+        ImGui.BeginDisabled(Shared.Game.GameScreen.World == null);
+        if (ImGuiExt.ColoredButton(FontAwesome6.Stop, Color.Red, "Stop"))
+        {
+            Shared.Game.GameScreen.Unload();
+        }
+
+        ImGui.EndDisabled();
     }
 
     private void DrawInternal()
     {
         var mainViewport = ImGui.GetMainViewport();
+
+
         var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
 
         if (_firstTime)
@@ -297,12 +315,65 @@ public unsafe class MyEditorMain : MyGameMain
             var leftWidth = 0.15f;
             var dockLeft = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, null, &dockId);
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
-            var dockDown = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
+            var dockRight = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeft);
             ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockDown);
+            ImGuiInternal.DockBuilderDockWindow("Entity Editor", dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRight);
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;
+        }
+
+        if (MainWindow.IsBorderless)
+        {
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
+            ImGuiInternal.BeginViewportSideBar("SideBar", mainViewport, ImGuiDir.Up, 34, ImGuiWindowFlags.NoDecoration);
+            ImGui.PopStyleVar();
+            var avail = ImGui.GetContentRegionAvail();
+            ImGui.InvisibleButton("Title", avail, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap);
+            if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
+            {
+                var windowPos = ImGui.GetWindowPos();
+                var newPos = windowPos + ImGui.GetMouseDragDelta(ImGuiMouseButton.Left);
+                ImGui.ResetMouseDragDelta(ImGuiMouseButton.Left);
+                SDL.SDL_SetWindowPosition(MainWindow.Handle, (int)newPos.X, (int)newPos.Y);
+            }
+
+            if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
+            {
+                if (MainWindow.IsMaximized)
+                    SDL.SDL_RestoreWindow(MainWindow.Handle);
+                else
+                    SDL.SDL_MaximizeWindow(MainWindow.Handle);
+            }
+
+            ImGui.SetItemAllowOverlap();
+
+            ImGui.SetCursorPos(new Num.Vector2(avail.X - 29 * 3 - 6, 6));
+            if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent)) // "Minimize"
+            {
+                MainWindow.IsMinimized = true;
+            }
+
+            ImGui.SameLine();
+            var icon = MainWindow.IsMaximized ? FontAwesome6.WindowRestore : FontAwesome6.WindowMaximize;
+            if (ImGuiExt.ColoredButton(icon, Color.White * 0.5f, Color.Transparent)) // "Maximize"
+            {
+                var isFullScreenDesktop = ((SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(MainWindow.Handle) &
+                                                  SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
+                if (MainWindow.IsMaximized || isFullScreenDesktop)
+                    SDL.SDL_RestoreWindow(MainWindow.Handle);
+                else
+                    MainWindow.IsMaximized = true;
+            }
+
+            ImGui.SameLine();
+            if (ImGuiExt.ColoredButton(FontAwesome6.Xmark, Color.White * 0.5f, Color.Transparent)) // "Close"
+            {
+                Quit();
+            }
+
+            ImGui.End();
         }
 
         DrawMenu();

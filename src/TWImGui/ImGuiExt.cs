@@ -346,35 +346,72 @@ public static unsafe class ImGuiExt
         return ColoredButton(label, color.ToColor());
     }
 
-    public static bool ColoredButton(string label, Color color, string? tooltip = null)
+    public static bool ColoredButton(string label, Color buttonColor, string? tooltip = null)
     {
-        return ColoredButton(label, color, tooltip, Vector2.Zero, ButtonPadding);
+        return ColoredButton(label, buttonColor, Vector2.Zero, tooltip);
     }
 
-    public static bool ColoredButton(string label, Color color, Vector2 size, string? tooltip = null)
+    public static bool ColoredButton(string label, Color buttonColor, Vector2 size, string? tooltip = null)
     {
-        return ColoredButton(label, color, tooltip, size, ButtonPadding);
+        var text = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
+        return ColoredButton(label, text.ToColor(), buttonColor, tooltip, size, ButtonPadding);
     }
 
-    public static bool ColoredButton(string label, Color color, string? tooltip, Vector2 size, Vector2 padding)
+    public static bool ColoredButton(string label, Color textColor, Color buttonColor, string? tooltip = null)
     {
-        var (h, s, v) = ColorExt.RgbToHsv(color);
-        ImGui.PushStyleColor(ImGuiCol.Button, ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f).ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f).ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, ColorExt.HsvToRgb(h, s * 1f, v * 0.8f).ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.BorderShadow, Color.Transparent.ToNumerics());
-        ImGui.PushStyleColor(ImGuiCol.Border, ColorExt.HsvToRgb(h, s * 1f, v * 0.7f).ToNumerics());
+        return ColoredButton(label, textColor, buttonColor, tooltip, Vector2.Zero, ButtonPadding);
+    }
+
+    public static bool ColoredButton(string label, Color textColor, Color buttonColor, Vector2 size, string? tooltip = null)
+    {
+        return ColoredButton(label, textColor, buttonColor, tooltip, size, ButtonPadding);
+    }
+
+    public static bool ColoredButton(string label, Color textColor, Color buttonColor, string? tooltip, Vector2 size, Vector2 padding)
+    {
+        var (h, s, v) = ColorExt.RgbToHsv(buttonColor);
+        var a = buttonColor.A / 255f;
+
+        var normal = ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f) * a;
+        var hovered = ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f) * a;
+        var active = ColorExt.HsvToRgb(h, s * 1f, v * 0.8f) * a;
+        var shadow = Color.Transparent;
+        var border = ColorExt.HsvToRgb(h, s * 1f, v * 0.7f) * a;
+
+        var (th, ts, tv) = ColorExt.RgbToHsv(textColor);
+        var textActive = ColorExt.HsvToRgb(th, ts, tv * 2f);
+        var textHovered = ColorExt.HsvToRgb(th, ts, tv * 1.8f);
+        var textNormal = textColor * 0.95f;
+
+        var wasHovered = ImGui.GetCurrentContext()->HoveredIdPreviousFrame == ImGui.GetID(label);
+        var wasActive = ImGui.GetCurrentContext()->ActiveIdPreviousFrame == ImGui.GetID(label);
+        var text = (wasActive, wasHovered) switch
+        {
+            (true, _) => textActive,
+            (_, true) => textHovered,
+            _ => textNormal
+        };
+
+        ImGui.PushStyleColor(ImGuiCol.Button, normal.ToNumerics());
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, hovered.ToNumerics());
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, active.ToNumerics());
+        ImGui.PushStyleColor(ImGuiCol.BorderShadow, shadow.ToNumerics());
+        ImGui.PushStyleColor(ImGuiCol.Border, border.ToNumerics());
+        ImGui.PushStyleColor(ImGuiCol.Text, text.ToNumerics());
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.ToNumerics());
         var result = ImGui.Button(label, size.ToNumerics());
 
-        if (ImGui.IsItemHovered() && tooltip != null)
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && tooltip != null)
         {
+            var popupBg = ColorExt.HsvToRgb(h, s * 1f, v * 0.5f) * 0.8f;
+            ImGui.PushStyleColor(ImGuiCol.PopupBg, popupBg.ToNumerics());
             ImGui.BeginTooltip();
             ImGui.TextUnformatted(tooltip);
             ImGui.EndTooltip();
+            ImGui.PopStyleColor();
         }
 
-        ImGui.PopStyleColor(5);
+        ImGui.PopStyleColor(6);
         ImGui.PopStyleVar();
         return result;
     }
@@ -550,7 +587,7 @@ public static unsafe class ImGuiExt
             ImGui.SetNextItemWidth(-1);
             return label;
         }
-        
+
         var width = ImGui.CalcItemWidth();
         float x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
@@ -738,11 +775,11 @@ public ref struct ImGuiInputBuffer
         Length = encodedBytesCount;
         MaxLength = maxMaxLength;
     }
-    
+
     public void Dispose()
     {
         ArrayPool<byte>.Shared.Return(_bufferArray);
     }
-    
+
     public override string ToString() => Encoding.UTF8.GetString(Bytes.Slice(0, Length));
 }
