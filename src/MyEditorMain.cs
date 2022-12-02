@@ -32,6 +32,12 @@ public unsafe class MyEditorMain : MyGameMain
     private GameWindow _gameWindow;
     private DebugWindow _debugWindow;
     private Task _screenshotTask;
+    private Stopwatch _imguiRenderStopwatch = new();
+    private Stopwatch _renderStopwatch = new();
+    private Stopwatch _updateStopwatch = new();
+    public float _imGuiRenderDurationMs;
+    public float _renderDurationMs;
+    public float _updateDurationMs;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -116,10 +122,6 @@ public unsafe class MyEditorMain : MyGameMain
                 () => ImGuiRenderer.UsePointSampler))
             .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless));
         _menuItems.Add(imgui);
-    }
-
-    private static void ShowImGuiDemoWindow(ImGuiEditorWindow window)
-    {
     }
 
     private void AddDefaultWindows()
@@ -360,7 +362,7 @@ public unsafe class MyEditorMain : MyGameMain
             if (ImGuiExt.ColoredButton(icon, Color.White * 0.5f, Color.Transparent)) // "Maximize"
             {
                 var isFullScreenDesktop = ((SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(MainWindow.Handle) &
-                                                  SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
+                                           SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
                 if (MainWindow.IsMaximized || isFullScreenDesktop)
                     SDL.SDL_RestoreWindow(MainWindow.Handle);
                 else
@@ -441,8 +443,11 @@ public unsafe class MyEditorMain : MyGameMain
 
         var wasHidden = IsHidden;
 
+        _updateStopwatch.Restart();
         base.Update(dt);
-
+        _updateStopwatch.Stop();
+        _updateDurationMs = (float)((double)_updateStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
+        
         if (wasHidden != IsHidden)
         {
             var platformIO = ImGui.GetPlatformIO();
@@ -469,15 +474,21 @@ public unsafe class MyEditorMain : MyGameMain
         if (MainWindow.IsMinimized)
             return;
 
+        _renderStopwatch.Restart();
         RenderGame(alpha, CompositeRender);
+        _renderStopwatch.Stop();
+        _renderDurationMs = (float)((double)_renderStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
 
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
+            _imguiRenderStopwatch.Restart();
             _imGuiDrawCount++;
             ImGuiRenderer.Begin();
             DrawInternal();
             TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size);
             ImGuiRenderer.End(_imGuiRenderTarget);
+            _imguiRenderStopwatch.Stop();
+            _imGuiRenderDurationMs = (float)((double)_imguiRenderStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
         }
 
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();

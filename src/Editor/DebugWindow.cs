@@ -5,6 +5,10 @@ namespace MyGame.Editor;
 public unsafe class DebugWindow : ImGuiEditorWindow
 {
     private MyEditorMain _editor;
+    private float _peakImGuiRenderDurationMs;
+    private float _peakRenderDurationMs;
+    private float _peakUpdateDurationMs;
+    private float _peakNumAddedSprites;
     public const string WindowTitle = "Debug";
 
     public DebugWindow(MyEditorMain editor) : base(WindowTitle)
@@ -32,12 +36,33 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();
-            ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
-            ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
-            ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-            ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}, AddedSprites: {_editor.Renderer.SpriteBatch.MaxNumAddedSprites}");
-            ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _editor.UpdateRate), 1, 10, default);
 
+            if (ImGui.BeginChild("PerformanceMetrics", new Num.Vector2(0, 300)))
+            {
+                ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
+                ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
+                ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
+                _peakImGuiRenderDurationMs = _peakImGuiRenderDurationMs > _editor._imGuiRenderDurationMs
+                    ? MathF.Lerp(_peakImGuiRenderDurationMs, _editor._imGuiRenderDurationMs, 0.05f)
+                    : _editor._imGuiRenderDurationMs;
+                ImGui.TextUnformatted($"ImGuiRenderDuration: {_peakImGuiRenderDurationMs:0.0} ms");
+                _peakRenderDurationMs = _peakRenderDurationMs > _editor._renderDurationMs
+                    ? MathF.Lerp(_peakRenderDurationMs, _editor._renderDurationMs, 0.05f)
+                    : _editor._renderDurationMs;
+                ImGui.TextUnformatted($"RenderDuration: {_peakRenderDurationMs:0.0} ms");
+                _peakUpdateDurationMs = _peakUpdateDurationMs > _editor._updateDurationMs
+                    ? MathF.Lerp(_peakUpdateDurationMs, _editor._updateDurationMs, 0.05f)
+                    : _editor._updateDurationMs;
+                ImGui.TextUnformatted($"UpdateDuration: {_peakUpdateDurationMs:0.0} ms");
+                ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}");
+                _peakNumAddedSprites = _peakNumAddedSprites > _editor.Renderer.SpriteBatch.LastNumAddedSprites
+                    ? MathF.Lerp(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites, 0.05f)
+                    : _editor.Renderer.SpriteBatch.LastNumAddedSprites;
+                ImGui.TextUnformatted($"AddedSprites: {_peakNumAddedSprites:0}");
+                ImGui.SliderInt("UpdateRate", ImGuiExt.RefPtr(ref _editor.UpdateRate), 1, 10, default);
+            }
+            ImGui.EndChild();
+            
             if (ImGuiExt.BeginCollapsingHeader("FancyText", ImGuiExt.Colors[0]))
             {
                 ImGui.SliderFloat("ShakeSpeed", ImGuiExt.RefPtr(ref FancyTextComponent.ShakeSpeed), 0, 500, default);
