@@ -49,7 +49,7 @@ public class FontAtlas
             // render glyph into a bitmap
             var bitmap = font.RenderGlyphAndGetInfo(glyphId, 12u, out var info);
         }
-        
-        Logs.LogInfo($"FontAtlas built in {sw.ElapsedMilliseconds} ms");
+
+        sw.StopAndLog("FontAtlas.AddFont");
     }
 }

@@ -16,7 +16,7 @@ public unsafe class MyEditorMain : MyGameMain
     private ulong _imGuiDrawCount;
     private readonly List<ImGuiMenu> _menuItems = new();
     public int UpdateRate = 1;
-    internal SortedList<string, ImGuiEditorWindow> Windows = new();
+    private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private bool _firstTime = true;
     private Texture _imGuiRenderTarget;
 
@@ -30,22 +30,28 @@ public unsafe class MyEditorMain : MyGameMain
 
     private GameWindow _gameWindow;
     private DebugWindow _debugWindow;
-    private Task _screenshotTask;
-    private Stopwatch _imguiRenderStopwatch = new();
-    private Stopwatch _renderStopwatch = new();
-    private Stopwatch _updateStopwatch = new();
-    public float _imGuiRenderDurationMs;
-    public float _renderDurationMs;
-    public float _updateDurationMs;
     private ImGuiDemoWindow _demoWindow;
+    private Task _screenshotTask;
+    
+    private Stopwatch _imguiRenderStopwatch = new();
+    private Stopwatch _renderGameStopwatch = new();
+    private Stopwatch _renderStopwatch = new();
+    private Stopwatch _gameUpdateStopwatch = new();
+    public float _imGuiRenderDurationMs;
+    public float _renderGameDurationMs;
+    public float _renderDurationMs;
+    public float _gameUpdateDurationMs;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
     {
+        var sw = Stopwatch.StartNew();
         var windowSize = MainWindow.Size;
-        _imGuiRenderTarget = Texture.CreateTexture2D(GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
-            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget);
+        _imGuiRenderTarget = Texture.CreateTexture2D(
+            GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
+        );
 
         _demoWindow = new ImGuiDemoWindow();
 
@@ -53,18 +59,19 @@ public unsafe class MyEditorMain : MyGameMain
         _debugWindow = new DebugWindow(this);
         _screenshotTask = Task.CompletedTask;
 
-        var timer = Stopwatch.StartNew();
+        var imguiSw = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
         ImGuiThemes.DarkTheme();
         AddDefaultWindows();
         AddDefaultMenus();
+        imguiSw.StopAndLog("ImGuiRenderer");
 
         _screenshotBuffer = Buffer.Create<byte>(GraphicsDevice, BufferUsageFlags.Index, GameRender.Width * GameRender.Height * sizeof(uint));
         _screenshotPixels = new byte[_screenshotBuffer.Size];
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
-        Logs.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
+        sw.StopAndLog("MyEditorMain");
     }
 
     private void OnFileChanged(FileEvent e)
@@ -140,7 +147,7 @@ public unsafe class MyEditorMain : MyGameMain
         };
         foreach (var window in windows)
         {
-            Windows.Add(window.Title, window);
+            _imGuiWindows.Add(window.Title, window);
         }
     }
 
@@ -184,7 +191,7 @@ public unsafe class MyEditorMain : MyGameMain
             ImGuiBorderlessTitle.Draw(MainWindow, this);
         }
 
-        ImGuiMainMenu.DrawMenu(_menuItems, Windows);
+        ImGuiMainMenu.DrawMenu(_menuItems, _imGuiWindows);
 
         DrawWindows(dockId);
 
@@ -217,7 +224,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void DrawWindows(uint dockId)
     {
-        foreach (var (key, window) in Windows)
+        foreach (var (_, window) in _imGuiWindows)
         {
             if (!ImGui.GetIO()->WantTextInput)
             {
@@ -249,11 +256,12 @@ public unsafe class MyEditorMain : MyGameMain
 
         var wasHidden = IsHidden;
 
-        _updateStopwatch.Restart();
+        _gameUpdateStopwatch.Restart();
         base.Update(dt);
-        _updateStopwatch.Stop();
-        _updateDurationMs = (float)((double)_updateStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
+        _gameUpdateStopwatch.Stop();
+        _gameUpdateDurationMs = _gameUpdateStopwatch.GetElapsedMilliseconds();
 
+        // show/hide child windows when showing/hiding imgui
         if (wasHidden != IsHidden)
         {
             var platformIO = ImGui.GetPlatformIO();
@@ -281,9 +289,10 @@ public unsafe class MyEditorMain : MyGameMain
             return;
 
         _renderStopwatch.Restart();
+        _renderGameStopwatch.Restart();
         RenderGame(alpha, CompositeRender);
-        _renderStopwatch.Stop();
-        _renderDurationMs = (float)((double)_renderStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
+        _renderGameStopwatch.Stop();
+        _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
@@ -291,10 +300,15 @@ public unsafe class MyEditorMain : MyGameMain
             _imGuiDrawCount++;
             ImGuiRenderer.Begin();
             DrawInternal();
-            TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size);
+            var previousSize = _imGuiRenderTarget.Size();
+            if (TextureUtils.EnsureTextureSize(ref _imGuiRenderTarget, GraphicsDevice, MainWindow.Size))
+            {
+                Logs.LogInfo($"ImGuiRenderTarget resized {previousSize.ToString()} -> {_imGuiRenderTarget.Size().ToString()}");
+            }
+
             ImGuiRenderer.End(_imGuiRenderTarget);
             _imguiRenderStopwatch.Stop();
-            _imGuiRenderDurationMs = (float)((double)_imguiRenderStopwatch.ElapsedTicks / Stopwatch.Frequency * 1000.0);
+            _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
         }
 
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
@@ -352,6 +366,9 @@ public unsafe class MyEditorMain : MyGameMain
 
             _screenshot = false;
         }
+        
+        _renderStopwatch.Stop();
+        _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
     }
 
     protected override void Destroy()

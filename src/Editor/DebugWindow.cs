@@ -93,9 +93,10 @@ public unsafe class DebugWindow : ImGuiEditorWindow
 {
     private MyEditorMain _editor;
     private float _peakImGuiRenderDurationMs;
-    private float _peakRenderDurationMs;
+    private float _peakRenderGameDurationMs;
     private float _peakUpdateDurationMs;
     private float _peakNumAddedSprites;
+    private float _peakRenderDurationMs;
     public const string WindowTitle = "Debug";
 
     public DebugWindow(MyEditorMain editor) : base(WindowTitle)
@@ -107,15 +108,11 @@ public unsafe class DebugWindow : ImGuiEditorWindow
 
     private void UpdateMetrics()
     {
-        float SmoothValue(float prev, float current)
-        {
-            return prev > current ? MathF.Lerp(prev, current, 0.05f) : current;
-        }
-
-        _peakImGuiRenderDurationMs = SmoothValue(_peakImGuiRenderDurationMs, _editor._imGuiRenderDurationMs);
-        _peakRenderDurationMs = SmoothValue(_peakRenderDurationMs, _editor._renderDurationMs);
-        _peakUpdateDurationMs = SmoothValue(_peakUpdateDurationMs, _editor._updateDurationMs);
-        _peakNumAddedSprites = SmoothValue(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites);
+        _peakImGuiRenderDurationMs = StopwatchExt.SmoothValue(_peakImGuiRenderDurationMs, _editor._imGuiRenderDurationMs);
+        _peakRenderGameDurationMs = StopwatchExt.SmoothValue(_peakRenderGameDurationMs, _editor._renderGameDurationMs);
+        _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _editor._renderDurationMs);
+        _peakUpdateDurationMs = StopwatchExt.SmoothValue(_peakUpdateDurationMs, _editor._gameUpdateDurationMs);
+        _peakNumAddedSprites = StopwatchExt.SmoothValue(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites);
     }
 
     public override void Draw()
@@ -134,6 +131,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
                 ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
                 ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
                 ImGui.TextUnformatted($"ImGuiRenderDuration: {_peakImGuiRenderDurationMs:0.0} ms");
+                ImGui.TextUnformatted($"RenderGameDuration: {_peakRenderGameDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"RenderDuration: {_peakRenderDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"UpdateDuration: {_peakUpdateDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}");

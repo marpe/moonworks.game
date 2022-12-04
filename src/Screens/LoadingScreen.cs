@@ -22,11 +22,9 @@ public enum TransitionType
 
 public class LoadingScreen
 {
+    public static readonly Dictionary<TransitionType, SceneTransition> SceneTransitions = new();
     public TransitionState State { get; private set; } = TransitionState.Hidden;
     public bool IsLoading => State == TransitionState.TransitionOn || State == TransitionState.Active;
-
-    private readonly Sprite _backgroundSprite;
-    private readonly Sprite _blankSprite;
 
     private Texture? _compositeOldCopy;
     private Texture? _compositeNewCopy;
@@ -35,24 +33,22 @@ public class LoadingScreen
 
     private readonly MyGameMain _game;
 
-    private float _progress = 0;
+    private float _progress;
     private bool _shouldCopyRender;
-
-    public static readonly Dictionary<TransitionType, SceneTransition> SceneTransitions = new();
 
     public static TransitionType TransitionType = TransitionType.Pixelize;
 
     [CVar("load_transition_speed", "Toggle transition speed")]
     public static float TransitionSpeed = 2.0f;
 
-    public static bool Debug;
-
-    public static float DebugProgress;
-
     private ConcurrentQueue<Action> _queue = new();
 
     private Action? _loadSyncCallback;
 
+    public static bool Debug;
+
+    public static float DebugProgress;
+    
     public static TransitionState DebugState
     {
         get
@@ -70,11 +66,6 @@ public class LoadingScreen
     public LoadingScreen(MyGameMain game)
     {
         _game = game;
-
-        var backgroundTexture = TextureUtils.LoadPngTexture(game.GraphicsDevice, ContentPaths.Textures.menu_background_png);
-        var blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
-        _backgroundSprite = new Sprite(backgroundTexture);
-        _blankSprite = new Sprite(blankTexture);
 
         SceneTransitions.Add(TransitionType.Diamonds, new DiamondTransition());
         SceneTransitions.Add(TransitionType.FadeToBlack, new FadeToBlack());
@@ -123,14 +114,10 @@ public class LoadingScreen
 
         Task.Run(() =>
         {
-            Logs.LogInfo($"LoadAsync Start: {Thread.CurrentThread.ManagedThreadId}");
-            while (_queue.TryPeek(out var callback))
+            while (_queue.TryDequeue(out var callback))
             {
                 callback();
-                if (!_queue.TryDequeue(out _))
-                    throw new InvalidOperationException("Peeked, but couldn't dequeue!?");
             }
-            Logs.LogInfo($"LoadAsync Done: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
         });
     }
 
@@ -138,11 +125,10 @@ public class LoadingScreen
     {
         if (IsLoading)
         {
-            Logs.LogError("Ignoring TransitionOn, since we're already active");
+            Logs.LogError("LoadingScreen is already active, ignoring TransitionOn()");
             return;
         }
 
-        Logs.LogInfo($"Load transition on: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
         State = TransitionState.TransitionOn;
         _shouldCopyRender = true;
     }
@@ -172,13 +158,11 @@ public class LoadingScreen
             {
                 _loadSyncCallback();
                 _loadSyncCallback = null;
-                Logs.LogInfo($"LoadSync: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             }
 
             if (_queue.IsEmpty)
             {
                 State = TransitionState.TransitionOff;
-                Logs.LogInfo($"Transitioning off: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             }
         }
         else if (State == TransitionState.TransitionOff)
@@ -196,18 +180,16 @@ public class LoadingScreen
     {
         if (_shouldCopyRender)
         {
-            Logs.LogInfo($"Copying render: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
             _gameOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, gameRender);
             _menuOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, menuRender);
             _compositeOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
             commandBuffer.CopyTextureToTexture(gameRender, _gameOldCopy, Filter.Nearest);
             commandBuffer.CopyTextureToTexture(menuRender, _menuOldCopy, Filter.Nearest);
             commandBuffer.CopyTextureToTexture(renderDestination, _compositeOldCopy, Filter.Nearest);
-            // _game.GraphicsDevice.Submit(commandBuffer);
-            // _game.GraphicsDevice.Wait();
             _shouldCopyRender = false;
         }
 
+        // TODO (marpe): This seems a bit exhaustive
         _compositeNewCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
         commandBuffer.CopyTextureToTexture(renderDestination, _compositeNewCopy, Filter.Nearest);
 
@@ -219,7 +201,8 @@ public class LoadingScreen
         }
         else
         {
-            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy, _compositeOldCopy,
+            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy,
+                _compositeOldCopy,
                 gameRender, menuRender, _compositeNewCopy);
             DrawLoadingText(renderer, ref commandBuffer, renderDestination);
         }
@@ -239,15 +222,18 @@ public class LoadingScreen
 
     public void Unload()
     {
+        _compositeOldCopy?.Dispose();
+        _compositeNewCopy?.Dispose();
         _gameOldCopy?.Dispose();
-
-        foreach (var (key, value) in SceneTransitions)
+        _menuOldCopy?.Dispose();
+        
+        foreach (var (_, value) in SceneTransitions)
         {
             value.Unload();
         }
+        SceneTransitions.Clear();
 
         _queue.Clear();
-
-        SceneTransitions.Clear();
+        _loadSyncCallback = null;
     }
 }

@@ -128,7 +128,7 @@ public class GameScreen
         World = null;
     }
 
-    public void UpdateQueued()
+    public void ExecuteQueuedActions()
     {
         while (_queuedActions.TryDequeue(out var action))
         {

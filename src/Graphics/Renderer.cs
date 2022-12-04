@@ -38,12 +38,17 @@ public class Renderer
         _device = game.GraphicsDevice;
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
         SpriteBatch = new SpriteBatch(_device);
+        
+        var textBatcherTimer = Stopwatch.StartNew();
         TextBatcher = new TextBatcher(_device);
+        textBatcherTimer.StopAndLog("TextBatcher");
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _blankSprite = new Sprite(_blankTexture);
 
+        var bmFontTimer = Stopwatch.StartNew();
         BMFonts = CreateBMFonts(_device);
+        bmFontTimer.StopAndLog("BMFonts");
         
         _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
@@ -61,7 +66,9 @@ public class Renderer
             LoadOp = LoadOp.Clear,
         };
 
+        var pipelinesTimer = Stopwatch.StartNew();
         Pipelines = Graphics.Pipelines.CreatePipelines(_device);
+        pipelinesTimer.StopAndLog("Pipelines");
     }
 
     private static BMFont[] CreateBMFonts(GraphicsDevice device)

@@ -287,7 +287,7 @@ public unsafe class ImGuiRenderer : IDisposable
 
         // io.NativePtr->FontDefault = _fonts[ImGuiFont.Default];
 
-        Logs.LogInfo($"Build ImGui fonts in {sw.ElapsedMilliseconds} ms");
+        sw.StopAndLog("ImGui.BuildFontAtlas");
     }
 
     #endregion

@@ -26,7 +26,7 @@ public class TWConsole
         ProcessCVarAttributes();
         DefaultConfig = GetCfgAsText();
         Execute("exec " + DEFAULT_CONFIG_FILENAME, false);
-        Logs.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
+        sw.StopAndLog("TWConsole.Initialize");
     }
 
     private void ProcessCVarAttributes()

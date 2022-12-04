@@ -56,13 +56,27 @@ public class MyGameMain : Game
         set
         {
             if (value == ScreenMode.Fullscreen)
-                SetWindowDisplayMode(Shared.Game.MainWindow.Handle);
+                SetWindowDisplayModeToMatchDesktop(Shared.Game.MainWindow.Handle);
 
             Shared.Game.MainWindow.SetScreenMode(value);
         }
     }
 
-    private static void SetWindowDisplayMode(IntPtr windowHandle)
+    private Stopwatch _renderStopwatch = new();
+    private Stopwatch _renderGameStopwatch = new();
+    private Stopwatch _updateStopwatch = new();
+    private float _renderDurationMs;
+    private float _renderGameDurationMs;
+    private float _updateDurationMs;
+    private float _peakUpdateDurationMs;
+    private float _peakRenderDurationMs;
+    private float _peakRenderGameDurationMs;
+
+
+    /// <summary>
+    /// Sets the window display mode to the same as the desktop
+    /// </summary>
+    private static void SetWindowDisplayModeToMatchDesktop(IntPtr windowHandle)
     {
         var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
         int result;
@@ -96,6 +110,13 @@ public class MyGameMain : Game
         return ScreenMode.Windowed;
     }
 
+    public static void LogWindowDisplayMode(IntPtr windowHandle)
+    {
+        var displayMode = GetWindowDisplayMode(windowHandle);
+        SDL.SDL_GetWindowSize(windowHandle, out var width, out var height);
+        Logs.LogInfo($"WindowSize: {width}x{height}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
+    }
+    
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -105,10 +126,10 @@ public class MyGameMain : Game
     {
         var sw = Stopwatch.StartNew();
 
-        var displayMode = GetWindowDisplayMode(MainWindow.Handle);
-        SetWindowDisplayMode(MainWindow.Handle);
-        Logs.LogInfo($"WindowSize: {MainWindow.Size.X}x{MainWindow.Size.Y}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
-
+        var setModeTimer = Stopwatch.StartNew();
+        SetWindowDisplayModeToMatchDesktop(MainWindow.Handle);
+        setModeTimer.StopAndLog("SetWindowDisplayModeToMatchDesktop");
+        
         Time = new Time();
 
         Shared.Game = this;
@@ -116,38 +137,50 @@ public class MyGameMain : Game
         Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
 
+        // create render targets
+        var createRtsTimer = Stopwatch.StartNew();
         var compositeRenderSize = new UPoint(1920, 1080);
         var gameRenderSize = RenderScale == 1 ? compositeRenderSize : compositeRenderSize / (int)RenderScale + UPoint.One;
         var flags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
         CompositeRender = Texture.CreateTexture2D(GraphicsDevice, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, flags);
         GameRender = Texture.CreateTexture2D(GraphicsDevice, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, flags);
         _menuRender = TextureUtils.CreateTexture(GraphicsDevice, CompositeRender);
+        createRtsTimer.StopAndLog("RenderTargets");
 
+        var createRendererTimer = Stopwatch.StartNew();
         Renderer = new Renderer(this);
+        createRendererTimer.StopAndLog("Renderer");
+        
         Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
 
+        var audioTimer = Stopwatch.StartNew();
         Shared.AudioManager = new AudioManager(this);
+        audioTimer.StopAndLog("AudioManager");
 
+        var menuTimer = Stopwatch.StartNew();
         Shared.Menus = new MenuHandler(this);
-
+        menuTimer.StopAndLog("MenuHandler");
+        
+        var freeTypeTimer = Stopwatch.StartNew();
         Shared.FreeTypeLibrary = new FreeTypeLibrary();
-
         var fontAtlas = new FontAtlas(GraphicsDevice);
         fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
-
+        freeTypeTimer.StopAndLog("FreeType");
+        
         Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Logs.Loggers.Add(new TWConsoleLogger());
         });
 
-        Logs.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
+        sw.StopAndLog("MyGameMain");
     }
 
     protected override void Update(TimeSpan dt)
     {
+        _updateStopwatch.Restart();
         Time.Update(dt);
 
         UpdateWindowTitle();
@@ -160,6 +193,8 @@ public class MyGameMain : Game
         Shared.AudioManager.Update((float)dt.TotalSeconds);
 
         InputHandler.EndFrame();
+        _updateStopwatch.Stop();
+        _updateDurationMs = _updateStopwatch.GetElapsedMilliseconds();
     }
 
     protected virtual void SetInputViewport()
@@ -170,7 +205,7 @@ public class MyGameMain : Game
 
     private void UpdateScreens()
     {
-        GameScreen.UpdateQueued();
+        GameScreen.ExecuteQueuedActions();
 
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
@@ -201,8 +236,12 @@ public class MyGameMain : Game
         if (MainWindow.IsMinimized)
             return;
 
+        _renderStopwatch.Restart();
         {
+            _renderGameStopwatch.Restart();
             RenderGame(alpha, CompositeRender);
+            _renderGameStopwatch.Stop();
+            _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
         }
 
         {
@@ -224,6 +263,8 @@ public class MyGameMain : Game
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(ref commandBuffer);
         }
+        _renderStopwatch.Stop();
+        _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
     }
 
     protected void RenderGame(double alpha, Texture renderDestination)
@@ -266,7 +307,12 @@ public class MyGameMain : Game
     private void DrawFPS(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
     {
         var position = new Vector2(renderDestination.Width, 0);
-        var str = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
+
+        _peakUpdateDurationMs = StopwatchExt.SmoothValue(_peakUpdateDurationMs, _updateDurationMs);
+        _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
+        _peakRenderGameDurationMs = StopwatchExt.SmoothValue(_peakRenderGameDurationMs, _renderGameDurationMs);
+        
+        var str = $"Update: {Time.UpdateFps:0.##} ({_peakUpdateDurationMs:0.00}), Draw: {Time.DrawFps:0.##} ({_peakRenderGameDurationMs:0.00}/{_peakRenderDurationMs:0.00})";
         var strSize = renderer.TextBatcher.GetFont(FontType.ConsolasMonoMedium).MeasureString(str);
         var bg = RectangleExt.FromFloats(position.X - strSize.X, 0, strSize.X, strSize.Y);
         renderer.DrawRect(bg, Color.Black * 0.66f);
