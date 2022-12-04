@@ -92,7 +92,7 @@ public class Mover
     private void SanityCheck(Vector2 position)
     {
         if (Parent.HasCollision(position, Parent.Size))
-            Logger.LogInfo("Moved into collision tile!");
+            Logs.LogInfo("Moved into collision tile!");
     }
 
     public void Unstuck()
@@ -100,12 +100,12 @@ public class Mover
         if (TryGetValidPosition(out var validPosition))
         {
             var deltaPos = validPosition - Parent.Position.Current;
-            Logger.LogInfo($"Moving entity from {Parent.Position.Current} to {validPosition} ({deltaPos.X}, {deltaPos.Y})");
+            Logs.LogInfo($"Moving entity from {Parent.Position.Current} to {validPosition} ({deltaPos.X}, {deltaPos.Y})");
             Parent.Position.SetPrevAndCurrent(validPosition);
             return;
         }
 
-        Logger.LogError("Couldn't find a suitable position");
+        Logs.LogError("Couldn't find a suitable position");
     }
 
     public void PerformMove(Velocity velocity, float deltaSeconds)

@@ -52,7 +52,7 @@ public struct InputState
     {
         if (NumTextInputChars > 0 || KeyboardState.Count > 0)
         {
-            Logger.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeyboardState.Select(x => x.ToString()))}");
+            Logs.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeyboardState.Select(x => x.ToString()))}");
         }
     }
 

@@ -26,7 +26,7 @@ public class MenuHandler
         if (Menus.Contains(screen))
         {
             Menus.Remove(screen);
-            Logger.LogError("Screen already added, removing and readding");
+            Logs.LogError("Screen already added, removing and readding");
         }
 
         Menus.Add(screen);

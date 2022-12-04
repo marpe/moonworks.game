@@ -1,17 +1,11 @@
 ﻿namespace MyGame.Utils;
 
-public struct UPoint
+public record struct UPoint(uint X, uint Y)
 {
     public static readonly UPoint One = new(1u, 1u);
 
-    public uint X;
-    public uint Y;
-
-    public UPoint(uint x, uint y)
-    {
-        X = x;
-        Y = y;
-    }
+    public uint X = X;
+    public uint Y = Y;
 
     public static UPoint operator +(UPoint a, UPoint b)
     {

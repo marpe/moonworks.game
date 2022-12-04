@@ -45,6 +45,8 @@ public class MyGameMain : Game
         CompositeRender.Height / RenderScale
     );
 
+    protected UPoint _swapSize;
+
     public static uint RenderScale = 1;
 
     [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
@@ -105,7 +107,7 @@ public class MyGameMain : Game
 
         var displayMode = GetWindowDisplayMode(MainWindow.Handle);
         SetWindowDisplayMode(MainWindow.Handle);
-        Logger.LogInfo($"WindowSize: {MainWindow.Size.X}x{MainWindow.Size.Y}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
+        Logs.LogInfo($"WindowSize: {MainWindow.Size.X}x{MainWindow.Size.Y}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
 
         Time = new Time();
 
@@ -141,7 +143,7 @@ public class MyGameMain : Game
             Logs.Loggers.Add(new TWConsoleLogger());
         });
 
-        Logger.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
+        Logs.LogInfo($"Game constructor loaded in {sw.ElapsedMilliseconds} ms");
     }
 
     protected override void Update(TimeSpan dt)
@@ -189,11 +191,11 @@ public class MyGameMain : Game
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {
-            MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}";
+            MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}, SwapSize: {_swapSize.ToString()}";
             _nextWindowTitleUpdate += 1f;
         }
     }
-
+    
     protected override void Draw(double alpha)
     {
         if (MainWindow.IsMinimized)
@@ -208,10 +210,12 @@ public class MyGameMain : Game
 
             if (swapTexture == null)
             {
-                Logger.LogError("Could not acquire swapchain texture");
+                Logs.LogError("Could not acquire swapchain texture");
                 return;
             }
 
+            _swapSize = swapTexture.Size();
+            
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
@@ -236,6 +240,7 @@ public class MyGameMain : Game
         {
             var camera = GameScreen.Camera;
             var dstSize = CompositeRender.Size() / (int)RenderScale;
+            // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
             var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
             var gameRenderSprite = new Sprite(GameRender, srcRect);
             var scale = Matrix3x2.CreateScale((int)RenderScale, (int)RenderScale).ToMatrix4x4();
@@ -277,7 +282,7 @@ public class MyGameMain : Game
 
     protected override void Destroy()
     {
-        Logger.LogInfo("Shutting down");
+        Logs.LogInfo("Shutting down");
 
         GameScreen.Unload();
 

@@ -64,7 +64,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
-        Logger.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
+        Logs.LogInfo($"ImGuiInit: {timer.ElapsedMilliseconds} ms");
     }
 
     private void OnFileChanged(FileEvent e)
@@ -301,9 +301,11 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (swapTexture == null)
         {
-            Logger.LogError("Could not acquire swapchain texture");
+            Logs.LogError("Could not acquire swapchain texture");
             return;
         }
+
+        _swapSize = swapTexture.Size();
 
         if (_screenshot)
         {
@@ -345,7 +347,7 @@ public unsafe class MyEditorMain : MyGameMain
                 }
 
                 Texture.SavePNG(filename, (int)CompositeRender.Width, (int)CompositeRender.Height, CompositeRender.Format, _screenshotPixels);
-                Logger.LogInfo($"Screenshot saved to {filename}");
+                Logs.LogInfo($"Screenshot saved to {filename}");
             });
 
             _screenshot = false;
@@ -358,7 +360,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         var fileName = ImGuiExt.StringFromPtr(ImGui.GetIO()->IniFilename);
         ImGui.SaveIniSettingsToDisk(fileName);
-        Logger.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
+        Logs.LogInfo($"Saved ImGui Settings to \"{fileName}\"");
         ImGuiRenderer.Dispose();
         _fileWatcher.Dispose();
         _screenshotBuffer.Dispose();

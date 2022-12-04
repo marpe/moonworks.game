@@ -2,9 +2,9 @@
 
 public static class TextureExt
 {
-    public static Point Size(this Texture t)
+    public static UPoint Size(this Texture t)
     {
-        return new Point((int)t.Width, (int)t.Height);
+        return new UPoint(t.Width, t.Height);
     }
     
     public static Rectangle Bounds(this Texture t)

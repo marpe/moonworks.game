@@ -208,7 +208,7 @@ public class World
         var world = Shared.Game.GameScreen.World;
         if (world == null)
         {
-            Logger.LogInfo("Requires a world to be loaded");
+            Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
@@ -216,7 +216,7 @@ public class World
         var nextIndex = (currIndex + 1) % world.Levels.Length;
         var nextLevel = world.Levels[nextIndex];
         world.StartLevel(nextLevel.Identifier);
-        Logger.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
+        Logs.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
     }
 
     [ConsoleHandler("prev_level")]
@@ -225,7 +225,7 @@ public class World
         var world = Shared.Game.GameScreen.World;
         if (world == null)
         {
-            Logger.LogInfo("Requires a world to be loaded");
+            Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
@@ -233,7 +233,7 @@ public class World
         var prevIndex = (world.Levels.Length + (currIndex - 1)) % world.Levels.Length;
         var prevLevel = world.Levels[prevIndex];
         world.StartLevel(prevLevel.Identifier);
-        Logger.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
+        Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
     private static List<Entity> LoadEntitiesInLevel(Level level)

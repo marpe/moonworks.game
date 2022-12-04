@@ -84,12 +84,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
         {
             _editor.ImGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
             _gameRenderTextureId = null;
-            Logger.LogInfo("Unbinding compositeRender texture");
+            Logs.LogInfo("Unbinding compositeRender texture");
         }
 
         if (_gameRenderTextureId == null)
         {
-            Logger.LogInfo("Binding _compositeRender texture");
+            Logs.LogInfo("Binding _compositeRender texture");
             _gameRenderTextureId = _editor.ImGuiRenderer.BindTexture(_editor.CompositeRender);
         }
 

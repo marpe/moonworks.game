@@ -70,7 +70,7 @@ public class SpriteBatch
         if (_numSprites == _spriteInfo.Length)
         {
             var maxNumSprites = (int)(_numSprites + 2048);
-            Logger.LogInfo($"Max number of sprites reached, resizing buffers ({_numSprites} -> {maxNumSprites})");
+            Logs.LogInfo($"Max number of sprites reached, resizing buffers ({_numSprites} -> {maxNumSprites})");
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
 
@@ -109,7 +109,7 @@ public class SpriteBatch
     {
         if (_numSprites == 0)
         {
-            Logger.LogWarn("Buffers are empty");
+            Logs.LogWarn("Buffers are empty");
             return;
         }
 
@@ -139,7 +139,7 @@ public class SpriteBatch
 
         if (_numSprites == 0)
         {
-            Logger.LogWarn("Flushing empty SpriteBatch");
+            Logs.LogWarn("Flushing empty SpriteBatch");
             return;
         }
 

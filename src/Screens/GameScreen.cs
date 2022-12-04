@@ -51,12 +51,12 @@ public class GameScreen
     {
         QueueAction(() =>
         {
-            Logger.LogInfo($"Setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
+            Logs.LogInfo($"Setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Menus.RemoveAll();
             Shared.Game.ConsoleScreen.IsHidden = true;
             Unload();
             World = world;
-            Logger.LogInfo("World set!");
+            Logs.LogInfo("World set!");
         });
     }
 
@@ -65,14 +65,14 @@ public class GameScreen
     {
         IsPaused = true;
         IsStepping = true;
-        Logger.LogInfo("Stepping...");
+        Logs.LogInfo("Stepping...");
     }
 
     [ConsoleHandler("pause")]
     public static void Pause()
     {
         IsPaused = !IsPaused;
-        Logger.LogInfo(IsPaused ? "Game paused" : "Game resumed");
+        Logs.LogInfo(IsPaused ? "Game paused" : "Game resumed");
     }
 
     [ConsoleHandler("speed_up")]
@@ -81,27 +81,27 @@ public class GameScreen
         GameUpdateRate -= 5;
         if (GameUpdateRate < 1)
             GameUpdateRate = 1;
-        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
+        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 
     [ConsoleHandler("speed_down")]
     public static void DecreaseUpdateRate()
     {
         GameUpdateRate += 5;
-        Logger.LogInfo($"UpdateRate: {GameUpdateRate}");
+        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 
     public void LoadWorld(Func<World> worldLoader)
     {
         if (Shared.LoadingScreen.IsLoading)
         {
-            Logger.LogError("Loading screen is active, ignoring load call");
+            Logs.LogError("Loading screen is active, ignoring load call");
             return;
         }
 
         QueueAction(() =>
         {
-            Logger.LogInfo($"Removing screens from thread: {Thread.CurrentThread.ManagedThreadId}");
+            Logs.LogInfo($"Removing screens from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             Unload();
@@ -123,7 +123,7 @@ public class GameScreen
     {
         if (World == null)
             return;
-        Logger.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
+        Logs.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
         World.Dispose();
         World = null;
     }

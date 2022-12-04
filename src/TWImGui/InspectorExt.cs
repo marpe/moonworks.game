@@ -78,7 +78,7 @@ public static class InspectorExt
         {
             var message = $"Attempted to get inspectors for object \"{target}\" which is of value type \"{type.Name}\", " +
                           "but objects of value types are not supported";
-            Logger.LogError(message);
+            Logs.LogError(message);
             return new PlaceholderInspector(message);
         }
 

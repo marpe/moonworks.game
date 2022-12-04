@@ -184,7 +184,7 @@ public class InputHandler
             }
             else
             {
-                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                Logs.LogError($"Command not found: {keyStr} -> {cmdKey}");
             }
         }
         else
@@ -226,7 +226,7 @@ public class InputHandler
             }
             else
             {
-                Logger.LogError($"Command not found: {keyStr} -> {cmdKey}");
+                Logs.LogError($"Command not found: {keyStr} -> {cmdKey}");
             }
         }
     }

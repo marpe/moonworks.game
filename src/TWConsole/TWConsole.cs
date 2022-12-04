@@ -26,7 +26,7 @@ public class TWConsole
         ProcessCVarAttributes();
         DefaultConfig = GetCfgAsText();
         Execute("exec " + kCvarsFilename, false);
-        Logger.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
+        Logs.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
     }
 
     private void ProcessCVarAttributes()
@@ -507,7 +507,7 @@ public class TWConsole
     public void SaveConfig()
     {
         Execute("cfg.save " + kCvarsFilename, false);
-        Logger.LogInfo($"cfg saved to {kCvarsFilename}");
+        Logs.LogInfo($"cfg saved to {kCvarsFilename}");
     }
 
     [ConsoleHandler("con.fill", "Fill console with data (for debugging console rendering)")]

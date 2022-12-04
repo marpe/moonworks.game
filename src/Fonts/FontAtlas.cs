@@ -38,7 +38,7 @@ public class FontAtlas
             if (glyphId == 0)
                 continue;
             glyphList.Add(glyphId);
-            Logger.LogInfo($"GlyphId: {glyphId}");
+            Logs.LogInfo($"GlyphId: {glyphId}");
         }
 
         foreach (var glyphId in glyphList)
@@ -50,6 +50,6 @@ public class FontAtlas
             var bitmap = font.RenderGlyphAndGetInfo(glyphId, 12u, out var info);
         }
         
-        Logger.LogInfo($"FontAtlas built in {sw.ElapsedMilliseconds} ms");
+        Logs.LogInfo($"FontAtlas built in {sw.ElapsedMilliseconds} ms");
     }
 }
