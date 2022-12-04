@@ -22,12 +22,13 @@ public class Renderer
     public readonly SpriteBatch SpriteBatch;
     public readonly TextBatcher TextBatcher;
 
-    private ColorAttachmentInfo ColorAttachmentInfo;
+    private ColorAttachmentInfo _colorAttachmentInfo;
 
     public Color DefaultClearColor = Color.CornflowerBlue;
 
-    public DepthStencilAttachmentInfo DepthStencilAttachmentInfo;
-    public Texture DepthTexture;
+    private DepthStencilAttachmentInfo _depthStencilAttachmentInfo;
+
+    public Dictionary<UPoint, Texture> _depthTextureCache = new();
 
     public Dictionary<PipelineType, GfxPipeline> Pipelines;
 
@@ -43,19 +44,18 @@ public class Renderer
         _blankSprite = new Sprite(_blankTexture);
 
         BMFonts = CreateBMFonts(_device);
-
-        DepthTexture = Texture.CreateTexture2D(_device, 1280, 720, TextureFormat.D16, TextureUsageFlags.DepthStencilTarget);
-        DepthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
+        
+        _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
             DepthStencilClearValue = new DepthStencilValue(0, 0),
-            Texture = DepthTexture,
+            Texture = null,
             LoadOp = LoadOp.Clear,
             StoreOp = StoreOp.Store,
             StencilLoadOp = LoadOp.Clear,
             StencilStoreOp = StoreOp.Store,
         };
 
-        ColorAttachmentInfo = new ColorAttachmentInfo()
+        _colorAttachmentInfo = new ColorAttachmentInfo()
         {
             ClearColor = Color.CornflowerBlue,
             LoadOp = LoadOp.Clear,
@@ -192,13 +192,7 @@ public class Renderer
     public (CommandBuffer, Texture?) AcquireSwapchainTexture()
     {
         var commandBuffer = _device.AcquireCommandBuffer();
-        var windowSize = _game.MainWindow.Size;
         var swapTexture = commandBuffer.AcquireSwapchainTexture(_game.MainWindow);
-        if (swapTexture != null && TextureUtils.EnsureTextureSize(ref swapTexture, _device, windowSize))
-        {
-            Logger.LogInfo("SwapTexture resized");
-        }
-
         return (commandBuffer, swapTexture);
     }
 
@@ -220,20 +214,17 @@ public class Renderer
         SpriteBatch.UpdateBuffers(ref commandBuffer);
     }
 
-    public void BeginRenderPass(ref CommandBuffer commandBuffer, Texture texture, Color? clearColor, PipelineType pipelineType)
+    public void BeginRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, PipelineType pipelineType)
     {
-        ColorAttachmentInfo.Texture = texture;
-        ColorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
-        ColorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
-        // TODO (marpe): Sawptexture specify that it should take entire screen?
-        TextureUtils.EnsureTextureSize(ref DepthTexture, _device, ColorAttachmentInfo.Texture.Size());
-        DepthStencilAttachmentInfo.Texture = DepthTexture;
-
+        _colorAttachmentInfo.Texture = renderTarget;
+        _colorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
+        _colorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
+        
         var pipeline = Pipelines[pipelineType];
         if (pipeline.CreateInfo.AttachmentInfo.HasDepthStencilAttachment)
-            commandBuffer.BeginRenderPass(DepthStencilAttachmentInfo, ColorAttachmentInfo);
+            commandBuffer.BeginRenderPass(_depthStencilAttachmentInfo, _colorAttachmentInfo);
         else
-            commandBuffer.BeginRenderPass(ColorAttachmentInfo);
+            commandBuffer.BeginRenderPass(_colorAttachmentInfo);
         commandBuffer.BindGraphicsPipeline(pipeline.Pipeline);
     }
 
@@ -260,7 +251,7 @@ public class Renderer
 
     public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection)
     {
-        SpriteBatch.DrawIndexed(ref commandBuffer, viewProjection ?? GetViewProjection(ColorAttachmentInfo.Texture.Width, ColorAttachmentInfo.Texture.Height));
+        SpriteBatch.DrawIndexed(ref commandBuffer, viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height));
     }
 
     public void Submit(ref CommandBuffer commandBuffer)
@@ -286,7 +277,11 @@ public class Renderer
         SpriteBatch.Unload();
         PointClamp.Dispose();
 
-        DepthTexture.Dispose();
+        foreach (var (_, texture) in _depthTextureCache)
+        {
+            texture.Dispose();
+        }
+        _depthTextureCache.Clear();
     }
 
     public static (Matrix4x4, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)

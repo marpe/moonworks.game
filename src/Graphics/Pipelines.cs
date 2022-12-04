@@ -151,22 +151,12 @@ public class Pipelines
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<DiamondUniforms>(fragmentShader, "main", 1);
 
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false,
-        };
-
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
                 new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
             ),
-            DepthStencilState = myDepthStencilState,
+            DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
             FragmentShaderInfo = fragmentShaderInfo,
             MultisampleState = MultisampleState.None,
@@ -187,25 +177,15 @@ public class Pipelines
         var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_vert_spv);
         var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_frag_spv);
 
-        var myDepthStencilState = new DepthStencilState
-        {
-            DepthTestEnable = true,
-            DepthWriteEnable = true,
-            CompareOp = CompareOp.GreaterOrEqual,
-            DepthBoundsTestEnable = false,
-            StencilTestEnable = false,
-        };
-
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1);
 
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                TextureFormat.D16,
                 new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
-            DepthStencilState = myDepthStencilState,
+            DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
             FragmentShaderInfo = fragmentShaderInfo,
             MultisampleState = MultisampleState.None,
