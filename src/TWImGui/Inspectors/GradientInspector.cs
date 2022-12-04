@@ -33,7 +33,7 @@ public unsafe class GradientInspector : Inspector
             p0.X = p1.X;
         }
 
-        ImGui.InvisibleButton("##gradient", gradientSize);
+        ImGui.InvisibleButton("##gradient", gradientSize.EnsureNotZero());
 
         for (var i = 0; i < grad.Length; i++)
         {

@@ -53,7 +53,9 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
             var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
                             ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
             ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
-            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, ImGui.GetContentRegionAvail());
+            var contentAvail = ImGui.GetContentRegionAvail();
+            var size = new Num.Vector2(MathF.Max(4.0f, contentAvail.X), MathF.Max(4.0f, contentAvail.Y));
+            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, size);
             //
             var rightDockID = 0u;
             var leftDockID = 0u;

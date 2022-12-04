@@ -52,7 +52,7 @@ public static class MouseDebug
 
 public static class CameraDebug
 {
-    [CVar("camera.debug", "Toggle camera debugging")]
+    [CVar("cam.debug", "Toggle camera debugging")]
     public static bool DebugCamera;
     
     public static void DrawCameraBounds(Renderer renderer, Camera camera)

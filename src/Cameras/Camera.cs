@@ -6,6 +6,8 @@ public static class CameraBinds
     public static ButtonBind ZoomOut = new();
     public static ButtonBind Up = new();
     public static ButtonBind Down = new();
+    public static ButtonBind Forward = new();
+    public static ButtonBind Back = new();
     public static ButtonBind Right = new();
     public static ButtonBind Left = new();
     public static ButtonBind Pan = new();
@@ -16,12 +18,18 @@ public class Camera
 {
     private Vector2 _cameraRotation3D = new(0, MathHelper.Pi);
 
-    [CVar("camera.use3d", "Use 3D Camera")]
+    [CVar("cam.use3d", "Use 3D Camera")]
     public static bool Use3D;
 
     [CVar("noclip", "Toggle camera controls")]
     public static bool NoClip;
 
+    // this is just here as a convenience so it can be toggled from an imgui inspector
+    public bool UseRelativeMouseMode
+    {
+        get => Shared.Game.Inputs.Mouse.RelativeMode;
+        set => Shared.Game.Inputs.Mouse.RelativeMode = value;
+    }
 
     private readonly float _lerpSpeed = 1f;
     private float _lerpT = 0;
@@ -108,28 +116,42 @@ public class Camera
     }
 
     public int HorizontalFovDegrees = 60;
-    public Vector2 InitialFriction;
-    public Vector2 ShakeFequencies = new(50, 40);
+    private Vector2 _initialFriction;
+    public Vector2 ShakeFrequencies = new(50, 40);
     private float _freezeCameraTimer;
     private float _timer = 0;
 
-    public float BumpFrict = 0.85f;
+    private float _bumpFriction = 0.85f;
     private float _shakeDuration = 0;
     private float _shakePower = 4f;
     private float _shakeTime = 0;
-    public Vector2 TrackingSpeed = new(5f, 5f);
+    private Vector2 _trackingSpeed = new(5f, 5f);
     public bool ClampToLevelBounds;
 
     public Rectangle LevelBounds = Rectangle.Empty;
 
+    [CVar("cam.3d_sens", "Mouse sensitivity when camera is in 3D mode")]
+    public static float MouseSensitivity3D = 1.0f;
+
+    [CVar("cam.3d_speed", "Camera movement speed when camera is in 3D mode")]
+    public static float Camera3DSpeed = 750f;
+
+    private float _cameraSpeed = 500f;
+    private float _cameraMouseSensitivity = 50f;
+
     public Camera(uint width, uint height)
     {
-        InitialFriction = Velocity.Friction;
+        _initialFriction = Velocity.Friction;
         Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
 
         Size = new UPoint(width, height);
-        Zoom = (float)Size.X / 480;
-        FloorViewPosition = MyGameMain.RenderScale != 1;
+        Zoom = GetZoomFromRenderScale();
+        FloorViewPosition = MyGameMain.RenderScale > 1; // only floor when rendering at a larger scale than 1
+    }
+
+    private static float GetZoomFromRenderScale()
+    {
+        return 5 - MyGameMain.RenderScale; // should be 1 when rendering at 480x270 and 4 when rendering at 1920x1080
     }
 
     public void Update(float deltaSeconds, InputHandler input)
@@ -153,7 +175,7 @@ public class Camera
 
         if (TrackingEntity != null)
         {
-            var trackSpeed = TrackingSpeed * Zoom;
+            var trackSpeed = _trackingSpeed * Zoom;
             TargetPosition = TrackingEntity.Center + TargetOffset;
 
             var offset = TargetPosition - Position;
@@ -172,7 +194,7 @@ public class Camera
             }
         }
 
-        Velocity.Friction = InitialFriction;
+        Velocity.Friction = _initialFriction;
 
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {
@@ -248,21 +270,21 @@ public class Camera
             var percentDone = MathF.Clamp01(_shakeTime / _shakeDuration);
             _shakeTime -= deltaSeconds;
             ShakeOffset = new Vector2(
-                MathF.Cos(0.0f + _timer * ShakeFequencies.X),
-                MathF.Sin(0.3f + _timer * ShakeFequencies.X)
+                MathF.Cos(0.0f + _timer * ShakeFrequencies.X),
+                MathF.Sin(0.3f + _timer * ShakeFrequencies.X)
             ) * percentDone * _shakePower;
         }
 
-        BumpOffset *= Vector2.One * MathF.Pow(BumpFrict, deltaSeconds);
+        BumpOffset *= Vector2.One * MathF.Pow(_bumpFriction, deltaSeconds);
     }
 
     private void HandleInput(float deltaSeconds, InputHandler input)
     {
         if (Use3D)
         {
-            if (CameraBinds.Pan.Active)
+            if (CameraBinds.Pan.Active || Shared.Game.Inputs.Mouse.RelativeMode)
             {
-                var rotationSpeed = 0.1f;
+                var rotationSpeed = 0.1f * MouseSensitivity3D;
                 _cameraRotation3D += new Vector2(input.MouseDelta.X, -input.MouseDelta.Y) * rotationSpeed * deltaSeconds;
                 var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
                 Rotation3D = rotation;
@@ -276,16 +298,25 @@ public class Camera
                 Position3D = new Vector3(0, 0, -1000);
             }
 
-            var camera3DSpeed = 750f;
-            var moveDelta = camera3DSpeed * deltaSeconds;
+            var moveDelta = Camera3DSpeed * deltaSeconds;
             if (CameraBinds.Up.Active)
             {
-                Position3D += Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
+                Position3D += Vector3.Transform(Vector3.Up, Rotation3D) * moveDelta;
             }
 
             if (CameraBinds.Down.Active)
             {
-                Position3D -= Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
+                Position3D += Vector3.Transform(Vector3.Down, Rotation3D) * moveDelta;
+            }
+
+            if (CameraBinds.Forward.Active)
+            {
+                Position3D += Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
+            }
+
+            if (CameraBinds.Back.Active)
+            {
+                Position3D += Vector3.Transform(Vector3.Backward, Rotation3D) * moveDelta;
             }
 
             if (CameraBinds.Left.Active)
@@ -300,18 +331,16 @@ public class Camera
         }
         else
         {
-            var cameraSpeed = 500f;
-
             if (CameraBinds.Pan.Active)
             {
-                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * 50 * deltaSeconds;
+                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
             }
 
-            var moveDelta = cameraSpeed * deltaSeconds;
+            var moveDelta = _cameraSpeed * deltaSeconds;
 
             if (CameraBinds.Reset.Active)
             {
-                Zoom = (float)Size.X / 480; // TODO (marpe): remove 480
+                Zoom = GetZoomFromRenderScale();
                 TargetPosition = TrackingEntity != null ? TrackingEntity.Center + TargetOffset : TargetPosition;
                 Position = TargetPosition;
             }
@@ -326,12 +355,12 @@ public class Camera
                 Zoom -= 0.025f * Zoom;
             }
 
-            if (CameraBinds.Up.Active)
+            if (CameraBinds.Forward.Active)
             {
                 Position.Y -= moveDelta;
             }
 
-            if (CameraBinds.Down.Active)
+            if (CameraBinds.Back.Active)
             {
                 Position.Y += moveDelta;
             }

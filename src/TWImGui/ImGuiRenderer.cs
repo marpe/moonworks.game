@@ -605,7 +605,7 @@ public unsafe class ImGuiRenderer : IDisposable
                 break;
             case SDL.SDL_WindowEventID.SDL_WINDOWEVENT_CLOSE:
             {
-                Logs.LogInfo($"Window \"{window.Title}\" received close event");
+                Logs.LogVerbose($"Window \"{window.Title}\" received close event");
 
                 var viewport = ImGui.FindViewportByPlatformHandle((void*)window.Handle);
                 viewport->PlatformRequestClose = true;
@@ -613,7 +613,7 @@ public unsafe class ImGuiRenderer : IDisposable
                 var backend = GetPlatformBackend();
                 if (window == backend._game.MainWindow)
                 {
-                    Logs.LogInfo("MainWindow close...");
+                    Logs.LogVerbose("MainWindow closing...");
                     backend._game.Quit();
                 }
             }
@@ -812,7 +812,7 @@ public unsafe class ImGuiRenderer : IDisposable
         if (gcHandle.Target != null)
         {
             var window = (Window)gcHandle.Target;
-            Logs.LogInfo($"ImGui destroying window: {window.Title}");
+            Logs.LogVerbose($"ImGui destroying window: {window.Title}");
             window.WindowEvent -= HandleWindowEvent;
             window.Dispose();
         }
@@ -892,7 +892,7 @@ public unsafe class ImGuiRenderer : IDisposable
         var window = viewport->Window();
         var titleStr = ImGuiExt.StringFromPtr(title);
         SDL.SDL_SetWindowTitle(window.Handle, titleStr);
-        Logs.LogInfo($"Created window: {titleStr}");
+        Logs.LogVerbose($"Created window: {titleStr}");
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]

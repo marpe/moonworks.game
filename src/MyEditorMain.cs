@@ -199,7 +199,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
             return;
 
-        if (_gameWindow.IsHoveringGame)
+        if (_gameWindow.IsHoveringGameWindow)
         {
             var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
             if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameViewTitle)
@@ -241,7 +241,7 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
-            if (io->NavActive || (_gameWindow.IsOpen && !_gameWindow.IsHoveringGame))
+            if (io->NavActive || (_gameWindow.IsOpen && !_gameWindow.IsHoveringGameWindow))
                 InputHandler.MouseEnabled = false;
 
             _imGuiUpdateCount++;

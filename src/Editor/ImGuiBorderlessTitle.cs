@@ -11,10 +11,12 @@ public static class ImGuiBorderlessTitle
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
         ImGuiInternal.BeginViewportSideBar("SideBar", mainViewport, ImGuiDir.Up, 34, ImGuiWindowFlags.NoDecoration);
         ImGui.PopStyleVar();
-        var avail = ImGui.GetContentRegionAvail();
-        
-        ImGui.InvisibleButton("Title", avail, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap);
-        
+        var contentAvail = ImGui.GetContentRegionAvail();
+
+        // invisible button cannot have size 0
+        var titleSize = contentAvail.EnsureNotZero();
+        ImGui.InvisibleButton("Title", titleSize, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap);
+    
         // move window while dragging the title bar
         if (ImGui.IsItemActive() && ImGui.IsMouseDragging(ImGuiMouseButton.Left))
         {
@@ -31,9 +33,9 @@ public static class ImGuiBorderlessTitle
                 SDL.SDL_MaximizeWindow(window.Handle);
         }
 
-        ImGui.SetItemAllowOverlap();
+        ImGui.SetItemAllowOverlap();   
 
-        ImGui.SetCursorPos(new Num.Vector2(avail.X - 29 * 3 - 6, 6));
+        ImGui.SetCursorPos(new Num.Vector2(contentAvail.X - 29 * 3 - 6, 6));
         if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent, "Minimize")) 
         {
             window.IsMinimized = true;

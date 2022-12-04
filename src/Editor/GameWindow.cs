@@ -16,12 +16,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private bool _showDebug;
 
-    public bool IsHoveringGame;
+    public bool IsHoveringGameWindow;
 
     [CVar("imgui.mouse_pan_and_zoom", "Toggle mouse pan & zoom control")]
     public static bool IsMousePanAndZoomEnabled = true;
 
-    public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Num.Vector2.Zero; 
+    public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Num.Vector2.Zero;
 
     public GameWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -44,7 +44,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         workspaceWindowClass.DockingAllowUnclassed = false;
 
         ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
-        
+
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
         ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
 
@@ -53,7 +53,9 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
                             ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
             ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
-            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, ImGui.GetContentRegionAvail());
+            var contentAvail = ImGui.GetContentRegionAvail();
+            var size = new Num.Vector2(MathF.Max(4.0f, contentAvail.X), MathF.Max(4.0f, contentAvail.Y));
+            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, size);
 
             uint upNode, downNode;
             ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Up, 0.05f, &upNode, &downNode);
@@ -77,7 +79,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         /*ImGuiWindowClass windowClass;
         windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
         ImGui.SetNextWindowClass(&windowClass);*/
-        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse |ImGuiWindowFlags.NoScrollbar;
+        var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
         ImGui.Begin(GameViewTitle, default, flags);
         ImGui.PopStyleVar();
         if (_gameRenderTextureId != null && _gameRenderTextureId != _editor.CompositeRender.Handle)
@@ -112,14 +114,16 @@ public unsafe class GameWindow : ImGuiEditorWindow
             gameRenderMin,
             gameRenderMax,
             Num.Vector2.Zero,
-            Num.Vector2.One
+            Num.Vector2.One,
+            Color.White.PackedValue
         );
 
         ImGui.SetCursorScreenPos(gameRenderMin);
 
+        var gameRenderSize = viewportSize * _gameRenderScale;
         ImGui.InvisibleButton(
             "GameRender",
-            viewportSize * _gameRenderScale,
+            gameRenderSize.EnsureNotZero(),
             ImGuiButtonFlags.MouseButtonLeft |
             ImGuiButtonFlags.MouseButtonMiddle |
             ImGuiButtonFlags.MouseButtonRight
@@ -131,6 +135,18 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         var isActive = ImGui.IsItemActive();
         var isHovered = ImGui.IsItemHovered();
+        
+        // draw border
+        /*var isFocused = ImGui.IsItemFocused();
+        var borderColor = (isActive, isFocused, isHovered) switch
+        {
+            (true, _, _) => Color.Green,
+            (_, true, _) => Color.Blue,
+            (_, _, true) => Color.Yellow,
+            _ => Color.Gray
+        };
+        dl->AddRect(gameRenderMin, gameRenderMax, borderColor.PackedValue, 0, ImDrawFlags.None, 1f);*/
+
         HandleInput(isActive, isHovered);
 
         SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
@@ -139,9 +155,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
         var contentMax = ImGui.GetWindowContentRegionMax();
         var windowPos = ImGui.GetWindowPos();
         var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
-        IsHoveringGame = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
+        IsHoveringGameWindow = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
 
-        if (ImGui.BeginPopupContextWindow("GameContextMenu"))
+        // exit relative mode on escape 
+        if (Shared.Game.Inputs.Mouse.RelativeMode && ImGui.IsKeyPressed(ImGuiKey.Escape))
+        {
+            Shared.Game.Inputs.Mouse.RelativeMode = false;
+        }
+
+        if (ImGui.BeginPopupContextWindow("GameContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
         {
             ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
             ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref MouseDebug.DebugMouse));
@@ -153,7 +175,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         }
 
         DrawDebugOverlay();
-        
+
         var dockNode = ImGuiInternal.GetWindowDockNode();
         if (dockNode != null)
         {
@@ -161,9 +183,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
         }
+
         ImGui.End();
     }
-    
+
     private void DrawButtons()
     {
         ImGui.Begin("GameToolbar");
@@ -195,6 +218,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
         }
+
         ImGui.End();
     }
 
@@ -249,7 +273,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
     {
         if (!_showDebug)
             return;
-        
+
         var windowFlags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoDocking | ImGuiWindowFlags.AlwaysAutoResize |
                           /*ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus |*/ ImGuiWindowFlags.NoSavedSettings |
                           ImGuiWindowFlags.NoNav;

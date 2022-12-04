@@ -4,9 +4,6 @@ public record struct UPoint(uint X, uint Y)
 {
     public static readonly UPoint One = new(1u, 1u);
 
-    public uint X = X;
-    public uint Y = Y;
-
     public static UPoint operator +(UPoint a, UPoint b)
     {
         return new UPoint(a.X + b.X, a.Y + b.Y);

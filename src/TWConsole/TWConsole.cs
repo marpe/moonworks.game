@@ -2,7 +2,7 @@ namespace MyGame.TWConsole;
 
 public class TWConsole
 {
-    private const string kCvarsFilename = "cvars.cfg";
+    private const string DEFAULT_CONFIG_FILENAME = "config.cfg";
     private const int MAX_COMMAND_HISTORY_COUNT = 48;
     public const int BUFFER_WIDTH = 186;
     public const int BUFFER_HEIGHT = 180;
@@ -25,7 +25,7 @@ public class TWConsole
         ProcessConsoleHandlerAttributes();
         ProcessCVarAttributes();
         DefaultConfig = GetCfgAsText();
-        Execute("exec " + kCvarsFilename, false);
+        Execute("exec " + DEFAULT_CONFIG_FILENAME, false);
         Logs.LogInfo($"Console initialized in {sw.ElapsedMilliseconds} ms");
     }
 
@@ -459,11 +459,13 @@ public class TWConsole
     }
 
     [ConsoleHandler("cfg.save", "Save config file")]
-    private void CfgSave(string filename = "cvars.cfg")
+    private void CfgSave(string filename = DEFAULT_CONFIG_FILENAME)
     {
         var cfgAsText = GetCfgAsText();
+        if (!filename.EndsWith(".cfg"))
+            filename += ".cfg";
         File.WriteAllText(filename, cfgAsText);
-        Print($"Saved config to {filename}");
+        Print($"Saved config to \"{filename}\"");
     }
 
     [ConsoleHandler("exec", "Loads a config file from disk")]
@@ -506,8 +508,8 @@ public class TWConsole
 
     public void SaveConfig()
     {
-        Execute("cfg.save " + kCvarsFilename, false);
-        Logs.LogInfo($"cfg saved to {kCvarsFilename}");
+        Execute("cfg.save " + DEFAULT_CONFIG_FILENAME, false);
+        Logs.LogInfo($"cfg saved to {DEFAULT_CONFIG_FILENAME}");
     }
 
     [ConsoleHandler("con.fill", "Fill console with data (for debugging console rendering)")]

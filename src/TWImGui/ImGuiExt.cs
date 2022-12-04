@@ -109,10 +109,9 @@ public static unsafe class ImGuiExt
             _openFoldouts.Add(id, false);
         }
 
-        var dl = ImGui.GetWindowDrawList();
-
         var avail = ImGui.GetContentRegionAvail();
-        var size = new Num.Vector2(avail.X, 20);
+        var size = new Num.Vector2(avail.X, 20).EnsureNotZero();
+
         var cursorStart = ImGui.GetCursorScreenPos();
         if (ImGui.InvisibleButton(label, size))
         {
@@ -135,6 +134,7 @@ public static unsafe class ImGuiExt
 
         var cursorEnd = cursorStart + size;
 
+        var dl = ImGui.GetWindowDrawList();
         dl->AddRectFilled(cursorStart, cursorEnd, backgroundColor.PackedValue);
 
         var padding = new Num.Vector2(0, (size.Y - ImGui.GetTextLineHeight()) * 0.5f);
@@ -241,7 +241,7 @@ public static unsafe class ImGuiExt
         var textWidth = Math.Max(ImGui.CalcTextSize(label).X, 16);
         if (TextButton(label, tooltip, textColor, new Num.Vector2(textWidth, ImGui.GetTextLineHeight())))
         {
-            ImGui.SetKeyboardFocusHere(0);
+            ImGui.SetKeyboardFocusHere();
         }
 
         ImGui.SameLine();
@@ -604,6 +604,15 @@ public static unsafe class ImGuiExt
         return ((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(fontType);
     }
 
+    /// <summary>
+    /// Returns a vector where each component is >= minValue
+    /// This is used to prevent calls to e.g InvisibleButton and DockBuilderSetNodeSize from blowing up 
+    /// </summary>
+    public static Num.Vector2 EnsureNotZero(this Num.Vector2 value, float minValue = 4.0f)
+    {
+        return new Num.Vector2(Math.Max(value.X, minValue), Math.Max(value.Y, minValue));
+    }
+
     public static string LabelPrefix(string label, bool preserveLabel = false)
     {
         if (label.StartsWith("##"))
@@ -612,34 +621,37 @@ public static unsafe class ImGuiExt
             return label;
         }
 
+        // label
         var itemWidth = ImGui.CalcItemWidth();
         var x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
         ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
+        
         var textSize = ImGui.CalcTextSize(label);
         var min = ImGui.GetCursorScreenPos();
         var labelWidth = itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X;
         var max = min + new Num.Vector2(Math.Min(textSize.X, labelWidth), textSize.Y);
         ImGuiInternal.RenderTextClipped(min, max, label, &textSize, Num.Vector2.Zero);
+        
         ImGui.PopFont();
         ImGui.PopStyleColor();
-        var buttonSize = max - min;
-        if (buttonSize.X > 0 && buttonSize.Y > 0)
-        {
-            ImGui.InvisibleButton(label, buttonSize, ImGuiButtonFlags.None);
-
-            if (labelWidth < textSize.X && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
-            {
-                ImGui.SetTooltip(label);
-            }
-
-            if (ImGui.IsItemClicked())
-            {
-                ImGui.SetKeyboardFocusHere();
-            }
         
-            ImGui.SameLine();    
+        // button for label
+        var buttonSize = max - min;
+        ImGui.InvisibleButton(label, buttonSize.EnsureNotZero(), ImGuiButtonFlags.None);
+
+        if (labelWidth < textSize.X && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+        {
+            ImGui.SetTooltip(label);
         }
+
+        if (ImGui.IsItemClicked())
+        {
+            ImGui.SetKeyboardFocusHere();
+        }
+
+        ImGui.SameLine();
+
         ImGui.SetCursorPosX(x + itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X);
         ImGui.SetNextItemWidth(-1);
 
@@ -705,13 +717,13 @@ public static unsafe class ImGuiExt
                 if (labelRightX >= cursorX)
                 {
                     ImGui.SetCursorPosX(labelRightX);
-                    ImGui.Text(labelRight);   
+                    ImGui.Text(labelRight);
                 }
             }
         }
         ImGui.EndGroup();
         PopStyles();
-        
+
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
         {
             var popupBg = ColorExt.HsvToRgb(h, s * 1f, v * 0.3f) * 0.8f;

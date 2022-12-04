@@ -56,7 +56,7 @@ public class Bullet : Entity
             {
                 IsDestroyed = true;
                 enemy.IsDead = true;
-                World.FreezeFrame(0.5f);
+                World.FreezeFrame(0.1f);
                 return;
             }
         }

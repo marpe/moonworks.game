@@ -163,6 +163,11 @@ public static class Binds
             ("left", "+left"),
             ("right", "+right"),
             ("up", "+jump"),
+            (",", "prev_level"),
+            (".", "next_level"),
+            ("3", "pause"),
+            ("4", "step"),
+            ("mb_middle", "+cam_pan"),
         };
 
         var keyBinds = new[]
@@ -176,8 +181,10 @@ public static class Binds
 
             ("cam_zoom_in", "Increase camera zoom", KeyCode.D0, CameraBinds.ZoomIn),
             ("cam_zoom_out", "Decrease camera zoom", KeyCode.Minus, CameraBinds.ZoomOut),
-            ("cam_up", "Move camera up", KeyCode.I, CameraBinds.Up),
-            ("cam_down", "Move camera down", KeyCode.K, CameraBinds.Down),
+            ("cam_up", "Move camera up", KeyCode.U, CameraBinds.Up),
+            ("cam_down", "Move camera down", KeyCode.O, CameraBinds.Down),
+            ("cam_forward", "Move camera forward", KeyCode.I, CameraBinds.Forward),
+            ("cam_back", "Move camera back", KeyCode.K, CameraBinds.Back),
             ("cam_left", "Move camera left", KeyCode.J, CameraBinds.Left),
             ("cam_right", "Move camera right", KeyCode.L, CameraBinds.Right),
             ("cam_reset", "Reset camera", KeyCode.Home, CameraBinds.Reset),
@@ -185,7 +192,7 @@ public static class Binds
 
         var mouseBinds = new[]
         {
-            ("cam_pan", "Pan camera", MouseButtonCode.Middle, CameraBinds.Pan),
+            ("cam_pan", "Pan camera", MouseButtonCode.Right, CameraBinds.Pan),
         };
 
         for (var i = 0; i < defaultBinds.Length; i++)
