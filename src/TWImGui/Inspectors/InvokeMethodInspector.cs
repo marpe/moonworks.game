@@ -119,7 +119,7 @@ public class InvokeMethodInspector : IInspectorWithTarget, IInspectorWithMemberI
 
     private void DrawInvokeButton()
     {
-        if (ImGuiExt.ColoredButton(_buttonLabel, ImGuiExt.Colors[0], new Vector2(-ImGuiExt.FLT_MIN, 0)))
+        if (ImGuiExt.ColoredButton(_buttonLabel, new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
             var parameters = _paramData.Select(x => x.Value).ToArray();
             _methodInfo.Invoke(_target, parameters);

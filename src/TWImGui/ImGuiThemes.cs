@@ -36,7 +36,7 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.ScrollbarGrab] = new Num.Vector4(0.34f, 0.34f, 0.34f, 0.54f);
         style->Colors[(int)ImGuiCol.ScrollbarGrabHovered] = new Num.Vector4(0.40f, 0.40f, 0.40f, 0.54f);
         style->Colors[(int)ImGuiCol.ScrollbarGrabActive] = new Num.Vector4(0.56f, 0.56f, 0.56f, 0.54f);
-        style->Colors[(int)ImGuiCol.CheckMark] = new Num.Vector4(2 / 255f, 115f / 255f, 235f / 255f, 255f / 255f); //new Num.Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
+        style->Colors[(int)ImGuiCol.CheckMark] = new Num.Vector4(0, 0.45f, 0.92f, 1f); //new Num.Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
         style->Colors[(int)ImGuiCol.SliderGrab] = new Num.Vector4(0.34f, 0.34f, 0.34f, 0.54f);
         style->Colors[(int)ImGuiCol.SliderGrabActive] = new Num.Vector4(0.56f, 0.56f, 0.56f, 0.54f);
         style->Colors[(int)ImGuiCol.Button] =
@@ -63,7 +63,7 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.DockingEmptyBg] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotLines] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotLinesHovered] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
-        style->Colors[(int)ImGuiCol.PlotHistogram] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
+        style->Colors[(int)ImGuiCol.PlotHistogram] = new Num.Vector4(0, 0.45f, 0.92f, 1f);
         style->Colors[(int)ImGuiCol.PlotHistogramHovered] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.TableHeaderBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
         style->Colors[(int)ImGuiCol.TableBorderStrong] = new Num.Vector4(0.26f, 0.26f, 0.26f, 1.00f);

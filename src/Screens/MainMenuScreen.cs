@@ -27,7 +27,6 @@ public class MainMenuScreen : MenuScreen
 
     private void OnPlay()
     {
-        Logs.LogInfo($"Play hit from: {Thread.CurrentThread.ManagedThreadId} {Shared.Game.Time.UpdateCount} - {Shared.Game.Time.DrawCount}");
         GameScreen.Restart(false);
     }
 

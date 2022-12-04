@@ -232,7 +232,7 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             var value = (bool)getter();
 
-            if (ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(name), ref value))
+            if (InspectBool(name, ref value))
             {
                 setter(value);
                 result = true;
@@ -251,11 +251,9 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Point))
         {
             var value = (Point)getter();
-            var tuple = new ValueTuple<int, int>(value.X, value.Y);
-            var xy = &tuple;
-            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%d"))
+            if (InspectPoint(name, ref value))
             {
-                setter(new Point(xy->Item1, xy->Item2));
+                setter(value);
                 result = true;
             }
         }
@@ -333,6 +331,26 @@ public unsafe class SimpleTypeInspector : Inspector
         if (isReadOnly)
         {
             ImGui.EndDisabled();
+        }
+
+        return result;
+    }
+
+    public static bool InspectBool(string name, ref bool value)
+    {
+        return ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(name), ref value);
+    }
+
+    public static bool InspectPoint(string name, ref Point value)
+    {
+        var result = false;
+        var tuple = new ValueTuple<int, int>(value.X, value.Y);
+        var xy = &tuple;
+
+        if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%d"))
+        {
+            value = new Point(xy->Item1, xy->Item2);
+            result = true;
         }
 
         return result;

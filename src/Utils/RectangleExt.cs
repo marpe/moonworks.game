@@ -62,4 +62,9 @@ public static class RectangleExt
     {
         return new Rectangle((int)x, (int)y, (int)width, (int)height);
     }
+
+    public static Rectangle FromMinMax(Vector2 min, Vector2 max)
+    {
+        return new Rectangle((int)min.X, (int)min.Y, (int)(max.X - min.X), (int)(max.Y - min.Y));
+    }
 }

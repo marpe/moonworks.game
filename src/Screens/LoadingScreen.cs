@@ -34,6 +34,8 @@ public class LoadingScreen
     private readonly MyGameMain _game;
 
     private float _progress;
+    public float Progress => _progress;
+    
     private bool _shouldCopyRender;
 
     public static TransitionType TransitionType = TransitionType.Pixelize;
@@ -43,25 +45,11 @@ public class LoadingScreen
 
     private ConcurrentQueue<Action> _queue = new();
 
+    public int QueueCount => _queue.Count;
+
     private Action? _loadSyncCallback;
 
     public static bool Debug;
-
-    public static float DebugProgress;
-    
-    public static TransitionState DebugState
-    {
-        get
-        {
-            return DebugProgress switch
-            {
-                > 0 and < 0.4f => TransitionState.TransitionOn,
-                >= 0.4f and < 0.6f => TransitionState.Active,
-                >= 0.6f => TransitionState.TransitionOff,
-                _ => TransitionState.Hidden,
-            };
-        }
-    }
 
     public LoadingScreen(MyGameMain game)
     {
@@ -74,9 +62,14 @@ public class LoadingScreen
     }
 
     [ConsoleHandler("test_load", "Test loading screen")]
-    public static void TestLoad()
+    public static void TestLoad(float durationInSeconds = 1.0f)
     {
-        Shared.LoadingScreen.LoadAsync(() => Thread.Sleep(1000));
+        Shared.LoadingScreen.LoadAsync(() =>
+        {
+            Logs.LogInfo("Starting loading...");
+            Thread.Sleep(TimeSpan.FromSeconds(durationInSeconds));
+            Logs.LogInfo("Finished loading...");
+        });
     }
 
     public void LoadSync(Action loadSyncCallback)
@@ -114,9 +107,11 @@ public class LoadingScreen
 
         Task.Run(() =>
         {
-            while (_queue.TryDequeue(out var callback))
+            while (_queue.TryPeek(out var callback))
             {
                 callback();
+                if (!_queue.TryDequeue(out _))
+                    throw new InvalidOperationException("Couldn't dequeue load callback");
             }
         });
     }
@@ -138,6 +133,11 @@ public class LoadingScreen
         if (Debug)
             return;
 
+        UpdateState(deltaSeconds);
+    }
+
+    public void UpdateState(float deltaSeconds)
+    {
         if (State == TransitionState.Hidden)
         {
             if (!_queue.IsEmpty || _loadSyncCallback != null)
@@ -178,8 +178,12 @@ public class LoadingScreen
 
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
     {
+        if (State == TransitionState.Hidden)
+            return;
+
         if (_shouldCopyRender)
         {
+            Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Copying render");
             _gameOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, gameRender);
             _menuOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, menuRender);
             _compositeOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
@@ -189,23 +193,25 @@ public class LoadingScreen
             _shouldCopyRender = false;
         }
 
-        // TODO (marpe): This seems a bit exhaustive
+        // TODO (marpe): This is a bit exhaustive
         _compositeNewCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
         commandBuffer.CopyTextureToTexture(renderDestination, _compositeNewCopy, Filter.Nearest);
 
-        if (Debug)
-        {
-            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, DebugProgress, DebugState, _gameOldCopy, _menuOldCopy,
-                _compositeOldCopy, gameRender, menuRender, _compositeNewCopy);
-            DrawLoadingText(renderer, ref commandBuffer, renderDestination);
-        }
-        else
-        {
-            SceneTransitions[TransitionType].Draw(renderer, ref commandBuffer, renderDestination, _progress, State, _gameOldCopy, _menuOldCopy,
-                _compositeOldCopy,
-                gameRender, menuRender, _compositeNewCopy);
-            DrawLoadingText(renderer, ref commandBuffer, renderDestination);
-        }
+        SceneTransitions[TransitionType].Draw(
+            renderer,
+            ref commandBuffer,
+            renderDestination,
+            _progress,
+            State,
+            _gameOldCopy,
+            _menuOldCopy,
+            _compositeOldCopy,
+            gameRender,
+            menuRender,
+            _compositeNewCopy
+        );
+        
+        DrawLoadingText(renderer, ref commandBuffer, renderDestination);
     }
 
     private void DrawLoadingText(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
@@ -226,11 +232,12 @@ public class LoadingScreen
         _compositeNewCopy?.Dispose();
         _gameOldCopy?.Dispose();
         _menuOldCopy?.Dispose();
-        
+
         foreach (var (_, value) in SceneTransitions)
         {
             value.Unload();
         }
+
         SceneTransitions.Clear();
 
         _queue.Clear();

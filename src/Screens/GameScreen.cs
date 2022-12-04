@@ -36,6 +36,7 @@ public class GameScreen
     [ConsoleHandler("restart")]
     public static void Restart(bool immediate = true)
     {
+        Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Starting load");
         var worldLoader = () => new World(Shared.Game.GameScreen, ContentPaths.ldtk.Example.World_ldtk);
         if (immediate)
         {
@@ -51,12 +52,11 @@ public class GameScreen
     {
         QueueAction(() =>
         {
-            Logs.LogInfo($"Setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
-            Shared.Menus.RemoveAll();
+            Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Removing screens and setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
             Shared.Game.ConsoleScreen.IsHidden = true;
+            Shared.Menus.RemoveAll();
             Unload();
             World = world;
-            Logs.LogInfo("World set!");
         });
     }
 
@@ -101,7 +101,7 @@ public class GameScreen
 
         QueueAction(() =>
         {
-            Logs.LogInfo($"Removing screens from thread: {Thread.CurrentThread.ManagedThreadId}");
+            Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Removing screens");
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             Unload();

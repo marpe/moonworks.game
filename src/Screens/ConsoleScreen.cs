@@ -35,13 +35,11 @@ public class ConsoleScreen
 
     private readonly KeyCode[] _pageUpAndDown = { KeyCode.PageUp, KeyCode.PageDown };
 
-    private Texture _renderTarget;
-
     private readonly char[] _tmpArr = new char[1];
 
     private float _transitionPercentage;
+    public float TransitionPercentage => _transitionPercentage;
     private readonly KeyCode[] _upAndDownArrows = { KeyCode.Up, KeyCode.Down };
-    private bool _hasRender;
 
     public bool IsHidden
     {
@@ -53,15 +51,16 @@ public class ConsoleScreen
 
     public ConsoleScreenState ConsoleScreenState { get; private set; } = ConsoleScreenState.Hidden;
 
+    private UPoint _lastRenderSize;
+    private Stopwatch _renderStopwatch = new();
+    private float _renderDurationMs;
+    private float _peakRenderDurationMs;
+    private uint _drawCalls;
+
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
-
-        var sz = game.MainWindow.Size;
-        _renderTarget = Texture.CreateTexture2D(
-            game.GraphicsDevice, (uint)sz.X, (uint)sz.Y, TextureFormat.B8G8R8A8,
-            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
-        );
+        _lastRenderSize = game.CompositeRender.Size();
     }
 
     [ConsoleHandler("console", "Toggles the console")]
@@ -72,20 +71,18 @@ public class ConsoleScreen
 
     public void Unload()
     {
-        _renderTarget.Dispose();
     }
 
     public void Update(float deltaSeconds)
     {
         var inputState = _game.InputHandler;
 
-        var sz = new UPoint(_renderTarget.Width, _renderTarget.Height);
-        UpdateTransition(deltaSeconds, sz.X, sz.Y);
+        UpdateTransition(deltaSeconds, _lastRenderSize.X, _lastRenderSize.Y);
 
         if (IsHidden)
             return;
 
-        CheckResize(sz.X, sz.Y);
+        CheckResize(_lastRenderSize.X, _lastRenderSize.Y);
 
         _caretBlinkTimer += deltaSeconds;
 
@@ -424,31 +421,15 @@ public class ConsoleScreen
         }
     }
 
+    public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';
+
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (ConsoleScreenState == ConsoleScreenState.Hidden)
             return;
 
-        if ((int)_game.Time.DrawCount % ConsoleSettings.RenderRate == 0)
-        {
-            _hasRender = true;
-            DrawInternal(renderer, alpha);
-            renderer.RunRenderPass(ref commandBuffer, _renderTarget, Color.Transparent, null);
-        }
-
-        if (!_hasRender)
-            return;
-
-        var sprite = new Sprite(_renderTarget);
-        renderer.DrawSprite(sprite, Matrix4x4.Identity, Color.White * _transitionPercentage);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
-    }
-
-    public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';
-
-    private void DrawInternal(Renderer renderer, double alpha)
-    {
-        renderer.DrawRect(_backgroundRect, ConsoleSettings.BackgroundColor * ConsoleSettings.BackgroundAlpha);
+        _renderStopwatch.Restart(); 
+        renderer.DrawRect(_backgroundRect, ColorExt.MultiplyAlpha(ConsoleSettings.BackgroundColor, ConsoleSettings.BackgroundAlpha));
 
         // draw line start and end
         var textArea = new Rectangle(
@@ -483,13 +464,10 @@ public class ConsoleScreen
         }
 
         // Draw history
-        var historyPosition = new Vector2(displayPosition.X, displayPosition.Y);
-
         var numLinesToDraw = _backgroundRect.Height / CharSize.Y;
 
         _charsDrawn = 0;
 
-        var sw = Stopwatch.StartNew();
         for (var i = 0; i < numLinesToDraw; i++)
         {
             var lineIndex = TwConsole.ScreenBuffer.DisplayY - i;
@@ -527,21 +505,27 @@ public class ConsoleScreen
 
         if (ConsoleSettings.ShowDebug)
         {
+            renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
+            
+            _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) " +
-                $"DrawCalls({renderer.SpriteBatch.DrawCalls}) " +
-                $"DisplayY({TwConsole.ScreenBuffer.DisplayY}) " +
-                $"CursorY({TwConsole.ScreenBuffer.CursorY}) " +
-                $"Elapsed({sw.ElapsedMilliseconds}ms) ";
+                $"DrawCalls({_drawCalls}) " +
+                $"Elapsed({_peakRenderDurationMs:00.00} ms) ";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
                 _backgroundRect.Width - lineLength - ConsoleSettings.HorizontalPadding,
                 0
             );
 
-            renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, -1f);
-            DrawText(renderer, scrolledLinesStr, scrollLinesPos, -2f, Color.Yellow);
+            renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, 0);
+            DrawText(renderer, scrolledLinesStr, scrollLinesPos, 0, Color.Yellow);
         }
+        
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+        _drawCalls = renderer.SpriteBatch.DrawCalls;
+        _renderStopwatch.Stop();
+        _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)

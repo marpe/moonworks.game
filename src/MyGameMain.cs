@@ -39,6 +39,7 @@ public class MyGameMain : Game
     public Texture CompositeRender;
     private readonly Texture _menuRender;
     public readonly Texture GameRender;
+    public readonly Texture _consoleRender;
 
     public UPoint GameRenderSize => new(
         CompositeRender.Width / RenderScale,
@@ -48,6 +49,8 @@ public class MyGameMain : Game
     protected UPoint _swapSize;
 
     public static uint RenderScale = 1;
+    private readonly FPSDisplay _fpsDisplay;
+    private bool _hasRenderedConsole;
 
     [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
     public static ScreenMode ScreenMode
@@ -61,16 +64,6 @@ public class MyGameMain : Game
             Shared.Game.MainWindow.SetScreenMode(value);
         }
     }
-
-    private Stopwatch _renderStopwatch = new();
-    private Stopwatch _renderGameStopwatch = new();
-    private Stopwatch _updateStopwatch = new();
-    private float _renderDurationMs;
-    private float _renderGameDurationMs;
-    private float _updateDurationMs;
-    private float _peakUpdateDurationMs;
-    private float _peakRenderDurationMs;
-    private float _peakRenderGameDurationMs;
 
 
     /// <summary>
@@ -116,7 +109,7 @@ public class MyGameMain : Game
         SDL.SDL_GetWindowSize(windowHandle, out var width, out var height);
         Logs.LogInfo($"WindowSize: {width}x{height}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
     }
-    
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -129,7 +122,7 @@ public class MyGameMain : Game
         var setModeTimer = Stopwatch.StartNew();
         SetWindowDisplayModeToMatchDesktop(MainWindow.Handle);
         setModeTimer.StopAndLog("SetWindowDisplayModeToMatchDesktop");
-        
+
         Time = new Time();
 
         Shared.Game = this;
@@ -145,12 +138,13 @@ public class MyGameMain : Game
         CompositeRender = Texture.CreateTexture2D(GraphicsDevice, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, flags);
         GameRender = Texture.CreateTexture2D(GraphicsDevice, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, flags);
         _menuRender = TextureUtils.CreateTexture(GraphicsDevice, CompositeRender);
+        _consoleRender = TextureUtils.CreateTexture(GraphicsDevice, CompositeRender);
         createRtsTimer.StopAndLog("RenderTargets");
 
         var createRendererTimer = Stopwatch.StartNew();
         Renderer = new Renderer(this);
         createRendererTimer.StopAndLog("Renderer");
-        
+
         Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
         GameScreen = new GameScreen(this);
@@ -162,25 +156,27 @@ public class MyGameMain : Game
         var menuTimer = Stopwatch.StartNew();
         Shared.Menus = new MenuHandler(this);
         menuTimer.StopAndLog("MenuHandler");
-        
+
         var freeTypeTimer = Stopwatch.StartNew();
         Shared.FreeTypeLibrary = new FreeTypeLibrary();
         var fontAtlas = new FontAtlas(GraphicsDevice);
         fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
         freeTypeTimer.StopAndLog("FreeType");
-        
+
         Shared.LoadingScreen.LoadImmediate(() =>
         {
             Shared.Console.Initialize();
             Logs.Loggers.Add(new TWConsoleLogger());
         });
 
+        _fpsDisplay = new FPSDisplay();
+
         sw.StopAndLog("MyGameMain");
     }
 
     protected override void Update(TimeSpan dt)
     {
-        _updateStopwatch.Restart();
+        _fpsDisplay.BeginUpdate();
         Time.Update(dt);
 
         UpdateWindowTitle();
@@ -193,8 +189,7 @@ public class MyGameMain : Game
         Shared.AudioManager.Update((float)dt.TotalSeconds);
 
         InputHandler.EndFrame();
-        _updateStopwatch.Stop();
-        _updateDurationMs = _updateStopwatch.GetElapsedMilliseconds();
+        _fpsDisplay.EndUpdate();
     }
 
     protected virtual void SetInputViewport()
@@ -230,18 +225,15 @@ public class MyGameMain : Game
             _nextWindowTitleUpdate += 1f;
         }
     }
-    
+
     protected override void Draw(double alpha)
     {
         if (MainWindow.IsMinimized)
             return;
 
-        _renderStopwatch.Restart();
+        _fpsDisplay.BeginRender();
         {
-            _renderGameStopwatch.Restart();
             RenderGame(alpha, CompositeRender);
-            _renderGameStopwatch.Stop();
-            _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
         }
 
         {
@@ -254,7 +246,7 @@ public class MyGameMain : Game
             }
 
             _swapSize = swapTexture.Size();
-            
+
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
@@ -263,12 +255,12 @@ public class MyGameMain : Game
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(ref commandBuffer);
         }
-        _renderStopwatch.Stop();
-        _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
+        _fpsDisplay.EndRender();
     }
 
     protected void RenderGame(double alpha, Texture renderDestination)
     {
+        _fpsDisplay.BeginRenderGame();
         Time.UpdateDrawCount();
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
@@ -295,35 +287,36 @@ public class MyGameMain : Game
         Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
         Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null);
 
-        DrawFPS(Renderer, commandBuffer, renderDestination);
-
-        RenderConsole(Renderer, ref commandBuffer, renderDestination, alpha);
-
         Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, GameRender, _menuRender, alpha);
 
+        RenderConsole(Renderer, ref commandBuffer, renderDestination, alpha);
+        _fpsDisplay.DrawFPS(Renderer, commandBuffer, renderDestination);
+
         Renderer.Submit(ref commandBuffer);
-    }
-
-    private void DrawFPS(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination)
-    {
-        var position = new Vector2(renderDestination.Width, 0);
-
-        _peakUpdateDurationMs = StopwatchExt.SmoothValue(_peakUpdateDurationMs, _updateDurationMs);
-        _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
-        _peakRenderGameDurationMs = StopwatchExt.SmoothValue(_peakRenderGameDurationMs, _renderGameDurationMs);
         
-        var str = $"Update: {Time.UpdateFps:0.##} ({_peakUpdateDurationMs:0.00}), Draw: {Time.DrawFps:0.##} ({_peakRenderGameDurationMs:0.00}/{_peakRenderDurationMs:0.00})";
-        var strSize = renderer.TextBatcher.GetFont(FontType.ConsolasMonoMedium).MeasureString(str);
-        var bg = RectangleExt.FromFloats(position.X - strSize.X, 0, strSize.X, strSize.Y);
-        renderer.DrawRect(bg, Color.Black * 0.66f);
-        renderer.DrawText(FontType.ConsolasMonoMedium, str, new Vector2(position.X - strSize.X, 0), 0, Color.Yellow);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+        _fpsDisplay.EndRenderGame();
     }
 
     private void RenderConsole(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        ConsoleToast.Draw(renderer, ref commandBuffer, renderDestination);
-        ConsoleScreen.Draw(renderer, ref commandBuffer, renderDestination, alpha);
+        if ((int)Time.UpdateCount % ConsoleSettings.RenderRate == 0)
+        {
+            _hasRenderedConsole = true;
+            renderer.Clear(ref commandBuffer, _consoleRender, Color.Transparent);
+
+            ConsoleToast.Draw(renderer, ref commandBuffer, _consoleRender);
+
+            if (!ConsoleScreen.IsHidden)
+            {
+                ConsoleScreen.Draw(renderer, ref commandBuffer, _consoleRender, alpha);
+            }
+        }
+
+        if (_hasRenderedConsole)
+        {
+            renderer.DrawSprite(_consoleRender, Matrix4x4.Identity, Color.White);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+        }
     }
 
     protected override void Destroy()

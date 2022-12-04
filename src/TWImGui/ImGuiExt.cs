@@ -23,7 +23,7 @@ public static unsafe class ImGuiExt
     private static readonly Dictionary<uint, bool> _openFoldouts = new();
 
     private static readonly Stack<Color> _colorStack = new();
-    public static Vector2 ButtonPadding => new(6f, 4f);
+    public static Num.Vector2 ButtonPadding => new(6f, 4f);
 
     public static Color[] Colors =
     {
@@ -330,12 +330,18 @@ public static unsafe class ImGuiExt
         return ColoredButton(label, color.ToColor());
     }
 
-    public static bool ColoredButton(string label, Color buttonColor, string? tooltip = null)
+    public static bool ColoredButton(string label, Num.Vector2 size)
     {
-        return ColoredButton(label, buttonColor, Vector2.Zero, tooltip);
+        var color = ImGui.GetStyle()->Colors[(int)ImGuiCol.Button];
+        return ColoredButton(label, color.ToColor(), size);
     }
 
-    public static bool ColoredButton(string label, Color buttonColor, Vector2 size, string? tooltip = null)
+    public static bool ColoredButton(string label, Color buttonColor, string? tooltip = null)
+    {
+        return ColoredButton(label, buttonColor, Num.Vector2.Zero, tooltip);
+    }
+
+    public static bool ColoredButton(string label, Color buttonColor, Num.Vector2 size, string? tooltip = null)
     {
         var text = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
         return ColoredButton(label, text.ToColor(), buttonColor, tooltip, size, ButtonPadding);
@@ -343,15 +349,15 @@ public static unsafe class ImGuiExt
 
     public static bool ColoredButton(string label, Color textColor, Color buttonColor, string? tooltip = null)
     {
-        return ColoredButton(label, textColor, buttonColor, tooltip, Vector2.Zero, ButtonPadding);
+        return ColoredButton(label, textColor, buttonColor, tooltip, Num.Vector2.Zero, ButtonPadding);
     }
 
-    public static bool ColoredButton(string label, Color textColor, Color buttonColor, Vector2 size, string? tooltip = null)
+    public static bool ColoredButton(string label, Color textColor, Color buttonColor, Num.Vector2 size, string? tooltip = null)
     {
         return ColoredButton(label, textColor, buttonColor, tooltip, size, ButtonPadding);
     }
 
-    public static bool ColoredButton(string label, Color textColor, Color buttonColor, string? tooltip, Vector2 size, Vector2 padding)
+    public static bool ColoredButton(string label, Color textColor, Color buttonColor, string? tooltip, Num.Vector2 size, Num.Vector2 padding)
     {
         var (h, s, v) = ColorExt.RgbToHsv(buttonColor);
         var a = buttonColor.A / 255f;
@@ -382,8 +388,8 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleColor(ImGuiCol.BorderShadow, shadow.ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.Border, border.ToNumerics());
         ImGui.PushStyleColor(ImGuiCol.Text, text.ToNumerics());
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.ToNumerics());
-        var result = ImGui.Button(label, size.ToNumerics());
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding);
+        var result = ImGui.Button(label, size);
 
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal) && tooltip != null)
         {
@@ -626,16 +632,16 @@ public static unsafe class ImGuiExt
         var x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
         ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
-        
+
         var textSize = ImGui.CalcTextSize(label);
         var min = ImGui.GetCursorScreenPos();
         var labelWidth = itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X;
         var max = min + new Num.Vector2(Math.Min(textSize.X, labelWidth), textSize.Y);
         ImGuiInternal.RenderTextClipped(min, max, label, &textSize, Num.Vector2.Zero);
-        
+
         ImGui.PopFont();
         ImGui.PopStyleColor();
-        
+
         // button for label
         var buttonSize = max - min;
         ImGui.InvisibleButton(label, buttonSize.EnsureNotZero(), ImGuiButtonFlags.None);
@@ -871,6 +877,217 @@ public static unsafe class ImGuiExt
             p += dir * segmentLength;
         }
     }
+
+    /// <summary>
+    /// from https://github.com/ocornut/imgui/issues/1901
+    /// </summary>
+    public static void Spinner(string label, float radius, int thickness, uint color, float speed = 0.5f)
+    {
+        var g = ImGui.GetCurrentContext();
+        var style = g->Style;
+        var id = ImGui.GetID(label);
+
+        var pos = ImGui.GetCursorScreenPos();
+        var size = new Num.Vector2(radius * 2, (radius + style.FramePadding.Y) * 2);
+
+        var bb = new ImRect(pos, pos + size);
+        ImGuiInternal.ItemSize(bb, style.FramePadding.Y);
+        if (!ImGuiInternal.ItemAdd(bb, id))
+            return;
+
+        var drawList = ImGui.GetWindowDrawList();
+        drawList->PathClear();
+
+        var numSegments = 30;
+        var start = (int)MathF.Abs(MathF.Sin((float)g->Time * 0.9f * speed) * (numSegments - 5));
+
+        var aMin = MathHelper.TwoPi * start / numSegments;
+        var aMax = MathHelper.TwoPi * ((float)numSegments - 3) / numSegments;
+
+        var center = new Num.Vector2(pos.X + radius, pos.Y + radius + style.FramePadding.Y);
+
+        for (var i = 0; i < numSegments; i++)
+        {
+            var a = aMin + i / (float)numSegments * (aMax - aMin);
+            drawList->PathLineTo(
+                new Num.Vector2(
+                    center.X + MathF.Cos(a + (float)g->Time * 4 * speed) * radius,
+                    center.Y + MathF.Sin(a + (float)g->Time * 4 * speed) * radius
+                )
+            );
+        }
+
+        drawList->PathStroke(color, ImDrawFlags.None, thickness);
+    }
+
+    public static void BufferingBar(string label, float value, Num.Vector2 sizeArg, uint bgCol, uint fgCol, float speed = 0.5f)
+    {
+        var id = ImGui.GetID(label);
+
+        var pos = ImGui.GetCursorScreenPos();
+        var size = sizeArg;
+        size.X -= ImGui.GetStyle()->FramePadding.X * 2;
+
+        var bb = new ImRect(pos, new Num.Vector2(pos.X + size.X, pos.Y + size.Y));
+        ImGuiInternal.ItemSize(bb, ImGui.GetStyle()->FramePadding.Y);
+        if (!ImGuiInternal.ItemAdd(bb, id))
+            return;
+
+        var circleStart = size.X * 0.7f;
+        var circleEnd = size.X;
+        var circleWidth = circleEnd - circleStart;
+
+        var drawList = ImGui.GetWindowDrawList();
+        drawList->AddRectFilled(bb.Min, new Num.Vector2(pos.X + circleStart, bb.Max.Y), bgCol);
+        drawList->AddRectFilled(bb.Min, new Num.Vector2(pos.X + circleStart * value, bb.Max.Y), fgCol);
+
+        var t = (float)ImGui.GetCurrentContext()->Time;
+        var r = size.Y / 2;
+
+        var a = speed * 0;
+        var b = speed * 0.333f;
+        var c = speed * 0.666f;
+
+        var o1 = (circleWidth + r) * (t + a - speed * (int)((t + a) / speed)) / speed;
+        var o2 = (circleWidth + r) * (t + b - speed * (int)((t + b) / speed)) / speed;
+        var o3 = (circleWidth + r) * (t + c - speed * (int)((t + c) / speed)) / speed;
+
+        drawList->AddCircleFilled(new Num.Vector2(pos.X + circleEnd - o1, bb.Min.Y + r), r, bgCol);
+        drawList->AddCircleFilled(new Num.Vector2(pos.X + circleEnd - o2, bb.Min.Y + r), r, bgCol);
+        drawList->AddCircleFilled(new Num.Vector2(pos.X + circleEnd - o3, bb.Min.Y + r), r, bgCol);
+    }
+    
+    public struct ButtonColors
+    {
+        public Color Button;
+        public Color Hovered;
+        public Color Active;
+        public Color Inactive;
+        public Color Shadow;
+        public Color BorderShadow;
+        public Color Border;
+    }
+
+    public static ButtonColors GetButtonColors(Color color)
+    {
+        var (h, s, v) = ColorExt.RgbToHsv(color);
+        return new ButtonColors()
+        {
+            Button = color,
+            Hovered = ColorExt.HsvToRgb(h, s, v * 0.6f),
+            Active = ColorExt.HsvToRgb(h, s, v * 0.7f),
+            Inactive = ColorExt.HsvToRgb(h, s * 0.8f, v * 0.35f),
+            Border = ColorExt.HsvToRgb(h, s * 0.5f, v * 0.1f)
+        };
+    }
+    
+    public static bool EnumButtons(string[] labels, int[] values, ref int value, bool isFlag, Color color, bool fullWidth = true, string[]? tooltips = null)
+	{
+		var result = false;
+		ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+
+		var cursorScreenPos = ImGui.GetCursorScreenPos();
+
+		var minSize = fullWidth ? 30f : FLT_MIN;
+
+		for (var i = 0; i < labels.Length; i++)
+		{
+			var size = ImGui.CalcTextSize(labels[i]);
+			minSize = Math.Max(minSize, size.X);
+		}
+
+		var framePaddingX = ImGui.GetStyle()->FramePadding.X;
+		var avail = fullWidth ? ImGui.GetContentRegionAvail() : new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
+
+		var rowWidth = Math.Max(avail.X - 10f, minSize);
+
+		var minItemsPerRow = (int)(rowWidth / minSize);
+
+		var numRows = MathF.CeilToInt(labels.Length / (float)minItemsPerRow);
+		var itemsPerRow = MathF.CeilToInt(labels.Length / (float)numRows);
+
+		var enumRowHeight = ImGui.GetFrameHeightWithSpacing() + 2;
+
+		var dl = ImGui.GetWindowDrawList();
+		var rounding = 0; // ImGui.GetStyle().FrameRounding;
+
+		var btnColors = GetButtonColors(color);
+
+		var rectMin = cursorScreenPos;
+		var rectMax = rectMin + new Num.Vector2(rowWidth, enumRowHeight * numRows);
+		dl->AddRectFilled(rectMin, rectMax, btnColors.Inactive.PackedValue, rounding);
+
+		var offsetX = 0f;
+		for (var k = 0; k < labels.Length; k++)
+		{
+			var currRow = k / itemsPerRow;
+			var indexInRow = k - (currRow * itemsPerRow);
+			var itemsThisRow = Math.Min(itemsPerRow, labels.Length - currRow * itemsPerRow);
+			var size = new Num.Vector2(Math.Max(minSize, (int)(rowWidth / itemsThisRow)), enumRowHeight);
+
+			if (ImGui.InvisibleButton(labels[k], size))
+            {
+                value = isFlag ? value | values[k] : values[k];
+				result = true;
+			}
+
+			var isHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal);
+			if (isHovered)
+			{
+				ImGui.BeginTooltip();
+				ImGui.TextUnformatted(tooltips != null ? tooltips[k] : labels[k]);
+				ImGui.EndTooltip();
+			}
+
+            var isCurrent = isFlag ? (value & values[k]) == values[k] : value == values[k];
+			var btnColor = (isCurrent, isHovered, ImGui.IsItemActive()) switch
+			{
+				(_, _, true) => btnColors.Active,
+				(true, _, _) => btnColors.Button,
+				(false, true, _) => btnColors.Hovered,
+				_ => btnColors.Inactive
+			};
+			var min = cursorScreenPos + new Num.Vector2(offsetX, 0);
+			var max = min + size;
+
+			dl->AddRectFilled(min, max, btnColor.PackedValue);
+
+			var textColor = isCurrent || isHovered ? Color.White.PackedValue : GetStyleColor(ImGuiCol.TextDisabled).PackedValue();
+			var textSize = ImGui.CalcTextSize(labels[k]);
+			var center = min + size * 0.5f;
+			var textPos = new Num.Vector2(center.X - textSize.X * 0.5f, min.Y + (size.Y - textSize.Y) * 0.5f);
+			dl->AddText(textPos, textColor, labels[k]);
+
+			if (indexInRow < itemsPerRow - 1 && k != labels.Length - 1)
+			{
+				offsetX += size.X;
+				dl->AddLine(
+					new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y),
+					new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y + enumRowHeight),
+					btnColors.Border.PackedValue
+				);
+				ImGui.SameLine();
+			}
+			else
+			{
+				offsetX = 0;
+				cursorScreenPos = ImGui.GetCursorScreenPos();
+				dl->AddLine(
+					new Num.Vector2(rectMin.X, cursorScreenPos.Y - 1),
+					new Num.Vector2(rectMax.X, cursorScreenPos.Y - 1),
+					btnColors.Border.PackedValue
+				);
+			}
+		}
+
+		dl->AddRect(rectMin, rectMax, btnColors.Border.PackedValue, rounding);
+
+		ImGui.PopStyleVar();
+
+		ImGui.Spacing();
+
+		return result;
+	}
 }
 
 public ref struct ImGuiInputBuffer

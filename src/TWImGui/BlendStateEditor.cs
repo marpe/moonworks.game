@@ -24,33 +24,50 @@ public static unsafe class BlendStateEditor
                a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor;
     }
 
-    public static bool ComboStep(string label, ref int currentIndex, string[] items)
+    public static bool ComboStep(string label, bool showPrevNextButtons, ref int currentIndex, string[] items)
     {
         var result = false;
 
-        ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
+        ImGui.BeginGroup();
 
-        if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label, default))
+        ImGuiExt.LabelPrefix(label);
+        
+        if (showPrevNextButtons)
         {
-            currentIndex = (items.Length + currentIndex - 1) % items.Length;
-            result = true;
+            ImGui.BeginGroup();
+            {
+                ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
+                ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
+
+                if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label, default))
+                {
+                    currentIndex = (items.Length + currentIndex - 1) % items.Length;
+                    result = true;
+                }
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Previous");
+
+                ImGui.SameLine();
+                if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label, default))
+                {
+                    currentIndex = (items.Length + currentIndex + 1) % items.Length;
+                    result = true;
+                }
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Next");
+
+                ImGui.PopStyleColor(3);
+            }
+            
+            ImGui.EndGroup();
+            ImGui.SameLine();
         }
 
-        ImGui.SameLine(0, 0);
-        if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label, default))
-        {
-            currentIndex = (items.Length + currentIndex + 1) % items.Length;
-            result = true;
-        }
-
-        ImGui.PopStyleColor(3);
-
-        ImGui.SameLine();
-        var itemsByZero = string.Join('0', items);
-
-        if (ImGui.BeginCombo(label, items[currentIndex]))
+        ImGui.SetNextItemWidth(-1);
+        if (ImGui.BeginCombo("##" + label, items[currentIndex]))
         {
             for (var i = 0; i < items.Length; i++)
             {
@@ -68,7 +85,7 @@ public static unsafe class BlendStateEditor
             ImGui.EndCombo();
         }
 
-        // result |= ImGui.Combo(label, ImGuiExt.RefPtr(ref currentIndex), itemsByZero, items.Length);
+        ImGui.EndGroup();
 
         return result;
     }
@@ -85,12 +102,12 @@ public static unsafe class BlendStateEditor
         var blendEnabled = state.BlendEnable;
         var prevState = state;
         ImGui.Checkbox("Enabled", ImGuiExt.RefPtr(ref blendEnabled));
-        ComboStep("AlphaOp", ref alphaBlendOpIndex, _blendOpNames);
-        ComboStep("ColorOp", ref colorBlendOpIndex, _blendOpNames);
-        ComboStep("SourceColor", ref sourceColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("SourceAlpha", ref sourceAlphaBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestColor", ref destColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestAlpha", ref destAlphaBlendFactorIndex, _blendFactorNames);
+        ComboStep("AlphaOp", true, ref alphaBlendOpIndex, _blendOpNames);
+        ComboStep("ColorOp", true, ref colorBlendOpIndex, _blendOpNames);
+        ComboStep("SourceColor", true, ref sourceColorBlendFactorIndex, _blendFactorNames);
+        ComboStep("SourceAlpha", true, ref sourceAlphaBlendFactorIndex, _blendFactorNames);
+        ComboStep("DestColor", true, ref destColorBlendFactorIndex, _blendFactorNames);
+        ComboStep("DestAlpha", true, ref destAlphaBlendFactorIndex, _blendFactorNames);
         state.BlendEnable = blendEnabled;
         state.AlphaBlendOp = (BlendOp)alphaBlendOpIndex;
         state.ColorBlendOp = (BlendOp)colorBlendOpIndex;
