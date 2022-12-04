@@ -365,27 +365,27 @@ public static class Texture2DBlender
         //return MAX(x, MIN(y, z));
     }
 
-    private static byte GetR(uint packedValue)
+    public static byte GetR(uint packedValue)
     {
         return unchecked((byte)(packedValue >> R_SHIFT));
     }
 
-    private static byte GetG(uint packedValue)
+    public static byte GetG(uint packedValue)
     {
         return unchecked((byte)(packedValue >> G_SHIFT));
     }
 
-    private static byte GetB(uint packedValue)
+    public static byte GetB(uint packedValue)
     {
         return unchecked((byte)(packedValue >> B_SHIFT));
     }
 
-    private static byte GetA(uint packedValue)
+    public static byte GetA(uint packedValue)
     {
         return unchecked((byte)(packedValue >> A_SHIFT));
     }
 
-    private static uint PackRGBA(int r, int g, int b, int a)
+    public static uint PackRGBA(int r, int g, int b, int a)
     {
         return (uint)((r << R_SHIFT) | (g << G_SHIFT) | (b << B_SHIFT) | (a << A_SHIFT));
     }

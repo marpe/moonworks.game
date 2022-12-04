@@ -22,6 +22,7 @@ public static class ImGuiBorderlessTitle
             SDL.SDL_SetWindowPosition(window.Handle, (int)windowPos.X, (int)windowPos.Y);
         }
 
+        // maximize/restore when double clicking title bar
         if (ImGui.IsItemHovered() && ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
         {
             if (window.IsMaximized)
@@ -33,14 +34,14 @@ public static class ImGuiBorderlessTitle
         ImGui.SetItemAllowOverlap();
 
         ImGui.SetCursorPos(new Num.Vector2(avail.X - 29 * 3 - 6, 6));
-        if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent)) // "Minimize"
+        if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent, "Minimize")) 
         {
             window.IsMinimized = true;
         }
 
         ImGui.SameLine();
         var icon = window.IsMaximized ? FontAwesome6.WindowRestore : FontAwesome6.WindowMaximize;
-        if (ImGuiExt.ColoredButton(icon, Color.White * 0.5f, Color.Transparent)) // "Maximize"
+        if (ImGuiExt.ColoredButton(icon, Color.White * 0.5f, Color.Transparent, "Maximize")) 
         {
             var isFullScreenDesktop = ((SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Handle) &
                                        SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -51,7 +52,7 @@ public static class ImGuiBorderlessTitle
         }
 
         ImGui.SameLine();
-        if (ImGuiExt.ColoredButton(FontAwesome6.Xmark, Color.White * 0.5f, Color.Transparent)) // "Close"
+        if (ImGuiExt.ColoredButton(FontAwesome6.Xmark, Color.White * 0.5f, Color.Transparent, "Close"))
         {
             editor.Quit();
         }

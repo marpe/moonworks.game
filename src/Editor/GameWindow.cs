@@ -18,7 +18,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     public bool IsHoveringGame;
 
-    public bool IsMouseCameraControlsEnabled = true;
+    [CVar("imgui.mouse_pan_and_zoom", "Toggle mouse pan & zoom control")]
+    public static bool IsMousePanAndZoomEnabled = true;
+
+    public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Num.Vector2.Zero; 
 
     public GameWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -142,8 +145,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
         {
             ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
             ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref MouseDebug.DebugMouse));
-            ImGui.MenuItem("Enable mouse pan & zoom", default, ImGuiExt.RefPtr(ref IsMouseCameraControlsEnabled));
-            if (ImGui.MenuItem("Reset pan & zoom", default))
+            ImGui.MenuItem("Enable mouse pan & zoom", default, ImGuiExt.RefPtr(ref IsMousePanAndZoomEnabled));
+            if (IsPanZoomDirty && ImGui.MenuItem("Reset pan & zoom", default))
                 ResetPanAndZoom();
 
             ImGui.EndPopup();
@@ -160,24 +163,29 @@ public unsafe class GameWindow : ImGuiEditorWindow
         }
         ImGui.End();
     }
-
+    
     private void DrawButtons()
     {
         ImGui.Begin("GameToolbar");
-        if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
+
+        if (IsPanZoomDirty)
         {
-            ResetPanAndZoom();
+            if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
+            {
+                ResetPanAndZoom();
+            }
+
+            ImGui.SameLine();
         }
 
-        ImGui.SameLine();
-        var (icon, color, tooltip) = IsMouseCameraControlsEnabled switch
+        var (icon, color, tooltip) = IsMousePanAndZoomEnabled switch
         {
             true => (FontAwesome6.ArrowPointer, Color.Green, "Disable mouse pan & zoom"),
             _ => (FontAwesome6.Lock, Color.Red, "Enable mouse pan & zoom")
         };
         if (ImGuiExt.ColoredButton(icon, color, tooltip))
         {
-            IsMouseCameraControlsEnabled = !IsMouseCameraControlsEnabled;
+            IsMousePanAndZoomEnabled = !IsMousePanAndZoomEnabled;
         }
 
         var dockNode = ImGuiInternal.GetWindowDockNode();
@@ -211,7 +219,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void HandleInput(bool isActive, bool isHovered)
     {
-        if (IsMouseCameraControlsEnabled)
+        if (IsMousePanAndZoomEnabled)
         {
             // panning
             if (isActive && ImGui.IsMouseDragging(ImGuiMouseButton.Middle))

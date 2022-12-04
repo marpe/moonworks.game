@@ -242,6 +242,7 @@ public class Camera
             }
         }
 
+        ShakeOffset = Vector2.Zero;
         if (_shakeTime > 0 && _shakeDuration > 0)
         {
             var percentDone = MathF.Clamp01(_shakeTime / _shakeDuration);

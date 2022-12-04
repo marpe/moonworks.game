@@ -32,6 +32,16 @@ public static class NumericsExt
         return new(self.X, self.Y, self.Z, self.W);
     }
 
+    public static uint PackedValue(this Num.Vector4 self)
+    {
+        return Texture2DBlender.PackRGBA(
+            (int)(self.X * 255),
+            (int)(self.Y * 255),
+            (int)(self.Z * 255),
+            (int)(self.W * 255)
+        );
+    }
+
     public static Vector4 ToXNA(this Num.Vector4 self)
     {
         return new(self.X, self.Y, self.Z, self.W);

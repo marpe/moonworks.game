@@ -37,12 +37,12 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
         if (_memberInfo is FieldInfo field)
         {
             _collection = field.GetValue(_target) as ICollection;
-            _name = field.Name + "[ ]";
+            _name = field.Name;
         }
         else if (_memberInfo is PropertyInfo prop)
         {
             _collection = prop.GetValue(_target) as ICollection;
-            _name = prop.Name + "[ ]";
+            _name = prop.Name;
         }
         else
         {
@@ -87,12 +87,10 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
 
         PushStyle();
 
-        if (ImGuiExt.Fold(_name))
+        if (ImGuiExt.Fold($"{_name}[{_collection.Count}]"))
         {
             foreach (var item in _inspectors.Keys)
                 _inactiveItems.Add(item);
-
-            DrawItemCount(_collection.Count);
 
             if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags, new Num.Vector2(0, 0)))
             {
@@ -124,10 +122,6 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
             _inactiveItems.Clear();
 
             ImGuiExt.MediumVerticalSpace();
-        }
-        else
-        {
-            DrawItemCount(_collection.Count);
         }
 
         PopStyle();
@@ -200,16 +194,5 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
         {
             ImGui.TextUnformatted(item.ToString());
         }
-    }
-
-    public static void DrawItemCount(int count)
-    {
-        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
-        ImGui.SameLine();
-        var itemCountLabel = $"({count} items)";
-        var itemCountLabelSize = ImGui.CalcTextSize(itemCountLabel);
-        ImGui.SetCursorPosX(ImGui.GetContentRegionMax().X - itemCountLabelSize.X);
-        ImGui.Text(itemCountLabel);
-        ImGui.PopFont();
     }
 }

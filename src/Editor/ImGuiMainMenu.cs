@@ -95,7 +95,9 @@ public unsafe static class ImGuiMainMenu
         var numButtons = 4;
         var buttonWidth = 29;
         ImGui.SetCursorPosX((max.X - numButtons * buttonWidth) / 2);
+        ImGui.SetCursorPosY(ImGui.GetStyle()->FramePadding.Y);
 
+        ImGui.BeginChild("MainMenuButtons", new Num.Vector2(0, 40), false);
         var (icon, color, tooltip) = GameScreen.IsPaused switch
         {
             true => (FontAwesome6.Play, Color.Green, "Play"),
@@ -107,26 +109,29 @@ public unsafe static class ImGuiMainMenu
         {
             GameScreen.Restart();
         }
-
         ImGui.EndDisabled();
 
+        ImGui.SameLine();
         if (ImGuiExt.ColoredButton(icon, color, tooltip))
         {
             GameScreen.IsPaused = !GameScreen.IsPaused;
         }
 
+        ImGui.SameLine();
         if (ImGuiExt.ColoredButton(FontAwesome6.ForwardStep, Color.Orange, "Step"))
         {
             GameScreen.IsPaused = GameScreen.IsStepping = true;
         }
 
+        ImGui.SameLine();
         ImGui.BeginDisabled(Shared.Game.GameScreen.World == null);
         if (ImGuiExt.ColoredButton(FontAwesome6.Stop, Color.Red, "Stop"))
         {
             Shared.Game.GameScreen.Unload();
         }
-
         ImGui.EndDisabled();
+        
+        ImGui.EndChild();
     }
     
     private static string LoadingIndicator(string labelWhenNotLoading, bool isLoading)

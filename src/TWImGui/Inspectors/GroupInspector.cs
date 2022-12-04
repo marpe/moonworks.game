@@ -133,7 +133,7 @@ public unsafe class GroupInspector : Inspector
         var flags = ImGuiTreeNodeFlags.AllowItemOverlap | ImGuiTreeNodeFlags.DefaultOpen;
         ImGui.BeginGroup();
 
-        if (ImGuiExt.BeginCollapsingHeader(title, HeaderColor, flags, ImGuiFont.Tiny, !ShowHeader))
+        if (ImGuiExt.BeginCollapsingHeader(title, HeaderColor, flags, ImGuiFont.Tiny, "", !ShowHeader))
         {
             if (_inspectors.Count == 0)
                 ImGuiExt.SeparatorText("No inspectors found");

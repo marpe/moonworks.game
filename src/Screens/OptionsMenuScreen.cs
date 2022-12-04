@@ -23,7 +23,7 @@ public class OptionsMenuScreen : MenuScreen
             
         });
         _scale = new TextMenuItem("Scale", ChangeScale);
-        _windowMode = new TextMenuItem("Window mode", CycleScreenMode);
+        _windowMode = new TextMenuItem($"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}", CycleScreenMode);
 
         _menuItems.AddRange(new MenuItem[]
         {

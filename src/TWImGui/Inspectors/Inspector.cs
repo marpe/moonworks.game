@@ -28,14 +28,14 @@ public abstract class Inspector : IInspectorWithTarget, IInspectorWithMemberInfo
     {
         _targetType = type;
         if (_name == string.Empty)
-            _name = ReflectionUtils.GetDisplayName(type);
+            _name = type.Name;
     }
 
     public void SetTarget(object target)
     {
         _target = target;
         if (_name == string.Empty)
-            _name = _target.ToString() ?? ReflectionUtils.GetDisplayName(target.GetType());
+            _name = target.GetType().Name;
     }
 
     public void SetMemberInfo(MemberInfo memberInfo)

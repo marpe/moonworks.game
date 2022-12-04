@@ -27,18 +27,45 @@ public class InvokeMethodInspector : IInspectorWithTarget, IInspectorWithMemberI
         _methodInfo = (MethodInfo)memberInfo;
         var attr = _methodInfo.GetCustomAttribute<InspectorCallableAttribute>() ?? throw new InvalidOperationException("Attribute not found");
         _buttonLabel = attr.Label ?? _methodInfo.Name;
-        _headerLabel = $"Method: {_buttonLabel}";
-
         var methodParams = _methodInfo.GetParameters();
+        _headerLabel = $"{_buttonLabel}{PrettyPrintParameters(methodParams)}";
+
         if (methodParams.Length > 0)
         {
             _paramData = new ParameterData[methodParams.Length];
 
             for (var i = 0; i < methodParams.Length; i++)
             {
-                _paramData[i] = CreateParamData(methodParams[i], i);
+                var pInfo = methodParams[i];
+                _paramData[i] = CreateParamData(pInfo, i);
             }
         }
+    }
+
+    private static string PrettyPrintParameters(ParameterInfo[] methodParams)
+    {
+        var sb = new StringBuilder();
+        sb.Append('(');
+
+        for (var i = 0; i < methodParams.Length; i++)
+        {
+            var param = methodParams[i];
+            sb.Append(ConsoleUtils.GetDisplayName(param.ParameterType));
+            sb.Append(' ');
+            sb.Append(param.Name);
+                
+            if (param.HasDefaultValue)
+            {
+                sb.Append(" = ");
+                sb.Append(param.DefaultValue?.ToString() ?? "NULL");
+            }
+
+            if (i < methodParams.Length - 1)
+                sb.Append(", ");
+        }
+        
+        sb.Append(')');
+        return sb.ToString();
     }
 
     public void SetTarget(object target)

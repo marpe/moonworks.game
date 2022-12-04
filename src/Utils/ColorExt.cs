@@ -80,7 +80,7 @@ public static class ColorExt
             _ => new Color(v, p, q),
         };
     }
-    
+
     /// <summary>
     /// linearly interpolates Color from - to
     /// </summary>
@@ -94,13 +94,13 @@ public static class ColorExt
             from.A + (to.A - from.A) * t255 / 255
         );
     }
-    
+
     public static Color PulseColor(in Color from, in Color to, float timer)
     {
         var t = Math.Abs(MathF.Sin(timer));
         return Lerp(from, to, t);
     }
-    
+
     public static Color Add(in Color a, in Color b)
     {
         return new Color(
@@ -121,11 +121,31 @@ public static class ColorExt
             A = (byte)(self.A * second.A / 255)
         };
     }
-    
+
     public static void MultiplyColors(Span<Color> colors, in Color tint)
     {
         for (var i = 0; i < colors.Length; i++)
             colors[i] = Multiply(colors[i], tint);
+    }
+
+    public static Color MultiplyAlpha(in Color color, float alpha)
+    {
+        return new Color(
+            color.R,
+            color.G,
+            color.B,
+            (int)(color.A * alpha)
+        );
+    }
+
+    public static Color FromPacked(uint packedValue)
+    {
+        return new Color(
+            Texture2DBlender.GetR(packedValue),
+            Texture2DBlender.GetG(packedValue),
+            Texture2DBlender.GetB(packedValue),
+            Texture2DBlender.GetA(packedValue)
+        );
     }
 
     public static Color Subtract(in Color a, in Color b)
@@ -137,7 +157,6 @@ public static class ColorExt
             a.A - b.A
         );
     }
-
 }
 
 public class ColorConverter : JsonConverter<Color>

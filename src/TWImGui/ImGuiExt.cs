@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Globalization;
 using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 
 namespace MyGame.TWImGui;
 
@@ -188,96 +189,79 @@ public static unsafe class ImGuiExt
     }
 
 
-    public static bool DrawXy(string label, ref Num.Vector2 value, string xLabel = "X", string yLabel = "Y", float step = 1f,
+    public static bool DrawXy(string label, ref Num.Vector2 value, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
+        float step = 1f,
         float min = 0f, float max = 0f, string format = "%g")
     {
         ImGui.PushID(label);
+        ImGui.BeginGroup();
+
         var itemWidth = ImGui.CalcItemWidth();
-        var cursorX = ImGui.GetCursorPosX();
         var itemInnerSpacing = ImGui.GetStyle()->ItemInnerSpacing.X;
-        var itemSpacing = ImGui.GetStyle()->ItemSpacing.X;
-        var isEdited = false;
-        var isHovering = false;
-        ImGui.PushItemWidth(itemWidth * 0.5f - itemSpacing * 0.5f);
-        isEdited |= DrawScalarButton(xLabel, "##x_label", ref value.X, step, min, max, format);
-        ImGui.SameLine();
-        isEdited |= DrawScalarButton(yLabel, "##y_label", ref value.Y, step, min, max, format);
-        ImGui.PopItemWidth();
 
-        ImGui.SameLine();
-        ImGui.SetCursorPosX(cursorX + itemWidth + itemInnerSpacing);
-        var labelPos = ImGui.GetCursorPos();
-        var labelColor = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
-        ImGui.PushStyleColor(ImGuiCol.Text, labelColor);
-        ImGui.TextUnformatted(label);
-        ImGui.PopStyleColor();
-
-        ImGui.SetCursorPos(labelPos);
-        if (DrawCopyPasteMenu(ref value))
+        var labelSize = ImGui.CalcTextSize(label, true);
+        if (labelSize.X > 0)
         {
-            isEdited = true;
+            var cursorX = ImGui.GetCursorPosX();
+            ImGui.PushFont(GetFont(ImGuiFont.MediumBold));
+            ImGui.PushStyleColor(ImGuiCol.Text, GetStyleColor(ImGuiCol.TextDisabled).PackedValue());
+            ImGui.Text(label);
+            ImGui.PopStyleColor();
+            ImGui.PopFont();
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(cursorX + itemWidth * 0.7f + itemInnerSpacing);
         }
 
+        var isEdited = false;
+
+        var inputWidth = ImGui.GetContentRegionAvail().X / 2;
+        isEdited |= DrawScalarButton(xLabel, xTooltip, "##x", ref value.X, inputWidth - itemInnerSpacing, step, min, max, format);
+        ImGui.SameLine();
+        isEdited |= DrawScalarButton(yLabel, yTooltip, "##y", ref value.Y, inputWidth, step, min, max, format);
+
+        ImGui.EndGroup();
+        isEdited |= DrawCopyPasteMenu(ref value);
         ImGui.PopID();
 
         return isEdited;
     }
 
-    private static bool DrawScalarButton(string label, string imguiLabel, ref float value, float step = 1f, float min = 0f, float max = 0f,
+    private static bool DrawScalarButton(string label, string tooltip, string valueLabel, ref float value, float width, float step = 1f, float min = 0f,
+        float max = 0f,
         string format = "%g")
     {
-        var (textColor, backgroundColor) = label switch
+        var textColor = label switch
         {
-            "X" => (0xff8888ffu, 0x0u), // 0xff222266u),
-            "Y" => (0xff88ff88u, 0x0u), // 0xff226622u),
-            "Z" => (0xffff8888u, 0x0u), // 0xff662222u),
-            _ => (0xff7f7f7f, 0x000000ffu), // 0xffd3d3d3 ImGui.GetStyle().Colors[(int)ImGuiCol.Text];
+            "X" => 0xff8888ffu,
+            "Y" => 0xff88ff88u,
+            "Z" => 0xffff8888u,
+            _ => 0xff7f7f7fu,
         };
-        ImGui.PushStyleColor(ImGuiCol.Text, textColor);
-        ImGui.PushStyleColor(ImGuiCol.Button, backgroundColor);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, backgroundColor);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, backgroundColor);
-        ImGui.PushStyleColor(ImGuiCol.BorderShadow, 0x0u);
-        ImGui.PushStyleColor(ImGuiCol.Border, backgroundColor);
-        var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, style->FramePadding.Y));
-        ImGui.Button(label, default);
-        ImGui.PopStyleVar();
+
+        var textWidth = Math.Max(ImGui.CalcTextSize(label).X, 16);
+        if (TextButton(label, tooltip, textColor, new Num.Vector2(textWidth, ImGui.GetTextLineHeight())))
+        {
+            ImGui.SetKeyboardFocusHere(0);
+        }
+
         ImGui.SameLine();
-        var buttonSize = ImGui.GetItemRectSize();
-        ImGui.PopStyleColor(6);
-        var itemWidth = ImGui.CalcItemWidth();
-        ImGui.PushItemWidth(itemWidth - (buttonSize.X + style->ItemSpacing.X));
-        var result = ImGui.DragFloat(imguiLabel, RefPtr(ref value), step, min, max, format);
-        ImGui.PopItemWidth();
-        return result;
+        ImGui.SetNextItemWidth(width - textWidth - ImGui.GetStyle()->ItemInnerSpacing.X);
+        return ImGui.DragFloat(valueLabel, RefPtr(ref value), step, min, max, format);
     }
 
 
     private static bool DrawCopyPasteMenu(ref Num.Vector2 value)
     {
-        var labelSize = ImGui.GetItemRectSize();
-        var frameHeight = ImGui.GetFrameHeight();
-
-        ImGui.InvisibleButton("##invis_menu_btn", new Num.Vector2(labelSize.X, frameHeight));
-        ImGui.OpenPopupOnItemClick("context");
-
         var result = false;
-        if (ImGui.BeginPopup("context"))
+        if (ImGui.BeginPopupContextItem("ContextMenu"))
         {
             if (ImGui.Selectable(FontAwesome6.Copy + " Copy", false, ImGuiSelectableFlags.None, default))
             {
                 SetVectorInClipboard(value);
             }
 
-            if (ImGui.Selectable(FontAwesome6.Paste + " Paste", false, ImGuiSelectableFlags.None, default))
-            {
-                if (ParseVectorFromClipboard(out var v))
-                {
-                    result = true;
-                    value = v;
-                }
-            }
+            result |= ImGui.Selectable(FontAwesome6.Paste + " Paste", false, ImGuiSelectableFlags.None, default) &&
+                      ParseVectorFromClipboard(out value);
 
             ImGui.EndPopup();
         }
@@ -401,12 +385,12 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, padding.ToNumerics());
         var result = ImGui.Button(label, size.ToNumerics());
 
-        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled) && tooltip != null)
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal) && tooltip != null)
         {
-            var popupBg = ColorExt.HsvToRgb(h, s * 1f, v * 0.5f) * 0.8f;
+            var popupBg = ColorExt.HsvToRgb(h, s * 1f, v * 0.3f) * 0.8f;
             ImGui.PushStyleColor(ImGuiCol.PopupBg, popupBg.ToNumerics());
             ImGui.BeginTooltip();
-            ImGui.TextUnformatted(tooltip);
+            ImGui.Text(tooltip);
             ImGui.EndTooltip();
             ImGui.PopStyleColor();
         }
@@ -435,7 +419,7 @@ public static unsafe class ImGuiExt
             openPicker = true;
         }
 
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
         }
@@ -479,30 +463,51 @@ public static unsafe class ImGuiExt
 
     public static bool TextButton(string text, string tooltip)
     {
-        var color = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
-        return TextButton(text, tooltip, color.ToColor());
+        var color = GetStyleColor(ImGuiCol.Text);
+        var size = ImGui.CalcTextSize(text);
+        return TextButton(text, tooltip, color.PackedValue(), size);
     }
 
-    public static bool TextButton(string text, string tooltip, Color textColor)
+    public static bool TextButton(string text, string tooltip, uint color, Num.Vector2 size)
     {
-        var size = ImGui.CalcTextSize(text);
+        /*if (size.X == 0 || size.Y == 0)
+            return false;
+
         var cursorPos = ImGui.GetCursorScreenPos();
         var result = ImGui.InvisibleButton(text, size);
         var isHovering = ImGui.IsItemHovered();
-        if (isHovering)
+
+        if (isHovering && tooltip != string.Empty)
         {
-            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-            if (tooltip != string.Empty)
-            {
-                ImGui.BeginTooltip();
-                ImGui.TextUnformatted(tooltip);
-                ImGui.EndTooltip();
-            }
+            ImGui.BeginTooltip();
+            ImGui.TextUnformatted(tooltip);
+            ImGui.EndTooltip();
         }
 
         var dl = ImGui.GetWindowDrawList();
-        var yPadding = ImGui.GetStyle()->FramePadding.Y;
-        dl->AddText(cursorPos + new Num.Vector2(0, yPadding), textColor.PackedValue, text);
+        dl->AddText(cursorPos, color, text);
+        return result;*/
+
+        ImGui.PushStyleColor(ImGuiCol.Text, color);
+        ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.BorderShadow, Color.Transparent.PackedValue);
+        ImGui.PushStyleColor(ImGuiCol.Border, Color.Transparent.PackedValue);
+        var style = ImGui.GetStyle();
+        ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, new Num.Vector2(0, 0.5f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, style->FramePadding.Y));
+        var result = ImGui.Button(text, size);
+        ImGui.PopStyleVar(2);
+        ImGui.PopStyleColor(6);
+
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal) && tooltip != "")
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text(tooltip);
+            ImGui.EndTooltip();
+        }
+
         return result;
     }
 
@@ -524,14 +529,28 @@ public static unsafe class ImGuiExt
         var min = ImGui.GetItemRectMin();
         var max = ImGui.GetItemRectMax();
         var padding = ImGui.GetStyle()->WindowPadding;
-        max.X = min.X + ImGui.GetContentRegionAvail().X;
-        // var color = ImGui.GetColorU32(ImGuiCol.FrameBg);
+        max.X = min.X + ImGui.GetContentRegionAvail().X - 1;
         var packedColor = color.PackedValue;
-        drawList->AddRect(
-            min - new Num.Vector2(padding.X * 0.5f - 1.0f, 0),
-            max + new Num.Vector2(padding.X * 0.5f, 0),
-            packedColor
-        );
+        var borderMin = min - new Num.Vector2(padding.X * 0.5f - 1, 0);
+        var borderMax = max + new Num.Vector2(padding.X * 0.5f + 1, 0);
+        borderMin.X = MathF.Floor(borderMin.X);
+        borderMax.X = MathF.Floor(borderMax.X);
+        if (borderMax.X - borderMin.X > 0 && borderMax.Y - borderMin.Y > 0)
+        {
+            var yAdjust = new Num.Vector2(0, ImGui.GetFrameHeightWithSpacing() - 6);
+            drawList->AddLine(
+                borderMin + yAdjust,
+                new Num.Vector2(borderMax.X, borderMin.Y) + yAdjust,
+                ColorExt.MultiplyAlpha(color, 0.8f).PackedValue,
+                1f
+            );
+            drawList->AddRect(
+                borderMin,
+                borderMax,
+                packedColor,
+                1f
+            );
+        }
     }
 
     public static void DrawCollapsableLeaf(ReadOnlySpan<char> header, Color headerColor)
@@ -580,6 +599,11 @@ public static unsafe class ImGuiExt
         );
     }
 
+    public static ImFont* GetFont(ImGuiFont fontType)
+    {
+        return ((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(fontType);
+    }
+
     public static string LabelPrefix(string label, bool preserveLabel = false)
     {
         if (label.StartsWith("##"))
@@ -588,22 +612,42 @@ public static unsafe class ImGuiExt
             return label;
         }
 
-        var width = ImGui.CalcItemWidth();
-        float x = ImGui.GetCursorPosX();
+        var itemWidth = ImGui.CalcItemWidth();
+        var x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
         ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
-        ImGui.Text(label);
+        var textSize = ImGui.CalcTextSize(label);
+        var min = ImGui.GetCursorScreenPos();
+        var labelWidth = itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X;
+        var max = min + new Num.Vector2(Math.Min(textSize.X, labelWidth), textSize.Y);
+        ImGuiInternal.RenderTextClipped(min, max, label, &textSize, Num.Vector2.Zero);
         ImGui.PopFont();
         ImGui.PopStyleColor();
-        ImGui.SameLine();
-        ImGui.SetCursorPosX(x + width * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X);
+        var buttonSize = max - min;
+        if (buttonSize.X > 0 && buttonSize.Y > 0)
+        {
+            ImGui.InvisibleButton(label, buttonSize, ImGuiButtonFlags.None);
+
+            if (labelWidth < textSize.X && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+            {
+                ImGui.SetTooltip(label);
+            }
+
+            if (ImGui.IsItemClicked())
+            {
+                ImGui.SetKeyboardFocusHere();
+            }
+        
+            ImGui.SameLine();    
+        }
+        ImGui.SetCursorPosX(x + itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X);
         ImGui.SetNextItemWidth(-1);
 
         return preserveLabel ? label : "##" + label;
     }
 
     public static bool BeginCollapsingHeader(string header, Color color,
-        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont font = ImGuiFont.Medium, bool hideHeader = false)
+        ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont font = ImGuiFont.Medium, string labelRight = "", bool hideHeader = false)
     {
         if (hideHeader)
         {
@@ -618,10 +662,10 @@ public static unsafe class ImGuiExt
         var (h, s, v) = ColorExt.RgbToHsv(color);
 
         var (normal, hovered, active, border) = (
-            ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f),
+            ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f) * 0,
             ColorExt.HsvToRgb(h, s * 0.9f, v * 0.7f),
             ColorExt.HsvToRgb(h, s * 1f, v * 0.8f),
-            GetStyleColor(ImGuiCol.Border).ToColor()
+            ColorExt.HsvToRgb(h, s * 1f, v * 0.8f)
         );
 
         var framePadding = new Num.Vector2(6, 4);
@@ -644,23 +688,49 @@ public static unsafe class ImGuiExt
             ImGui.PopFont();
         }
 
+        var result = false;
         ImGui.BeginGroup();
 
         PushStyles();
-        var id = header;
-        var result = ImGui.CollapsingHeader(id, flags);
+        ImGui.BeginGroup();
+        {
+            result = ImGui.CollapsingHeader(header, flags);
+
+            if (labelRight != "")
+            {
+                var labelRightSize = ImGui.CalcTextSize(labelRight);
+                ImGui.SameLine();
+                var cursorX = ImGui.GetCursorPosX();
+                var labelRightX = ImGui.GetContentRegionMax().X - labelRightSize.X - ImGui.GetStyle()->FramePadding.X;
+                if (labelRightX >= cursorX)
+                {
+                    ImGui.SetCursorPosX(labelRightX);
+                    ImGui.Text(labelRight);   
+                }
+            }
+        }
+        ImGui.EndGroup();
         PopStyles();
+        
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+        {
+            var popupBg = ColorExt.HsvToRgb(h, s * 1f, v * 0.3f) * 0.8f;
+            ImGui.PushStyleColor(ImGuiCol.PopupBg, popupBg.ToNumerics());
+            ImGui.PushStyleColor(ImGuiCol.Border, border.ToNumerics());
+            ImGui.SetTooltip(header);
+            ImGui.PopStyleColor(2);
+        }
 
         if (result)
         {
             Indent();
             ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
-            _colorStack.Push(normal);
+            _colorStack.Push(border);
         }
         else
         {
             ImGui.EndGroup();
-            DrawCollapsingHeaderBorder(normal);
+            // DrawCollapsingHeaderBorder(border);
         }
 
         return result;
@@ -757,6 +827,37 @@ public static unsafe class ImGuiExt
     public static Num.Vector4 GetStyleColor(ImGuiCol c)
     {
         return ImGui.GetStyle()->Colors[(int)c];
+    }
+
+    public static void RenderText(string text, bool hideTextAfterHash)
+    {
+        var pos = ImGui.GetCursorScreenPos();
+        ImGuiInternal.RenderText(pos, text, hideTextAfterHash);
+    }
+
+    public static void AddRectDashed(ImDrawList* drawList, Num.Vector2 min, Num.Vector2 max, uint color, float thickness, int segmentLength,
+        float lengthOfOnSegments = 0.5f)
+    {
+        AddLineDashed(drawList, min, new Num.Vector2(max.X, min.Y), color, thickness, segmentLength, lengthOfOnSegments);
+        AddLineDashed(drawList, new Num.Vector2(max.X, min.Y), max, color, thickness, segmentLength, lengthOfOnSegments);
+        AddLineDashed(drawList, max, new Num.Vector2(min.X, max.Y), color, thickness, segmentLength, lengthOfOnSegments);
+        AddLineDashed(drawList, new Num.Vector2(min.X, max.Y), min, color, thickness, segmentLength, lengthOfOnSegments);
+    }
+
+    public static void AddLineDashed(ImDrawList* drawList, Num.Vector2 start, Num.Vector2 end, uint color, float thickness, int segmentLength,
+        float lengthOfOnSegments = 0.5f)
+    {
+        var offset = (end - start);
+        var length = offset.Length();
+        var numSegments = (int)(length / segmentLength);
+        var dir = offset / length;
+        int i;
+        var p = start;
+        for (i = 0; i < numSegments; i++)
+        {
+            drawList->AddLine(p, p + dir * segmentLength * lengthOfOnSegments, color, thickness);
+            p += dir * segmentLength;
+        }
     }
 }
 

@@ -98,10 +98,11 @@ public unsafe class SimpleTypeInspector : Inspector
                 result = true;
             }
         }
+
         inputBuffer.Dispose();
         return result;
-    } 
-    
+    }
+
     public static bool InspectULong(string name, ref ulong value)
     {
         var result = false;
@@ -118,7 +119,7 @@ public unsafe class SimpleTypeInspector : Inspector
     {
         var result = false;
 
-        if (ImGuiExt.BeginCollapsingHeader(name, ImGuiExt.Colors[0], ImGuiTreeNodeFlags.None, ImGuiFont.Tiny))
+        if (ImGuiExt.BeginCollapsingHeader(name, ImGuiExt.Colors[5], ImGuiTreeNodeFlags.None, ImGuiFont.Tiny, typeof(Rectangle).Name))
         {
             if (isReadOnly)
             {
@@ -126,7 +127,7 @@ public unsafe class SimpleTypeInspector : Inspector
             }
 
             var position = value.Location.ToNumerics();
-            if (ImGuiExt.DrawXy("Position", ref position, "X", "Y", 1f, 0f, 0f, "%.6g"))
+            if (ImGuiExt.DrawXy("##Position", ref position, "X", "", "Y", "", 1f, 0f, 0f, "%u"))
             {
                 value.X = (int)position.X;
                 value.Y = (int)position.Y;
@@ -134,7 +135,7 @@ public unsafe class SimpleTypeInspector : Inspector
             }
 
             var size = value.Size.ToNumerics();
-            if (ImGuiExt.DrawXy("Size", ref size, "W", "H"))
+            if (ImGuiExt.DrawXy("##Size", ref size, "W", "Width", "H", "Height"))
             {
                 value.Width = (int)size.X;
                 value.Height = (int)size.Y;
@@ -252,7 +253,7 @@ public unsafe class SimpleTypeInspector : Inspector
             var value = (Point)getter();
             var tuple = new ValueTuple<int, int>(value.X, value.Y);
             var xy = &tuple;
-            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%11d"))
+            if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%d"))
             {
                 setter(new Point(xy->Item1, xy->Item2));
                 result = true;
@@ -272,7 +273,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Vector2))
         {
             var value = ((Vector2)getter()).ToNumerics();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%g"))
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%.4g"))
             {
                 setter(value.ToXNA());
                 result = true;
@@ -281,7 +282,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Num.Vector2))
         {
             var value = (Num.Vector2)getter();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%g"))
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%.4g"))
             {
                 setter(value);
                 result = true;
@@ -290,7 +291,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Vector3))
         {
             var value = ((Vector3)getter()).ToNumerics();
-            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), default, default, default, default))
+            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, default, default, "%.6g"))
             {
                 setter(value.ToXNA());
                 result = true;
@@ -299,7 +300,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Vector4))
         {
             var value = ((Vector4)getter()).ToNumerics();
-            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), default, default, default, default))
+            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, default, default, "%.6g"))
             {
                 setter(value.ToXNA());
                 result = true;

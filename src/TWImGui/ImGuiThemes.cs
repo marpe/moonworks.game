@@ -66,8 +66,8 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.PlotHistogram] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotHistogramHovered] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.TableHeaderBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
-        style->Colors[(int)ImGuiCol.TableBorderStrong] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
-        style->Colors[(int)ImGuiCol.TableBorderLight] = new Num.Vector4(0.28f, 0.28f, 0.28f, 0.29f);
+        style->Colors[(int)ImGuiCol.TableBorderStrong] = new Num.Vector4(0.26f, 0.26f, 0.26f, 1.00f);
+        style->Colors[(int)ImGuiCol.TableBorderLight] = new Num.Vector4(0.25f, 0.25f, 0.25f, 1.00f);
         style->Colors[(int)ImGuiCol.TableRowBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.00f);
         style->Colors[(int)ImGuiCol.TableRowBgAlt] = new Num.Vector4(1.00f, 1.00f, 1.00f, 0.06f);
         style->Colors[(int)ImGuiCol.TextSelectedBg] = new Num.Vector4(0.20f, 0.22f, 0.23f, 1.00f);
