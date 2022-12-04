@@ -199,7 +199,7 @@ public class TWConsole
                 for (var i = 0; i < parameters.Length && i < numSuppliedParams; i++)
                 {
                     // args[0] will be the command
-                    var arg = i == parameters.Length - 1 ? string.Join(' ', args.Slice(1 + i).ToArray()) : args[1 + i];
+                    var arg = i == parameters.Length - 1 ? string.Join(' ', args.AsSpan().Slice(1 + i).ToArray()) : args[1 + i];
                     parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, arg);
                 }
 
@@ -246,7 +246,7 @@ public class TWConsole
     }
 
     [ConsoleHandler("win_info", "Print window size and resolution info")]
-    private void PrintDisplayResolution()
+    private void PrintWindowInfo()
     {
         var window = Shared.Game.MainWindow;
         SDL.SDL_Vulkan_GetDrawableSize(window.Handle, out var w, out var h);
@@ -429,7 +429,7 @@ public class TWConsole
         }
     }
 
-    public void ExecuteCommand(ConsoleCommand command, ReadOnlySpan<string> args)
+    public void ExecuteCommand(ConsoleCommand command, string[] args)
     {
         command.Handler.Invoke(this, command, args);
     }

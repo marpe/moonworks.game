@@ -54,7 +54,7 @@ public static class CameraDebug
 {
     [CVar("cam.debug", "Toggle camera debugging")]
     public static bool DebugCamera;
-    
+
     public static void DrawCameraBounds(Renderer renderer, Camera camera)
     {
         if (!DebugCamera)
@@ -120,7 +120,10 @@ public class World
 
     [CVar("lights.debug", "Toggle light debugging", false)]
     public static bool DebugLights;
-    
+
+    [CVar("entities.debug", "Toggle debugging of entities")]
+    public static bool DebugEntities;
+
     private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private readonly GameScreen _gameScreen;
@@ -137,11 +140,9 @@ public class World
 
     public List<Light> Lights { get; } = new();
 
-    [HideInInspector]
-    public ulong WorldUpdateCount;
-    
-    [HideInInspector]
-    public float WorldTotalElapsedTime;
+    [HideInInspector] public ulong WorldUpdateCount;
+
+    [HideInInspector] public float WorldTotalElapsedTime;
 
     private static Vector2 _savedPos;
 
@@ -163,7 +164,7 @@ public class World
             ContentPaths.ldtk.Example.Characters_png
         };
 
-        gameScreen.Content.LoadTextures(textures);
+        Shared.Content.LoadTextures(textures);
 
         _debugDraw = new DebugDrawItems();
 
@@ -348,7 +349,7 @@ public class World
             Player.Initialize(this);
         }
 
-        var command = PlayerBinds.ToPlayerCommand();
+        var command = Binds.Player.ToPlayerCommand();
         Player.Update(deltaSeconds, command);
     }
 
@@ -403,7 +404,6 @@ public class World
         DrawBullets(renderer, alpha);
     }
 
-    
 
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
@@ -423,7 +423,7 @@ public class World
 
     private void DrawBullets(Renderer renderer, double alpha)
     {
-        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
         for (var i = 0; i < Bullets.Count; i++)
         {
             var bullet = Bullets[i];
@@ -431,7 +431,15 @@ public class World
             var xform = bullet.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
             if (Debug)
+            {
+                if (bullet.DrawDebug || DebugEntities)
+                {
+                    var radius = MathF.Min(bullet.Size.X, bullet.Size.Y) * 0.5f;
+                    renderer.DrawCircleOutline(bullet.Bounds.Center, radius, Color.Blue, 1.0f);
+                }
+
                 DrawEntityDebug(renderer, bullet, false, alpha);
+            }
         }
     }
 
@@ -439,7 +447,7 @@ public class World
     {
         var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
         var xform = Player.GetTransform(alpha);
-        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
         renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
         if (Debug)
             DrawEntityDebug(renderer, Player, true, alpha);
@@ -447,7 +455,7 @@ public class World
 
     private void DrawEnemies(Renderer renderer, double alpha)
     {
-        var texture = _gameScreen.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
         for (var i = 0; i < Enemies.Count; i++)
         {
             var entity = Enemies[i];
@@ -474,7 +482,7 @@ public class World
             return;
 
         var texturePath = _tileSetTextureMapping[layer.TilesetDefUid.Value];
-        var texture = _gameScreen.Content[texturePath];
+        var texture = Shared.Content[texturePath];
 
         var layerWidth = layer.CWid;
         var layerHeight = layer.CHei;
@@ -563,7 +571,7 @@ public class World
 
     public void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
-        if (!e.DrawDebug)
+        if (!e.DrawDebug && !DebugEntities)
             return;
 
         var cell = e.Cell;
@@ -608,11 +616,34 @@ public class World
     public void SpawnBullet(Vector2 position, int direction)
     {
         var bullet = new Bullet();
+        var def = GetEntityDefinition(LdtkRaw, EntityType.Bullet);
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
-        bullet.Pivot = new Vector2(0.5f, 0.5f);
-        bullet.Size = new Point(8, 8);
+        bullet.Pivot = def.PivotVec;
+        bullet.Size = def.Size;
+        bullet.SmartColor = ColorExt.FromHex(def.Color.AsSpan(1));
+        bullet.Iid = Guid.NewGuid();
+        bullet.EntityType = EntityType.Bullet;
+
+        bullet.Initialize(this);
+        if (bullet.HasCollision(bullet.Position.Current, bullet.Size))
+        {
+            // Logs.LogInfo("Can't spawn bullet");
+            // return;
+        }
+
         Bullets.Add(bullet);
+    }
+
+    private static EntityDefinition GetEntityDefinition(LdtkJson ldtkRaw, EntityType entityType)
+    {
+        for (var i = 0; i < ldtkRaw.Defs.Entities.Length; i++)
+        {
+            if (ldtkRaw.Defs.Entities[i].Identifier == Entity.Identifiers[(int)entityType])
+                return ldtkRaw.Defs.Entities[i];
+        }
+
+        throw new InvalidOperationException();
     }
 
     public static LayerDefinition GetLayerDefinition(LdtkJson ldtkRaw, long layerDefUid)

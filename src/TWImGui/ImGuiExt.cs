@@ -188,8 +188,14 @@ public static unsafe class ImGuiExt
         PropRow(key, value, null, color);
     }
 
-
     public static bool DrawXy(string label, ref Num.Vector2 value, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
+        float step = 1f,
+        float min = 0f, float max = 0f, string format = "%g")
+    {
+        return DrawXy(label, ref value.X, ref value.Y, xLabel, xTooltip, yLabel, yTooltip, step, min, max, format);
+    }
+
+    public static bool DrawXy(string label, ref float x, ref float y, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
         float step = 1f,
         float min = 0f, float max = 0f, string format = "%g")
     {
@@ -215,12 +221,12 @@ public static unsafe class ImGuiExt
         var isEdited = false;
 
         var inputWidth = ImGui.GetContentRegionAvail().X / 2;
-        isEdited |= DrawScalarButton(xLabel, xTooltip, "##x", ref value.X, inputWidth - itemInnerSpacing, step, min, max, format);
+        isEdited |= DrawScalarButton(xLabel, xTooltip, "##x", ref x, inputWidth - itemInnerSpacing, step, min, max, format);
         ImGui.SameLine();
-        isEdited |= DrawScalarButton(yLabel, yTooltip, "##y", ref value.Y, inputWidth, step, min, max, format);
+        isEdited |= DrawScalarButton(yLabel, yTooltip, "##y", ref y, inputWidth, step, min, max, format);
 
         ImGui.EndGroup();
-        isEdited |= DrawCopyPasteMenu(ref value);
+        isEdited |= DrawCopyPasteMenu(ref x, ref y);
         ImGui.PopID();
 
         return isEdited;
@@ -250,18 +256,18 @@ public static unsafe class ImGuiExt
     }
 
 
-    private static bool DrawCopyPasteMenu(ref Num.Vector2 value)
+    private static bool DrawCopyPasteMenu(ref float x, ref float y)
     {
         var result = false;
         if (ImGui.BeginPopupContextItem("ContextMenu"))
         {
             if (ImGui.Selectable(FontAwesome6.Copy + " Copy", false, ImGuiSelectableFlags.None, default))
             {
-                SetVectorInClipboard(value);
+                SetVectorInClipboard(x, y);
             }
 
             result |= ImGui.Selectable(FontAwesome6.Paste + " Paste", false, ImGuiSelectableFlags.None, default) &&
-                      ParseVectorFromClipboard(out value);
+                      ParseVectorFromClipboard(out x, out y);
 
             ImGui.EndPopup();
         }
@@ -269,25 +275,25 @@ public static unsafe class ImGuiExt
         return result;
     }
 
-    public static void SetVectorInClipboard(Num.Vector2 v)
+    public static void SetVectorInClipboard(float x, float y)
     {
-        var str = $"{v.X.ToString("F0", CultureInfo.InvariantCulture)},{v.Y.ToString("F0", CultureInfo.InvariantCulture)}";
+        var str = $"{x.ToString("F0", CultureInfo.InvariantCulture)},{y.ToString("F0", CultureInfo.InvariantCulture)}";
         SDL.SDL_SetClipboardText(str);
     }
 
-    public static bool ParseVectorFromClipboard(out Num.Vector2 vector)
+    public static bool ParseVectorFromClipboard(out float x, out float y)
     {
         var clipboard = SDL.SDL_GetClipboardText();
         var split = clipboard.Split(',');
         if (split.Length != 2)
         {
-            vector = Num.Vector2.Zero;
+            x = y = 0;
+            return true;
         }
 
-        var _x = float.TryParse(split[0], out var x);
-        var _y = float.TryParse(split[1], out var y);
-        vector = new Num.Vector2(_x ? x : 0, _y ? y : 0);
-        return _x && _y;
+        float.TryParse(split[0], out x);
+        float.TryParse(split[1], out y);
+        return true;
     }
 
 

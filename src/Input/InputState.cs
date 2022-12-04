@@ -2,9 +2,9 @@
 
 public struct InputState
 {
-    private static KeyCode[] AllKeyCodes = Enum.GetValues<KeyCode>();
-    private static MouseButtonCode[] AllMouseButtonCodes = Enum.GetValues<MouseButtonCode>();
-    
+    private static KeyCode[] _allKeyCodes = Enum.GetValues<KeyCode>();
+    private static MouseButtonCode[] _allMouseButtonCodes = Enum.GetValues<MouseButtonCode>();
+
     public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
     public HashSet<KeyCode> KeyboardState = new();
     public HashSet<MouseButtonCode> MouseState = new();
@@ -27,9 +27,21 @@ public struct InputState
         inputState.NumTextInputChars = 0;
     }
 
-    public static bool IsKeyDown(in InputState inpuState, KeyCode keyCode)
+    public static bool IsKeyDown(in InputState inputState, KeyCode keyCode)
     {
-        return inpuState.KeyboardState.Contains(keyCode);
+        return inputState.KeyboardState.Contains(keyCode);
+    }
+    
+    public static bool IsKeyReleased(in InputState inputState, KeyCode keyCode)
+    {
+        // TODO (marpe): Fix
+        return false;
+    }
+    
+    public static bool IsKeyPressed(in InputState inputState, KeyCode keyCode)
+    {
+        // TODO (marpe): Fix
+        return false;
     }
 
     public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
@@ -47,6 +59,18 @@ public struct InputState
     {
         return inputState.MouseState.Contains(mouseButton);
     }
+    
+    public static bool IsMouseButtonReleased(in InputState inputState, MouseButtonCode mouseButton)
+    {
+        // TODO (marpe): Fix
+        return false;
+    }
+    
+    public static bool IsMouseButtonPressed(in InputState inputState, MouseButtonCode mouseButton)
+    {
+        // TODO (marpe): Fix
+        return false;
+    }
 
     public void Print(string label)
     {
@@ -56,41 +80,32 @@ public struct InputState
         }
     }
 
-    public static InputState Aggregate(List<InputState> inputStates)
+    public static InputState Add(InputState first, InputState second)
     {
         var result = new InputState();
-
-        foreach (var state in inputStates)
-        {
-            var oldNumChars = result.NumTextInputChars;
-            result.NumTextInputChars += state.NumTextInputChars;
-            if (result.TextInput.Length < result.NumTextInputChars)
-            {
-                Array.Resize(ref result.TextInput, result.NumTextInputChars);
-            }
-
-            for (var i = 0; i < state.NumTextInputChars; i++)
-            {
-                result.TextInput[oldNumChars + i] = state.TextInput[i];
-            }
-
-            foreach (var keyDown in state.KeyboardState)
-            {
-                result.KeyboardState.Add(keyDown);
-            }
-
-            result.GlobalMousePosition = state.GlobalMousePosition;
-            result.MouseWheelDelta += state.MouseWheelDelta;
-
-            foreach (var mouseDown in state.MouseState)
-            {
-                result.MouseState.Add(mouseDown);
-            }
-        }
-
+        result.NumTextInputChars = first.NumTextInputChars + second.NumTextInputChars;
+        Array.Resize(ref result.TextInput, result.NumTextInputChars);
+        
+        for (var i = 0; i < first.NumTextInputChars; i++)
+            result.TextInput[i] = first.TextInput[i];
+        for (var i = 0; i < second.NumTextInputChars; i++)
+            result.TextInput[first.NumTextInputChars + i] = second.TextInput[i];
+        
+        foreach (var keyDown in first.KeyboardState)
+            result.KeyboardState.Add(keyDown);
+        foreach (var keyDown in second.KeyboardState)
+            result.KeyboardState.Add(keyDown);
+        
+        result.GlobalMousePosition = second.GlobalMousePosition;
+        result.MouseWheelDelta = first.MouseWheelDelta + second.MouseWheelDelta;
+        
+        foreach (var mouseDown in first.MouseState)
+            result.MouseState.Add(mouseDown);
+        foreach (var mouseDown in second.MouseState)
+            result.MouseState.Add(mouseDown);
+        
         return result;
     }
-
     public static InputState Create(InputHandler input)
     {
         var state = new InputState();
@@ -103,9 +118,9 @@ public struct InputState
             state.TextInput[i] = textInput[i];
         }
 
-        for (var i = 0; i < AllKeyCodes.Length; i++)
+        for (var i = 0; i < _allKeyCodes.Length; i++)
         {
-            var keyCode = AllKeyCodes[i];
+            var keyCode = _allKeyCodes[i];
             if (input.IsKeyDown(keyCode))
                 state.KeyboardState.Add(keyCode);
         }
@@ -113,9 +128,9 @@ public struct InputState
         SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
         state.GlobalMousePosition = new Vector2(globalMouseX, globalMouseY);
         state.MouseWheelDelta = input.MouseWheelDelta;
-        for (var i = 0; i < AllMouseButtonCodes.Length; i++)
+        for (var i = 0; i < _allMouseButtonCodes.Length; i++)
         {
-            var mouseButton = AllMouseButtonCodes[i];
+            var mouseButton = _allMouseButtonCodes[i];
             if (input.IsMouseButtonDown(mouseButton))
                 state.MouseState.Add(mouseButton);
         }

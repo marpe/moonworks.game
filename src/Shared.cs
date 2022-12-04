@@ -11,4 +11,5 @@ public static class Shared
     public static MenuHandler Menus = null!;
     public static FreeTypeLibrary FreeTypeLibrary = null!;
     public static AudioManager AudioManager = null!;
+    public static ContentManager Content = null!;
 }

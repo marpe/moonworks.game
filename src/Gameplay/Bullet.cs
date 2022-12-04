@@ -1,6 +1,9 @@
-﻿namespace MyGame;
+﻿using MoonWorks.Collision.Float;
+using Point = MoonWorks.Math.Float.Point;
 
-public class Bullet : Entity
+namespace MyGame;
+
+public partial class Bullet : Entity
 {
     public float Timer;
     public float Lifetime = 3f;
@@ -44,15 +47,16 @@ public class Bullet : Entity
 
         Timer += deltaSeconds;
         Mover.PerformMove(Velocity, deltaSeconds);
-        var distance = 5f;
+        var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
+        var circle = new Circle(radius);
 
         for (var i = World.Enemies.Count - 1; i >= 0; i--)
         {
             var enemy = World.Enemies[i];
             if (enemy.IsDead || enemy.IsDestroyed)
                 continue;
-            var offset = enemy.Bounds.Center - Bounds.Center;
-            if (offset.LengthSquared() <= distance * distance)
+            var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
+            if (NarrowPhase.TestCollision(circle, new Transform2D(Position + Size.ToVec2() * 0.5f), other, new Transform2D(enemy.Position)))
             {
                 IsDestroyed = true;
                 enemy.IsDead = true;

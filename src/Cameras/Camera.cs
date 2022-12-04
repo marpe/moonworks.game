@@ -1,19 +1,5 @@
 ﻿namespace MyGame.Cameras;
 
-public static class CameraBinds
-{
-    public static ButtonBind ZoomIn = new();
-    public static ButtonBind ZoomOut = new();
-    public static ButtonBind Up = new();
-    public static ButtonBind Down = new();
-    public static ButtonBind Forward = new();
-    public static ButtonBind Back = new();
-    public static ButtonBind Right = new();
-    public static ButtonBind Left = new();
-    public static ButtonBind Pan = new();
-    public static ButtonBind Reset = new();
-}
-
 public class Camera
 {
     private Vector2 _cameraRotation3D = new(0, MathHelper.Pi);
@@ -265,7 +251,7 @@ public class Camera
     {
         if (Use3D)
         {
-            if (CameraBinds.Pan.Active || Shared.Game.Inputs.Mouse.RelativeMode)
+            if (Binds.Camera.Pan.Active || Shared.Game.Inputs.Mouse.RelativeMode)
             {
                 var rotationSpeed = 0.1f * MouseSensitivity3D;
                 _cameraRotation3D += new Vector2(input.MouseDelta.X, -input.MouseDelta.Y) * rotationSpeed * deltaSeconds;
@@ -273,7 +259,7 @@ public class Camera
                 Rotation3D = rotation;
             }
 
-            if (CameraBinds.Reset.Active)
+            if (Binds.Camera.Reset.Active)
             {
                 _cameraRotation3D = new Vector2(0, MathHelper.Pi);
                 var rotation = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
@@ -282,78 +268,78 @@ public class Camera
             }
 
             var moveDelta = Camera3DSpeed * deltaSeconds;
-            if (CameraBinds.Up.Active)
+            if (Binds.Camera.Up.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Up, Rotation3D) * moveDelta;
             }
 
-            if (CameraBinds.Down.Active)
+            if (Binds.Camera.Down.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Down, Rotation3D) * moveDelta;
             }
 
-            if (CameraBinds.Forward.Active)
+            if (Binds.Camera.Forward.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Forward, Rotation3D) * moveDelta;
             }
 
-            if (CameraBinds.Back.Active)
+            if (Binds.Camera.Back.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Backward, Rotation3D) * moveDelta;
             }
 
-            if (CameraBinds.Left.Active)
+            if (Binds.Camera.Left.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Left, Rotation3D) * moveDelta;
             }
 
-            if (CameraBinds.Right.Active)
+            if (Binds.Camera.Right.Active)
             {
                 Position3D += Vector3.Transform(Vector3.Right, Rotation3D) * moveDelta;
             }
         }
         else
         {
-            if (CameraBinds.Pan.Active)
+            if (Binds.Camera.Pan.Active)
             {
                 Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
             }
 
             var moveDelta = _cameraSpeed * deltaSeconds;
 
-            if (CameraBinds.Reset.Active)
+            if (Binds.Camera.Reset.Active)
             {
                 Zoom = GetZoomFromRenderScale();
                 TargetPosition = _trackingEntity != null ? _trackingEntity.Center + _targetOffset : TargetPosition;
                 Position = TargetPosition;
             }
 
-            if (CameraBinds.ZoomIn.Active)
+            if (Binds.Camera.ZoomIn.Active)
             {
                 Zoom += 0.025f * Zoom;
             }
 
-            if (CameraBinds.ZoomOut.Active)
+            if (Binds.Camera.ZoomOut.Active)
             {
                 Zoom -= 0.025f * Zoom;
             }
 
-            if (CameraBinds.Forward.Active)
+            if (Binds.Camera.Forward.Active)
             {
                 Position.Y -= moveDelta;
             }
 
-            if (CameraBinds.Back.Active)
+            if (Binds.Camera.Back.Active)
             {
                 Position.Y += moveDelta;
             }
 
-            if (CameraBinds.Left.Active)
+            if (Binds.Camera.Left.Active)
             {
                 Position.X -= moveDelta;
             }
 
-            if (CameraBinds.Right.Active)
+            if (Binds.Camera.Right.Active)
             {
                 Position.X += moveDelta;
             }

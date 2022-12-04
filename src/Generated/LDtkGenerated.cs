@@ -63,6 +63,7 @@ public enum EntityType
     Player,
     RefTest,
     Light,
+    Bullet,
 }
 
 public partial class Entity
@@ -81,6 +82,17 @@ public partial class Entity
         { EntityType.Player, typeof(Player) },
         { EntityType.RefTest, typeof(RefTest) },
         { EntityType.Light, typeof(Light) },
+        { EntityType.Bullet, typeof(Bullet) },
+    };
+
+    public static string[] Identifiers = new[]
+    {
+        "Enemy",
+        "Gun_Pickup",
+        "Player",
+        "RefTest",
+        "Light",
+        "Bullet",
     };
 
 }
@@ -114,5 +126,9 @@ public partial class Light
     public Color Color;
     public float Angle;
     public float ConeAngle;
+}
+
+public partial class Bullet
+{
 }
 

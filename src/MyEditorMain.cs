@@ -102,7 +102,7 @@ public unsafe class MyEditorMain : MyGameMain
                 var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
                 GameScreen.QueueAction(() =>
                 {
-                    GameScreen.Content.AddTexture(relativePath, texture);
+                    Shared.Content.AddTexture(relativePath, texture);
                     Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");
                 });
             });

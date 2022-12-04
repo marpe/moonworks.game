@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;
@@ -40,6 +41,8 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
     private object? _target;
     private string _name = "Enum";
 
+    private Type? _enumType;
+    
     private bool _isInitialized;
 
     public void SetType(Type type)
@@ -75,13 +78,13 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
         {
             _isReadOnly = field.IsInitOnly || field.IsDefined(typeof(ReadOnlyAttribute));
             _name = field.Name;
-            _type ??= field.FieldType;
+            _enumType = field.FieldType;
         }
         else if (_memberInfo is PropertyInfo prop)
         {
-            _isReadOnly = prop.CanWrite || !prop.IsDefined(typeof(ReadOnlyAttribute));
+            _isReadOnly = !prop.CanWrite || prop.IsDefined(typeof(ReadOnlyAttribute));
             _name = prop.Name;
-            _type ??= prop.PropertyType;
+            _enumType = prop.PropertyType;
         }
         else
             throw new Exception();
@@ -112,18 +115,15 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
 
     public void Draw()
     {
-        if (_type == null)
-            throw new InvalidOperationException($"{nameof(_type)} is required");
-
         if (!_isInitialized)
             Initialize();
 
-        var entry = GetOrCreateCacheEntry(_type);
+        var entry = GetOrCreateCacheEntry(_enumType ?? throw new Exception($"{nameof(_enumType)} cannot be null"));
         var value = GetValue();
 
         ImGui.BeginDisabled(_isReadOnly);
 
-        if (InspectEnum(_name, ref value, entry))
+        if (InspectEnum(_name, ref value, entry, false))
         {
             SetValue(value);
         }
@@ -154,11 +154,17 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
             return flagName;
         }
 
+        if (value == 0)
+        {
+            var index = Array.IndexOf(entry.ValuesAsInt, value);
+            return index != -1 ? entry.Names[index] : "";
+        }
+        
         _sb.Clear();
         for (var i = 0; i < entry.ValuesAsInt.Length; i++)
         {
             var entryValue = entry.ValuesAsInt[i];
-            if ((value & entryValue) == value)
+            if ((value & entryValue) == entryValue)
             {
                 if (_sb.Length > 0)
                     _sb.Append(" | ");

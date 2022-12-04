@@ -118,6 +118,18 @@ public class Renderer
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
         SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
+    
+    public void DrawCircleOutline(Vector2 position, float radius, Color color, float thickness, int numSegments = 12)
+    {
+        var prevPoint = position + new Vector2(radius, 0);
+        for (var i = 1; i <= numSegments; i++)
+        {
+            var a = MathHelper.TwoPi * i / (float)numSegments;
+            var currentPoint = position + new Vector2(MathF.Cos(a), MathF.Sin(a)) * radius;
+            DrawLine(prevPoint, currentPoint, color, thickness);
+            prevPoint = currentPoint;
+        }
+    }
 
     public void DrawLine(Vector2 from, Vector2 to, Color color, float thickness = 1.0f)
     {

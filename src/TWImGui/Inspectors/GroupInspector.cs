@@ -126,7 +126,7 @@ public unsafe class GroupInspector : Inspector
     private void Draw(string path, bool drawWindow, bool rootIsWindow)
     {
         path += (path.Length > 0 ? '/' : "") + _name;
-        var title = $"{_name} ({path})";
+        var title = _name;
 
         DrawDebug(path, drawWindow, rootIsWindow);
 

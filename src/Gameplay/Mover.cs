@@ -89,10 +89,15 @@ public class Mover
         return false;
     }
 
-    private void SanityCheck(Vector2 position)
+    private bool SanityCheck(Vector2 position, string message)
     {
         if (Parent.HasCollision(position, Parent.Size))
-            Logs.LogInfo("Moved into collision tile!");
+        {
+            Logs.LogInfo(message);
+            return true;
+        }
+
+        return false;
     }
 
     public void Unstuck()
@@ -118,6 +123,12 @@ public class Mover
         if (velocity.Delta.LengthSquared() == 0)
             return;
 
+        if (SanityCheck(Parent.Position.Current, "Already colliding!"))
+        {
+            velocity.X = velocity.Y = 0;
+            return;
+        }
+        
         var deltaMove = velocity * deltaSeconds;
         var steps = MathF.Ceil((MathF.Abs(deltaMove.X) + MathF.Abs(deltaMove.Y)) / World.DefaultGridSize / 0.33f);
         var position = Parent.Position.Current;
@@ -142,7 +153,7 @@ public class Mover
                     var resolved = position;
                     resolved.X -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(intersection, 0), resolved));
-                    SanityCheck(resolved);
+                    SanityCheck(resolved, "Moving along x-axis resulted in moving into a collision tile!");
                     position = resolved;
                     velocity.X = deltaMove.X = 0;
                 }
@@ -165,7 +176,7 @@ public class Mover
                     var resolved = position;
                     resolved.Y -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(0, intersection), resolved));
-                    SanityCheck(resolved);
+                    SanityCheck(resolved, "Moving along y-axis resulted in moving into a collision tile!");
                     position = resolved;
                     velocity.Y = deltaMove.Y = 0;
                 }
@@ -173,7 +184,7 @@ public class Mover
         }
 
         Parent.Position.Current = position;
-        SanityCheck(Parent.Position.Current); // one last check, because I don't trust anyone, including myself
+        SanityCheck(Parent.Position.Current, "Post x/y update resulted in moving into a collision tile"); // one last check, because I don't trust anyone, including myself
 
         Velocity.ApplyFriction(velocity);
 

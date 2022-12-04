@@ -158,9 +158,10 @@ public static class ConsoleUtils
         return Convert.ChangeType(strValue, type, CultureInfo.InvariantCulture);
     }
 
-    public static Span<string> SplitArgs(ReadOnlySpan<char> text)
+    private static List<string> _tmpArgs = new();
+    public static string[] SplitArgs(ReadOnlySpan<char> text)
     {
-        var args = new List<string>();
+        _tmpArgs.Clear();
         var inQuotes = false;
         var splitStart = 0;
 
@@ -182,20 +183,20 @@ public static class ConsoleUtils
                     // we ended an argument
                     var length = i - splitStart;
                     var arg = text.Slice(splitStart, length).ToString();
-                    args.Add(arg);
+                    _tmpArgs.Add(arg);
                     splitStart = i + 1;
                 }
             }
         }
 
-        args.Add(text[splitStart..].ToString());
+        _tmpArgs.Add(text[splitStart..].ToString());
 
-        for (var i = 0; i < args.Count; i++)
+        for (var i = 0; i < _tmpArgs.Count; i++)
         {
-            args[i] = args[i].Trim('"');
+            _tmpArgs[i] = _tmpArgs[i].Trim('"');
         }
 
-        return args.ToArray();
+        return _tmpArgs.ToArray();
     }
 
     public static string Colorize(object? value)

@@ -1,34 +1,5 @@
 ﻿namespace MyGame;
 
-public static class PlayerBinds
-{
-    public static ButtonBind Right = new();
-    public static ButtonBind Left = new();
-    public static ButtonBind Jump = new();
-    public static ButtonBind Fire1 = new();
-    public static ButtonBind Respawn = new();
-    public static ButtonBind MoveToMouse = new();
-
-    public static PlayerCommand ToPlayerCommand()
-    {
-        var cmd = new PlayerCommand();
-
-        if (Right.Active)
-            cmd.MovementX += 1;
-
-        if (Left.Active)
-            cmd.MovementX += -1;
-
-        cmd.IsFiring = Fire1.WasPressed;
-        cmd.Respawn = Respawn.WasPressed;
-        cmd.IsJumpDown = Jump.Active;
-        cmd.IsJumpPressed = Jump.WasPressed;
-        cmd.MoveToMouse = MoveToMouse.Active;
-
-        return cmd;
-    }
-}
-
 public struct PlayerCommand
 {
     public float MovementX;

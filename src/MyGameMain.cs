@@ -126,6 +126,7 @@ public class MyGameMain : Game
         Time = new Time();
 
         Shared.Game = this;
+        Shared.Content = new ContentManager(GraphicsDevice);
         Shared.Console = new TWConsole.TWConsole();
         Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
@@ -201,7 +202,9 @@ public class MyGameMain : Game
     private void UpdateScreens()
     {
         GameScreen.ExecuteQueuedActions();
-
+        
+        GameScreen.UpdateLastPositions();
+        
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
             return;
@@ -214,6 +217,12 @@ public class MyGameMain : Game
         if (!Shared.Menus.IsHidden)
             return;
 
+        if (InputHandler.IsKeyPressed(KeyCode.Escape))
+        {
+            Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
+            return;
+        }
+        
         GameScreen.Update(Time.ElapsedTime);
     }
 

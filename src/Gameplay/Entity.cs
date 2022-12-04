@@ -27,8 +27,14 @@ public partial class Entity
 
     public CoroutineManager CoroutineManager = new();
 
+    [CustomDrawInspector(nameof(DrawPosition))]
     public Position Position = new();
 
+    private void DrawPosition()
+    {
+        ImGuiExt.DrawXy("Position", ref Position.Current.X, ref Position.Current.Y);
+    }
+    
     public Point Cell => ToCell(Position);
     
     [HideInInspector]

@@ -7,7 +7,6 @@ namespace MyGame.Screens;
 
 public class GameScreen
 {
-    public ContentManager Content;
     public Camera Camera { get; private set; }
     public World? World { get; private set; }
 
@@ -25,8 +24,6 @@ public class GameScreen
     {
         _game = game;
 
-        Content = new ContentManager(game.GraphicsDevice);
-        
         Camera = new Camera(game.GameRenderSize.X, game.GameRenderSize.Y)
         {
             ClampToLevelBounds = true,
@@ -136,18 +133,15 @@ public class GameScreen
         }
     }
 
+    public void UpdateLastPositions()
+    {
+        World?.UpdateLastPositions();
+    }
+
     public void Update(float deltaSeconds)
     {
         if (World == null)
             return;
-
-        World.UpdateLastPositions();
-
-        if (_game.InputHandler.IsKeyPressed(KeyCode.Escape))
-        {
-            Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
-            return;
-        }
 
         var doUpdate = IsStepping ||
                        (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
@@ -162,29 +156,19 @@ public class GameScreen
                 Camera.Update(deltaSeconds, _game.InputHandler);
         }
 
-        SetCircleCropPosition();
-
         if (IsStepping)
-        {
             IsStepping = false;
-            return;
-        }
     }
 
-    private void SetCircleCropPosition()
+    /// Call before loading starts
+    private void SetCircleCropPosition(Vector2 position)
     {
-        if (World == null)
-            return;
-
-        var entity = World.Player;
-        var transform = entity.LastTransform;
         var viewProjection = Camera.GetViewProjection(_game.GameRender.Width, _game.GameRender.Height);
-        var halfSize = entity.Size.ToVec2() * 0.5f;
-        var playerInScreen = Vector2.Transform(halfSize, transform * viewProjection);
-        playerInScreen = Vector2.Half + playerInScreen * 0.5f;
+        var positionInScreen = Vector2.Transform(position, viewProjection);
+        positionInScreen = Vector2.Half + positionInScreen * 0.5f;
         var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
-        circleLoad.CenterX = playerInScreen.X;
-        circleLoad.CenterY = playerInScreen.Y;
+        circleLoad.CenterX = positionInScreen.X;
+        circleLoad.CenterY = positionInScreen.Y;
     }
 
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
