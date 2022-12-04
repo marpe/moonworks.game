@@ -62,7 +62,8 @@ public class GameScreen
     {
         IsPaused = true;
         IsStepping = true;
-        Logs.LogInfo("Stepping...");
+        var updateCount = Shared.Game.GameScreen.World?.WorldUpdateCount ?? 0;
+        Logs.LogInfo($"[WU:{updateCount}] Stepping...");
     }
 
     [ConsoleHandler("pause")]
@@ -148,7 +149,7 @@ public class GameScreen
 
         if (doUpdate)
         {
-            BindHandler.HandleBoundKeys();
+            // BindHandler.HandleBoundKeys();
             World.Update(deltaSeconds, _game.InputHandler);
         }
         else

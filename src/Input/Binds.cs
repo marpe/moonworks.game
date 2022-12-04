@@ -61,7 +61,7 @@ public static class BindHandler
 
     public static void AddState(in InputState inputState)
     {
-        foreach (var key in inputState.KeyboardState)
+        foreach (var key in inputState.KeysDown)
         {
             var buttonId = (int)key;
             if (!_buttons.ContainsKey(buttonId))
@@ -70,9 +70,10 @@ public static class BindHandler
             var state = _buttons[buttonId];
             state.WasActive = state.Active;
             state.Active = true;
+            state.GameUpdateCount = Shared.Game.Time.UpdateCount;
         }
 
-        foreach (var mouseButton in inputState.MouseState)
+        foreach (var mouseButton in inputState.MouseButtonsDown)
         {
             var buttonId = ((int)mouseButton) + 100;
             if (!_buttons.ContainsKey(buttonId))
@@ -81,6 +82,16 @@ public static class BindHandler
             var state = _buttons[buttonId];
             state.WasActive = state.Active;
             state.Active = true;
+            state.GameUpdateCount = Shared.Game.Time.UpdateCount;
+        }
+
+        foreach (var (_, button) in _buttons)
+        {
+            // if it was updated this frame, continue
+            if (button.GameUpdateCount == Shared.Game.Time.UpdateCount)
+                continue;
+            button.WasActive = button.Active;
+            button.Active = false;
         }
 
         var mwheelUpId = Binds.MouseWheelUp + MOUSE_WHEEL_OFFSET;
@@ -89,10 +100,12 @@ public static class BindHandler
             _buttons[mwheelUpId] = new Binds.ButtonBind();
         _buttons[mwheelUpId].WasActive = _buttons[mwheelUpId].Active;
         _buttons[mwheelUpId].Active = inputState.MouseWheelDelta > 0;
+        _buttons[mwheelUpId].GameUpdateCount = Shared.Game.Time.UpdateCount;
         if (!_buttons.ContainsKey(mwheelDownId))
             _buttons[mwheelDownId] = new Binds.ButtonBind();
         _buttons[mwheelDownId].WasActive = _buttons[mwheelDownId].Active;
         _buttons[mwheelDownId].Active = inputState.MouseWheelDelta < 0;
+        _buttons[mwheelDownId].GameUpdateCount = Shared.Game.Time.UpdateCount;
     }
 
     public static void HandleBoundKeys()
@@ -174,11 +187,24 @@ public static class BindHandler
         if (callbacks.IsButtonDown(buttonId))
         {
             // continued press
-            if (cmdKey.StartsWith('+'))
-            {
-                Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, keyStr });
+            if (!cmdKey.StartsWith('+'))
                 return;
-            }
+
+            Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, keyStr });
+
+            return;
+        }
+
+        if (!callbacks.IsButtonDown(buttonId))
+        {
+            // released/idle key
+            if (!cmdKey.StartsWith('+'))
+                return;
+
+            var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
+            var upCmd = Shared.Console.Commands[upCmdKey];
+            Shared.Console.ExecuteCommand(upCmd, new[] { cmdKey, keyStr });
+            return;
         }
     }
 }
@@ -466,6 +492,9 @@ public static class Binds
     {
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
+            if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
+                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount)
+                return; // don't trigger down actions if the world hasn't been updated yet
             var wasActive = bind.Active;
             bind.Active = true;
             bind.WasActive = wasActive;
@@ -477,6 +506,9 @@ public static class Binds
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
+            if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
+                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount)
+                return; // don't trigger up actions if the world hasn't been updated yet
             var wasActive = bind.Active;
             bind.Active = false;
             bind.WasActive = wasActive;

@@ -183,6 +183,8 @@ public class MyGameMain : Game
         UpdateWindowTitle();
 
         InputHandler.BeginFrame(Time.ElapsedTime);
+        BindHandler.HandleBoundKeys();
+        
         SetInputViewport();
 
         UpdateScreens();

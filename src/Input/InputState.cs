@@ -6,8 +6,8 @@ public struct InputState
     private static MouseButtonCode[] _allMouseButtonCodes = Enum.GetValues<MouseButtonCode>();
 
     public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
-    public HashSet<KeyCode> KeyboardState = new();
-    public HashSet<MouseButtonCode> MouseState = new();
+    public HashSet<KeyCode> KeysDown = new();
+    public HashSet<MouseButtonCode> MouseButtonsDown = new();
     public Vector2 GlobalMousePosition = DefaultMousePosition;
     public int MouseWheelDelta = 0;
     public char[] TextInput = Array.Empty<char>();
@@ -19,8 +19,8 @@ public struct InputState
 
     public static void Clear(ref InputState inputState)
     {
-        inputState.KeyboardState.Clear();
-        inputState.MouseState.Clear();
+        inputState.KeysDown.Clear();
+        inputState.MouseButtonsDown.Clear();
         inputState.GlobalMousePosition = DefaultMousePosition;
         inputState.MouseWheelDelta = 0;
         inputState.TextInput.AsSpan().Fill('\0');
@@ -29,14 +29,14 @@ public struct InputState
 
     public static bool IsKeyDown(in InputState inputState, KeyCode keyCode)
     {
-        return inputState.KeyboardState.Contains(keyCode);
+        return inputState.KeysDown.Contains(keyCode);
     }
     
     public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
     {
         foreach (var key in keyCodes)
         {
-            if (inputState.KeyboardState.Contains(key))
+            if (inputState.KeysDown.Contains(key))
                 return true;
         }
 
@@ -45,14 +45,14 @@ public struct InputState
 
     public static bool IsMouseButtonDown(in InputState inputState, MouseButtonCode mouseButton)
     {
-        return inputState.MouseState.Contains(mouseButton);
+        return inputState.MouseButtonsDown.Contains(mouseButton);
     }
     
     public void Print(string label)
     {
-        if (NumTextInputChars > 0 || KeyboardState.Count > 0)
+        if (NumTextInputChars > 0 || KeysDown.Count > 0)
         {
-            Logs.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeyboardState.Select(x => x.ToString()))}");
+            Logs.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeysDown.Select(x => x.ToString()))}");
         }
     }
     
@@ -72,7 +72,7 @@ public struct InputState
         {
             var keyCode = _allKeyCodes[i];
             if (input.IsKeyDown(keyCode))
-                state.KeyboardState.Add(keyCode);
+                state.KeysDown.Add(keyCode);
         }
 
         SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
@@ -82,7 +82,8 @@ public struct InputState
         {
             var mouseButton = _allMouseButtonCodes[i];
             if (input.IsMouseButtonDown(mouseButton))
-                state.MouseState.Add(mouseButton);
+                state.MouseButtonsDown.Add(mouseButton);
+            
         }
 
         return state;
