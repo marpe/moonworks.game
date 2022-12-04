@@ -15,47 +15,96 @@ public static class BindHandler
     private static CheckBindCallbacks _mouseWheelCallbacks;
     private static CheckBindCallbacks _keyboardCallbacks;
 
-    private static InputState _bufferedInput = new();
+    private static Dictionary<int, Binds.ButtonBind> _buttons = new();
+
+    private const int MOUSE_WHEEL_OFFSET = 200;
+    private const int MOUSE_BUTTON_OFFSET = 100;
 
     static BindHandler()
     {
         _mouseCallbacks = new CheckBindCallbacks(
-            buttonId => Binds.MouseButtonCodeToName[(MouseButtonCode)buttonId],
-            buttonId => InputState.IsMouseButtonDown(_bufferedInput, (MouseButtonCode)buttonId),
-            buttonId => InputState.IsMouseButtonReleased(_bufferedInput, (MouseButtonCode)buttonId),
-            buttonId => InputState.IsMouseButtonPressed(_bufferedInput,  (MouseButtonCode)buttonId)
+            buttonId => Binds.MouseButtonCodeToName[(MouseButtonCode)(buttonId - MOUSE_BUTTON_OFFSET)],
+            IsButtonDown,
+            IsButtonReleased,
+            IsButtonPressed
         );
 
         _mouseWheelCallbacks = new CheckBindCallbacks(
-            buttonId => Binds.MouseWheelCodeToName[buttonId],
-            buttonId => buttonId == Binds.MouseWheelUp ? _bufferedInput.MouseWheelDelta > 0 : _bufferedInput.MouseWheelDelta < 0,
-            buttonId => _bufferedInput.MouseWheelDelta == 0,
-            buttonId => buttonId == Binds.MouseWheelUp ? _bufferedInput.MouseWheelDelta > 0 : _bufferedInput.MouseWheelDelta < 0
+            buttonId => Binds.MouseWheelCodeToName[buttonId - MOUSE_WHEEL_OFFSET],
+            IsButtonDown,
+            IsButtonReleased,
+            IsButtonPressed
         );
 
         _keyboardCallbacks = new CheckBindCallbacks(
             buttonId => Binds.KeyCodeToName[(KeyCode)buttonId],
-            buttonId => InputState.IsKeyDown(_bufferedInput, (KeyCode)buttonId),
-            buttonId => InputState.IsKeyReleased(_bufferedInput,(KeyCode)buttonId),
-            buttonId => InputState.IsKeyPressed(_bufferedInput, (KeyCode)buttonId)
+            IsButtonDown,
+            IsButtonReleased,
+            IsButtonPressed
         );
+    }
+
+    private static bool IsButtonDown(int buttonId)
+    {
+        return _buttons.ContainsKey(buttonId) && _buttons[buttonId].Active;
+    }
+
+    private static bool IsButtonReleased(int buttonId)
+    {
+        return _buttons.ContainsKey(buttonId) && _buttons[buttonId].WasActive && !_buttons[buttonId].Active;
+    }
+
+    private static bool IsButtonPressed(int buttonId)
+    {
+        return _buttons.ContainsKey(buttonId) && !_buttons[buttonId].WasActive && _buttons[buttonId].Active;
     }
 
     public static void AddState(in InputState inputState)
     {
-        _bufferedInput = InputState.Add(_bufferedInput, inputState);
+        foreach (var key in inputState.KeyboardState)
+        {
+            var buttonId = (int)key;
+            if (!_buttons.ContainsKey(buttonId))
+                _buttons[buttonId] = new Binds.ButtonBind();
+
+            var state = _buttons[buttonId];
+            state.WasActive = state.Active;
+            state.Active = true;
+        }
+
+        foreach (var mouseButton in inputState.MouseState)
+        {
+            var buttonId = ((int)mouseButton) + 100;
+            if (!_buttons.ContainsKey(buttonId))
+                _buttons[buttonId] = new Binds.ButtonBind();
+
+            var state = _buttons[buttonId];
+            state.WasActive = state.Active;
+            state.Active = true;
+        }
+
+        var mwheelUpId = Binds.MouseWheelUp + MOUSE_WHEEL_OFFSET;
+        var mwheelDownId = Binds.MouseWheelDown + MOUSE_WHEEL_OFFSET;
+        if (!_buttons.ContainsKey(mwheelUpId))
+            _buttons[mwheelUpId] = new Binds.ButtonBind();
+        _buttons[mwheelUpId].WasActive = _buttons[mwheelUpId].Active;
+        _buttons[mwheelUpId].Active = inputState.MouseWheelDelta > 0;
+        if (!_buttons.ContainsKey(mwheelDownId))
+            _buttons[mwheelDownId] = new Binds.ButtonBind();
+        _buttons[mwheelDownId].WasActive = _buttons[mwheelDownId].Active;
+        _buttons[mwheelDownId].Active = inputState.MouseWheelDelta < 0;
     }
 
-    private static void HandleBoundKeys()
+    public static void HandleBoundKeys()
     {
         foreach (var (code, _) in Binds.MouseWheelCodeToName)
         {
-            HandleButtonBind(code, _mouseWheelCallbacks);
+            HandleButtonBind(code + MOUSE_WHEEL_OFFSET, _mouseWheelCallbacks);
         }
 
         foreach (var (code, _) in Binds.MouseButtonCodeToName)
         {
-            HandleButtonBind((int)code, _mouseCallbacks);
+            HandleButtonBind(((int)code + MOUSE_BUTTON_OFFSET), _mouseCallbacks);
         }
 
         foreach (var (code, _) in Binds.KeyCodeToName)
@@ -75,10 +124,10 @@ public static class BindHandler
     {
         var keyStr = callbacks.GetButtonName(buttonId);
 
-        if (!Binds.TryGetBind(keyStr, out var bind))
+        if (!Binds.TryGetBind(keyStr, out var bindStr))
             return;
 
-        var split = ConsoleUtils.SplitArgs(bind);
+        var split = ConsoleUtils.SplitArgs(bindStr);
         var cmdKey = split[0];
         if (!Shared.Console.Commands.TryGetValue(cmdKey, out var cmd))
         {

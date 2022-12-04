@@ -148,6 +148,7 @@ public class GameScreen
 
         if (doUpdate)
         {
+            BindHandler.HandleBoundKeys();
             World.Update(deltaSeconds, _game.InputHandler);
         }
         else

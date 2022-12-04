@@ -32,18 +32,6 @@ public struct InputState
         return inputState.KeyboardState.Contains(keyCode);
     }
     
-    public static bool IsKeyReleased(in InputState inputState, KeyCode keyCode)
-    {
-        // TODO (marpe): Fix
-        return false;
-    }
-    
-    public static bool IsKeyPressed(in InputState inputState, KeyCode keyCode)
-    {
-        // TODO (marpe): Fix
-        return false;
-    }
-
     public static bool IsAnyKeyDown(in InputState inputState, KeyCode[] keyCodes)
     {
         foreach (var key in keyCodes)
@@ -60,18 +48,6 @@ public struct InputState
         return inputState.MouseState.Contains(mouseButton);
     }
     
-    public static bool IsMouseButtonReleased(in InputState inputState, MouseButtonCode mouseButton)
-    {
-        // TODO (marpe): Fix
-        return false;
-    }
-    
-    public static bool IsMouseButtonPressed(in InputState inputState, MouseButtonCode mouseButton)
-    {
-        // TODO (marpe): Fix
-        return false;
-    }
-
     public void Print(string label)
     {
         if (NumTextInputChars > 0 || KeyboardState.Count > 0)
@@ -79,33 +55,7 @@ public struct InputState
             Logs.LogInfo($"{label}: Text: {new string(TextInput, 0, NumTextInputChars)}, Keys: {string.Join(", ", KeyboardState.Select(x => x.ToString()))}");
         }
     }
-
-    public static InputState Add(InputState first, InputState second)
-    {
-        var result = new InputState();
-        result.NumTextInputChars = first.NumTextInputChars + second.NumTextInputChars;
-        Array.Resize(ref result.TextInput, result.NumTextInputChars);
-        
-        for (var i = 0; i < first.NumTextInputChars; i++)
-            result.TextInput[i] = first.TextInput[i];
-        for (var i = 0; i < second.NumTextInputChars; i++)
-            result.TextInput[first.NumTextInputChars + i] = second.TextInput[i];
-        
-        foreach (var keyDown in first.KeyboardState)
-            result.KeyboardState.Add(keyDown);
-        foreach (var keyDown in second.KeyboardState)
-            result.KeyboardState.Add(keyDown);
-        
-        result.GlobalMousePosition = second.GlobalMousePosition;
-        result.MouseWheelDelta = first.MouseWheelDelta + second.MouseWheelDelta;
-        
-        foreach (var mouseDown in first.MouseState)
-            result.MouseState.Add(mouseDown);
-        foreach (var mouseDown in second.MouseState)
-            result.MouseState.Add(mouseDown);
-        
-        return result;
-    }
+    
     public static InputState Create(InputHandler input)
     {
         var state = new InputState();
