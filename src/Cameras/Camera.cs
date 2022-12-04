@@ -18,31 +18,31 @@ public class Camera
 {
     private Vector2 _cameraRotation3D = new(0, MathHelper.Pi);
 
-    [CVar("cam.use3d", "Use 3D Camera")]
+    [CVar("cam.use3d", "Use 3D Camera", false)]
     public static bool Use3D;
 
-    [CVar("noclip", "Toggle camera controls")]
+    [CVar("noclip", "Toggle camera controls", false)]
     public static bool NoClip;
 
     // this is just here as a convenience so it can be toggled from an imgui inspector
-    public bool UseRelativeMouseMode
+    [CVar("use_rel_mouse", "Toggle relative mouse mode", false)]
+    public static bool UseRelativeMouseMode
     {
         get => Shared.Game.Inputs.Mouse.RelativeMode;
         set => Shared.Game.Inputs.Mouse.RelativeMode = value;
     }
 
-    private readonly float _lerpSpeed = 1f;
+    private float _lerpSpeed = 1f;
     private float _lerpT = 0;
 
     private float _zoom = 1.0f;
-    public Vector2 BumpOffset;
 
-    public Vector2 DeadZoneInPercentOfViewport = new(0.2f, 0.2f);
+    private Vector2 _deadZoneInPercentOfViewport = new(0.2f, 0.2f);
 
-    public Vector2 DeadZone => DeadZoneInPercentOfViewport * ZoomedSize;
+    public Vector2 DeadZone => _deadZoneInPercentOfViewport * ZoomedSize;
 
-    public Vector2 BrakeZone => BrakeZoneInPercentOfViewport * ZoomedSize;
-    public float BrakeZoneInPercentOfViewport = 0.2f;
+    public Vector2 BrakeZone => _brakeZoneInPercentOfViewport * ZoomedSize;
+    private float _brakeZoneInPercentOfViewport = 0.2f;
 
     public Vector2 Position;
 
@@ -51,17 +51,15 @@ public class Camera
     public float RotationDegrees = 0;
 
     public Quaternion Rotation3D;
-    public Vector2 ShakeOffset;
-    public Vector2 TargetOffset;
+    private Vector2 _targetOffset = Vector2.Zero;
     public Vector2 TargetPosition;
 
     /// <summary>This is the "true" position, that was used for the view projection calculation Which has shake and bump and crap applied</summary>
     public Vector2 ViewPosition;
 
+    private UPoint _size;
 
-    public UPoint Size;
-
-    public Vector2 ZoomedSize => Size.ToVec2() / Zoom;
+    public Vector2 ZoomedSize => _size.ToVec2() / Zoom;
 
     public Bounds ZoomedBounds
     {
@@ -78,7 +76,7 @@ public class Camera
         }
     }
 
-    public Entity? TrackingEntity;
+    private Entity? _trackingEntity;
 
     public Velocity Velocity = new()
     {
@@ -95,40 +93,24 @@ public class Camera
     public Vector2 FloorRemainder => ViewPosition - FlooredViewPosition;
     public Vector2 FlooredViewPosition => ViewPosition.Floor();
 
-    public Matrix3x2 GetView()
-    {
-        ViewPosition = Position + ShakeOffset + BumpOffset;
-        var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
-        return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
-               Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
-               Matrix3x2.CreateScale(_zoom) *
-               Matrix3x2.CreateTranslation(Size.X * 0.5f, Size.Y * 0.5f);
-    }
-
-    private Matrix4x4 GetView3D()
-    {
-        var position = new Vector3(Position3D.X, Position3D.Y, Position3D.Z);
-        return Matrix4x4.CreateLookAt(
-            position,
-            position + Vector3.Transform(Vector3.Forward, Rotation3D),
-            Vector3.Down
-        );
-    }
-
-    public int HorizontalFovDegrees = 60;
-    private Vector2 _initialFriction;
-    public Vector2 ShakeFrequencies = new(50, 40);
-    private float _freezeCameraTimer;
     private float _timer = 0;
-
-    private float _bumpFriction = 0.85f;
+    private Vector2 _shakeFrequencies = new(15, 12);
+    private Vector2 _shakeTimeOffsets = new Vector2(0, .3f);
     private float _shakeDuration = 0;
     private float _shakePower = 4f;
     private float _shakeTime = 0;
+    private Vector2 _shakeOffset;
+
+    private float _freezeCameraTimer;
+
     private Vector2 _trackingSpeed = new(5f, 5f);
     public bool ClampToLevelBounds;
 
     public Rectangle LevelBounds = Rectangle.Empty;
+
+    private Vector2 _initialFriction;
+    private float _bumpFriction = 0.85f;
+    private Vector2 _bumpOffset;
 
     [CVar("cam.3d_sens", "Mouse sensitivity when camera is in 3D mode")]
     public static float MouseSensitivity3D = 1.0f;
@@ -136,6 +118,7 @@ public class Camera
     [CVar("cam.3d_speed", "Camera movement speed when camera is in 3D mode")]
     public static float Camera3DSpeed = 750f;
 
+    private int _horizontalFovDegrees = 60;
     private float _cameraSpeed = 500f;
     private float _cameraMouseSensitivity = 50f;
 
@@ -144,7 +127,7 @@ public class Camera
         _initialFriction = Velocity.Friction;
         Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
 
-        Size = new UPoint(width, height);
+        _size = new UPoint(width, height);
         Zoom = GetZoomFromRenderScale();
         FloorViewPosition = MyGameMain.RenderScale > 1; // only floor when rendering at a larger scale than 1
     }
@@ -173,10 +156,10 @@ public class Camera
 
         _freezeCameraTimer = 0;
 
-        if (TrackingEntity != null)
+        if (_trackingEntity != null)
         {
             var trackSpeed = _trackingSpeed * Zoom;
-            TargetPosition = TrackingEntity.Center + TargetOffset;
+            TargetPosition = _trackingEntity.Center + _targetOffset;
 
             var offset = TargetPosition - Position;
             var direction = offset.ToNormal();
@@ -264,18 +247,18 @@ public class Camera
             }
         }
 
-        ShakeOffset = Vector2.Zero;
+        _shakeOffset = Vector2.Zero;
         if (_shakeTime > 0 && _shakeDuration > 0)
         {
             var percentDone = MathF.Clamp01(_shakeTime / _shakeDuration);
             _shakeTime -= deltaSeconds;
-            ShakeOffset = new Vector2(
-                MathF.Cos(0.0f + _timer * ShakeFrequencies.X),
-                MathF.Sin(0.3f + _timer * ShakeFrequencies.X)
+            _shakeOffset = new Vector2(
+                MathF.Cos(_shakeTimeOffsets.X + _timer * _shakeFrequencies.X * MathHelper.TwoPi),
+                MathF.Sin(_shakeTimeOffsets.Y + _timer * _shakeFrequencies.Y * MathHelper.TwoPi)
             ) * percentDone * _shakePower;
         }
 
-        BumpOffset *= Vector2.One * MathF.Pow(_bumpFriction, deltaSeconds);
+        _bumpOffset *= Vector2.One * MathF.Pow(_bumpFriction, deltaSeconds);
     }
 
     private void HandleInput(float deltaSeconds, InputHandler input)
@@ -341,7 +324,7 @@ public class Camera
             if (CameraBinds.Reset.Active)
             {
                 Zoom = GetZoomFromRenderScale();
-                TargetPosition = TrackingEntity != null ? TrackingEntity.Center + TargetOffset : TargetPosition;
+                TargetPosition = _trackingEntity != null ? _trackingEntity.Center + _targetOffset : TargetPosition;
                 Position = TargetPosition;
             }
 
@@ -388,14 +371,34 @@ public class Camera
 
     public void TrackEntity(Entity? target)
     {
-        TrackingEntity = target;
+        _trackingEntity = target;
         if (target != null)
         {
-            var targetPosition = target.Center + TargetOffset;
+            var targetPosition = target.Center + _targetOffset;
             Position = TargetPosition = targetPosition;
         }
     }
+    
+    public Matrix3x2 GetView()
+    {
+        ViewPosition = Position + _shakeOffset + _bumpOffset;
+        var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
+        return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
+               Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
+               Matrix3x2.CreateScale(_zoom) *
+               Matrix3x2.CreateTranslation(_size.X * 0.5f, _size.Y * 0.5f);
+    }
 
+    private Matrix4x4 GetView3D()
+    {
+        var position = new Vector3(Position3D.X, Position3D.Y, Position3D.Z);
+        return Matrix4x4.CreateLookAt(
+            position,
+            position + Vector3.Transform(Vector3.Forward, Rotation3D),
+            Vector3.Down
+        );
+    }
+    
     private Matrix4x4 GetProjection(uint width, uint height)
     {
         return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
@@ -404,7 +407,7 @@ public class Camera
     private Matrix4x4 GetProjection3D(uint width, uint height)
     {
         var aspectRatio = width / (float)height;
-        var hFov = HorizontalFovDegrees * MathF.Deg2Rad;
+        var hFov = _horizontalFovDegrees * MathF.Deg2Rad;
         var vFov = MathF.Atan(MathF.Tan(hFov / 2.0f) / aspectRatio) * 2.0f;
         return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
     }
