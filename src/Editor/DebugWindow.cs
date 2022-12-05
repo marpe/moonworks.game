@@ -120,6 +120,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         if (!IsOpen)
             return;
 
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 850));
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();

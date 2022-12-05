@@ -46,6 +46,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 850));
         ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
 
         if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)

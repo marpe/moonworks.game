@@ -49,8 +49,8 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         {
         }
 
-        ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
-
+        ImGui.SetNextWindowSize(new Num.Vector2(800, 850), ImGuiCond.Appearing);
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 850));
         if (ImGui.Begin(WindowTitle, default, flags))
         {
             DrawMainMenu();
@@ -110,9 +110,8 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
                 }
                 else if (result == 1)
                 {
-                        
                 }
-                
+
                 var entities = world.LdtkRaw.Defs.Entities;
                 // ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(0, 0));
                 // ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, 20));
@@ -283,11 +282,9 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
                     var result = ButtonGroup($"{FontAwesome6.Plus} Single Value", $"{FontAwesome6.Plus} Array", minWidth);
                     if (result == 0)
                     {
-                        
                     }
                     else if (result == 1)
                     {
-                        
                     }
 
                     ImGui.Separator();
@@ -348,6 +345,9 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
 
     private static bool PivotPointEditor(string label, ref double pivotX, ref double pivotY, float size, uint color)
     {
+        if (ImGuiInternal.GetCurrentWindow()->SkipItems)
+            return false;
+
         var pivotAnchors = new Num.Vector2[]
         {
             new(0, 0),
@@ -366,50 +366,51 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         ImGuiExt.LabelPrefix(label);
 
         var itemSpacing = ImGui.GetStyle()->ItemSpacing;
-        ImGui.BeginChild(label, new Num.Vector2(size + itemSpacing.X * 2.0f, size + itemSpacing.Y * 2f));
-        var dl = ImGui.GetWindowDrawList();
-
-        var cursor = ImGui.GetCursorScreenPos();
-        var pivotRectSize = new Num.Vector2(size, size);
-        var basePadding = new Num.Vector2(size / 4);
-        var rectTopLeft = basePadding + cursor;
-        var anchorRadius = MathF.Max(6, size / 8f);
-        dl->AddRectFilled(rectTopLeft, rectTopLeft + pivotRectSize, color);
-        dl->AddRect(rectTopLeft, rectTopLeft + pivotRectSize, Color.White.PackedValue);
         var result = false;
-        for (var i = 0; i < pivotAnchors.Length; i++)
+        if (ImGui.BeginChild(label, new Num.Vector2(size + itemSpacing.X * 2.0f, size + itemSpacing.Y * 2f)))
         {
-            var anchorCenter = pivotAnchors[i] * size;
-            var isSelected = MathF.Approx((float)pivotX, pivotAnchors[i].X) && MathF.Approx((float)pivotY, pivotAnchors[i].Y);
+            var dl = ImGui.GetWindowDrawList();
+            var cursor = ImGui.GetCursorScreenPos();
+            var pivotRectSize = new Num.Vector2(size, size);
+            var basePadding = new Num.Vector2(size / 4);
+            var rectTopLeft = basePadding + cursor;
+            var anchorRadius = MathF.Max(6, size / 8f);
+            dl->AddRectFilled(rectTopLeft, rectTopLeft + pivotRectSize, color);
+            dl->AddRect(rectTopLeft, rectTopLeft + pivotRectSize, Color.White.PackedValue);
+            for (var i = 0; i < pivotAnchors.Length; i++)
+            {
+                var anchorCenter = pivotAnchors[i] * size;
+                var isSelected = MathF.Approx((float)pivotX, pivotAnchors[i].X) && MathF.Approx((float)pivotY, pivotAnchors[i].Y);
 
-            ImGui.SetCursorScreenPos(rectTopLeft + anchorCenter - Num.Vector2.One * anchorRadius);
-            if (ImGui.InvisibleButton($"Anchor{i}", new Num.Vector2(anchorRadius * 2, anchorRadius * 2)))
-            {
-                pivotX = pivotAnchors[i].X;
-                pivotY = pivotAnchors[i].Y;
-                result = true;
-            }
+                ImGui.SetCursorScreenPos(rectTopLeft + anchorCenter - Num.Vector2.One * anchorRadius);
+                if (ImGui.InvisibleButton($"Anchor{i}", new Num.Vector2(anchorRadius * 2, anchorRadius * 2)))
+                {
+                    pivotX = pivotAnchors[i].X;
+                    pivotY = pivotAnchors[i].Y;
+                    result = true;
+                }
 
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.SetTooltip(pivotAnchors[i].ToString());
-            }
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip(pivotAnchors[i].ToString());
+                }
 
-            if (isSelected)
-            {
-                var fillColor = Color.White;
-                var borderColor = Color.Blue;
-                dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 1.5f, fillColor.PackedValue);
-                dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 0.8f, borderColor.PackedValue);
-                dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius * 1.5f, borderColor.PackedValue);
-            }
-            else
-            {
-                var alpha = ImGui.IsItemHovered() ? 0.8f : 0.4f;
-                var fillColor = Color.White.MultiplyAlpha(alpha);
-                var borderColor = Color.Black.MultiplyAlpha(alpha);
-                dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius, fillColor.PackedValue);
-                dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius, borderColor.PackedValue);
+                if (isSelected)
+                {
+                    var fillColor = Color.White;
+                    var borderColor = Color.Blue;
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 1.5f, fillColor.PackedValue);
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 0.8f, borderColor.PackedValue);
+                    dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius * 1.5f, borderColor.PackedValue);
+                }
+                else
+                {
+                    var alpha = ImGui.IsItemHovered() ? 0.8f : 0.4f;
+                    var fillColor = Color.White.MultiplyAlpha(alpha);
+                    var borderColor = Color.Black.MultiplyAlpha(alpha);
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius, fillColor.PackedValue);
+                    dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius, borderColor.PackedValue);
+                }
             }
         }
 

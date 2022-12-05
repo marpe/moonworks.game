@@ -167,7 +167,22 @@ public unsafe class MyEditorMain : MyGameMain
     {
         var mainViewport = ImGui.GetMainViewport();
 
+        var dockId = SetupDockspace(mainViewport);
 
+        if (MainWindow.IsBorderless)
+        {
+            ImGuiBorderlessTitle.Draw(MainWindow, this);
+        }
+
+        ImGuiMainMenu.DrawMenu(_menuItems, _imGuiWindows);
+
+        DrawWindows(dockId);
+
+        SetMouseCursor();
+    }
+
+    private uint SetupDockspace(ImGuiViewport* mainViewport)
+    {
         var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
 
         if (_firstTime)
@@ -180,22 +195,14 @@ public unsafe class MyEditorMain : MyGameMain
             var dockRight = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeft);
             ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow("Entity Editor", dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(EntityEditorWindow.WindowTitle, dockLeft);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRight);
+
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;
         }
 
-        if (MainWindow.IsBorderless)
-        {
-            ImGuiBorderlessTitle.Draw(MainWindow, this);
-        }
-
-        ImGuiMainMenu.DrawMenu(_menuItems, _imGuiWindows);
-
-        DrawWindows(dockId);
-
-        SetMouseCursor();
+        return dockId;
     }
 
     private void SetMouseCursor()
