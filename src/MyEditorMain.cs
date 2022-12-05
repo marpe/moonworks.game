@@ -152,6 +152,7 @@ public unsafe class MyEditorMain : MyGameMain
             _debugWindow,
             _demoWindow,
             new RenderTargetsWindow(this),
+            new InputDebugWindow(this),
         };
         foreach (var window in windows)
         {

@@ -10,7 +10,7 @@ public static class StopwatchExt
     public static void StopAndLog(this Stopwatch stopwatch, string message)
     {
         stopwatch.Stop();
-        Logs.LogVerbose($"{message}: {stopwatch.GetElapsedMilliseconds()}");
+        Logs.LogVerbose($"{message}: {stopwatch.GetElapsedMilliseconds()} ms");
     }
     
     public static float SmoothValue(float prev, float current)

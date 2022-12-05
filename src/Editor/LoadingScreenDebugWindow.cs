@@ -21,9 +21,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
     public override void Draw()
     {
         if (!IsOpen)
-        {
             return;
-        }
 
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen)))
         {

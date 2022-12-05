@@ -17,6 +17,8 @@ public static class BindHandler
 
     private static Dictionary<int, Binds.ButtonBind> _buttons = new();
 
+    public static IReadOnlyDictionary<int, Binds.ButtonBind> Buttons => _buttons;
+    
     private const int MOUSE_WHEEL_OFFSET = 200;
     private const int MOUSE_BUTTON_OFFSET = 100;
 
