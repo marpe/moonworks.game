@@ -673,7 +673,7 @@ public static unsafe class ImGuiExt
     public static string LabelPrefix(string label, bool preserveLabel = false)
     {
         // label
-        var textSize = ImGui.CalcTextSize(label);
+        var textSize = ImGui.CalcTextSize(label, true);
 
         if (textSize.X <= 0)
         {

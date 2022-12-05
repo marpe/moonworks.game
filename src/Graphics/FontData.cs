@@ -1,20 +1,30 @@
 namespace MyGame.Graphics;
 
+public class TTFFont
+{
+    public Dictionary<int, FontData> Sizes = new();
+
+    public void Add(int size, FontData fontData)
+    {
+        Sizes.Add(size, fontData);
+    }
+}
+
 public class FontData
 {
+    public int Size { get; }
     private static byte[] _stringBytes = new byte[128];
 
     public TextBatch Batch;
     public Font Font;
     public bool HasStarted;
 
-    public FontType Name;
     public Packer Packer;
     public Texture? Texture;
 
-    public FontData(FontType name, TextBatch batch, Packer packer, Font font)
+    public FontData(TextBatch batch, Packer packer, Font font, int size)
     {
-        Name = name;
+        Size = size;
         Batch = batch;
         Packer = packer;
         Font = font;

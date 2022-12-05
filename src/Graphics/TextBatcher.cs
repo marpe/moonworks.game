@@ -4,10 +4,9 @@ public class TextBatcher
 {
     private readonly Dictionary<FontType, FontData> _fonts = new();
 
-    private uint _addCountSinceDraw = 0;
-    private GraphicsDevice _device;
+    private uint _addCountSinceDraw;
 
-    public FontRange BasicLatin = new()
+    public static readonly FontRange BasicLatin = new()
     {
         FirstCodepoint = 0x0,
         NumChars = 0x7f + 1,
@@ -15,41 +14,29 @@ public class TextBatcher
         OversampleV = 0,
     };
 
-    public TextBatcher(GraphicsDevice device)
+    public TextBatcher()
     {
-        _device = device;
-
         var fonts = new[]
         {
-            (FontType.Pixellari, 18f, ContentPaths.fonts.Pixellari_ttf),
-            (FontType.PixellariLarge, 48f, ContentPaths.fonts.Pixellari_ttf),
-            (FontType.RobotoMedium, 18f, ContentPaths.fonts.Roboto_Regular_ttf),
-            (FontType.RobotoLarge, 48f, ContentPaths.fonts.Roboto_Regular_ttf),
-            (FontType.ConsolasMonoMedium, 18f, ContentPaths.fonts.consola_ttf),
-            (FontType.ConsolasMonoLarge, 48f, ContentPaths.fonts.consola_ttf),
+            (ContentPaths.fonts.Pixellari_ttf, new[] { 18, 48 }),
+            (ContentPaths.fonts.Roboto_Regular_ttf, new[] { 18, 48 }),
+            (ContentPaths.fonts.consola_ttf, new[] { 18, 48 }),
         };
 
-        var commandBuffer = device.AcquireCommandBuffer();
-        foreach (var (key, size, path) in fonts)
-        {
-            var font = new Font(path);
-            var fontPacker = new Packer(device, font, size, 512, 512, 2u);
-            fontPacker.PackFontRanges(BasicLatin);
-            fontPacker.SetTextureData(commandBuffer);
-            var textBatchFont = new FontData(key, new TextBatch(device), fontPacker, font);
-            _fonts.Add(key, textBatchFont);
-        }
+        Shared.Content.LoadTTFFonts(fonts);
 
-        device.Submit(commandBuffer);
+        var pixellari = Shared.Content.GetTTFFont(ContentPaths.fonts.Pixellari_ttf);
+        var roboto = Shared.Content.GetTTFFont(ContentPaths.fonts.Roboto_Regular_ttf);
+        var consola = Shared.Content.GetTTFFont(ContentPaths.fonts.consola_ttf);
 
-        foreach (var (key, data) in _fonts)
-        {
-            var pixels = TextureUtils.ConvertSingleChannelTextureToRGBA(device, data.Packer.Texture);
-            TextureUtils.PremultiplyAlpha(pixels);
-            var (width, height) = (data.Packer.Texture.Width, data.Packer.Texture.Height);
-            var fontTexture = TextureUtils.CreateTexture(device, width, height, pixels);
-            _fonts[key].Texture = fontTexture;
-        }
+        _fonts.Add(FontType.Pixellari, pixellari.Sizes[18]);
+        _fonts.Add(FontType.PixellariLarge, pixellari.Sizes[48]);
+
+        _fonts.Add(FontType.RobotoMedium, roboto.Sizes[18]);
+        _fonts.Add(FontType.RobotoLarge, roboto.Sizes[48]);
+
+        _fonts.Add(FontType.ConsolasMonoMedium, consola.Sizes[18]);
+        _fonts.Add(FontType.ConsolasMonoLarge, consola.Sizes[48]);
     }
 
     public FontData GetFont(FontType fontType)
@@ -131,7 +118,7 @@ public class TextBatcher
                     var srcPos = topLeftVert.TexCoord * fontTextureSize;
                     var srcDim = (bottomRightVert.TexCoord - topLeftVert.TexCoord) * fontTextureSize;
                     var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);
-                    
+
                     sprite.SrcRect = srcRect;
                     Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, srcRect);
                     var color = topLeftVert.Color;

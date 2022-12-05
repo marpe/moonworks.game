@@ -10,20 +10,28 @@ public class BMFont : IDisposable
 
     public Texture[] Textures;
 
-    public BMFont(GraphicsDevice device, string filename)
+    public BMFont(BitmapFont font, Texture[] textures)
+    {
+        Font = font;
+        Textures = textures;
+    }
+
+    public static BMFont LoadFromFile(GraphicsDevice device, string filename)
     {
         using var stream = File.OpenRead(filename);
         using var reader = new StreamReader(stream);
-        Font = BitmapFont.LoadXml(reader);
+        var font = BitmapFont.LoadXml(reader);
+        
+        var textures = new Texture[font.Pages.Length];
         var directoryName = Path.GetDirectoryName(filename);
-        Textures = new Texture[Font.Pages.Length];
-
-        for (var i = 0; i < Textures.Length; i++)
+        for (var i = 0; i < textures.Length; i++)
         {
-            var path = Path.Combine(directoryName ?? "", Font.Pages[i].Filename);
+            var path = Path.Combine(directoryName ?? "", font.Pages[i].Filename);
             var texture = TextureUtils.LoadPngTexture(device, path);
-            Textures[i] = TextureUtils.PremultiplyAlpha(device, texture);
+            textures[i] = TextureUtils.PremultiplyAlpha(device, texture);
         }
+
+        return new BMFont(font, textures);
     }
 
     public bool IsDisposed { get; private set; }

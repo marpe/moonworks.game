@@ -40,7 +40,7 @@ public class Renderer
         SpriteBatch = new SpriteBatch(_device);
         
         var textBatcherTimer = Stopwatch.StartNew();
-        TextBatcher = new TextBatcher(_device);
+        TextBatcher = new TextBatcher();
         textBatcherTimer.StopAndLog("TextBatcher");
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
@@ -87,7 +87,7 @@ public class Renderer
         for (var i = 0; i < bmFontTypes.Length; i++)
         {
             var (type, path) = bmFontTypes[i];
-            fonts[i] = new BMFont(device, path);
+            fonts[i] = Shared.Content.LoadBMFont(path);
         }
 
         return fonts;

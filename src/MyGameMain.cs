@@ -5,22 +5,6 @@ using MyGame.Fonts;
 
 namespace MyGame;
 
-public class TestGame : Game
-{
-    public TestGame(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep = 60, bool debugMode = false) : base(
-        windowCreateInfo, frameLimiterSettings, targetTimestep, debugMode)
-    {
-    }
-
-    protected override void Update(TimeSpan delta)
-    {
-    }
-
-    protected override void Draw(double alpha)
-    {
-    }
-}
-
 public class MyGameMain : Game
 {
     // public static readonly UPoint DesignResolution = new UPoint(1920, 1080);
@@ -126,7 +110,7 @@ public class MyGameMain : Game
         Time = new Time();
 
         Shared.Game = this;
-        Shared.Content = new ContentManager(GraphicsDevice);
+        Shared.Content = new ContentManager(this);
         Shared.Console = new TWConsole.TWConsole();
         Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
@@ -151,7 +135,7 @@ public class MyGameMain : Game
         GameScreen = new GameScreen(this);
 
         var audioTimer = Stopwatch.StartNew();
-        Shared.AudioManager = new AudioManager(this);
+        Shared.AudioManager = new AudioManager();
         audioTimer.StopAndLog("AudioManager");
 
         var menuTimer = Stopwatch.StartNew();

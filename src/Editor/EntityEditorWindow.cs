@@ -71,6 +71,48 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
             var world = _editor.GameScreen.World;
             if (world != null)
             {
+                var result = ButtonGroup($"{FontAwesome6.Plus}", "Presets", 200);
+                if (result == 0)
+                {
+                    var def = new EntityDefinition()
+                    {
+                        Color = "#000000",
+                        Height = 16,
+                        Width = 16,
+                        Identifier = "NewEntity",
+                        FillOpacity = 0.08,
+                        KeepAspectRatio = true,
+                        ResizableX = false,
+                        ResizableY = false,
+                        TileOpacity = 1,
+                        LineOpacity = 0,
+                        Hollow = false,
+                        RenderMode = RenderMode.Tile,
+                        ShowName = false,
+                        TilesetId = 0,
+                        TileId = 0,
+                        TileRenderMode = TileRenderMode.FitInside,
+                        TileRect = new TilesetRectangle(),
+                        MaxCount = 0,
+                        LimitScope = LimitScope.PerLayer,
+                        LimitBehavior = LimitBehavior.MoveLastOne,
+                        PivotX = 0.5,
+                        PivotY = 0.5,
+                        NineSliceBorders = Array.Empty<long>(),
+                        Tags = Array.Empty<string>(),
+                        FieldDefs = Array.Empty<FieldDefinition>(),
+                    };
+
+                    var newArr = new EntityDefinition[world.LdtkRaw.Defs.Entities.Length + 1];
+                    Array.Copy(world.LdtkRaw.Defs.Entities, newArr, world.LdtkRaw.Defs.Entities.Length);
+                    newArr[world.LdtkRaw.Defs.Entities.Length] = def;
+                    world.LdtkRaw.Defs.Entities = newArr;
+                }
+                else if (result == 1)
+                {
+                        
+                }
+                
                 var entities = world.LdtkRaw.Defs.Entities;
                 // ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(0, 0));
                 // ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, 20));
@@ -132,8 +174,11 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
                             ImGui.SameLine(0, ImGui.GetStyle()->ItemInnerSpacing.X);
                         }
 
-                        ImGui.SetCursorPosY(cursorPosY + (_rowMinHeight - ImGui.GetFrameHeightWithSpacing() + ImGui.GetFontSize() / 2) / 2);
                         ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                        ImGui.PushTextWrapPos();
+                        var textSize = ImGui.CalcTextSize(entityDef.Identifier);
+                        ImGui.SetCursorPosY(cursorPosY + (_rowMinHeight - (textSize.Y + ImGui.GetStyle()->ItemSpacing.Y)) / 2);
+
                         ImGui.TextColored(entityColor.ToNumerics(), entityDef.Identifier);
                         ImGui.PopFont();
                         ImGui.PopStyleVar();
@@ -178,32 +223,74 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
                     ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.4f);
 
                     var identifier = entityDef.Identifier;
-                    if (SimpleTypeInspector.InspectString("Identifier", ref identifier))
+
+                    string HideIfNarrow(string label, float minWidth)
+                    {
+                        return ImGui.GetContentRegionAvail().X < minWidth ? $"##{label}" : label;
+                    }
+
+                    var minWidth = 200;
+
+                    if (SimpleTypeInspector.InspectString(HideIfNarrow("Identifier", minWidth), ref identifier))
                     {
                         entities[_selectedEntityDefIndex].Identifier = identifier;
                     }
 
                     var size = entityDef.Size;
-                    if (ImGuiExt.InspectPoint("Size", ref size.X, ref size.Y))
+                    if (ImGuiExt.InspectPoint(HideIfNarrow("Size", minWidth), ref size.X, ref size.Y))
                     {
                         entityDef.Width = size.X;
                         entityDef.Height = size.Y;
                     }
 
+                    ImGuiExt.LabelPrefix(HideIfNarrow("Tags", minWidth));
+
+                    for (var i = 0; i < entityDef.Tags.Length; i++)
+                    {
+                        var colorIndex = (2 + i) % ImGuiExt.Colors.Length;
+                        if (ImGuiExt.ColoredButton(entityDef.Tags[i], ImGuiExt.Colors[colorIndex], new Num.Vector2(0, 26)))
+                        {
+                        }
+
+                        ImGui.SameLine();
+                    }
+
+                    ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(4, 2));
+                    ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                    if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.White, new Color(95, 111, 165), new Num.Vector2(26, 26), "Add Tag"))
+                    {
+                    }
+
+                    ImGui.PopFont();
+                    ImGui.PopStyleVar();
+
                     _color = ParseColor(entityDef.Color);
-                    if (SimpleTypeInspector.InspectColor("Smart Color", ref _color, _refColor, ImGuiColorEditFlags.NoAlpha))
+                    if (SimpleTypeInspector.InspectColor(HideIfNarrow("Smart Color", minWidth), ref _color, _refColor, ImGuiColorEditFlags.NoAlpha))
                     {
                         entityDef.Color = ColorExt.ToHex(_color);
                     }
 
                     var (pivotX, pivotY) = (entityDef.PivotX, entityDef.PivotY);
-                    if (PivotPointEditor("PivotPoint", ref pivotX, ref pivotY, 40, _color.PackedValue))
+                    if (PivotPointEditor(HideIfNarrow("Pivot Point", minWidth), ref pivotX, ref pivotY, 40, _color.PackedValue))
                     {
                         entityDef.PivotX = pivotX;
                         entityDef.PivotY = pivotY;
                     }
 
                     ImGuiExt.SeparatorText("Fields");
+
+
+                    var result = ButtonGroup($"{FontAwesome6.Plus} Single Value", $"{FontAwesome6.Plus} Array", minWidth);
+                    if (result == 0)
+                    {
+                        
+                    }
+                    else if (result == 1)
+                    {
+                        
+                    }
+
+                    ImGui.Separator();
 
                     for (var i = 0; i < entityDef.FieldDefs.Length; i++)
                     {
@@ -232,6 +319,33 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         // ImGui.PopStyleVar();
     }
 
+    private static int ButtonGroup(string firstLabel, string secondLabel, int minWidth)
+    {
+        var result = -1;
+        var contentAvail = ImGui.GetContentRegionAvail();
+        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
+        ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+        var canFitOnOneLine = contentAvail.X >= minWidth;
+        var buttonWidth = canFitOnOneLine ? contentAvail.X * 0.5f : -ImGuiExt.FLT_MIN;
+        var buttonSize = new Num.Vector2(buttonWidth, 40);
+        var buttonGap = canFitOnOneLine ? new Num.Vector2(2, 0) : Num.Vector2.Zero;
+        if (ImGuiExt.ColoredButton(firstLabel, buttonSize))
+        {
+            result = 0;
+        }
+
+        if (canFitOnOneLine)
+            ImGui.SameLine(0, buttonGap.X);
+        if (ImGuiExt.ColoredButton(secondLabel, buttonSize - buttonGap))
+        {
+            result = 1;
+        }
+
+        ImGui.PopFont();
+        ImGui.PopStyleVar();
+        return result;
+    }
+
     private static bool PivotPointEditor(string label, ref double pivotX, ref double pivotY, float size, uint color)
     {
         var pivotAnchors = new Num.Vector2[]
@@ -250,7 +364,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         };
 
         ImGuiExt.LabelPrefix(label);
-        
+
         var itemSpacing = ImGui.GetStyle()->ItemSpacing;
         ImGui.BeginChild(label, new Num.Vector2(size + itemSpacing.X * 2.0f, size + itemSpacing.Y * 2f));
         var dl = ImGui.GetWindowDrawList();
@@ -267,7 +381,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         {
             var anchorCenter = pivotAnchors[i] * size;
             var isSelected = MathF.Approx((float)pivotX, pivotAnchors[i].X) && MathF.Approx((float)pivotY, pivotAnchors[i].Y);
-            
+
             ImGui.SetCursorScreenPos(rectTopLeft + anchorCenter - Num.Vector2.One * anchorRadius);
             if (ImGui.InvisibleButton($"Anchor{i}", new Num.Vector2(anchorRadius * 2, anchorRadius * 2)))
             {
@@ -280,7 +394,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
             {
                 ImGui.SetTooltip(pivotAnchors[i].ToString());
             }
-            
+
             if (isSelected)
             {
                 var fillColor = Color.White;

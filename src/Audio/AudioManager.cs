@@ -7,10 +7,10 @@ public class AudioManager
     [CVar("volume", "Sets the volume (0 - 1f)")]
     public static float Volume = 0.01f;
 
-    private Dictionary<string, StaticSound> _staticSound = new();
     private Dictionary<string, List<StaticSoundInstance>> _instances = new();
+    public Dictionary<string, StaticSound> _staticSound = new();
 
-    public AudioManager(MyGameMain game)
+    public AudioManager()
     {
         var soundEffects = typeof(ContentPaths.sfx).GetFields()
             .Select(f => f.GetRawConstantValue())
@@ -19,7 +19,7 @@ public class AudioManager
 
         for (var i = 0; i < soundEffects.Length; i++)
         {
-            var wav = StaticSound.LoadWav(game.AudioDevice, soundEffects[i]);
+            var wav = Shared.Content.LoadSound(soundEffects[i]);
             _staticSound.Add(soundEffects[i], wav);
         }
     }
