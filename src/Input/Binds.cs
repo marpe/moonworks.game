@@ -4,46 +4,22 @@ namespace MyGame.Input;
 
 public static class BindHandler
 {
-    public record struct CheckBindCallbacks(
-        Func<int, string> GetButtonName,
-        Func<int, bool> IsButtonDown,
-        Func<int, bool> IsButtonReleased,
-        Func<int, bool> IsButtonPressed
-    );
-
-    private static CheckBindCallbacks _mouseCallbacks;
-    private static CheckBindCallbacks _mouseWheelCallbacks;
-    private static CheckBindCallbacks _keyboardCallbacks;
+    private static HashSet<int> _buttonsToClear = new();
 
     private static Dictionary<int, Binds.ButtonBind> _buttons = new();
-
+    private static readonly Func<int, string> _getMouseButtonName;
+    private static readonly Func<int, string> _getMouseWheelName;
+    private static readonly Func<int, string> _getKeyboardButtonName;
     public static IReadOnlyDictionary<int, Binds.ButtonBind> Buttons => _buttons;
-    
+
     private const int MOUSE_WHEEL_OFFSET = 200;
     private const int MOUSE_BUTTON_OFFSET = 100;
 
     static BindHandler()
     {
-        _mouseCallbacks = new CheckBindCallbacks(
-            buttonId => Binds.MouseButtonCodeToName[(MouseButtonCode)(buttonId - MOUSE_BUTTON_OFFSET)],
-            IsButtonDown,
-            IsButtonReleased,
-            IsButtonPressed
-        );
-
-        _mouseWheelCallbacks = new CheckBindCallbacks(
-            buttonId => Binds.MouseWheelCodeToName[buttonId - MOUSE_WHEEL_OFFSET],
-            IsButtonDown,
-            IsButtonReleased,
-            IsButtonPressed
-        );
-
-        _keyboardCallbacks = new CheckBindCallbacks(
-            buttonId => Binds.KeyCodeToName[(KeyCode)buttonId],
-            IsButtonDown,
-            IsButtonReleased,
-            IsButtonPressed
-        );
+        _getMouseButtonName = buttonId => Binds.MouseButtonCodeToName[(MouseButtonCode)(buttonId - MOUSE_BUTTON_OFFSET)];
+        _getMouseWheelName = buttonId => Binds.MouseWheelCodeToName[buttonId - MOUSE_WHEEL_OFFSET];
+        _getKeyboardButtonName = buttonId => Binds.KeyCodeToName[(KeyCode)buttonId];
     }
 
     private static bool IsButtonDown(int buttonId)
@@ -87,13 +63,22 @@ public static class BindHandler
             state.GameUpdateCount = Shared.Game.Time.UpdateCount;
         }
 
-        foreach (var (_, button) in _buttons)
+        _buttonsToClear.Clear();
+        foreach (var (id, button) in _buttons)
         {
             // if it was updated this frame, continue
             if (button.GameUpdateCount == Shared.Game.Time.UpdateCount)
                 continue;
             button.WasActive = button.Active;
             button.Active = false;
+
+            if (!button.WasActive && !button.Active)
+                _buttonsToClear.Add(id);
+        }
+
+        foreach (var id in _buttonsToClear)
+        {
+            _buttons.Remove(id);
         }
 
         var mwheelUpId = Binds.MouseWheelUp + MOUSE_WHEEL_OFFSET;
@@ -110,34 +95,39 @@ public static class BindHandler
         _buttons[mwheelDownId].GameUpdateCount = Shared.Game.Time.UpdateCount;
     }
 
+    public static void Clear()
+    {
+        _buttons.Clear();
+    }
+
     public static void HandleBoundKeys()
     {
         foreach (var (code, _) in Binds.MouseWheelCodeToName)
         {
-            HandleButtonBind(code + MOUSE_WHEEL_OFFSET, _mouseWheelCallbacks);
+            HandleButtonBind(code + MOUSE_WHEEL_OFFSET, _getMouseWheelName);
         }
 
         foreach (var (code, _) in Binds.MouseButtonCodeToName)
         {
-            HandleButtonBind(((int)code + MOUSE_BUTTON_OFFSET), _mouseCallbacks);
+            HandleButtonBind(((int)code + MOUSE_BUTTON_OFFSET), _getMouseButtonName);
         }
 
         foreach (var (code, _) in Binds.KeyCodeToName)
         {
             // console key handled separately
-            if (code == KeyCode.Grave && _keyboardCallbacks.IsButtonPressed((int)code))
+            if (code == KeyCode.Grave && IsButtonPressed((int)code))
             {
                 ConsoleScreen.ToggleConsole();
                 continue;
             }
 
-            HandleButtonBind((int)code, _keyboardCallbacks);
+            HandleButtonBind((int)code, _getKeyboardButtonName);
         }
     }
 
-    private static void HandleButtonBind(int buttonId, in CheckBindCallbacks callbacks)
+    private static void HandleButtonBind(int buttonId, Func<int, string> getButtonName)
     {
-        var keyStr = callbacks.GetButtonName(buttonId);
+        var keyStr = getButtonName(buttonId);
 
         if (!Binds.TryGetBind(keyStr, out var bindStr))
             return;
@@ -150,7 +140,7 @@ public static class BindHandler
             return;
         }
 
-        if (callbacks.IsButtonReleased(buttonId))
+        if (IsButtonReleased(buttonId))
         {
             // key up events only trigger binds if the binding is a button command (leading + sign)
             if (!cmdKey.StartsWith('+'))
@@ -162,7 +152,7 @@ public static class BindHandler
             return;
         }
 
-        if (callbacks.IsButtonPressed(buttonId))
+        if (IsButtonPressed(buttonId))
         {
             // ignore if console is down
             if (!Shared.Game.ConsoleScreen.IsHidden)
@@ -186,7 +176,7 @@ public static class BindHandler
             return;
         }
 
-        if (callbacks.IsButtonDown(buttonId))
+        if (IsButtonDown(buttonId))
         {
             // continued press
             if (!cmdKey.StartsWith('+'))
@@ -197,7 +187,7 @@ public static class BindHandler
             return;
         }
 
-        if (!callbacks.IsButtonDown(buttonId))
+        if (!IsButtonDown(buttonId))
         {
             // released/idle key
             if (!cmdKey.StartsWith('+'))
@@ -494,9 +484,12 @@ public static class Binds
     {
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
+            // don't trigger down actions if the world hasn't been updated yet
+            // unless it was a command types in the console (in which case no source button is in the args)
             if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
-                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount)
-                return; // don't trigger down actions if the world hasn't been updated yet
+                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount &&
+                args.Length > 1)
+                return;
             var wasActive = bind.Active;
             bind.Active = true;
             bind.WasActive = wasActive;
@@ -508,9 +501,14 @@ public static class Binds
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
+            // don't trigger up actions if the world hasn't been updated yet
             if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
                 bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount)
-                return; // don't trigger up actions if the world hasn't been updated yet
+                return;
+            // also skip if sources is empty, since it means the bind was triggered by typing it in the console
+            // in which case we want to repeat the action, unless the -command was typed in which case args wont contain a button source
+            if (bind.Sources[0] == "" && args.Length > 1)
+                return;
             var wasActive = bind.Active;
             bind.Active = false;
             bind.WasActive = wasActive;

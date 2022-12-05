@@ -26,12 +26,37 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 800));
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
-            var i = 0;
+            if (ImGuiExt.ColoredButton(FontAwesome6.TrashCan, Color.Red))
+            {
+                BindHandler.Clear();
+            }
 
+            var i = 0;
+            void DrawBind(string label, Binds.ButtonBind bind)
+            {
+                ImGui.PushID(i);
+                i++;
+
+                ImGui.TableNextRow();
+
+                ImGui.TableNextColumn();
+                ImGui.Text(label);
+                ImGui.TableNextColumn();
+                SimpleTypeInspector.InspectBool("##Active", ref bind.Active);
+                ImGui.TableNextColumn();
+                SimpleTypeInspector.InspectBool("##WasActive", ref bind.WasActive);
+                ImGui.TableNextColumn();
+                SimpleTypeInspector.InspectULong("##WorldUpdateCount", ref bind.WorldUpdateCount);
+                ImGui.TableNextColumn();
+                SimpleTypeInspector.InspectULong("##GameUpdateCount", ref bind.GameUpdateCount);
+
+                ImGui.PopID();
+            }
+            
             var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Hideable |
                              ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
 
-            if (ImGui.BeginTable("EntityDefinitions", 5, tableFlags, new Num.Vector2(0, 350)))
+            if (ImGui.BeginTable("Buttons", 5, tableFlags, new Num.Vector2(0, 150)))
             {
                 ImGui.TableSetupColumn("Key");
                 ImGui.TableSetupColumn("Active");
@@ -43,7 +68,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                 {
                     ImGui.PushID(i);
                     i++;
-                    
+
                     ImGui.TableNextRow();
 
                     ImGui.TableNextColumn();
@@ -56,10 +81,50 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                     SimpleTypeInspector.InspectULong("##WorldUpdateCount", ref value.WorldUpdateCount);
                     ImGui.TableNextColumn();
                     SimpleTypeInspector.InspectULong("##GameUpdateCount", ref value.GameUpdateCount);
-                    
+
                     ImGui.PopID();
                 }
-                
+
+                ImGui.EndTable();
+            }
+            
+            if (ImGui.BeginTable("Camera", 5, tableFlags, new Num.Vector2(0, 350)))
+            {
+                ImGui.TableSetupColumn("Key");
+                ImGui.TableSetupColumn("Active");
+                ImGui.TableSetupColumn("WasActive");
+                ImGui.TableSetupColumn("WU");
+                ImGui.TableSetupColumn("GU");
+
+                DrawBind("ZoomIn", Binds.Camera.ZoomIn);
+                DrawBind("ZoomOut", Binds.Camera.ZoomOut);
+                DrawBind("Up", Binds.Camera.Up);
+                DrawBind("Down", Binds.Camera.Down);
+                DrawBind("Forward", Binds.Camera.Forward);
+                DrawBind("Back", Binds.Camera.Back);
+                DrawBind("Right", Binds.Camera.Right);
+                DrawBind("Left", Binds.Camera.Left);
+                DrawBind("Pan", Binds.Camera.Pan);
+                DrawBind("Reset", Binds.Camera.Reset);
+
+                ImGui.EndTable();
+            }
+            
+            if (ImGui.BeginTable("Player", 5, tableFlags, new Num.Vector2(0, 0)))
+            {
+                ImGui.TableSetupColumn("Key");
+                ImGui.TableSetupColumn("Active");
+                ImGui.TableSetupColumn("WasActive");
+                ImGui.TableSetupColumn("WU");
+                ImGui.TableSetupColumn("GU");
+
+                DrawBind("Right", Binds.Player.Right);
+                DrawBind("Left", Binds.Player.Left);
+                DrawBind("Jump", Binds.Player.Jump);
+                DrawBind("Fire1", Binds.Player.Fire1);
+                DrawBind("Respawn", Binds.Player.Respawn);
+                DrawBind("MoveToMouse", Binds.Player.MoveToMouse);
+
                 ImGui.EndTable();
             }
 
@@ -67,25 +132,28 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             var cursorPos = ImGui.GetCursorScreenPos();
             var contentAvail = ImGui.GetContentRegionAvail();
             var child1DefaultWidth = 150;
-            
+
             var bb = new ImRect(
                 cursorPos + new Num.Vector2(child1DefaultWidth + _sz1, 0),
                 cursorPos + new Num.Vector2(child1DefaultWidth + _sz1 + 5, windowHeight)
             ); // bb.Min == child0->Pos, bb-Max child1->Pos
 
 
-            if (ImGuiInternal.SplitterBehavior(bb, ImGui.GetID("Splitter"), ImGuiAxis.ImGuiAxis_X, 
+            if (ImGuiInternal.SplitterBehavior(bb, ImGui.GetID("Splitter"), ImGuiAxis.ImGuiAxis_X,
                     ImGuiExt.RefPtr(ref _sz1), ImGuiExt.RefPtr(ref _sz2),
                     10, 10, 4, 0.04f, ImGuiExt.GetStyleColor(ImGuiCol.WindowBg).PackedValue()))
             {
             }
 
-            ImGui.BeginChild("Child1", new Num.Vector2(child1DefaultWidth + _sz1, 0), true);
-            ImGui.Text("Inside child 1");
+            if (ImGui.BeginChild("Child1", new Num.Vector2(child1DefaultWidth + _sz1, 0), true))
+            {
+            }
+
             ImGui.EndChild();
             ImGui.SameLine();
-            ImGui.BeginChild("Child2", new Num.Vector2(contentAvail.X - (child1DefaultWidth + _sz1) - 5, 0), true);
-            ImGui.Text("Inside child 2");
+            if (ImGui.BeginChild("Child2", new Num.Vector2(contentAvail.X - (child1DefaultWidth + _sz1) - 5, 0), true))
+            {
+            }
             ImGui.EndChild();
         }
 
