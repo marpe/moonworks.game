@@ -28,8 +28,6 @@ public class LoadingScreen
 
     private Texture? _compositeOldCopy;
     private Texture? _compositeNewCopy;
-    private Texture? _gameOldCopy;
-    private Texture? _menuOldCopy;
 
     private readonly MyGameMain _game;
 
@@ -184,11 +182,7 @@ public class LoadingScreen
         if (_shouldCopyRender)
         {
             Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Copying render");
-            _gameOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, gameRender);
-            _menuOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, menuRender);
             _compositeOldCopy ??= TextureUtils.CreateTexture(_game.GraphicsDevice, renderDestination);
-            commandBuffer.CopyTextureToTexture(gameRender, _gameOldCopy, Filter.Nearest);
-            commandBuffer.CopyTextureToTexture(menuRender, _menuOldCopy, Filter.Nearest);
             commandBuffer.CopyTextureToTexture(renderDestination, _compositeOldCopy, Filter.Nearest);
             _shouldCopyRender = false;
         }
@@ -203,11 +197,7 @@ public class LoadingScreen
             renderDestination,
             _progress,
             State,
-            _gameOldCopy,
-            _menuOldCopy,
             _compositeOldCopy,
-            gameRender,
-            menuRender,
             _compositeNewCopy
         );
         
@@ -230,8 +220,6 @@ public class LoadingScreen
     {
         _compositeOldCopy?.Dispose();
         _compositeNewCopy?.Dispose();
-        _gameOldCopy?.Dispose();
-        _menuOldCopy?.Dispose();
 
         foreach (var (_, value) in SceneTransitions)
         {

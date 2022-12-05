@@ -45,7 +45,7 @@ public class PauseMenu : MenuScreen
     public override void Draw(Renderer renderer, double alpha)
     {
         var bgAlpha = State == MenuScreenState.Active ? 1.0f : _transitionPercentage;
-        renderer.DrawRect(new Rectangle(0, 0, (int)_game.CompositeRender.Width, (int)_game.CompositeRender.Height), Color.Black * bgAlpha * 0.5f);
+        renderer.DrawRect(new Rectangle(0, 0, (int)_game.RenderTargets.CompositeRender.Width, (int)_game.RenderTargets.CompositeRender.Height), Color.Black * bgAlpha * 0.5f);
         base.Draw(renderer, alpha);
     }
 }

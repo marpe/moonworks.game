@@ -150,7 +150,6 @@ public class World
     public Level[] Levels;
     private readonly Dictionary<long, string> _tileSetTextureMapping;
     public float FreezeFrameTimer;
-    private Texture? _copyRender;
 
     public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
     {
@@ -694,11 +693,9 @@ public class World
 
     public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        _copyRender ??= TextureUtils.CreateTexture(_gameScreen.Game.GraphicsDevice, _gameScreen.Game.GameRender);
-
         DrawEntities(renderer, alpha);
         var viewProjection = _gameScreen.Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        renderer.RunRenderPass(ref commandBuffer, _copyRender, Color.Transparent, viewProjection);
+        renderer.RunRenderPass(ref commandBuffer, _gameScreen.Game.RenderTargets.LightSource, Color.Transparent, viewProjection);
 
         renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
         renderer.UpdateBuffers(ref commandBuffer);
@@ -710,7 +707,7 @@ public class World
             var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
             var fragmentBindings = new[]
             {
-                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_copyRender, Renderer.PointClamp)
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_gameScreen.Game.RenderTargets.LightSource, Renderer.PointClamp)
             };
             commandBuffer.BindFragmentSamplers(fragmentBindings);
             var fragUniform = new Pipelines.RimLightUniforms()

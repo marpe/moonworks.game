@@ -5,9 +5,66 @@ using MyGame.Fonts;
 
 namespace MyGame;
 
+public enum DebugRenderTarget
+{
+    GameRender,
+    Lights,
+    Menu,
+    Console,
+    None
+}
+
+public class RenderTarget
+{
+    public Texture Target;
+
+    public uint Width => Target.Width;
+    public uint Height => Target.Height;
+
+    public UPoint Size => new UPoint(Width, Height);
+    
+    public RenderTarget(Texture target)
+    {
+        Target = target;
+    }
+
+    public static implicit operator Texture(RenderTarget rt) => rt.Target;
+}
+
+public class RenderTargets
+{
+    private readonly GraphicsDevice _device;
+    public static uint RenderScale = 1;
+    
+    public UPoint GameRenderSize => new(
+        CompositeRender.Width / RenderScale,
+        CompositeRender.Height / RenderScale
+    );
+    
+    public RenderTarget CompositeRender;
+    public RenderTarget MenuRender;
+    public RenderTarget LightSource;
+    public RenderTarget GameRender;
+    public RenderTarget ConsoleRender;
+
+    public RenderTargets(GraphicsDevice device)
+    {
+        _device = device;
+        var compositeRenderSize = new UPoint(1920, 1080);
+        // increase game render target size with 1 pixel if render at < 1920x1080 to enable smooth camera panning by offsetting the upscaled render
+        var gameRenderSize = RenderScale == 1 ? compositeRenderSize : compositeRenderSize / (int)RenderScale + UPoint.One;
+        var textureFlags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
+
+        CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
+        GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
+        LightSource = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
+        MenuRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
+        ConsoleRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
+    }
+}
+
 public class MyGameMain : Game
 {
-    // public static readonly UPoint DesignResolution = new UPoint(1920, 1080);
     public const int TARGET_TIMESTEP = 120;
 
     public readonly InputHandler InputHandler;
@@ -20,21 +77,13 @@ public class MyGameMain : Game
 
     private float _nextWindowTitleUpdate;
 
-    public Texture CompositeRender;
-    private readonly Texture _menuRender;
-    public readonly Texture GameRender;
-    public readonly Texture _consoleRender;
-
-    public UPoint GameRenderSize => new(
-        CompositeRender.Width / RenderScale,
-        CompositeRender.Height / RenderScale
-    );
+    public RenderTargets RenderTargets;
 
     protected UPoint _swapSize;
 
-    public static uint RenderScale = 1;
     private readonly FPSDisplay _fpsDisplay;
     private bool _hasRenderedConsole;
+    public DebugRenderTarget DebugRenderTarget = DebugRenderTarget.None;
 
     [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
     public static ScreenMode ScreenMode
@@ -48,7 +97,6 @@ public class MyGameMain : Game
             Shared.Game.MainWindow.SetScreenMode(value);
         }
     }
-
 
     /// <summary>
     /// Sets the window display mode to the same as the desktop
@@ -115,15 +163,8 @@ public class MyGameMain : Game
         Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
 
-        // create render targets
         var createRtsTimer = Stopwatch.StartNew();
-        var compositeRenderSize = new UPoint(1920, 1080);
-        var gameRenderSize = RenderScale == 1 ? compositeRenderSize : compositeRenderSize / (int)RenderScale + UPoint.One;
-        var flags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
-        CompositeRender = Texture.CreateTexture2D(GraphicsDevice, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, flags);
-        GameRender = Texture.CreateTexture2D(GraphicsDevice, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, flags);
-        _menuRender = TextureUtils.CreateTexture(GraphicsDevice, CompositeRender);
-        _consoleRender = TextureUtils.CreateTexture(GraphicsDevice, CompositeRender);
+        RenderTargets = new RenderTargets(GraphicsDevice);
         createRtsTimer.StopAndLog("RenderTargets");
 
         var createRendererTimer = Stopwatch.StartNew();
@@ -168,7 +209,7 @@ public class MyGameMain : Game
 
         InputHandler.BeginFrame(Time.ElapsedTime);
         BindHandler.HandleBoundKeys();
-        
+
         SetInputViewport();
 
         UpdateScreens();
@@ -181,16 +222,16 @@ public class MyGameMain : Game
 
     protected virtual void SetInputViewport()
     {
-        var (viewportTransform, viewport) = Renderer.GetViewportTransform(MainWindow.Size, CompositeRender.Size());
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(MainWindow.Size, RenderTargets.CompositeRender.Size);
         InputHandler.SetViewportTransform(viewportTransform);
     }
 
     private void UpdateScreens()
     {
         GameScreen.ExecuteQueuedActions();
-        
+
         GameScreen.UpdateLastPositions();
-        
+
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
             return;
@@ -208,7 +249,7 @@ public class MyGameMain : Game
             Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
             return;
         }
-        
+
         GameScreen.Update(Time.ElapsedTime);
     }
 
@@ -228,7 +269,7 @@ public class MyGameMain : Game
 
         _fpsDisplay.BeginRender();
         {
-            RenderGame(alpha, CompositeRender);
+            RenderGame(alpha, RenderTargets.CompositeRender);
         }
 
         {
@@ -242,11 +283,20 @@ public class MyGameMain : Game
 
             _swapSize = swapTexture.Size();
 
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
+            var finalRenderTarget = DebugRenderTarget switch
+            {
+                DebugRenderTarget.GameRender => RenderTargets.GameRender,
+                DebugRenderTarget.Lights => RenderTargets.LightSource,
+                DebugRenderTarget.Console => RenderTargets.ConsoleRender,
+                DebugRenderTarget.Menu => RenderTargets.MenuRender,
+                _ => RenderTargets.CompositeRender
+            };
+
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), finalRenderTarget.Size);
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
+            Renderer.DrawSprite(finalRenderTarget.Target, viewportTransform, Color.White);
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
             Renderer.Submit(ref commandBuffer);
         }
@@ -259,36 +309,36 @@ public class MyGameMain : Game
         Time.UpdateDrawCount();
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
+        Renderer.Clear(ref commandBuffer, RenderTargets.LightSource, Color.Transparent);
+        GameScreen.Draw(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
 
-        GameScreen.Draw(Renderer, ref commandBuffer, GameRender, alpha);
+        Shared.Menus.Draw(Renderer, ref commandBuffer, RenderTargets.MenuRender, alpha);
 
-        Shared.Menus.Draw(Renderer, ref commandBuffer, _menuRender, alpha);
-
-        if (RenderScale != 1)
+        if (RenderTargets.RenderScale != 1)
         {
             var camera = GameScreen.Camera;
-            var dstSize = CompositeRender.Size() / (int)RenderScale;
+            var dstSize = RenderTargets.CompositeRender.Size / (int)RenderTargets.RenderScale;
             // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
             var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
-            var gameRenderSprite = new Sprite(GameRender, srcRect);
-            var scale = Matrix3x2.CreateScale((int)RenderScale, (int)RenderScale).ToMatrix4x4();
+            var gameRenderSprite = new Sprite(RenderTargets.GameRender, srcRect);
+            var scale = Matrix3x2.CreateScale((int)RenderTargets.RenderScale, (int)RenderTargets.RenderScale).ToMatrix4x4();
             Renderer.DrawSprite(gameRenderSprite, scale, Color.White);
         }
         else
         {
-            Renderer.DrawSprite(GameRender, Matrix4x4.Identity, Color.White);
+            Renderer.DrawSprite(RenderTargets.GameRender.Target, Matrix4x4.Identity, Color.White);
         }
 
-        Renderer.DrawSprite(_menuRender, Matrix4x4.Identity, Color.White);
+        Renderer.DrawSprite(RenderTargets.MenuRender.Target, Matrix4x4.Identity, Color.White);
         Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null);
 
-        Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, GameRender, _menuRender, alpha);
+        Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, RenderTargets.GameRender, RenderTargets.MenuRender, alpha);
 
         RenderConsole(Renderer, ref commandBuffer, renderDestination, alpha);
         _fpsDisplay.DrawFPS(Renderer, commandBuffer, renderDestination);
 
         Renderer.Submit(ref commandBuffer);
-        
+
         _fpsDisplay.EndRenderGame();
     }
 
@@ -297,19 +347,19 @@ public class MyGameMain : Game
         if ((int)Time.UpdateCount % ConsoleSettings.RenderRate == 0)
         {
             _hasRenderedConsole = true;
-            renderer.Clear(ref commandBuffer, _consoleRender, Color.Transparent);
+            renderer.Clear(ref commandBuffer, RenderTargets.ConsoleRender, Color.Transparent);
 
-            ConsoleToast.Draw(renderer, ref commandBuffer, _consoleRender);
+            ConsoleToast.Draw(renderer, ref commandBuffer, RenderTargets.ConsoleRender);
 
             if (!ConsoleScreen.IsHidden)
             {
-                ConsoleScreen.Draw(renderer, ref commandBuffer, _consoleRender, alpha);
+                ConsoleScreen.Draw(renderer, ref commandBuffer, RenderTargets.ConsoleRender, alpha);
             }
         }
 
         if (_hasRenderedConsole)
         {
-            renderer.DrawSprite(_consoleRender, Matrix4x4.Identity, Color.White);
+            renderer.DrawSprite(RenderTargets.ConsoleRender.Target, Matrix4x4.Identity, Color.White);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
         }
     }

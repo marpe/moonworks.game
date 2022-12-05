@@ -60,7 +60,7 @@ public class ConsoleScreen
     public ConsoleScreen(MyGameMain game)
     {
         _game = game;
-        _lastRenderSize = game.CompositeRender.Size();
+        _lastRenderSize = game.RenderTargets.CompositeRender.Size;
     }
 
     [ConsoleHandler("console", "Toggles the console")]

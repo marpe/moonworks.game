@@ -1,4 +1,5 @@
-﻿using Mochi.DearImGui;
+﻿using System.Diagnostics.CodeAnalysis;
+using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 
 namespace MyGame.Editor;
@@ -30,10 +31,32 @@ public unsafe class GameWindow : ImGuiEditorWindow
         IsOpen = true;
     }
 
+    public static void EnsureTextureIsBound([NotNull] ref IntPtr? ptr, Texture texture, ImGuiRenderer renderer)
+    {
+        if (texture.IsDisposed)
+            throw new Exception("Attempted to bind a disposed texture");
+
+        if (ptr != null && ptr != texture.Handle)
+        {
+            renderer.UnbindTexture(ptr.Value);
+            ptr = null;
+        }
+
+        ptr ??= renderer.BindTexture(texture);
+    }
+
     public override void Draw()
     {
         if (!IsOpen)
             return;
+
+        SetupDockSpace();
+        DrawGameView();
+        DrawToolbar();
+    }
+
+    private void SetupDockSpace()
+    {
         var flags = ImGuiWindowFlags.NoCollapse; /*ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
                     ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;*/
 
@@ -69,10 +92,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         ImGui.End();
         ImGui.PopStyleVar();
-
-        DrawGameView();
-        DrawButtons();
     }
+
 
     private void DrawGameView()
     {
@@ -83,19 +104,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
         ImGui.Begin(GameViewTitle, default, flags);
         ImGui.PopStyleVar();
-        if (_gameRenderTextureId != null && _gameRenderTextureId != _editor.CompositeRender.Handle)
-        {
-            _editor.ImGuiRenderer.UnbindTexture(_gameRenderTextureId.Value);
-            _gameRenderTextureId = null;
-        }
 
-        if (_gameRenderTextureId == null)
-        {
-            _gameRenderTextureId = _editor.ImGuiRenderer.BindTexture(_editor.CompositeRender);
-        }
+        EnsureTextureIsBound(ref _gameRenderTextureId, _editor.RenderTargets.CompositeRender.Target, _editor.ImGuiRenderer);
 
         var windowSize = ImGui.GetWindowSize();
-        var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.CompositeRender.Size());
+        var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.RenderTargets.CompositeRender.Size);
 
         var viewportPosition = new Num.Vector2(viewport.X, viewport.Y);
         var cursorScreenPosition = ImGui.GetCursorScreenPos();
@@ -134,7 +147,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         var isActive = ImGui.IsItemActive();
         var isHovered = ImGui.IsItemHovered();
-        
+
         // draw border
         /*var isFocused = ImGui.IsItemFocused();
         var borderColor = (isActive, isFocused, isHovered) switch
@@ -186,7 +199,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
-    private void DrawButtons()
+    private void DrawToolbar()
     {
         ImGui.Begin("GameToolbar");
 

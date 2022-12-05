@@ -24,7 +24,7 @@ public class GameScreen
     {
         _game = game;
 
-        Camera = new Camera(game.GameRenderSize.X, game.GameRenderSize.Y)
+        Camera = new Camera(game.RenderTargets.GameRenderSize.X, game.RenderTargets.GameRenderSize.Y)
         {
             ClampToLevelBounds = true,
         };
@@ -165,7 +165,7 @@ public class GameScreen
     /// Call before loading starts
     private void SetCircleCropPosition(Vector2 position)
     {
-        var viewProjection = Camera.GetViewProjection(_game.GameRender.Width, _game.GameRender.Height);
+        var viewProjection = Camera.GetViewProjection(_game.RenderTargets.GameRender.Width, _game.RenderTargets.GameRender.Height);
         var positionInScreen = Vector2.Transform(position, viewProjection);
         positionInScreen = Vector2.Half + positionInScreen * 0.5f;
         var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
@@ -205,7 +205,7 @@ public class GameScreen
         if (!World.Debug) return;
         if (!DebugViewBounds) return;
 
-        renderer.DrawRectOutline(Vector2.Zero, _game.CompositeRender.Size(), Color.LimeGreen, 10f);
+        renderer.DrawRectOutline(Vector2.Zero, _game.RenderTargets.CompositeRender.Size, Color.LimeGreen, 10f);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }

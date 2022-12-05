@@ -41,7 +41,7 @@ public abstract class MenuScreen
 
     public MenuScreen(MyGameMain game)
     {
-        InitialPosition = game.CompositeRender.Size().ToVec2() * 0.5f;
+        InitialPosition = game.RenderTargets.CompositeRender.Size.ToVec2() * 0.5f;
 
         _game = game;
         _spring = new Spring();

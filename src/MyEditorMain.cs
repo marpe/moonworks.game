@@ -32,7 +32,7 @@ public unsafe class MyEditorMain : MyGameMain
     private DebugWindow _debugWindow;
     private ImGuiDemoWindow _demoWindow;
     private Task _screenshotTask;
-    
+
     private Stopwatch _imguiRenderStopwatch = new();
     private Stopwatch _renderGameStopwatch = new();
     private Stopwatch _renderStopwatch = new();
@@ -57,7 +57,6 @@ public unsafe class MyEditorMain : MyGameMain
 
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
-        _screenshotTask = Task.CompletedTask;
 
         var imguiSw = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
@@ -66,8 +65,16 @@ public unsafe class MyEditorMain : MyGameMain
         AddDefaultMenus();
         imguiSw.StopAndLog("ImGuiRenderer");
 
-        _screenshotBuffer = Buffer.Create<byte>(GraphicsDevice, BufferUsageFlags.Index, GameRender.Width * GameRender.Height * sizeof(uint));
-        _screenshotPixels = new byte[_screenshotBuffer.Size];
+        // screenshot setup
+        {
+            _screenshotTask = Task.CompletedTask;
+            _screenshotBuffer = Buffer.Create<byte>(
+                GraphicsDevice,
+                BufferUsageFlags.Index,
+                RenderTargets.GameRender.Width * RenderTargets.GameRender.Height * sizeof(uint)
+            );
+            _screenshotPixels = new byte[_screenshotBuffer.Size];
+        }
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
@@ -144,6 +151,7 @@ public unsafe class MyEditorMain : MyGameMain
             _gameWindow,
             _debugWindow,
             _demoWindow,
+            new RenderTargetsWindow(this),
         };
         foreach (var window in windows)
         {
@@ -167,7 +175,7 @@ public unsafe class MyEditorMain : MyGameMain
     {
         var mainViewport = ImGui.GetMainViewport();
 
-        var dockId = SetupDockspace(mainViewport);
+        var dockId = SetupDockSpace(mainViewport);
 
         if (MainWindow.IsBorderless)
         {
@@ -181,7 +189,7 @@ public unsafe class MyEditorMain : MyGameMain
         SetMouseCursor();
     }
 
-    private uint SetupDockspace(ImGuiViewport* mainViewport)
+    private uint SetupDockSpace(ImGuiViewport* mainViewport)
     {
         var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
 
@@ -191,11 +199,16 @@ public unsafe class MyEditorMain : MyGameMain
 
             var leftWidth = 0.15f;
             var dockLeft = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, null, &dockId);
+
+            uint topLeft;
+            uint bottomLeft;
+            var leftSplit = ImGuiInternal.DockBuilderSplitNode(dockLeft, ImGuiDir.Up, 0.5f, &topLeft, &bottomLeft);
+            
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             var dockRight = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
-            ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeft);
-            ImGuiInternal.DockBuilderDockWindow(EntityEditorWindow.WindowTitle, dockLeft);
+            ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, topLeft);
+            ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, topLeft);
+            ImGuiInternal.DockBuilderDockWindow(EntityEditorWindow.WindowTitle, bottomLeft);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRight);
 
             ImGuiInternal.DockBuilderFinish(dockId);
@@ -297,7 +310,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _renderStopwatch.Restart();
         _renderGameStopwatch.Restart();
-        RenderGame(alpha, CompositeRender);
+        RenderGame(alpha, RenderTargets.CompositeRender);
         _renderGameStopwatch.Stop();
         _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
@@ -330,7 +343,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (_screenshot)
         {
-            commandBuffer.CopyTextureToBuffer(CompositeRender, _screenshotBuffer);
+            commandBuffer.CopyTextureToBuffer(RenderTargets.CompositeRender.Target, _screenshotBuffer);
         }
 
         /*{
@@ -367,13 +380,19 @@ public unsafe class MyEditorMain : MyGameMain
                     filename = Path.Combine(dirname, "screenshot_" + (i++) + ".png");
                 }
 
-                Texture.SavePNG(filename, (int)CompositeRender.Width, (int)CompositeRender.Height, CompositeRender.Format, _screenshotPixels);
+                Texture.SavePNG(
+                    filename,
+                    (int)RenderTargets.CompositeRender.Width,
+                    (int)RenderTargets.CompositeRender.Height,
+                    RenderTargets.CompositeRender.Target.Format,
+                    _screenshotPixels
+                );
                 Logs.LogInfo($"Screenshot saved to {filename}");
             });
 
             _screenshot = false;
         }
-        
+
         _renderStopwatch.Stop();
         _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
     }

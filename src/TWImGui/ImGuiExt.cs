@@ -1144,6 +1144,28 @@ public static unsafe class ImGuiExt
 
         return result;
     }
+
+    public static void FillWithStripes(ImDrawList* drawList, ImRect areaOnScreen, float patternWidth = 16)
+    {
+        drawList->PushClipRect(areaOnScreen.Min, areaOnScreen.Max, true);
+        var lineColor = new Color(0f, 0f, 0f, 0.2f).PackedValue;
+        var stripeOffset = patternWidth;
+        var lineWidth = stripeOffset / 2.7f;
+
+        var h = areaOnScreen.GetHeight();
+        var stripeCount = (int)((areaOnScreen.GetWidth() + h + 3 * lineWidth) / stripeOffset);
+        var p = areaOnScreen.Min - new Num.Vector2(h + lineWidth, +lineWidth);
+        var offset = new Num.Vector2(h + 2 * lineWidth,
+            h + 2 * lineWidth);
+
+        for (var i = 0; i < stripeCount; i++)
+        {
+            drawList->AddLine(p, p + offset, lineColor, lineWidth);
+            p.X += stripeOffset;
+        }
+
+        drawList->PopClipRect();
+    }
 }
 
 public ref struct ImGuiInputBuffer

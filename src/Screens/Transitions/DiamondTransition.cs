@@ -13,8 +13,7 @@ public class DiamondTransition : SceneTransition
     {
     }
 
-    public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
-        Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
+    public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state, Texture? compositeOldCopy, Texture compositeNewCopy)
     {
         var isLoading = state is TransitionState.TransitionOn or TransitionState.Active;
         if (compositeOldCopy != null && isLoading)

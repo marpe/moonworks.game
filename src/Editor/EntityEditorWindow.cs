@@ -55,11 +55,11 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         {
             DrawMainMenu();
 
-            SetupDockspace();
+            SetupDockSpace();
         }
         else
         {
-            SetupDockspace(true);
+            SetupDockSpace(true);
         }
 
         ImGui.End();
@@ -446,7 +446,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         ImGui.EndMenuBar();
     }
 
-    private static void SetupDockspace(bool keepAlive = false)
+    private static void SetupDockSpace(bool keepAlive = false)
     {
         var dockspaceID = ImGui.GetID("EntityEditorDockspace");
 

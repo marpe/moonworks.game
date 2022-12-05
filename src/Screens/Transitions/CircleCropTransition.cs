@@ -11,8 +11,7 @@ public class CircleCropTransition : SceneTransition
 
     public Color ClearColor = Color.Black;
 
-    public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state,
-        Texture? copyOldGameRender, Texture? copyOldMenuRender, Texture? compositeOldCopy, Texture gameRender, Texture menuRender, Texture compositeNewCopy)
+    public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, float progress, TransitionState state, Texture? compositeOldCopy, Texture compositeNewCopy)
     {
         if (state == TransitionState.Hidden || compositeOldCopy == null)
             return;

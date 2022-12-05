@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Infrastructure;
 
@@ -741,7 +742,8 @@ public unsafe class ImGuiRenderer : IDisposable
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        _textures.Add(texture.Handle, texture);
+        if (!_textures.ContainsKey(texture.Handle))
+            _textures.Add(texture.Handle, texture);
         return texture.Handle;
     }
 

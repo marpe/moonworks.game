@@ -115,12 +115,12 @@ public class Camera
 
         _size = new UPoint(width, height);
         Zoom = GetZoomFromRenderScale();
-        FloorViewPosition = MyGameMain.RenderScale > 1; // only floor when rendering at a larger scale than 1
+        FloorViewPosition = RenderTargets.RenderScale > 1; // only floor when rendering at a larger scale than 1
     }
 
     private static float GetZoomFromRenderScale()
     {
-        return 5 - MyGameMain.RenderScale; // should be 1 when rendering at 480x270 and 4 when rendering at 1920x1080
+        return 5 - RenderTargets.RenderScale; // should be 1 when rendering at 480x270 and 4 when rendering at 1920x1080
     }
 
     public void Update(float deltaSeconds, InputHandler input)
