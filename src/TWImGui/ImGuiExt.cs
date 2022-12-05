@@ -492,8 +492,11 @@ public static unsafe class ImGuiExt
 
         if (ImGui.BeginPopup("picker"))
         {
-            ImGui.Text(label);
-
+            var labelWidth = ImGui.CalcTextSize(label, true);
+            if (labelWidth.X > 0)
+            {
+                RenderText(label, true); ImGui.NewLine();    
+            }
             ImGui.Spacing();
             ImGui.SetNextItemWidth(frameHeight * 12.0f);
             float* pRefColor = null;
@@ -1145,10 +1148,9 @@ public static unsafe class ImGuiExt
         return result;
     }
 
-    public static void FillWithStripes(ImDrawList* drawList, ImRect areaOnScreen, float patternWidth = 16)
+    public static void FillWithStripes(ImDrawList* drawList, ImRect areaOnScreen, uint stripesColor, float patternWidth = 16)
     {
         drawList->PushClipRect(areaOnScreen.Min, areaOnScreen.Max, true);
-        var lineColor = new Color(0f, 0f, 0f, 0.2f).PackedValue;
         var stripeOffset = patternWidth;
         var lineWidth = stripeOffset / 2.7f;
 
@@ -1160,7 +1162,7 @@ public static unsafe class ImGuiExt
 
         for (var i = 0; i < stripeCount; i++)
         {
-            drawList->AddLine(p, p + offset, lineColor, lineWidth);
+            drawList->AddLine(p, p + offset, stripesColor, lineWidth);
             p.X += stripeOffset;
         }
 

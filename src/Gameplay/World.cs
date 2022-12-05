@@ -699,7 +699,7 @@ public class World
 
         renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
         renderer.UpdateBuffers(ref commandBuffer);
-        renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.RimLight);
+        renderer.BeginRenderPass(ref commandBuffer, _gameScreen.Game.RenderTargets.LightTarget, Color.Transparent, PipelineType.RimLight);
         var cameraBounds = _gameScreen.Camera.ZoomedBounds;
         for (var i = 0; i < Lights.Count; i++)
         {
@@ -736,5 +736,9 @@ public class World
         }
 
         renderer.EndRenderPass(ref commandBuffer);
+        
+        renderer.DrawSprite(_gameScreen.Game.RenderTargets.LightTarget.Target, Matrix4x4.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+
     }
 }

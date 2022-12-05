@@ -344,7 +344,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (_screenshot)
         {
-            commandBuffer.CopyTextureToBuffer(RenderTargets.CompositeRender.Target, _screenshotBuffer);
+            commandBuffer.CopyTextureToBuffer(RenderTargets.LightTarget.Target, _screenshotBuffer);
         }
 
         /*{

@@ -8,7 +8,8 @@ namespace MyGame;
 public enum DebugRenderTarget
 {
     GameRender,
-    Lights,
+    LightSource,
+    LightTarget,
     Menu,
     Console,
     None
@@ -44,6 +45,7 @@ public class RenderTargets
     public RenderTarget CompositeRender;
     public RenderTarget MenuRender;
     public RenderTarget LightSource;
+    public RenderTarget LightTarget;
     public RenderTarget GameRender;
     public RenderTarget ConsoleRender;
 
@@ -58,6 +60,7 @@ public class RenderTargets
         CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
         GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
         LightSource = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
+        LightTarget = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
         MenuRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
         ConsoleRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
     }
@@ -286,7 +289,8 @@ public class MyGameMain : Game
             var finalRenderTarget = DebugRenderTarget switch
             {
                 DebugRenderTarget.GameRender => RenderTargets.GameRender,
-                DebugRenderTarget.Lights => RenderTargets.LightSource,
+                DebugRenderTarget.LightSource => RenderTargets.LightSource,
+                DebugRenderTarget.LightTarget => RenderTargets.LightTarget,
                 DebugRenderTarget.Console => RenderTargets.ConsoleRender,
                 DebugRenderTarget.Menu => RenderTargets.MenuRender,
                 _ => RenderTargets.CompositeRender
