@@ -188,53 +188,67 @@ public static unsafe class ImGuiExt
         PropRow(key, value, null, color);
     }
 
-    public static bool DrawXy(string label, ref Num.Vector2 value, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
-        float step = 1f,
-        float min = 0f, float max = 0f, string format = "%g")
+    public static bool InspectNumVector2(string label, ref Num.Vector2 value, string xLabel = "X", string xTooltip = "", string yLabel = "Y",
+        string yTooltip = "", float step = 1f, float min = 0f, float max = 0f, string format = "%g")
     {
-        return DrawXy(label, ref value.X, ref value.Y, xLabel, xTooltip, yLabel, yTooltip, step, min, max, format);
+        return InspectVector2(label, ref value.X, ref value.Y, xLabel, xTooltip, yLabel, yTooltip, step, min, max, format);
     }
 
-    public static bool DrawXy(string label, ref float x, ref float y, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
-        float step = 1f,
-        float min = 0f, float max = 0f, string format = "%g")
+    public static bool InspectPoint(string label, ref int x, ref int y, string xLabel = "X", string xTooltip = "", string yLabel = "Y", string yTooltip = "",
+        int step = 1, int min = 0, int max = 0, string format = "%d")
     {
-        ImGui.PushID(label);
-        ImGui.BeginGroup();
-
-        var itemWidth = ImGui.CalcItemWidth();
-        var itemInnerSpacing = ImGui.GetStyle()->ItemInnerSpacing.X;
-
-        var labelSize = ImGui.CalcTextSize(label, true);
-        if (labelSize.X > 0)
-        {
-            var cursorX = ImGui.GetCursorPosX();
-            ImGui.PushFont(GetFont(ImGuiFont.MediumBold));
-            ImGui.PushStyleColor(ImGuiCol.Text, GetStyleColor(ImGuiCol.TextDisabled).PackedValue());
-            ImGui.Text(label);
-            ImGui.PopStyleColor();
-            ImGui.PopFont();
-            ImGui.SameLine();
-            ImGui.SetCursorPosX(cursorX + itemWidth * 0.7f + itemInnerSpacing);
-        }
-
         var isEdited = false;
+        ImGui.PushID(label);
+        {
+            ImGui.BeginGroup();
+            {
+                LabelPrefix(label);
 
-        var inputWidth = ImGui.GetContentRegionAvail().X / 2;
-        isEdited |= DrawScalarButton(xLabel, xTooltip, "##x", ref x, inputWidth - itemInnerSpacing, step, min, max, format);
-        ImGui.SameLine();
-        isEdited |= DrawScalarButton(yLabel, yTooltip, "##y", ref y, inputWidth, step, min, max, format);
+                var itemInnerSpacingX = ImGui.GetStyle()->ItemInnerSpacing.X;
+                var inputWidth = ImGui.GetContentRegionAvail().X / 2;
+                isEdited |= DrawVectorComponent(xLabel, xTooltip, "##x", ref x, inputWidth - itemInnerSpacingX, step, min, max, format);
+                ImGui.SameLine();
+                isEdited |= DrawVectorComponent(yLabel, yTooltip, "##y", ref y, inputWidth, step, min, max, format);
+            }
+            ImGui.EndGroup();
 
-        ImGui.EndGroup();
-        isEdited |= DrawCopyPasteMenu(ref x, ref y);
+            float x2 = x, y2 = y;
+            if (DrawCopyPasteMenu(ref x2, ref y2))
+            {
+                x = (int)x2;
+                y = (int)y2;
+            }
+        }
         ImGui.PopID();
 
         return isEdited;
     }
 
-    private static bool DrawScalarButton(string label, string tooltip, string valueLabel, ref float value, float width, float step = 1f, float min = 0f,
-        float max = 0f,
-        string format = "%g")
+    public static bool InspectVector2(string label, ref float x, ref float y, string xLabel = "X", string xTooltip = "", string yLabel = "Y",
+        string yTooltip = "", float step = 1f, float min = 0f, float max = 0f, string format = "%g")
+    {
+        var isEdited = false;
+        ImGui.PushID(label);
+        {
+            ImGui.BeginGroup();
+            {
+                LabelPrefix(label);
+
+                var itemInnerSpacingX = ImGui.GetStyle()->ItemInnerSpacing.X;
+                var inputWidth = ImGui.GetContentRegionAvail().X / 2;
+                isEdited |= DrawVectorComponent(xLabel, xTooltip, "##x", ref x, inputWidth - itemInnerSpacingX, step, min, max, format);
+                ImGui.SameLine();
+                isEdited |= DrawVectorComponent(yLabel, yTooltip, "##y", ref y, inputWidth, step, min, max, format);
+            }
+            ImGui.EndGroup();
+            isEdited |= DrawCopyPasteMenu(ref x, ref y);
+        }
+        ImGui.PopID();
+
+        return isEdited;
+    }
+
+    private static void DrawComponentLabel(string label, string tooltip, float width)
     {
         var textColor = label switch
         {
@@ -244,17 +258,39 @@ public static unsafe class ImGuiExt
             _ => 0xff7f7f7fu,
         };
 
+        ImGui.PushAllowKeyboardFocus(false);
         var textWidth = Math.Max(ImGui.CalcTextSize(label).X, 16);
-        if (TextButton(label, tooltip, textColor, new Num.Vector2(textWidth, ImGui.GetTextLineHeight())))
+        if (TextButton(label, tooltip, textColor, new Num.Vector2(textWidth, 0)))
         {
             ImGui.SetKeyboardFocusHere();
         }
 
-        ImGui.SameLine();
+        ImGui.PopAllowKeyboardFocus();
+
+        ImGui.SameLine(0, 0);
         ImGui.SetNextItemWidth(width - textWidth - ImGui.GetStyle()->ItemInnerSpacing.X);
-        return ImGui.DragFloat(valueLabel, RefPtr(ref value), step, min, max, format);
     }
 
+    private static bool DrawVectorComponent(string label, string tooltip, string valueLabel, ref int value, float width, int step = 1, int min = 0,
+        int max = 0, string format = "%g")
+    {
+        ImGui.BeginGroup();
+        DrawComponentLabel(label, tooltip, width);
+        var result = ImGui.DragInt(valueLabel, RefPtr(ref value), step, min, max, format);
+        ImGui.EndGroup();
+        return result;
+    }
+
+    private static bool DrawVectorComponent(string label, string tooltip, string valueLabel, ref float value, float width, float step = 1f, float min = 0f,
+        float max = 0f,
+        string format = "%g")
+    {
+        ImGui.BeginGroup();
+        DrawComponentLabel(label, tooltip, width);
+        var result = ImGui.DragFloat(valueLabel, RefPtr(ref value), step, min, max, format);
+        ImGui.EndGroup();
+        return result;
+    }
 
     private static bool DrawCopyPasteMenu(ref float x, ref float y)
     {
@@ -266,8 +302,10 @@ public static unsafe class ImGuiExt
                 SetVectorInClipboard(x, y);
             }
 
-            result |= ImGui.Selectable(FontAwesome6.Paste + " Paste", false, ImGuiSelectableFlags.None, default) &&
-                      ParseVectorFromClipboard(out x, out y);
+            if (ImGui.Selectable(FontAwesome6.Paste + " Paste", false, ImGuiSelectableFlags.None, default))
+            {
+                result |= ParseVectorFromClipboard(out x, out y);
+            }
 
             ImGui.EndPopup();
         }
@@ -295,7 +333,6 @@ public static unsafe class ImGuiExt
         float.TryParse(split[1], out y);
         return true;
     }
-
 
     public static bool DrawCheckbox(string label, ref bool value)
     {
@@ -412,7 +449,7 @@ public static unsafe class ImGuiExt
         return result;
     }
 
-    public static bool ColorEdit(string label, ref Color color)
+    public static bool ColorEdit(string label, ref Color color, Color? refColor = null, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
     {
         var colorNum = color.ToNumerics();
         var valueChanged = false;
@@ -421,12 +458,13 @@ public static unsafe class ImGuiExt
         ImGui.BeginGroup();
         ImGui.PushID(label);
 
-        ImGui.PushStyleColor(ImGuiCol.Border, CheckboxBorderColor.PackedValue);
+        var borderColor = ColorExt.MultiplyAlpha(Color.White, 0.66f);
+        ImGui.PushStyleColor(ImGuiCol.Border, borderColor.PackedValue);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
 
         var frameHeight = ImGui.GetFrameHeight();
         var colorButtonSize = new Num.Vector2(frameHeight * 2.0f, frameHeight);
-        if (ImGui.ColorButton("##button", colorNum, ImGuiColorEditFlags.None, colorButtonSize))
+        if (ImGui.ColorButton("##button", colorNum, flags, colorButtonSize))
         {
             openPicker = true;
         }
@@ -458,7 +496,14 @@ public static unsafe class ImGuiExt
 
             ImGui.Spacing();
             ImGui.SetNextItemWidth(frameHeight * 12.0f);
-            if (ImGui.ColorPicker4("##picker", RefPtr(ref colorNum)))
+            float* pRefColor = null;
+            if (refColor != null)
+            {
+                var refVec4 = refColor.Value.ToNumerics();
+                pRefColor = RefPtr(ref refVec4.X);
+            }
+
+            if (ImGui.ColorPicker4("##picker", RefPtr(ref colorNum), flags, pRefColor))
             {
                 color = colorNum.ToColor();
                 valueChanged = true;
@@ -627,30 +672,33 @@ public static unsafe class ImGuiExt
 
     public static string LabelPrefix(string label, bool preserveLabel = false)
     {
-        if (label.StartsWith("##"))
+        // label
+        var textSize = ImGui.CalcTextSize(label);
+
+        if (textSize.X <= 0)
         {
             ImGui.SetNextItemWidth(-1);
             return label;
         }
 
-        // label
         var itemWidth = ImGui.CalcItemWidth();
         var x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
         ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
 
-        var textSize = ImGui.CalcTextSize(label);
+        var frameHeight = ImGui.GetFrameHeight();
         var min = ImGui.GetCursorScreenPos();
-        var labelWidth = itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X;
-        var max = min + new Num.Vector2(Math.Min(textSize.X, labelWidth), textSize.Y);
-        ImGuiInternal.RenderTextClipped(min, max, label, &textSize, Num.Vector2.Zero);
+        var itemInnerSpacingX = ImGui.GetStyle()->ItemInnerSpacing.X;
+        var labelWidth = itemWidth * 0.7f + itemInnerSpacingX;
+        var max = min + new Num.Vector2(Math.Min(textSize.X + itemInnerSpacingX, labelWidth), frameHeight);
+        ImGuiInternal.RenderTextClipped(min, max, label, &textSize, new Num.Vector2(0, 0.5f));
 
         ImGui.PopFont();
         ImGui.PopStyleColor();
 
         // button for label
         var buttonSize = max - min;
-        ImGui.InvisibleButton(label, buttonSize.EnsureNotZero(), ImGuiButtonFlags.None);
+        ImGui.InvisibleButton(label, buttonSize.EnsureNotZero());
 
         if (labelWidth < textSize.X && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
         {
@@ -664,7 +712,7 @@ public static unsafe class ImGuiExt
 
         ImGui.SameLine();
 
-        ImGui.SetCursorPosX(x + itemWidth * 0.7f + ImGui.GetStyle()->ItemInnerSpacing.X);
+        ImGui.SetCursorPosX(x + itemWidth * 0.7f + itemInnerSpacingX);
         ImGui.SetNextItemWidth(-1);
 
         return preserveLabel ? label : "##" + label;
@@ -804,7 +852,9 @@ public static unsafe class ImGuiExt
             separatorColor.PackedValue
         );
         ImGui.SetCursorPosX(ImGui.GetCursorPos().X + 20f);
+        ImGui.PushFont(GetFont(ImGuiFont.MediumBold));
         ImGui.TextColored(textColor.ToNumerics(), text);
+        ImGui.PopFont();
         ImGui.SameLine();
         draw->AddLine(
             ImGui.GetCursorScreenPos() + halfLine,
@@ -962,7 +1012,7 @@ public static unsafe class ImGuiExt
         drawList->AddCircleFilled(new Num.Vector2(pos.X + circleEnd - o2, bb.Min.Y + r), r, bgCol);
         drawList->AddCircleFilled(new Num.Vector2(pos.X + circleEnd - o3, bb.Min.Y + r), r, bgCol);
     }
-    
+
     public struct ButtonColors
     {
         public Color Button;
@@ -986,114 +1036,114 @@ public static unsafe class ImGuiExt
             Border = ColorExt.HsvToRgb(h, s * 0.5f, v * 0.1f)
         };
     }
-    
+
     public static bool EnumButtons(string[] labels, int[] values, ref int value, bool isFlag, Color color, bool fullWidth = true, string[]? tooltips = null)
-	{
-		var result = false;
-		ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+    {
+        var result = false;
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
 
-		var cursorScreenPos = ImGui.GetCursorScreenPos();
+        var cursorScreenPos = ImGui.GetCursorScreenPos();
 
-		var minSize = fullWidth ? 30f : FLT_MIN;
+        var minSize = fullWidth ? 30f : FLT_MIN;
 
-		for (var i = 0; i < labels.Length; i++)
-		{
-			var size = ImGui.CalcTextSize(labels[i]);
-			minSize = Math.Max(minSize, size.X);
-		}
+        for (var i = 0; i < labels.Length; i++)
+        {
+            var size = ImGui.CalcTextSize(labels[i]);
+            minSize = Math.Max(minSize, size.X);
+        }
 
-		var framePaddingX = ImGui.GetStyle()->FramePadding.X;
-		var avail = fullWidth ? ImGui.GetContentRegionAvail() : new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
+        var framePaddingX = ImGui.GetStyle()->FramePadding.X;
+        var avail = fullWidth ? ImGui.GetContentRegionAvail() : new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
 
-		var rowWidth = Math.Max(avail.X - 10f, minSize);
+        var rowWidth = Math.Max(avail.X - 10f, minSize);
 
-		var minItemsPerRow = (int)(rowWidth / minSize);
+        var minItemsPerRow = (int)(rowWidth / minSize);
 
-		var numRows = MathF.CeilToInt(labels.Length / (float)minItemsPerRow);
-		var itemsPerRow = MathF.CeilToInt(labels.Length / (float)numRows);
+        var numRows = MathF.CeilToInt(labels.Length / (float)minItemsPerRow);
+        var itemsPerRow = MathF.CeilToInt(labels.Length / (float)numRows);
 
-		var enumRowHeight = ImGui.GetFrameHeightWithSpacing() + 2;
+        var enumRowHeight = ImGui.GetFrameHeightWithSpacing() + 2;
 
-		var dl = ImGui.GetWindowDrawList();
-		var rounding = 0; // ImGui.GetStyle().FrameRounding;
+        var dl = ImGui.GetWindowDrawList();
+        var rounding = 0; // ImGui.GetStyle().FrameRounding;
 
-		var btnColors = GetButtonColors(color);
+        var btnColors = GetButtonColors(color);
 
-		var rectMin = cursorScreenPos;
-		var rectMax = rectMin + new Num.Vector2(rowWidth, enumRowHeight * numRows);
-		dl->AddRectFilled(rectMin, rectMax, btnColors.Inactive.PackedValue, rounding);
+        var rectMin = cursorScreenPos;
+        var rectMax = rectMin + new Num.Vector2(rowWidth, enumRowHeight * numRows);
+        dl->AddRectFilled(rectMin, rectMax, btnColors.Inactive.PackedValue, rounding);
 
-		var offsetX = 0f;
-		for (var k = 0; k < labels.Length; k++)
-		{
-			var currRow = k / itemsPerRow;
-			var indexInRow = k - (currRow * itemsPerRow);
-			var itemsThisRow = Math.Min(itemsPerRow, labels.Length - currRow * itemsPerRow);
-			var size = new Num.Vector2(Math.Max(minSize, (int)(rowWidth / itemsThisRow)), enumRowHeight);
+        var offsetX = 0f;
+        for (var k = 0; k < labels.Length; k++)
+        {
+            var currRow = k / itemsPerRow;
+            var indexInRow = k - (currRow * itemsPerRow);
+            var itemsThisRow = Math.Min(itemsPerRow, labels.Length - currRow * itemsPerRow);
+            var size = new Num.Vector2(Math.Max(minSize, (int)(rowWidth / itemsThisRow)), enumRowHeight);
 
-			if (ImGui.InvisibleButton(labels[k], size))
+            if (ImGui.InvisibleButton(labels[k], size))
             {
                 value = isFlag ? value | values[k] : values[k];
-				result = true;
-			}
+                result = true;
+            }
 
-			var isHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal);
-			if (isHovered)
-			{
-				ImGui.BeginTooltip();
-				ImGui.TextUnformatted(tooltips != null ? tooltips[k] : labels[k]);
-				ImGui.EndTooltip();
-			}
+            var isHovered = ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal);
+            if (isHovered)
+            {
+                ImGui.BeginTooltip();
+                ImGui.TextUnformatted(tooltips != null ? tooltips[k] : labels[k]);
+                ImGui.EndTooltip();
+            }
 
             var isCurrent = isFlag ? (value & values[k]) == values[k] : value == values[k];
-			var btnColor = (isCurrent, isHovered, ImGui.IsItemActive()) switch
-			{
-				(_, _, true) => btnColors.Active,
-				(true, _, _) => btnColors.Button,
-				(false, true, _) => btnColors.Hovered,
-				_ => btnColors.Inactive
-			};
-			var min = cursorScreenPos + new Num.Vector2(offsetX, 0);
-			var max = min + size;
+            var btnColor = (isCurrent, isHovered, ImGui.IsItemActive()) switch
+            {
+                (_, _, true) => btnColors.Active,
+                (true, _, _) => btnColors.Button,
+                (false, true, _) => btnColors.Hovered,
+                _ => btnColors.Inactive
+            };
+            var min = cursorScreenPos + new Num.Vector2(offsetX, 0);
+            var max = min + size;
 
-			dl->AddRectFilled(min, max, btnColor.PackedValue);
+            dl->AddRectFilled(min, max, btnColor.PackedValue);
 
-			var textColor = isCurrent || isHovered ? Color.White.PackedValue : GetStyleColor(ImGuiCol.TextDisabled).PackedValue();
-			var textSize = ImGui.CalcTextSize(labels[k]);
-			var center = min + size * 0.5f;
-			var textPos = new Num.Vector2(center.X - textSize.X * 0.5f, min.Y + (size.Y - textSize.Y) * 0.5f);
-			dl->AddText(textPos, textColor, labels[k]);
+            var textColor = isCurrent || isHovered ? Color.White.PackedValue : GetStyleColor(ImGuiCol.TextDisabled).PackedValue();
+            var textSize = ImGui.CalcTextSize(labels[k]);
+            var center = min + size * 0.5f;
+            var textPos = new Num.Vector2(center.X - textSize.X * 0.5f, min.Y + (size.Y - textSize.Y) * 0.5f);
+            dl->AddText(textPos, textColor, labels[k]);
 
-			if (indexInRow < itemsPerRow - 1 && k != labels.Length - 1)
-			{
-				offsetX += size.X;
-				dl->AddLine(
-					new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y),
-					new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y + enumRowHeight),
-					btnColors.Border.PackedValue
-				);
-				ImGui.SameLine();
-			}
-			else
-			{
-				offsetX = 0;
-				cursorScreenPos = ImGui.GetCursorScreenPos();
-				dl->AddLine(
-					new Num.Vector2(rectMin.X, cursorScreenPos.Y - 1),
-					new Num.Vector2(rectMax.X, cursorScreenPos.Y - 1),
-					btnColors.Border.PackedValue
-				);
-			}
-		}
+            if (indexInRow < itemsPerRow - 1 && k != labels.Length - 1)
+            {
+                offsetX += size.X;
+                dl->AddLine(
+                    new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y),
+                    new Num.Vector2(cursorScreenPos.X + offsetX - 1, cursorScreenPos.Y + enumRowHeight),
+                    btnColors.Border.PackedValue
+                );
+                ImGui.SameLine();
+            }
+            else
+            {
+                offsetX = 0;
+                cursorScreenPos = ImGui.GetCursorScreenPos();
+                dl->AddLine(
+                    new Num.Vector2(rectMin.X, cursorScreenPos.Y - 1),
+                    new Num.Vector2(rectMax.X, cursorScreenPos.Y - 1),
+                    btnColors.Border.PackedValue
+                );
+            }
+        }
 
-		dl->AddRect(rectMin, rectMax, btnColors.Border.PackedValue, rounding);
+        dl->AddRect(rectMin, rectMax, btnColors.Border.PackedValue, rounding);
 
-		ImGui.PopStyleVar();
+        ImGui.PopStyleVar();
 
-		ImGui.Spacing();
+        ImGui.Spacing();
 
-		return result;
-	}
+        return result;
+    }
 }
 
 public ref struct ImGuiInputBuffer

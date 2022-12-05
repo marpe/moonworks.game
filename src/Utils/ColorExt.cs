@@ -18,6 +18,11 @@ public static class ColorExt
         return new Color(r, g, b);
     }
 
+    public static string ToHex(in Color color)
+    {
+        return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+    }
+
     public static (float, float, float) RgbToHsv(Color color)
     {
         var k = 0f;
@@ -130,6 +135,11 @@ public static class ColorExt
 
     public static Color MultiplyAlpha(in Color color, float alpha)
     {
+        return color.MultiplyAlpha(alpha);
+    }
+
+    public static Color MultiplyAlpha(this Color color, float alpha)
+    {
         return new Color(
             color.R,
             color.G,
@@ -137,7 +147,7 @@ public static class ColorExt
             (int)(color.A * alpha)
         );
     }
-
+    
     public static Color FromPacked(uint packedValue)
     {
         return new Color(

@@ -32,7 +32,7 @@ public partial class Entity
 
     private void DrawPosition()
     {
-        ImGuiExt.DrawXy("Position", ref Position.Current.X, ref Position.Current.Y);
+        ImGuiExt.InspectVector2("Position", ref Position.Current.X, ref Position.Current.Y);
     }
     
     public Point Cell => ToCell(Position);

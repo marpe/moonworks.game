@@ -127,7 +127,7 @@ public unsafe class SimpleTypeInspector : Inspector
             }
 
             var position = value.Location.ToNumerics();
-            if (ImGuiExt.DrawXy("##Position", ref position, "X", "", "Y", "", 1f, 0f, 0f, "%u"))
+            if (ImGuiExt.InspectNumVector2("##Position", ref position, "X", "", "Y", "", 1f, 0f, 0f, "%u"))
             {
                 value.X = (int)position.X;
                 value.Y = (int)position.Y;
@@ -135,7 +135,7 @@ public unsafe class SimpleTypeInspector : Inspector
             }
 
             var size = value.Size.ToNumerics();
-            if (ImGuiExt.DrawXy("##Size", ref size, "W", "Width", "H", "Height"))
+            if (ImGuiExt.InspectNumVector2("##Size", ref size, "W", "Width", "H", "Height"))
             {
                 value.Width = (int)size.X;
                 value.Height = (int)size.Y;
@@ -151,6 +151,11 @@ public unsafe class SimpleTypeInspector : Inspector
         }
 
         return result;
+    }
+
+    public static bool InspectColor(string label, ref Color color, Color? refColor = null, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
+    {
+        return ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(label, true), ref color, refColor, flags);
     }
 
     public override void Draw()
@@ -307,7 +312,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Color))
         {
             var value = (Color)getter();
-            if (ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(name, true), ref value))
+            if (InspectColor(name, ref value))
             {
                 setter(value);
                 result = true;
