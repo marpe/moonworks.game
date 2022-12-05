@@ -8,7 +8,6 @@ namespace MyGame.Screens;
 public class GameScreen
 {
     public Camera Camera { get; private set; }
-    public World? World { get; private set; }
 
     private readonly MyGameMain _game;
     public MyGameMain Game => _game;
@@ -19,11 +18,14 @@ public class GameScreen
     public static bool IsStepping = false;
     public static bool IsPaused = false;
     public static bool DebugViewBounds = false;
+    public World World { get; }
 
     public GameScreen(MyGameMain game)
     {
         _game = game;
 
+        World = new();
+        
         Camera = new Camera(game.RenderTargets.GameRenderSize.X, game.RenderTargets.GameRenderSize.Y)
         {
             ClampToLevelBounds = true,
@@ -34,18 +36,18 @@ public class GameScreen
     public static void Restart(bool immediate = true)
     {
         Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Starting load");
-        var worldLoader = () => new World(Shared.Game.GameScreen, ContentPaths.ldtk.Example.World_ldtk);
+        var ldtkLoader = () => Shared.Content.LoadAndAddLDtkWithTextures(ContentPaths.ldtk.Example.World_ldtk);
         if (immediate)
         {
-            Shared.Game.GameScreen.QueueSetWorld(worldLoader());
+            Shared.Game.GameScreen.QueueSetLdtk(ldtkLoader(), World.NextLevel);
         }
         else
         {
-            Shared.Game.GameScreen.LoadWorld(worldLoader);
+            Shared.Game.GameScreen.LoadLdtk(ldtkLoader, World.NextLevel);
         }
     }
 
-    public void QueueSetWorld(World world)
+    public void QueueSetLdtk(LDtkAsset ldtk, Action? onCompleteCallback)
     {
         QueueAction(() =>
         {
@@ -53,7 +55,8 @@ public class GameScreen
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             Unload();
-            World = world;
+            World.SetLDtk(ldtk);
+            onCompleteCallback?.Invoke();
         });
     }
 
@@ -89,7 +92,7 @@ public class GameScreen
         Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
     }
 
-    public void LoadWorld(Func<World> worldLoader)
+    public void LoadLdtk(Func<LDtkAsset> ldtkLoader, Action? onCompleteCallback)
     {
         if (Shared.LoadingScreen.IsLoading)
         {
@@ -107,8 +110,8 @@ public class GameScreen
 
         Shared.LoadingScreen.LoadAsync(() =>
         {
-            var world = worldLoader();
-            QueueSetWorld(world);
+            var ldtk = ldtkLoader();
+            QueueSetLdtk(ldtk, onCompleteCallback);
         });
     }
 
@@ -119,11 +122,12 @@ public class GameScreen
 
     public void Unload()
     {
-        if (World == null)
+        if (!World.IsLoaded)
             return;
         Logs.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
-        World.Dispose();
-        World = null;
+        Camera.TrackEntity(null);
+        Camera.LevelBounds = Rectangle.Empty;
+        World.Unload();
     }
 
     public void ExecuteQueuedActions()
@@ -141,7 +145,7 @@ public class GameScreen
 
     public void Update(float deltaSeconds)
     {
-        if (World == null)
+        if (!World.IsLoaded)
             return;
 
         var doUpdate = IsStepping ||
@@ -150,7 +154,7 @@ public class GameScreen
         if (doUpdate)
         {
             // BindHandler.HandleBoundKeys();
-            World.Update(deltaSeconds, _game.InputHandler);
+            World.Update(deltaSeconds, _game.InputHandler, Camera);
         }
         else
         {
@@ -175,7 +179,7 @@ public class GameScreen
 
     public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        if (World == null)
+        if (!World.IsLoaded)
         {
             renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
             return;
@@ -193,7 +197,7 @@ public class GameScreen
         }
 
         {
-            World.DrawLights(renderer, ref commandBuffer, renderDestination, alpha);
+            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, _game.RenderTargets.LightSource, _game.RenderTargets.LightTarget, alpha);
         }
 
 

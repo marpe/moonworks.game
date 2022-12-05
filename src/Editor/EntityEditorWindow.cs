@@ -69,8 +69,9 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         if (ImGui.Begin("EntityEditorList", default))
         {
             var world = _editor.GameScreen.World;
-            if (world != null)
+            if (world.IsLoaded)
             {
+                var ldtkRaw = world.LDtk.LdtkRaw;
                 var result = ButtonGroup($"{FontAwesome6.Plus}", "Presets", 200);
                 if (result == 0)
                 {
@@ -103,16 +104,16 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
                         FieldDefs = Array.Empty<FieldDefinition>(),
                     };
 
-                    var newArr = new EntityDefinition[world.LdtkRaw.Defs.Entities.Length + 1];
-                    Array.Copy(world.LdtkRaw.Defs.Entities, newArr, world.LdtkRaw.Defs.Entities.Length);
-                    newArr[world.LdtkRaw.Defs.Entities.Length] = def;
-                    world.LdtkRaw.Defs.Entities = newArr;
+                    var newArr = new EntityDefinition[ldtkRaw.Defs.Entities.Length + 1];
+                    Array.Copy(ldtkRaw.Defs.Entities, newArr, ldtkRaw.Defs.Entities.Length);
+                    newArr[ldtkRaw.Defs.Entities.Length] = def;
+                    ldtkRaw.Defs.Entities = newArr;
                 }
                 else if (result == 1)
                 {
                 }
 
-                var entities = world.LdtkRaw.Defs.Entities;
+                var entities = ldtkRaw.Defs.Entities;
                 // ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(0, 0));
                 // ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, 20));
 
@@ -208,9 +209,10 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         if (ImGui.Begin("EntityEditorProps", default))
         {
             var world = _editor.GameScreen.World;
-            if (world != null)
+            if (world.IsLoaded)
             {
-                var entities = world.LdtkRaw.Defs.Entities;
+                var ldtkRaw = world.LDtk.LdtkRaw;
+                var entities = ldtkRaw.Defs.Entities;
                 if (_selectedEntityDefIndex >= 0 && _selectedEntityDefIndex < entities.Length)
                 {
                     var entityDef = entities[_selectedEntityDefIndex];
@@ -431,9 +433,9 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
             if (ImGui.MenuItem("Save", default))
             {
                 var world = _editor.GameScreen.World;
-                if (world != null)
+                if (world.IsLoaded)
                 {
-                    var json = world.LdtkRaw.ToJson();
+                    var json = world.LDtk.LdtkRaw.ToJson();
                     var filename = "test.ldtk";
                     File.WriteAllText(filename, json);
                     Logs.LogInfo($"Saved to {filename}");

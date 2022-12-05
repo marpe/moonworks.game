@@ -19,7 +19,7 @@ public class AudioManager
 
         for (var i = 0; i < soundEffects.Length; i++)
         {
-            var wav = Shared.Content.LoadSound(soundEffects[i]);
+            var wav = Shared.Content.LoadAndAddSound(soundEffects[i]);
             _staticSound.Add(soundEffects[i], wav);
         }
     }

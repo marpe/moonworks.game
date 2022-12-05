@@ -84,20 +84,29 @@ public unsafe class MyEditorMain : MyGameMain
     private void OnFileChanged(FileEvent e)
     {
         Logs.LogInfo($"File changed: {e.FullPath}, {e.ChangeType}");
-        var extension = Path.GetExtension(e.FullPath);
+        var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
+        var extension = Path.GetExtension(relativePath);
         if (extension == ".ldtk")
         {
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
-                var world = new World(GameScreen, e.FullPath);
-                if (GameScreen.World != null)
+
+                var ldtk = ContentManager.LoadLDtk(relativePath);
+
+                // TODO (marpe): Fix
+                var ldtkAsset = new LDtkAsset();
+                ldtkAsset.LdtkRaw = ldtk;
+                
+                // start the same level we're currently on
+                Action? onComplete = null;
+                if (GameScreen.World.IsLoaded)
                 {
                     var levelIdentifier = GameScreen.World.Level.Identifier;
-                    world.StartLevel(levelIdentifier);
+                    onComplete = () => { GameScreen.World.StartLevel(levelIdentifier); };
                 }
 
-                GameScreen.QueueSetWorld(world);
+                GameScreen.QueueSetLdtk(ldtkAsset, onComplete);
             });
         }
         else if (extension == ".aseprite")
@@ -106,7 +115,6 @@ public unsafe class MyEditorMain : MyGameMain
             {
                 Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
                 var texture = TextureUtils.LoadAseprite(GraphicsDevice, e.FullPath);
-                var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
                 GameScreen.QueueAction(() =>
                 {
                     Shared.Content.ReplaceTexture(relativePath, texture);
@@ -204,7 +212,7 @@ public unsafe class MyEditorMain : MyGameMain
             uint topLeft;
             uint bottomLeft;
             var leftSplit = ImGuiInternal.DockBuilderSplitNode(dockLeft, ImGuiDir.Up, 0.5f, &topLeft, &bottomLeft);
-            
+
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             var dockRight = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, topLeft);

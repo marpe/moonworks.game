@@ -87,7 +87,7 @@ public class Renderer
         for (var i = 0; i < bmFontTypes.Length; i++)
         {
             var (type, path) = bmFontTypes[i];
-            fonts[i] = Shared.Content.LoadBMFont(path);
+            fonts[i] = Shared.Content.LoadAndAddBMFont(path);
         }
 
         return fonts;

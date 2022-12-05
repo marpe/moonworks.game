@@ -2,8 +2,16 @@ using MoonWorks.Audio;
 
 namespace MyGame.Utils;
 
+public struct LDtkAsset
+{
+    public LdtkJson LdtkRaw;
+    public Texture[] Textures;
+}
+
 public class ContentManager
 {
+    public static readonly JsonSerializer JsonSerializer = new() { Converters = { new ColorConverter() } };
+
     private readonly MyGameMain _game;
     private static StringBuilder _sb = new();
 
@@ -11,6 +19,7 @@ public class ContentManager
     private Dictionary<string, BMFont> _loadedBMFonts = new();
     private Dictionary<string, StaticSound> _loadedSound = new();
     private Dictionary<string, TTFFont> _loadedTTFFonts = new();
+    private Dictionary<string, LDtkAsset> _loadedLDtks = new();
 
     public ContentManager(MyGameMain game)
     {
@@ -33,14 +42,53 @@ public class ContentManager
         AddTexture(path, texture);
     }
 
-    public BMFont LoadBMFont(string path)
+    public static LdtkJson LoadLDtk(string path)
+    {
+        var jsonString = File.ReadAllText(path);
+        var ldtk = LdtkJson.FromJson(jsonString);
+        
+        // TODO (marpe): Remove ugly hack
+        for (var i = 0; i < ldtk.Defs.Tilesets.Length; i++)
+        {
+            var def = ldtk.Defs.Tilesets[i];
+            if (def.RelPath != null)
+            {
+                var combinedPath = Path.Combine(Path.GetDirectoryName(path) ?? "", def.RelPath);
+                ldtk.Defs.Tilesets[i].RelPath = combinedPath;
+            }
+        }
+
+        return ldtk;
+    }
+
+    public LDtkAsset LoadAndAddLDtkWithTextures(string path)
+    {
+        var asset = new LDtkAsset();
+        asset.LdtkRaw = LoadLDtk(path);
+
+        var texturePaths = asset.LdtkRaw.Defs.Tilesets.Where(x => x.RelPath != null)
+            .Select(x => x.RelPath)
+            .ToList();
+        LoadAndAddTextures(texturePaths);
+        asset.Textures = texturePaths.Select(GetTexture).ToArray();
+
+        if (_loadedLDtks.ContainsKey(path))
+        {
+            Logs.LogWarn($"LDtk has already been loaded: {path}");
+        }
+
+        _loadedLDtks[path] = asset;
+        return asset;
+    }
+
+    public BMFont LoadAndAddBMFont(string path)
     {
         var font = BMFont.LoadFromFile(_game.GraphicsDevice, path);
         _loadedBMFonts.Add(path, font);
         return font;
     }
 
-    public StaticSound LoadSound(string path)
+    public StaticSound LoadAndAddSound(string path)
     {
         var wav = StaticSound.LoadWav(_game.AudioDevice, path);
         _loadedSound.Add(path, wav);
@@ -57,7 +105,12 @@ public class ContentManager
         return _loadedTTFFonts[path];
     }
 
-    public void LoadTTFFonts((string, int[])[] fontPaths)
+    public Texture GetTexture(string path)
+    {
+        return _loadedTextures[path];
+    }
+
+    public void LoadAndAddTTFFonts((string, int[])[] fontPaths)
     {
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
         var loadedFonts = new Dictionary<string, TTFFont>();
@@ -96,7 +149,7 @@ public class ContentManager
         }
     }
 
-    public void LoadTextures(List<string> texturePaths)
+    public void LoadAndAddTextures(IEnumerable<string> texturePaths)
     {
         var texturesPendingSubmit = new Dictionary<string, Texture>();
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
@@ -162,6 +215,4 @@ public class ContentManager
 
         Shared.Console.Print(_sb.ToString());
     }
-
-    public Texture this[string path] => _loadedTextures[path];
 }

@@ -110,7 +110,7 @@ public static class CameraDebug
 public class World
 {
     public const int DefaultGridSize = 16;
-    public bool IsDisposed { get; private set; }
+    public bool IsLoaded { get; private set; }
 
     [CVar("world.debug", "Toggle world debugging")]
     public static bool Debug;
@@ -123,18 +123,12 @@ public class World
 
     [CVar("entities.debug", "Toggle debugging of entities")]
     public static bool DebugEntities;
-
-    private static readonly JsonSerializer _jsonSerializer = new() { Converters = { new ColorConverter() } };
-
-    private readonly GameScreen _gameScreen;
-
+    
     private readonly DebugDrawItems _debugDraw;
 
     public float Gravity = 800f;
 
-    public readonly LdtkJson LdtkRaw;
-
-    public Player Player;
+    public Player Player = new();
     public List<Enemy> Enemies { get; } = new();
     public List<Bullet> Bullets { get; } = new();
 
@@ -146,34 +140,20 @@ public class World
 
     private static Vector2 _savedPos;
 
-    public Level Level;
-    public Level[] Levels;
-    private readonly Dictionary<long, string> _tileSetTextureMapping;
     public float FreezeFrameTimer;
 
-    public World(GameScreen gameScreen, ReadOnlySpan<char> ldtkPath)
+    public Level Level = new();
+    public LDtkAsset LDtk = new();
+
+    public World()
     {
-        _gameScreen = gameScreen;
-        var jsonString = File.ReadAllText(ldtkPath.ToString());
-        LdtkRaw = LdtkJson.FromJson(jsonString);
-
-        _tileSetTextureMapping = LoadTilesets(ldtkPath, LdtkRaw.Defs.Tilesets);
-        var textures = new List<string>(_tileSetTextureMapping.Values)
-        {
-            ContentPaths.ldtk.Example.Characters_png
-        };
-
-        Shared.Content.LoadTextures(textures);
-
         _debugDraw = new DebugDrawItems();
-
-        var isMultiWorld = LdtkRaw.Worlds.Length > 0;
-        Levels = isMultiWorld ? LdtkRaw.Worlds[0].Levels : LdtkRaw.Levels;
-        StartLevel("World_Level_1");
+        // StartLevel("World_Level_1");
     }
 
-    public static Level FindLevel(string identifier, Level[] levels)
+    public static Level FindLevel(string identifier, LdtkJson ldtk)
     {
+        var levels = ldtk.Worlds.Length > 0 ? ldtk.Worlds[0].Levels : ldtk.Levels;
         for (var i = 0; i < levels.Length; i++)
         {
             if (levels[i].Identifier == identifier)
@@ -183,12 +163,18 @@ public class World
         throw new InvalidOperationException($"Level not found: {identifier}");
     }
 
+    public void SetLDtk(LDtkAsset ldtk)
+    {
+        LDtk = ldtk;
+        IsLoaded = true;
+    }
+
     [MemberNotNull(nameof(Level), nameof(Player))]
     public void StartLevel(string levelIdentifier)
     {
         WorldTotalElapsedTime = WorldUpdateCount = 0;
 
-        var level = FindLevel(levelIdentifier, Levels);
+        var level = FindLevel(levelIdentifier, LDtk.LdtkRaw);
 
         Enemies.Clear();
         Bullets.Clear();
@@ -205,16 +191,17 @@ public class World
     [ConsoleHandler("next_level")]
     public static void NextLevel()
     {
-        var world = Shared.Game.GameScreen.World;
-        if (world == null)
+        if (!Shared.Game.GameScreen.World.IsLoaded)
         {
             Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
-        var currIndex = Array.IndexOf(world.Levels, world.Level);
-        var nextIndex = (currIndex + 1) % world.Levels.Length;
-        var nextLevel = world.Levels[nextIndex];
+        var world = Shared.Game.GameScreen.World;
+        var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
+        var currIndex = Array.IndexOf(levels, world.Level);
+        var nextIndex = (currIndex + 1) % levels.Length;
+        var nextLevel = levels[nextIndex];
         world.StartLevel(nextLevel.Identifier);
         Logs.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
     }
@@ -222,16 +209,17 @@ public class World
     [ConsoleHandler("prev_level")]
     public static void PrevLevel()
     {
-        var world = Shared.Game.GameScreen.World;
-        if (world == null)
+        if (!Shared.Game.GameScreen.World.IsLoaded)
         {
             Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
-        var currIndex = Array.IndexOf(world.Levels, world.Level);
-        var prevIndex = (world.Levels.Length + (currIndex - 1)) % world.Levels.Length;
-        var prevLevel = world.Levels[prevIndex];
+        var world = Shared.Game.GameScreen.World;
+        var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
+        var currIndex = Array.IndexOf(levels, world.Level);
+        var prevIndex = (levels.Length + (currIndex - 1)) % levels.Length;
+        var prevLevel = levels[prevIndex];
         world.StartLevel(prevLevel.Identifier);
         Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
@@ -261,7 +249,7 @@ public class World
                 {
                     var fieldValue = (JToken)field.Value;
                     var fieldInfo = entity.GetType().GetField(field.Identifier) ?? throw new InvalidOperationException();
-                    var deserializedValue = fieldValue?.ToObject(fieldInfo.FieldType, _jsonSerializer);
+                    var deserializedValue = fieldValue?.ToObject(fieldInfo.FieldType, ContentManager.JsonSerializer);
                     fieldInfo.SetValue(entity, deserializedValue);
                 }
 
@@ -276,9 +264,9 @@ public class World
     public static void KillAllEnemies()
     {
         var world = Shared.Game.GameScreen.World;
-        if (world == null)
+        if (!world.IsLoaded)
         {
-            Shared.Console.Print("World is null");
+            Shared.Console.Print("World is not loaded");
             return;
         }
 
@@ -305,12 +293,12 @@ public class World
             Bullets[i].Position.SetLastUpdatePosition();
     }
 
-    public void Update(float deltaSeconds, InputHandler input)
+    public void Update(float deltaSeconds, InputHandler input, Camera camera)
     {
         // first update stuff
         if (WorldUpdateCount == 0)
         {
-            _gameScreen.Camera.LevelBounds = Level.Bounds;
+            camera.LevelBounds = Level.Bounds;
         }
 
         WorldUpdateCount++;
@@ -321,10 +309,10 @@ public class World
         if (FreezeFrameTimer > 0)
             return;
 
-        UpdatePlayer(deltaSeconds, input);
+        UpdatePlayer(deltaSeconds, input, camera);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
-        _gameScreen.Camera.Update(deltaSeconds, input);
+        camera.Update(deltaSeconds, input);
     }
 
     private void UpdateBullets(float deltaSeconds)
@@ -340,11 +328,11 @@ public class World
         }
     }
 
-    private void UpdatePlayer(float deltaSeconds, InputHandler input)
+    private void UpdatePlayer(float deltaSeconds, InputHandler input, Camera camera)
     {
         if (!Player.IsInitialized)
         {
-            _gameScreen.Camera.TrackEntity(Player);
+            camera.TrackEntity(Player);
             Player.Initialize(this);
         }
 
@@ -412,8 +400,8 @@ public class World
         for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(LdtkRaw, layer.LayerDefUid);
-            DrawLayer(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
+            var layerDef = GetLayerDefinition(LDtk.LdtkRaw, layer.LayerDefUid);
+            DrawLayer(renderer, LDtk.LdtkRaw, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
         if (Debug && DebugLevel)
@@ -422,7 +410,7 @@ public class World
 
     private void DrawBullets(Renderer renderer, double alpha)
     {
-        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         for (var i = 0; i < Bullets.Count; i++)
         {
             var bullet = Bullets[i];
@@ -446,7 +434,7 @@ public class World
     {
         var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
         var xform = Player.GetTransform(alpha);
-        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
         if (Debug)
             DrawEntityDebug(renderer, Player, true, alpha);
@@ -454,7 +442,7 @@ public class World
 
     private void DrawEnemies(Renderer renderer, double alpha)
     {
-        var texture = Shared.Content[ContentPaths.ldtk.Example.Characters_png];
+        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         for (var i = 0; i < Enemies.Count; i++)
         {
             var entity = Enemies[i];
@@ -475,13 +463,13 @@ public class World
         }
     }
 
-    private void DrawLayer(Renderer renderer, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
+    private void DrawLayer(Renderer renderer, LdtkJson ldtk, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
     {
         if (!layer.TilesetDefUid.HasValue)
             return;
 
-        var texturePath = _tileSetTextureMapping[layer.TilesetDefUid.Value];
-        var texture = Shared.Content[texturePath];
+        var tilesetDef = GetTilesetDef(ldtk, layerDef.TilesetDefUid!.Value);
+        var texture = Shared.Content.GetTexture(tilesetDef.RelPath);
 
         var layerWidth = layer.CWid;
         var layerHeight = layer.CHei;
@@ -549,6 +537,19 @@ public class World
             }*/
     }
 
+    private static TilesetDefinition GetTilesetDef(LdtkJson ldtk, long tilesetUid)
+    {
+        for (var i = 0; i < ldtk.Defs.Tilesets.Length; i++)
+        {
+            if (ldtk.Defs.Tilesets[i].Uid == tilesetUid)
+            {
+                return ldtk.Defs.Tilesets[i];
+            }
+        }
+
+        throw new Exception($"Could not find a TilesetDefinition with id \"{tilesetUid}\"");
+    }
+
     private static void RenderTile(Renderer renderer, Point position, TileInstance tile, LayerInstance layer, Texture texture)
     {
         var srcRect = new Rectangle((int)tile.Src[0], (int)tile.Src[1], (int)layer.GridSize, (int)layer.GridSize);
@@ -557,15 +558,21 @@ public class World
         renderer.DrawSprite(sprite, transform.ToMatrix4x4(), Color.White);
     }
 
-    public void Dispose()
+    public void Unload()
     {
-        if (IsDisposed)
+        if (IsLoaded)
             return;
 
-        _gameScreen.Camera.TrackEntity(null);
-        _gameScreen.Camera.LevelBounds = Rectangle.Empty;
+        Level = new Level();
+        LDtk = new LDtkAsset();
 
-        IsDisposed = true;
+
+        Player = new();
+        Enemies.Clear();
+        Bullets.Clear();
+        Lights.Clear();
+
+        IsLoaded = false;
     }
 
     public void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
@@ -615,7 +622,7 @@ public class World
     public void SpawnBullet(Vector2 position, int direction)
     {
         var bullet = new Bullet();
-        var def = GetEntityDefinition(LdtkRaw, EntityType.Bullet);
+        var def = GetEntityDefinition(LDtk.LdtkRaw, EntityType.Bullet);
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
         bullet.Pivot = def.PivotVec;
@@ -691,23 +698,23 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera, RenderTarget lightSource, RenderTarget lightTarget, double alpha)
     {
         DrawEntities(renderer, alpha);
-        var viewProjection = _gameScreen.Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        renderer.RunRenderPass(ref commandBuffer, _gameScreen.Game.RenderTargets.LightSource, Color.Transparent, viewProjection);
+        var viewProjection = camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection);
 
         renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
         renderer.UpdateBuffers(ref commandBuffer);
-        renderer.BeginRenderPass(ref commandBuffer, _gameScreen.Game.RenderTargets.LightTarget, Color.Transparent, PipelineType.RimLight);
-        var cameraBounds = _gameScreen.Camera.ZoomedBounds;
+        renderer.BeginRenderPass(ref commandBuffer, lightTarget, Color.Transparent, PipelineType.RimLight);
+        var cameraBounds = camera.ZoomedBounds;
         for (var i = 0; i < Lights.Count; i++)
         {
             var light = Lights[i];
             var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
             var fragmentBindings = new[]
             {
-                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(_gameScreen.Game.RenderTargets.LightSource, Renderer.PointClamp)
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(lightSource, Renderer.PointClamp)
             };
             commandBuffer.BindFragmentSamplers(fragmentBindings);
             var fragUniform = new Pipelines.RimLightUniforms()
@@ -737,7 +744,7 @@ public class World
 
         renderer.EndRenderPass(ref commandBuffer);
         
-        renderer.DrawSprite(_gameScreen.Game.RenderTargets.LightTarget.Target, Matrix4x4.Identity, Color.White);
+        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
 
     }

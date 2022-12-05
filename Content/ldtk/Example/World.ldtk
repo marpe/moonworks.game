@@ -1597,6 +1597,44 @@
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] }
 							]
+						},
+						{
+							"__identifier": "Light",
+							"__grid": [14,6],
+							"__pivot": [0.5,0.5],
+							"__tags": ["Light"],
+							"__tile": { "tilesetUid": 152, "x": 80, "y": 112, "w": 16, "h": 16 },
+							"__smartColor": "#FFFFFF",
+							"iid": "e5c647f0-5110-11ed-891d-4990b89ea2b0",
+							"width": 16,
+							"height": 16,
+							"defUid": 151,
+							"px": [232,104],
+							"fieldInstances": [
+								{ "__identifier": "Intensity", "__value": 1, "__type": "Float", "__tile": null, "defUid": 153, "realEditorValues": [] },
+								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
+								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
+								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] }
+							]
+						},
+						{
+							"__identifier": "Light",
+							"__grid": [9,6],
+							"__pivot": [0.5,0.5],
+							"__tags": ["Light"],
+							"__tile": { "tilesetUid": 152, "x": 80, "y": 112, "w": 16, "h": 16 },
+							"__smartColor": "#FFFFFF",
+							"iid": "64d263d0-5110-11ed-891d-5fc5527870e9",
+							"width": 16,
+							"height": 16,
+							"defUid": 151,
+							"px": [152,104],
+							"fieldInstances": [
+								{ "__identifier": "Intensity", "__value": 1, "__type": "Float", "__tile": null, "defUid": 153, "realEditorValues": [] },
+								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
+								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
+								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] }
+							]
 						}
 					]
 				},

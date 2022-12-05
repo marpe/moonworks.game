@@ -23,7 +23,7 @@ public class TextBatcher
             (ContentPaths.fonts.consola_ttf, new[] { 18, 48 }),
         };
 
-        Shared.Content.LoadTTFFonts(fonts);
+        Shared.Content.LoadAndAddTTFFonts(fonts);
 
         var pixellari = Shared.Content.GetTTFFont(ContentPaths.fonts.Pixellari_ttf);
         var roboto = Shared.Content.GetTTFFont(ContentPaths.fonts.Roboto_Regular_ttf);
