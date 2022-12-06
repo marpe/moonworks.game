@@ -40,7 +40,7 @@ public struct FancyTextPart
 
 public class FancyTextComponent
 {
-    private static Color[] _rainbowGradient =  new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
+    private static Color[] _rainbowGradient = new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
     private static Color[] _tempColors = new Color[4];
     private static Vector2[] _tempPoints = { new(0, 0), new(0, 1), new(1, 0), new(1, 1), };
     public static float ShakeSpeed = 100f;
@@ -58,6 +58,8 @@ public class FancyTextComponent
     public float Timer;
     public static float WaveAmplitudeScale = 2f;
 
+    public float LineHeightScaling = 2f;
+
     public FancyTextComponent(ReadOnlySpan<char> rawText)
     {
         var (stripped, parts) = ParseText(rawText);
@@ -67,6 +69,8 @@ public class FancyTextComponent
 
     public AlignH AlignH { get; set; } = AlignH.Center;
     public AlignV AlignV { get; set; } = AlignV.Middle;
+
+    public Vector2 LastRenderSize;
 
     public static Vector2 GetAlignVector(AlignH horizontal, AlignV vertical)
     {
@@ -217,6 +221,8 @@ public class FancyTextComponent
         var font = renderer.GetFont(fontType);
         var textSize = font.MeasureString(_strippedText);
         var origin = GetAlignVector(AlignH, AlignV) * textSize;
+        
+        LastRenderSize = new Vector2(textSize.X, textSize.Y * LineHeightScaling);
 
         var rotation = Matrix3x2.CreateRotation(Rotation);
         var offset = Vector2.Zero;
@@ -249,7 +255,8 @@ public class FancyTextComponent
                 var partOrigin = charSize / 2;
                 var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
-                renderer.DrawBMText(fontType, part.Character, new Vector2((int)finalPos.X, (int)finalPos.Y), partOrigin, Scale * part.Scale, Rotation + part.Rotation, 0, finalColors);
+                renderer.DrawBMText(fontType, part.Character, new Vector2((int)finalPos.X, (int)finalPos.Y), partOrigin, Scale * part.Scale,
+                    Rotation + part.Rotation, 0, finalColors);
             }
 
             partOffset.X += charSize.X;
@@ -294,7 +301,7 @@ public class FancyTextComponent
             var position = new Vector2(part.Offset.X, part.Offset.Y) + Vector2.One * Shared.Game.Time.TotalElapsedTime * 0.025f;
             var t = Matrix3x2.CreateTranslation(-Vector2.Half) *
                     Matrix3x2.CreateScale(Vector2.One * s) *
-                    Matrix3x2.CreateRotation(45 * MathF.Deg2Rad) * 
+                    Matrix3x2.CreateRotation(45 * MathF.Deg2Rad) *
                     Matrix3x2.CreateTranslation(position);
 
             for (var i = 0; i < _tempPoints.Length; i++)
@@ -307,12 +314,13 @@ public class FancyTextComponent
             ColorExt.MultiplyColors(_tempColors, tint);
             return _tempColors;
         }
-        else
-        {
-            _tempColors.AsSpan().Fill(part.Color);
-            ColorExt.MultiplyColors(_tempColors, tint);
-            return _tempColors;
-        }
+
+        _tempColors[0] = tint;
+        _tempColors[1] = tint.MultiplyRGB(tint * 0.5f);
+        _tempColors[2] = tint;
+        _tempColors[3] = tint.MultiplyRGB(tint * 0.5f);
+        ColorExt.MultiplyColors(_tempColors, tint);
+        return _tempColors;
     }
 
     private static Vector2 MeasureText(ReadOnlySpan<char> text, FontData font, HorizontalAlignment alignH, VerticalAlignment alignV)

@@ -1169,7 +1169,7 @@
 					"editorTextPrefix": null,
 					"useForSmartColor": false,
 					"min": 0,
-					"max": null,
+					"max": 20,
 					"regex": null,
 					"acceptFileTypes": null,
 					"defaultOverride": { "id": "V_Float", "params": [1] },

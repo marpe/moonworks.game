@@ -10,7 +10,8 @@ public abstract class MenuItem
     public bool IsEnabled = true;
     public float Alpha = 0f;
     public Spring NudgeSpring = new();
-    
+    public Action? Callback;
+
     public bool IsSelectable => IsVisible && IsEnabled;
     public abstract Rectangle Bounds { get; }
 
@@ -19,7 +20,6 @@ public abstract class MenuItem
 
 public class TextMenuItem : MenuItem
 {
-    public Action Callback;
     public string Text;
 
     public HorizontalAlignment AlignH = HorizontalAlignment.Center;

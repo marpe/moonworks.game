@@ -109,6 +109,8 @@ public static class CameraDebug
 
 public class World
 {
+    public Color AmbientColor = new Color(0, 0, 0, 0.8f);
+
     public const int DefaultGridSize = 16;
     public bool IsLoaded { get; private set; }
 
@@ -375,11 +377,13 @@ public class World
 
     private void DrawLightBounds(Renderer renderer)
     {
-        if (!Debug || !DebugLights)
+        if (!Debug && !DebugLights)
             return;
         for (var i = 0; i < Lights.Count; i++)
         {
             var light = Lights[i];
+            if (!light.DrawDebug)
+                continue;
             renderer.DrawRectOutline(light.Bounds.Min, light.Bounds.Max, light.Color);
         }
     }
@@ -696,21 +700,24 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera, RenderTarget lightSource,
-        RenderTarget lightTarget, double alpha)
+    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
+        RenderTarget lightSource, RenderTarget lightTarget, double alpha)
     {
         DrawEntities(renderer, alpha);
-        var viewProjection = camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
         renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection);
 
         renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
         renderer.UpdateBuffers(ref commandBuffer);
-        renderer.BeginRenderPass(ref commandBuffer, lightTarget, Color.Transparent, PipelineType.RimLight);
+        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.RimLight);
         var cameraBounds = camera.ZoomedBounds;
+        // TODO (marpe): First draw all lights to rt1
+        // Use rt1 to draw rim light rt2
+        // Combine rt1 and r2
         for (var i = 0; i < Lights.Count; i++)
         {
             var light = Lights[i];
-            var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            var vertUniform = Renderer.GetViewProjection(lightTarget.Width, lightTarget.Height);
             var fragmentBindings = new[]
             {
                 new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(lightSource, Renderer.PointClamp)
@@ -738,6 +745,7 @@ public class World
             };
             var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
             var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
+            // TODO (marpe): Render a quad the size of the light
             SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
         }
 

@@ -78,7 +78,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
-        sw.StopAndLog("MyEditorMainTest");
+        sw.StopAndLog("MyEditorMain");
     }
 
     private void OnFileChanged(FileEvent e)

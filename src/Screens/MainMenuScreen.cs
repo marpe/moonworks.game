@@ -4,7 +4,7 @@ public class MainMenuScreen : MenuScreen
 {
     private readonly Texture _background;
     private readonly ConfirmScreen _confirmScreen;
-    
+
     public MainMenuScreen(MyGameMain game) : base(game)
     {
         _menuItems.AddRange(new MenuItem[]
@@ -13,9 +13,21 @@ public class MainMenuScreen : MenuScreen
             {
                 IsEnabled = false
             },
-            new TextMenuItem("New Game", OnPlay),
-            new TextMenuItem("Options", () => { Shared.Menus.AddScreen(Shared.Menus.OptionsScreen); }),
-            new TextMenuItem("Quit", OnQuit),
+            new FancyTextMenuItem("New Game", OnPlay)
+            {
+                FontType = BMFontType.PixellariLarge,
+                ShadowOffset = Vector2.One * 3f
+            },
+            new FancyTextMenuItem("Options", () => { Shared.Menus.AddScreen(Shared.Menus.OptionsScreen); })
+            {
+                FontType = BMFontType.PixellariLarge,
+                ShadowOffset = Vector2.One * 3f
+            },
+            new FancyTextMenuItem("Quit", OnQuit)
+            {
+                FontType = BMFontType.PixellariLarge,
+                ShadowOffset = Vector2.One * 3f
+            },
         });
 
         _confirmScreen = new ConfirmScreen(game, () => Shared.Game.Quit(), () => { });
@@ -24,7 +36,7 @@ public class MainMenuScreen : MenuScreen
     }
 
     private void OnPlay()
-    { 
+    {
         MyGameMain.Restart(false);
     }
 
@@ -32,7 +44,7 @@ public class MainMenuScreen : MenuScreen
     {
         Shared.Menus.AddScreen(_confirmScreen);
     }
-    
+
     public override void Draw(Renderer renderer, double alpha)
     {
         var scale = new Vector2(

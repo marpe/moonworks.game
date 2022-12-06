@@ -45,6 +45,11 @@ public static unsafe class ImGuiExt
         Color.OliveDrab,
     };
 
+    public static Color GetColor(int i = 0)
+    {
+        return Colors[i % Colors.Length];
+    }
+
     public static bool Begin(string name, ref bool isOpen, ImGuiWindowFlags flags = ImGuiWindowFlags.None)
     {
         var framePadding = ImGui.GetStyle()->FramePadding;

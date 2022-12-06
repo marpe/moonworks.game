@@ -33,18 +33,23 @@ public class FancyTextMenuItem : MenuItem
             );
         }
     }
+    
+    public Vector2 ShadowOffset = Vector2.One * 5f;
 
-    public FancyTextMenuItem(ReadOnlySpan<char> text)
+    public FancyTextMenuItem(ReadOnlySpan<char> text, Action? callback = null)
     {
         TextComponent = new FancyTextComponent(text);
         var size = Shared.Game.Renderer.GetFont(FontType).MeasureString(TextComponent.StrippedText);
         Width = (int)size.X;
-        Height = (int)size.Y;
+        Height = (int)(size.Y * TextComponent.LineHeightScaling);
+        Callback = callback;
     }
 
     public void Update(float deltaSeconds)
     {
         TextComponent.Update(deltaSeconds);
+        Width = (int)TextComponent.LastRenderSize.X;
+        Height = (int)TextComponent.LastRenderSize.Y;
     }
 
     public override void Draw(Vector2 position, Renderer renderer, Color color)
@@ -52,7 +57,7 @@ public class FancyTextMenuItem : MenuItem
         if (!IsVisible)
             return;
         
-        TextComponent.Render(FontType, renderer, position + new Vector2(5, 5), Color.Black * Alpha, 1.0f);
+        TextComponent.Render(FontType, renderer, position + ShadowOffset, Color.Black * Alpha, 1.0f);
         TextComponent.Render(FontType, renderer, position, color * Alpha, 1.0f);
     }
 }

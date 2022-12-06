@@ -195,8 +195,7 @@ public abstract class MenuScreen
 
         if (_game.InputHandler.IsKeyPressed(KeyCode.Return) || _game.InputHandler.IsKeyPressed(KeyCode.Space))
         {
-            if (_menuItems[_selectedIndex] is TextMenuItem tmi)
-                tmi.Callback.Invoke();
+            _menuItems[_selectedIndex].Callback?.Invoke();
             return true;
         }
 
@@ -224,9 +223,8 @@ public abstract class MenuScreen
 
             if (!_game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
                 continue;
-
-            if (_menuItems[i] is TextMenuItem tmi)
-                tmi.Callback.Invoke();
+            
+            _menuItems[i].Callback?.Invoke();
 
             return true;
         }
