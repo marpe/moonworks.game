@@ -11,8 +11,16 @@ public unsafe class GameWindow : ImGuiEditorWindow
     private IntPtr? _gameRenderTextureId;
     public Matrix4x4 GameRenderViewportTransform;
 
+    /// <summary>
+    /// User zoom
+    /// </summary>
     private float _gameRenderScale = 1f;
+
+    /// <summary>
+    /// User panning offset
+    /// </summary>
     private Num.Vector2 _gameRenderPosition = Num.Vector2.Zero;
+
     private MyEditorMain _editor;
 
     private bool _showDebug;
@@ -21,6 +29,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     [CVar("imgui.mouse_pan_and_zoom", "Toggle mouse pan & zoom control")]
     public static bool IsMousePanAndZoomEnabled = true;
+
+    /// <summary>
+    /// Used to set zoom to fill window height/width
+    /// </summary>
+    private Num.Vector2 _gameViewWindowSize;
 
     public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Num.Vector2.Zero;
 
@@ -105,6 +118,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.Begin(GameViewTitle, default, flags);
         ImGui.PopStyleVar();
 
+        var contentMin = ImGui.GetWindowContentRegionMin();
+        var contentMax = ImGui.GetWindowContentRegionMax();
+        _gameViewWindowSize = contentMax - contentMin;
+
         EnsureTextureIsBound(ref _gameRenderTextureId, _editor.RenderTargets.CompositeRender.Target, _editor.ImGuiRenderer);
 
         var windowSize = ImGui.GetWindowSize();
@@ -116,7 +133,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
         var viewportSize = viewport.Size.ToNumerics();
         var viewportHalfSize = viewportSize * 0.5f;
 
-        var gameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - _gameRenderScale * viewportHalfSize +
+        var gameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - // this gets us to the center
+                            _gameRenderScale * viewportHalfSize +
                             _gameRenderScale * _gameRenderPosition;
         var gameRenderMax = gameRenderMin + _gameRenderScale * viewportSize;
 
@@ -163,8 +181,6 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
 
-        var contentMin = ImGui.GetWindowContentRegionMin();
-        var contentMax = ImGui.GetWindowContentRegionMax();
         var windowPos = ImGui.GetWindowPos();
         var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
         IsHoveringGameWindow = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
@@ -201,9 +217,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void DrawToolbar()
     {
-        ImGui.Begin("GameToolbar");
-
-        if (IsPanZoomDirty)
+        if (ImGui.Begin("GameToolbar", default, ImGuiWindowFlags.NoScrollbar))
         {
             if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
             {
@@ -211,24 +225,45 @@ public unsafe class GameWindow : ImGuiEditorWindow
             }
 
             ImGui.SameLine();
-        }
 
-        var (icon, color, tooltip) = IsMousePanAndZoomEnabled switch
-        {
-            true => (FontAwesome6.ArrowPointer, Color.Green, "Disable mouse pan & zoom"),
-            _ => (FontAwesome6.Lock, Color.Red, "Enable mouse pan & zoom")
-        };
-        if (ImGuiExt.ColoredButton(icon, color, tooltip))
-        {
-            IsMousePanAndZoomEnabled = !IsMousePanAndZoomEnabled;
-        }
+            if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlassPlus, ImGuiExt.Colors[0], "Fill height"))
+            {
+                _gameRenderScale = _gameViewWindowSize.X / (float)_gameViewWindowSize.Y;
+            }
 
-        var dockNode = ImGuiInternal.GetWindowDockNode();
-        if (dockNode != null)
-        {
-            dockNode->LocalFlags = 0;
-            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
-            dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
+            ImGui.SameLine();
+
+            ImGui.BeginChild("ZoomChild", new System.Numerics.Vector2(60, 30), false);
+            var tmpZoom = _gameRenderScale * 100 + 0.01f;
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(ImGui.GetStyle()->FramePadding.X, ImGui.GetStyle()->FramePadding.Y + 2));
+            if (SimpleTypeInspector.InspectFloat("##Zoom", ref tmpZoom, new RangeSettings(50, 1000, 1, true), "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
+            {
+                _gameRenderScale = MathF.Exp(MathF.Lerp(MathF.Log(_gameRenderScale), MathF.Log(tmpZoom / 100f), 0.1f));
+            }
+            ImGui.PopStyleVar();
+
+            ImGui.EndChild();
+
+            ImGui.SameLine();
+
+            var (icon, color, tooltip) = IsMousePanAndZoomEnabled switch
+            {
+                true => (FontAwesome6.ArrowPointer, Color.Green, "Disable mouse pan & zoom"),
+                _ => (FontAwesome6.Lock, ImGuiExt.Colors[2], "Enable mouse pan & zoom")
+            };
+            if (ImGuiExt.ColoredButton(icon, color, tooltip))
+            {
+                IsMousePanAndZoomEnabled = !IsMousePanAndZoomEnabled;
+            }
+
+            var dockNode = ImGuiInternal.GetWindowDockNode();
+            if (dockNode != null)
+            {
+                dockNode->LocalFlags = 0;
+                dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
+                dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
+                dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoResizeY);
+            }
         }
 
         ImGui.End();

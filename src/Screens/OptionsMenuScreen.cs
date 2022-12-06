@@ -22,7 +22,16 @@ public class OptionsMenuScreen : MenuScreen
         {
             
         });
-        _scale = new TextMenuItem("Scale", ChangeScale);
+
+
+        var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(_game.MainWindow.Handle);
+        var desktopDisplayMode = MyGameMain.GetDesktopDisplayMode(windowDisplayIndex);
+        var gameResolution = _game.RenderTargets.GameRenderSize;
+        var maxScale = MathF.Min(
+            gameResolution.X / (float)desktopDisplayMode.w,
+            gameResolution.Y / (float)desktopDisplayMode.h
+        );
+        _scale = new TextMenuItem($"Scale: {maxScale}", ChangeScale);
         _windowMode = new TextMenuItem($"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}", CycleScreenMode);
 
         _menuItems.AddRange(new MenuItem[]

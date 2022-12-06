@@ -36,7 +36,7 @@ public sealed class FileWatcher : IDisposable
         _watcher.Renamed += OnRenamed;
         _watcher.Disposed += OnDisposed;
 
-        Logs.LogInfo($"Watching \"{path}\" ({_fullPath}) with filter {filter}");
+        Logs.LogInfo($"Watching \"{path}\" ({_fullPath}) with filter \"{filter}\"");
 
         _watcher.Filter = filter;
         _watcher.IncludeSubdirectories = true;

@@ -38,7 +38,6 @@ public class FontAtlas
             if (glyphId == 0)
                 continue;
             glyphList.Add(glyphId);
-            Logs.LogInfo($"GlyphId: {glyphId}");
         }
 
         foreach (var glyphId in glyphList)

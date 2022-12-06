@@ -381,4 +381,10 @@ public static class MathF
     {
         return (float)Math.Abs(value - Math.Truncate(value));
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Log(float value)
+    {
+        return (float)Math.Log(value);
+    }
 }

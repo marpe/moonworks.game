@@ -468,13 +468,18 @@ public class MyGameMain : Game
     private static void SetWindowDisplayModeToMatchDesktop(IntPtr windowHandle)
     {
         var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
-        int result;
-        result = SDL.SDL_GetDesktopDisplayMode(windowDisplayIndex, out var desktopDisplayMode);
-        if (result != 0)
-            throw new SDLException(nameof(SDL.SDL_GetDesktopDisplayMode));
-        result = SDL.SDL_SetWindowDisplayMode(windowHandle, ref desktopDisplayMode);
+        var desktopDisplayMode = GetDesktopDisplayMode(windowDisplayIndex);
+        var result = SDL.SDL_SetWindowDisplayMode(windowHandle, ref desktopDisplayMode);
         if (result != 0)
             throw new SDLException(nameof(SDL.SDL_SetWindowDisplayMode));
+    }
+
+    public static SDL.SDL_DisplayMode GetDesktopDisplayMode(int windowDisplayIndex)
+    {
+        var result = SDL.SDL_GetDesktopDisplayMode(windowDisplayIndex, out var desktopDisplayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_GetDesktopDisplayMode));
+        return desktopDisplayMode;
     }
 
     public static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)

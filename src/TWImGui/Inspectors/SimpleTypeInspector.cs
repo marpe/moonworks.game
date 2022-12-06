@@ -27,7 +27,7 @@ public unsafe class SimpleTypeInspector : Inspector
         _setter = SetValue;
     }
 
-    public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings)
+    public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings, string format = "%.4g", ImGuiSliderFlags flags = ImGuiSliderFlags.None)
     {
         if (rangeSettings.UseDragVersion)
         {
@@ -37,7 +37,8 @@ public unsafe class SimpleTypeInspector : Inspector
                 rangeSettings.StepSize,
                 rangeSettings.MinValue,
                 rangeSettings.MaxValue,
-                "%g"
+                format,
+                flags
             );
         }
 
@@ -46,7 +47,8 @@ public unsafe class SimpleTypeInspector : Inspector
             ImGuiExt.RefPtr(ref value),
             rangeSettings.MinValue,
             rangeSettings.MaxValue,
-            "%.4g"
+            format,
+            flags
         );
     }
 
