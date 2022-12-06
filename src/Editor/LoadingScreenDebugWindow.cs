@@ -1,5 +1,4 @@
 ﻿using Mochi.DearImGui;
-using Mochi.DearImGui.Internal;
 
 namespace MyGame.Editor;
 

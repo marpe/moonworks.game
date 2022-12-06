@@ -14,11 +14,13 @@ public class MenuHandler
 
     public MenuHandler(MyGameMain game)
     {
+        var menuTimer = Stopwatch.StartNew();
         MainMenuScreen = new MainMenuScreen(game);
         AddScreen(MainMenuScreen);
 
         PauseScreen = new PauseMenu(game);
         OptionsScreen = new OptionsMenuScreen(game);
+        menuTimer.StopAndLog("MenuHandler");
     }
 
     public void AddScreen(MenuScreen screen)

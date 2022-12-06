@@ -100,13 +100,13 @@ public unsafe class MyEditorMain : MyGameMain
                 
                 // start the same level we're currently on
                 Action? onComplete = null;
-                if (GameScreen.World.IsLoaded)
+                if (World.IsLoaded)
                 {
-                    var levelIdentifier = GameScreen.World.Level.Identifier;
-                    onComplete = () => { GameScreen.World.StartLevel(levelIdentifier); };
+                    var levelIdentifier = World.Level.Identifier;
+                    onComplete = () => { World.StartLevel(levelIdentifier); };
                 }
 
-                GameScreen.QueueSetLdtk(ldtkAsset, onComplete);
+                Shared.Game.QueueSetLdtk(ldtkAsset, onComplete);
             });
         }
         else if (extension == ".aseprite")
@@ -115,7 +115,7 @@ public unsafe class MyEditorMain : MyGameMain
             {
                 Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
                 var texture = TextureUtils.LoadAseprite(GraphicsDevice, e.FullPath);
-                GameScreen.QueueAction(() =>
+                QueueAction(() =>
                 {
                     Shared.Content.ReplaceTexture(relativePath, texture);
                     Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");

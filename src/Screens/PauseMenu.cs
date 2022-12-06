@@ -19,7 +19,7 @@ public class PauseMenu : MenuScreen
 
     private void OnRestart()
     {
-        GameScreen.Restart(false);
+        MyGameMain.Restart(false);
     }
 
     public override void OnCancelled()
@@ -36,7 +36,7 @@ public class PauseMenu : MenuScreen
     {
         Shared.LoadingScreen.LoadSync(() =>
         {
-            Shared.Game.GameScreen.Unload();
+            Shared.Game.UnloadWorld();
             Shared.Menus.RemoveAll();
             Shared.Menus.AddScreen(Shared.Menus.MainMenuScreen);
         });

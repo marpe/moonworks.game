@@ -17,7 +17,7 @@ public static class MouseDebug
             return;
 
         var mousePosition = Shared.Game.InputHandler.MousePosition;
-        var view = Shared.Game.GameScreen.Camera.GetView();
+        var view = Shared.Game.Camera.GetView();
         Matrix3x2.Invert(view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
         var mouseCell = Entity.ToCell(mouseInWorld);
@@ -123,7 +123,7 @@ public class World
 
     [CVar("entities.debug", "Toggle debugging of entities")]
     public static bool DebugEntities;
-    
+
     private readonly DebugDrawItems _debugDraw;
 
     public float Gravity = 800f;
@@ -191,13 +191,13 @@ public class World
     [ConsoleHandler("next_level")]
     public static void NextLevel()
     {
-        if (!Shared.Game.GameScreen.World.IsLoaded)
+        if (!Shared.Game.World.IsLoaded)
         {
             Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
-        var world = Shared.Game.GameScreen.World;
+        var world = Shared.Game.World;
         var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
         var currIndex = Array.IndexOf(levels, world.Level);
         var nextIndex = (currIndex + 1) % levels.Length;
@@ -209,13 +209,13 @@ public class World
     [ConsoleHandler("prev_level")]
     public static void PrevLevel()
     {
-        if (!Shared.Game.GameScreen.World.IsLoaded)
+        if (!Shared.Game.World.IsLoaded)
         {
             Logs.LogInfo("Requires a world to be loaded");
             return;
         }
 
-        var world = Shared.Game.GameScreen.World;
+        var world = Shared.Game.World;
         var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
         var currIndex = Array.IndexOf(levels, world.Level);
         var prevIndex = (levels.Length + (currIndex - 1)) % levels.Length;
@@ -263,7 +263,7 @@ public class World
     [ConsoleHandler("kill_all")]
     public static void KillAllEnemies()
     {
-        var world = Shared.Game.GameScreen.World;
+        var world = Shared.Game.World;
         if (!world.IsLoaded)
         {
             Shared.Console.Print("World is not loaded");
@@ -666,31 +666,29 @@ public class World
     [ConsoleHandler("save_pos")]
     public static void SavePos(Vector2? position = null)
     {
-        if (Shared.Game.GameScreen.World != null)
-        {
-            _savedPos = position ?? Shared.Game.GameScreen.World.Player.Position;
-            Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
-        }
+        if (!Shared.Game.World.IsLoaded)
+            return;
+        _savedPos = position ?? Shared.Game.World.Player.Position;
+        Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
     }
 
     [ConsoleHandler("load_pos")]
     public static void LoadPos(Vector2? position = null)
     {
-        if (Shared.Game.GameScreen.World != null)
-        {
-            var loadPos = position ?? _savedPos;
-            Shared.Game.GameScreen.World.Player.Position.SetPrevAndCurrent(loadPos);
-            Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
-        }
+        if (!Shared.Game.World.IsLoaded)
+            return;
+
+        var loadPos = position ?? _savedPos;
+        Shared.Game.World.Player.Position.SetPrevAndCurrent(loadPos);
+        Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
     }
 
     [ConsoleHandler("unstuck")]
     public static void Unstuck()
     {
-        if (Shared.Game.GameScreen.World != null)
-        {
-            Shared.Game.GameScreen.World.Player.Mover.Unstuck();
-        }
+        if (!Shared.Game.World.IsLoaded)
+            return;
+        Shared.Game.World.Player.Mover.Unstuck();
     }
 
     public void FreezeFrame(float duration, bool force = false)
@@ -698,7 +696,8 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera, RenderTarget lightSource, RenderTarget lightTarget, double alpha)
+    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera, RenderTarget lightSource,
+        RenderTarget lightTarget, double alpha)
     {
         DrawEntities(renderer, alpha);
         var viewProjection = camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
@@ -743,9 +742,8 @@ public class World
         }
 
         renderer.EndRenderPass(ref commandBuffer);
-        
+
         renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
-
     }
 }

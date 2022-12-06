@@ -333,15 +333,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
             ImGuiExt.SeparatorText("Mouse", Color.White);
             var mousePosition = _editor.InputHandler.MousePosition;
             PrintVector("Pos", mousePosition);
-            var view = _editor.GameScreen.Camera.GetView();
+            var view = _editor.Camera.GetView();
             Matrix3x2.Invert(view, out var invertedView);
             var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
             PrintVector("World", mouseInWorld);
             var mouseCell = Entity.ToCell(mouseInWorld);
             PrintVector("Cel", mouseCell);
 
-            var world = _editor.GameScreen.World;
-            if (world != null)
+            var world = _editor.World;
+            if (world.IsLoaded)
             {
                 var playerCell = world.Player.Cell;
                 ImGuiExt.SeparatorText("Player", Color.White);

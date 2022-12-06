@@ -14,9 +14,9 @@ public static unsafe class CollisionDebug
 
     public static void DrawCollisionDebug()
     {
-        if (Shared.Game.GameScreen.World != null)
+        if (!Shared.Game.World.IsLoaded)
         {
-            var player = Shared.Game.GameScreen.World.Player;
+            var player = Shared.Game.World.Player;
 
             if (ImGuiExt.BeginCollapsingHeader("Ground", ImGuiExt.Colors[0]))
             {

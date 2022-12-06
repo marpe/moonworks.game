@@ -1,79 +1,29 @@
+using System.Collections.Concurrent;
+using System.Threading;
 using FreeTypeSharp;
 using MyGame.Audio;
+using MyGame.Cameras;
 using MyGame.Debug;
 using MyGame.Fonts;
+using MyGame.Screens.Transitions;
 
 namespace MyGame;
-
-public enum DebugRenderTarget
-{
-    GameRender,
-    LightSource,
-    LightTarget,
-    Menu,
-    Console,
-    None
-}
-
-public class RenderTarget
-{
-    public Texture Target;
-
-    public uint Width => Target.Width;
-    public uint Height => Target.Height;
-
-    public UPoint Size => new UPoint(Width, Height);
-    
-    public RenderTarget(Texture target)
-    {
-        Target = target;
-    }
-
-    public static implicit operator Texture(RenderTarget rt) => rt.Target;
-}
-
-public class RenderTargets
-{
-    private readonly GraphicsDevice _device;
-    public static uint RenderScale = 1;
-    
-    public UPoint GameRenderSize => new(
-        CompositeRender.Width / RenderScale,
-        CompositeRender.Height / RenderScale
-    );
-    
-    public RenderTarget CompositeRender;
-    public RenderTarget MenuRender;
-    public RenderTarget LightSource;
-    public RenderTarget LightTarget;
-    public RenderTarget GameRender;
-    public RenderTarget ConsoleRender;
-
-    public RenderTargets(GraphicsDevice device)
-    {
-        _device = device;
-        var compositeRenderSize = new UPoint(1920, 1080);
-        // increase game render target size with 1 pixel if render at < 1920x1080 to enable smooth camera panning by offsetting the upscaled render
-        var gameRenderSize = RenderScale == 1 ? compositeRenderSize : compositeRenderSize / (int)RenderScale + UPoint.One;
-        var textureFlags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
-
-        CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
-        GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
-        LightSource = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
-        LightTarget = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
-        MenuRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
-        ConsoleRender = new RenderTarget(TextureUtils.CreateTexture(device, CompositeRender));
-    }
-}
 
 public class MyGameMain : Game
 {
     public const int TARGET_TIMESTEP = 120;
 
     public readonly InputHandler InputHandler;
+    public Camera Camera { get; }
+    private ConcurrentQueue<Action> _queuedActions = new();
+
+    public static int GameUpdateRate = 1;
+    public static bool IsStepping;
+    public static bool IsPaused;
+    public static bool DebugViewBounds = false;
+    public World World { get; }
 
     public ConsoleScreen ConsoleScreen;
-    public GameScreen GameScreen;
     public readonly Time Time;
 
     public readonly Renderer Renderer;
@@ -87,63 +37,6 @@ public class MyGameMain : Game
     private readonly FPSDisplay _fpsDisplay;
     private bool _hasRenderedConsole;
     public DebugRenderTarget DebugRenderTarget = DebugRenderTarget.None;
-
-    [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
-    public static ScreenMode ScreenMode
-    {
-        get => Shared.Game.MainWindow.ScreenMode;
-        set
-        {
-            if (value == ScreenMode.Fullscreen)
-                SetWindowDisplayModeToMatchDesktop(Shared.Game.MainWindow.Handle);
-
-            Shared.Game.MainWindow.SetScreenMode(value);
-        }
-    }
-
-    /// <summary>
-    /// Sets the window display mode to the same as the desktop
-    /// </summary>
-    private static void SetWindowDisplayModeToMatchDesktop(IntPtr windowHandle)
-    {
-        var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
-        int result;
-        result = SDL.SDL_GetDesktopDisplayMode(windowDisplayIndex, out var desktopDisplayMode);
-        if (result != 0)
-            throw new SDLException(nameof(SDL.SDL_GetDesktopDisplayMode));
-        result = SDL.SDL_SetWindowDisplayMode(windowHandle, ref desktopDisplayMode);
-        if (result != 0)
-            throw new SDLException(nameof(SDL.SDL_SetWindowDisplayMode));
-    }
-
-    public static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)
-    {
-        var result = SDL.SDL_GetWindowDisplayMode(windowHandle, out var displayMode);
-        if (result != 0)
-            throw new SDLException(nameof(SDL.SDL_GetWindowDisplayMode));
-        return displayMode;
-    }
-
-    public static ScreenMode GetScreenMode(IntPtr windowHandle)
-    {
-        var flags = SDL.SDL_GetWindowFlags(windowHandle);
-        var isFullscreenWindow = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
-        if (isFullscreenWindow)
-            return ScreenMode.BorderlessFullscreen;
-
-        var isFullscreen = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
-        if (isFullscreen)
-            return ScreenMode.Fullscreen;
-
-        return ScreenMode.Windowed;
-    }
-
-    public static void LogWindowDisplayMode(IntPtr windowHandle)
-    {
-        var displayMode = GetWindowDisplayMode(windowHandle);
-        SDL.SDL_GetWindowSize(windowHandle, out var width, out var height);
-        Logs.LogInfo($"WindowSize: {width}x{height}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
-    }
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -165,32 +58,25 @@ public class MyGameMain : Game
         Shared.Console = new TWConsole.TWConsole();
         Binds.Initialize();
         InputHandler = new InputHandler(Inputs);
-
-        var createRtsTimer = Stopwatch.StartNew();
         RenderTargets = new RenderTargets(GraphicsDevice);
-        createRtsTimer.StopAndLog("RenderTargets");
-
-        var createRendererTimer = Stopwatch.StartNew();
         Renderer = new Renderer(this);
-        createRendererTimer.StopAndLog("Renderer");
-
         Shared.LoadingScreen = new LoadingScreen(this);
         ConsoleScreen = new ConsoleScreen(this);
-        GameScreen = new GameScreen(this);
-
-        var audioTimer = Stopwatch.StartNew();
         Shared.AudioManager = new AudioManager();
-        audioTimer.StopAndLog("AudioManager");
-
-        var menuTimer = Stopwatch.StartNew();
         Shared.Menus = new MenuHandler(this);
-        menuTimer.StopAndLog("MenuHandler");
 
         var freeTypeTimer = Stopwatch.StartNew();
         Shared.FreeTypeLibrary = new FreeTypeLibrary();
         var fontAtlas = new FontAtlas(GraphicsDevice);
         fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
         freeTypeTimer.StopAndLog("FreeType");
+
+        World = new World();
+
+        Camera = new Camera(RenderTargets.GameRenderSize.X, RenderTargets.GameRenderSize.Y)
+        {
+            ClampToLevelBounds = true,
+        };
 
         Shared.LoadingScreen.LoadImmediate(() =>
         {
@@ -211,6 +97,9 @@ public class MyGameMain : Game
         UpdateWindowTitle();
 
         InputHandler.BeginFrame(Time.ElapsedTime);
+        
+        // TODO (marpe): refactor 
+        BindHandler.AddState(InputState.Create(InputHandler));
         BindHandler.HandleBoundKeys();
 
         SetInputViewport();
@@ -231,9 +120,9 @@ public class MyGameMain : Game
 
     private void UpdateScreens()
     {
-        GameScreen.ExecuteQueuedActions();
+        ExecuteQueuedActions();
 
-        GameScreen.UpdateLastPositions();
+        UpdateLastPositions();
 
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
@@ -253,16 +142,7 @@ public class MyGameMain : Game
             return;
         }
 
-        GameScreen.Update(Time.ElapsedTime);
-    }
-
-    private void UpdateWindowTitle()
-    {
-        if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
-        {
-            MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}, SwapSize: {_swapSize.ToString()}";
-            _nextWindowTitleUpdate += 1f;
-        }
+        UpdateWorld(Time.ElapsedTime);
     }
 
     protected override void Draw(double alpha)
@@ -314,13 +194,13 @@ public class MyGameMain : Game
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
         Renderer.Clear(ref commandBuffer, RenderTargets.LightSource, Color.Transparent);
-        GameScreen.Draw(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
+        DrawWorld(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
 
         Shared.Menus.Draw(Renderer, ref commandBuffer, RenderTargets.MenuRender, alpha);
 
         if (RenderTargets.RenderScale != 1)
         {
-            var camera = GameScreen.Camera;
+            var camera = Camera;
             var dstSize = RenderTargets.CompositeRender.Size / (int)RenderTargets.RenderScale;
             // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
             var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
@@ -368,11 +248,148 @@ public class MyGameMain : Game
         }
     }
 
+    public void LoadLdtk(Func<LDtkAsset> ldtkLoader, Action? onCompleteCallback)
+    {
+        if (Shared.LoadingScreen.IsLoading)
+        {
+            Logs.LogError("Loading screen is active, ignoring load call");
+            return;
+        }
+
+        QueueAction(() =>
+        {
+            Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Removing screens");
+            Shared.Game.ConsoleScreen.IsHidden = true;
+            Shared.Menus.RemoveAll();
+            UnloadWorld();
+        });
+
+        Shared.LoadingScreen.LoadAsync(() =>
+        {
+            var ldtk = ldtkLoader();
+            QueueSetLdtk(ldtk, onCompleteCallback);
+        });
+    }
+
+    private void ExecuteQueuedActions()
+    {
+        while (_queuedActions.TryDequeue(out var action))
+        {
+            action();
+        }
+    }
+
+    private void UpdateLastPositions()
+    {
+        if (!World.IsLoaded)
+            return;
+        World.UpdateLastPositions();
+    }
+
+    /// Call before loading starts
+    private void SetCircleCropPosition(Vector2 position)
+    {
+        var viewProjection = Camera.GetViewProjection(RenderTargets.GameRender.Width, RenderTargets.GameRender.Height);
+        var positionInScreen = Vector2.Transform(position, viewProjection);
+        positionInScreen = Vector2.Half + positionInScreen * 0.5f;
+        var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
+        circleLoad.CenterX = positionInScreen.X;
+        circleLoad.CenterY = positionInScreen.Y;
+    }
+
+    private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
+    {
+        if (!World.Debug) return;
+        if (!DebugViewBounds) return;
+
+        renderer.DrawRectOutline(Vector2.Zero, RenderTargets.CompositeRender.Size, Color.LimeGreen, 10f);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+    }
+
+    private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    {
+        if (!World.IsLoaded)
+        {
+            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
+            return;
+        }
+
+        {
+            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
+            World.Draw(renderer, Camera, alpha);
+
+            // draw ambient background color
+            // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);
+
+            var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
+        }
+
+        {
+            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
+        }
+
+
+        DrawViewBounds(renderer, ref commandBuffer, renderDestination);
+    }
+
+    private void UpdateWorld(float deltaSeconds)
+    {
+        if (!World.IsLoaded)
+            return;
+
+        var doUpdate = IsStepping ||
+                       (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
+
+        if (doUpdate)
+        {
+            World.Update(deltaSeconds, InputHandler, Camera);
+        }
+        else
+        {
+            if (Camera.NoClip)
+                Camera.Update(deltaSeconds, InputHandler);
+        }
+
+        if (IsStepping)
+            IsStepping = false;
+    }
+
+    public void UnloadWorld()
+    {
+        if (!World.IsLoaded)
+            return;
+        
+        Logs.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
+        Camera.TrackEntity(null);
+        Camera.LevelBounds = Rectangle.Empty;
+        World.Unload();
+    }
+
+    public void QueueAction(Action callback)
+    {
+        _queuedActions.Enqueue(callback);
+    }
+
+    public void QueueSetLdtk(LDtkAsset ldtk, Action? onCompleteCallback)
+    {
+        QueueAction(() =>
+        {
+            Logs.LogInfo(
+                $"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Removing screens and setting world from thread: {Thread.CurrentThread.ManagedThreadId}");
+            Shared.Game.ConsoleScreen.IsHidden = true;
+            Shared.Menus.RemoveAll();
+            UnloadWorld();
+            World.SetLDtk(ldtk);
+            onCompleteCallback?.Invoke();
+        });
+    }
+
     protected override void Destroy()
     {
         Logs.LogInfo("Shutting down");
 
-        GameScreen.Unload();
+        World.Unload();
 
         ConsoleScreen.Unload();
 
@@ -381,5 +398,122 @@ public class MyGameMain : Game
         Shared.LoadingScreen.Unload();
 
         Shared.Console.SaveConfig();
+    }
+
+    #region ConsoleHandlers
+
+    [ConsoleHandler("restart")]
+    public static void Restart(bool immediate = true)
+    {
+        Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Starting load");
+        var ldtkLoader = () => Shared.Content.LoadAndAddLDtkWithTextures(ContentPaths.ldtk.Example.World_ldtk);
+        if (immediate)
+            Shared.Game.QueueSetLdtk(ldtkLoader(), World.NextLevel);
+        else
+            Shared.Game.LoadLdtk(ldtkLoader, World.NextLevel);
+    }
+    
+    [ConsoleHandler("step")]
+    public static void Step()
+    {
+        IsPaused = true;
+        IsStepping = true;
+        var updateCount = Shared.Game.World.WorldUpdateCount;
+        Logs.LogInfo($"[WU:{updateCount}] Stepping...");
+    }
+
+    [ConsoleHandler("pause")]
+    public static void Pause()
+    {
+        IsPaused = !IsPaused;
+        Logs.LogInfo(IsPaused ? "Game paused" : "Game resumed");
+    }
+
+    [ConsoleHandler("speed_up")]
+    public static void IncreaseUpdateRate()
+    {
+        GameUpdateRate -= 5;
+        if (GameUpdateRate < 1)
+            GameUpdateRate = 1;
+        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
+    }
+
+    [ConsoleHandler("speed_down")]
+    public static void DecreaseUpdateRate()
+    {
+        GameUpdateRate += 5;
+        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
+    }
+
+    [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]
+    public static ScreenMode ScreenMode
+    {
+        get => Shared.Game.MainWindow.ScreenMode;
+        set
+        {
+            if (value == ScreenMode.Fullscreen)
+                SetWindowDisplayModeToMatchDesktop(Shared.Game.MainWindow.Handle);
+
+            Shared.Game.MainWindow.SetScreenMode(value);
+        }
+    }
+
+    #endregion
+
+    #region SDL Helpers
+
+    /// <summary>
+    /// Sets the window display mode to the same as the desktop
+    /// </summary>
+    private static void SetWindowDisplayModeToMatchDesktop(IntPtr windowHandle)
+    {
+        var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(windowHandle);
+        int result;
+        result = SDL.SDL_GetDesktopDisplayMode(windowDisplayIndex, out var desktopDisplayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_GetDesktopDisplayMode));
+        result = SDL.SDL_SetWindowDisplayMode(windowHandle, ref desktopDisplayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_SetWindowDisplayMode));
+    }
+
+    public static SDL.SDL_DisplayMode GetWindowDisplayMode(IntPtr windowHandle)
+    {
+        var result = SDL.SDL_GetWindowDisplayMode(windowHandle, out var displayMode);
+        if (result != 0)
+            throw new SDLException(nameof(SDL.SDL_GetWindowDisplayMode));
+        return displayMode;
+    }
+
+    public static ScreenMode GetScreenMode(IntPtr windowHandle)
+    {
+        var flags = SDL.SDL_GetWindowFlags(windowHandle);
+        var isFullscreenWindow = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN_DESKTOP;
+        if (isFullscreenWindow)
+            return ScreenMode.BorderlessFullscreen;
+
+        var isFullscreen = (flags & (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN) == (uint)SDL.SDL_WindowFlags.SDL_WINDOW_FULLSCREEN;
+        if (isFullscreen)
+            return ScreenMode.Fullscreen;
+
+        return ScreenMode.Windowed;
+    }
+
+    public static void LogWindowDisplayMode(IntPtr windowHandle)
+    {
+        var displayMode = GetWindowDisplayMode(windowHandle);
+        SDL.SDL_GetWindowSize(windowHandle, out var width, out var height);
+        Logs.LogInfo($"WindowSize: {width}x{height}, DisplayMode: {displayMode.w}x{displayMode.h} ({displayMode.refresh_rate} Hz)");
+    }
+
+    #endregion
+    
+    private void UpdateWindowTitle()
+    {
+        if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
+        {
+            MainWindow.Title = $"Update: {Time.UpdateFps:0.##}, Draw: {Time.DrawFps:0.##}, SwapSize: {_swapSize.ToString()}";
+            _nextWindowTitleUpdate += 1f;
+        }
     }
 }

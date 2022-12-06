@@ -87,8 +87,6 @@ public class InputHandler
             var isHeld = _inputs.Keyboard.IsHeld(keyCode);
             key.Update(isHeld, deltaSeconds);
         }
-
-        BindHandler.AddState(InputState.Create(this));
     }
    
     public void EndFrame()

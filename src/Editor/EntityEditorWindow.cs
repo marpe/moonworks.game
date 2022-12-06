@@ -68,7 +68,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
 
         if (ImGui.Begin("EntityEditorList", default))
         {
-            var world = _editor.GameScreen.World;
+            var world = _editor.World;
             if (world.IsLoaded)
             {
                 var ldtkRaw = world.LDtk.LdtkRaw;
@@ -208,7 +208,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
 
         if (ImGui.Begin("EntityEditorProps", default))
         {
-            var world = _editor.GameScreen.World;
+            var world = _editor.World;
             if (world.IsLoaded)
             {
                 var ldtkRaw = world.LDtk.LdtkRaw;
@@ -432,7 +432,7 @@ public unsafe class EntityEditorWindow : ImGuiEditorWindow
         {
             if (ImGui.MenuItem("Save", default))
             {
-                var world = _editor.GameScreen.World;
+                var world = _editor.World;
                 if (world.IsLoaded)
                 {
                     var json = world.LDtk.LdtkRaw.ToJson();

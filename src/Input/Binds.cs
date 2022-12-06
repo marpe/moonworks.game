@@ -486,8 +486,8 @@ public static class Binds
         {
             // don't trigger down actions if the world hasn't been updated yet
             // unless it was a command types in the console (in which case no source button is in the args)
-            if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
-                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount &&
+            if (bind.WorldUpdateCount != 0 && Shared.Game.World.IsLoaded &&
+                bind.WorldUpdateCount == Shared.Game.World.WorldUpdateCount &&
                 args.Length > 1)
                 return;
             var wasActive = bind.Active;
@@ -496,14 +496,14 @@ public static class Binds
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
             bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
-            bind.WorldUpdateCount = Shared.Game.GameScreen.World?.WorldUpdateCount ?? 0;
-            bind.WorldTimestamp = Shared.Game.GameScreen.World?.WorldTotalElapsedTime ?? 0;
+            bind.WorldUpdateCount = Shared.Game.World?.WorldUpdateCount ?? 0;
+            bind.WorldTimestamp = Shared.Game.World?.WorldTotalElapsedTime ?? 0;
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
             // don't trigger up actions if the world hasn't been updated yet
-            if (bind.WorldUpdateCount != 0 && Shared.Game.GameScreen.World != null &&
-                bind.WorldUpdateCount == Shared.Game.GameScreen.World.WorldUpdateCount)
+            if (bind.WorldUpdateCount != 0 && Shared.Game.World.IsLoaded &&
+                bind.WorldUpdateCount == Shared.Game.World.WorldUpdateCount)
                 return;
             // also skip if sources is empty, since it means the bind was triggered by typing it in the console
             // in which case we want to repeat the action, unless the -command was typed in which case args wont contain a button source
@@ -515,8 +515,8 @@ public static class Binds
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
             bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
-            bind.WorldUpdateCount = Shared.Game.GameScreen.World?.WorldUpdateCount ?? 0;
-            bind.WorldTimestamp = Shared.Game.GameScreen.World?.WorldTotalElapsedTime ?? 0;
+            bind.WorldUpdateCount = Shared.Game.World?.WorldUpdateCount ?? 0;
+            bind.WorldTimestamp = Shared.Game.World?.WorldTotalElapsedTime ?? 0;
         };
         var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
         var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);

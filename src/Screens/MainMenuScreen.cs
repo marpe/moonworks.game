@@ -1,6 +1,4 @@
-﻿using System.Threading;
-
-namespace MyGame.Screens;
+﻿namespace MyGame.Screens;
 
 public class MainMenuScreen : MenuScreen
 {
@@ -26,8 +24,8 @@ public class MainMenuScreen : MenuScreen
     }
 
     private void OnPlay()
-    {
-        GameScreen.Restart(false);
+    { 
+        MyGameMain.Restart(false);
     }
 
     private void OnQuit()

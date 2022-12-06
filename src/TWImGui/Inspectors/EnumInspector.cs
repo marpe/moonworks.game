@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 
 namespace MyGame.TWImGui.Inspectors;

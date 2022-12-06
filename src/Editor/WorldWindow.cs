@@ -24,10 +24,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
         ImGui.Begin(Title, ImGuiExt.RefPtr(ref IsOpen));
 
-        var world = Shared.Game.GameScreen.World;
-        if (world == null)
+        var world = Shared.Game.World;
+        if (!world.IsLoaded)
         {
-            ImGui.TextDisabled("NULL");
+            ImGui.TextDisabled("World is not loaded");
             ImGui.End();
             return;
         }
@@ -50,7 +50,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
             if (ImGui.BeginTabItem("Camera"))
             {
-                _cameraInspector ??= InspectorExt.GetGroupInspectorForTarget(Shared.Game.GameScreen.Camera);
+                _cameraInspector ??= InspectorExt.GetGroupInspectorForTarget(Shared.Game.Camera);
                 _cameraInspector.Draw();
 
                 ImGui.EndTabItem();

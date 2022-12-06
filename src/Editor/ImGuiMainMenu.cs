@@ -98,7 +98,7 @@ public unsafe static class ImGuiMainMenu
         ImGui.SetCursorPosY(ImGui.GetStyle()->FramePadding.Y);
 
         ImGui.BeginChild("MainMenuButtons", new Num.Vector2(0, 40), false);
-        var (icon, color, tooltip) = GameScreen.IsPaused switch
+        var (icon, color, tooltip) = MyGameMain.IsPaused switch
         {
             true => (FontAwesome6.Play, Color.Green, "Play"),
             _ => (FontAwesome6.Pause, Color.Yellow, "Pause")
@@ -107,27 +107,27 @@ public unsafe static class ImGuiMainMenu
         ImGui.BeginDisabled(Shared.LoadingScreen.IsLoading);
         if (ImGuiExt.ColoredButton(LoadingIndicator(FontAwesome6.ArrowsRotate, Shared.LoadingScreen.IsLoading), Color.Blue, "Reload World"))
         {
-            GameScreen.Restart();
+            MyGameMain.Restart();
         }
         ImGui.EndDisabled();
 
         ImGui.SameLine();
         if (ImGuiExt.ColoredButton(icon, color, tooltip))
         {
-            GameScreen.IsPaused = !GameScreen.IsPaused;
+            MyGameMain.IsPaused = !MyGameMain.IsPaused;
         }
 
         ImGui.SameLine();
         if (ImGuiExt.ColoredButton(FontAwesome6.ForwardStep, Color.Orange, "Step"))
         {
-            GameScreen.IsPaused = GameScreen.IsStepping = true;
+            MyGameMain.IsPaused = MyGameMain.IsStepping = true;
         }
 
         ImGui.SameLine();
-        ImGui.BeginDisabled(Shared.Game.GameScreen.World == null);
+        ImGui.BeginDisabled(!Shared.Game.World.IsLoaded);
         if (ImGuiExt.ColoredButton(FontAwesome6.Stop, Color.Red, "Stop"))
         {
-            Shared.Game.GameScreen.Unload();
+            Shared.Game.UnloadWorld();
         }
         ImGui.EndDisabled();
         

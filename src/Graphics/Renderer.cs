@@ -34,6 +34,7 @@ public class Renderer
 
     public Renderer(MyGameMain game)
     {
+        var createRendererTimer = Stopwatch.StartNew();
         _game = game;
         _device = game.GraphicsDevice;
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
@@ -69,6 +70,7 @@ public class Renderer
         var pipelinesTimer = Stopwatch.StartNew();
         Pipelines = Graphics.Pipelines.CreatePipelines(_device);
         pipelinesTimer.StopAndLog("Pipelines");
+        createRendererTimer.StopAndLog("Renderer");
     }
 
     private static BMFont[] CreateBMFonts(GraphicsDevice device)

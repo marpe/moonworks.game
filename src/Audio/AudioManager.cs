@@ -12,6 +12,7 @@ public class AudioManager
 
     public AudioManager()
     {
+        var audioTimer = Stopwatch.StartNew();
         var soundEffects = typeof(ContentPaths.sfx).GetFields()
             .Select(f => f.GetRawConstantValue())
             .Cast<string>()
@@ -22,6 +23,7 @@ public class AudioManager
             var wav = Shared.Content.LoadAndAddSound(soundEffects[i]);
             _staticSound.Add(soundEffects[i], wav);
         }
+        audioTimer.StopAndLog("AudioManager");
     }
 
     public void Play(string path)
