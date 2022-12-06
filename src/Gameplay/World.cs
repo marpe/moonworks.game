@@ -148,7 +148,10 @@ public class World
     public LDtkAsset LDtk = new();
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
     public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
-    public float RimLightIntensity = 3f;
+    
+    [Range(0, 5, 0.1f)]
+    [CVar("light_rim_intensity", "Sets the intensity of the rim lighting")]
+    public static float RimLightIntensity = 1f;
 
     public World()
     {
@@ -770,7 +773,8 @@ public class World
                 LightIntensity = light.Intensity,
                 LightRadius = Math.Max(light.Width, light.Height) / MathF.Sqrt(2),
                 LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
-                Debug = useRimIntensity ? RimLightIntensity : ((DebugLights || light.Debug) ? 1.0f : 0),
+                Debug = ((DebugLights || light.Debug) ? 1.0f : 0),
+                RimIntensity = RimLightIntensity,
                 Angle = light.Angle,
                 ConeAngle = light.ConeAngle, // TODO (marpe): Not working atm
 
