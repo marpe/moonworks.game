@@ -45,7 +45,7 @@ void main()
 		return;
 	}
 
-	float angularFalloff = smoothstep(maxAngle, 0, deltaAngle);
+	float angularFalloff = max(smoothstep(maxAngle, 0, deltaAngle), Uniforms.coneAngle == 360);
 
 	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * radialFalloff * angularFalloff;
 	fragColor.rgba = vec4(light, 1);
