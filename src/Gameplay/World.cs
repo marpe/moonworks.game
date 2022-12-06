@@ -768,7 +768,7 @@ public class World
             {
                 LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
                 LightIntensity = light.Intensity,
-                LightRadius = Math.Max(light.Width, light.Height),
+                LightRadius = Math.Max(light.Width, light.Height) / MathF.Sqrt(2),
                 LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
                 Debug = useRimIntensity ? RimLightIntensity : ((DebugLights || light.Debug) ? 1.0f : 0),
                 Angle = light.Angle,

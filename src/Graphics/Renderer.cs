@@ -4,6 +4,8 @@ public struct GfxPipeline
 {
     public GraphicsPipeline Pipeline;
     public GraphicsPipelineCreateInfo CreateInfo;
+    public string VertexShaderPath;
+    public string FragmentShaderPath;
 }
 
 public class Renderer

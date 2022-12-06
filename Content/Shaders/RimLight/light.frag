@@ -27,16 +27,27 @@ void main()
 	vec2 offset = worldPos - Uniforms.lightPos;
 	float dist = length(offset);
 	float relativeLength = dist / Uniforms.lightRadius;
-	/* float atten = clamp(1.0 - relativeLength, 0, 1);
-    if ( atten <= 0 )
-        discard; */
+
+	if ( relativeLength > 1.0 )
+	{
+		fragColor = vec4(0, 0, 0, 0);
+		return;
+	}
 
 	float radialFalloff = pow(1.0 - relativeLength, 2.0);
 	float angleRad = radians(Uniforms.angle);
-float deltaAngle = acos(dot(worldPos, Uniforms.lightPos) / (length(worldPos) + length(Uniforms.lightPos));
+	float deltaAngle = acos(dot(normalize(offset), vec2(cos(angleRad), sin(angleRad))));
 
-	float maxAngle = radians(Uniforms.coneAngle - 180) * 0.5;
-	float angularFalloff = smoothstep(maxAngle, -maxAngle, deltaAngle);
+	float maxAngle = radians(Uniforms.coneAngle) * 0.5;
+	if ( deltaAngle > maxAngle )
+	{
+		fragColor.rgba = vec4(0, 0, 0, 0);
+		return;
+	}
+
+	float angularFalloff = smoothstep(maxAngle, 0, deltaAngle);
+
 	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * radialFalloff * angularFalloff;
 	fragColor.rgba = vec4(light, 1);
 }
+

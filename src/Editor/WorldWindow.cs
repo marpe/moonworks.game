@@ -12,6 +12,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
     private ColorAttachmentBlendState _rimBlendState = ColorAttachmentBlendState.Additive;
     private ColorAttachmentBlendState _lightBlendState = ColorAttachmentBlendState.Additive;
+    private ColorAttachmentBlendState _customBlendState = ColorAttachmentBlendState.AlphaBlend;
 
     public WorldWindow() : base(WindowTitle)
     {
@@ -59,10 +60,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 }
                 
                 ImGuiExt.SeparatorText("Custom");
-                if (BlendStateEditor.Draw("CustomBlendState", ref Pipelines.CustomBlendState))
+                if (BlendStateEditor.Draw("CustomBlendState", ref _customBlendState))
                 {
                     Shared.Game.Renderer.Pipelines[PipelineType.CustomBlendState].Pipeline.Dispose();
-                    Shared.Game.Renderer.Pipelines[PipelineType.CustomBlendState] = Pipelines.CreateSpritePipeline(Shared.Game.GraphicsDevice, Pipelines.CustomBlendState);
+                    Shared.Game.Renderer.Pipelines[PipelineType.CustomBlendState] = Pipelines.CreateSpritePipeline(Shared.Game.GraphicsDevice, _customBlendState);
                     Logs.LogInfo("Recreated rim pipeline");
                 }
 

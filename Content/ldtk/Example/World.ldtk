@@ -1571,7 +1571,10 @@
 								{ "__identifier": "Color", "__value": "#FF0000", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [16711680] }] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
 							]
 						},
 						{
@@ -1591,7 +1594,10 @@
 								{ "__identifier": "Color", "__value": "#361EFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [3546879] }] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 90, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [{ "id": "V_Float", "params": [90] }] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
 							]
 						},
 						{
@@ -1611,7 +1617,10 @@
 								{ "__identifier": "Color", "__value": "#FFFB00", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [16775936] }] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
 							]
 						},
 						{
@@ -1631,7 +1640,10 @@
 								{ "__identifier": "Color", "__value": "#00FF00", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [65280] }] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
 							]
 						},
 						{
@@ -1651,12 +1663,15 @@
 								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
+									"id": "V_Bool",
+									"params": [ false ]
+								}] }
 							]
 						},
 						{
 							"__identifier": "Light",
-							"__grid": [13,14],
+							"__grid": [11,8],
 							"__pivot": [0.5,0.5],
 							"__tags": ["Light"],
 							"__tile": { "tilesetUid": 152, "x": 80, "y": 112, "w": 16, "h": 16 },
@@ -1665,7 +1680,7 @@
 							"width": 128,
 							"height": 128,
 							"defUid": 151,
-							"px": [216,232],
+							"px": [184,136],
 							"fieldInstances": [
 								{ "__identifier": "Intensity", "__value": 0.6, "__type": "Float", "__tile": null, "defUid": 153, "realEditorValues": [] },
 								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },

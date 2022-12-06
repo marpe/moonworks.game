@@ -126,11 +126,17 @@ public unsafe class MyEditorMain : MyGameMain
         {
             QueueAction(() =>
             {
-                Renderer.Pipelines[PipelineType.Light].Pipeline.Dispose();
-                Renderer.Pipelines[PipelineType.Light] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
-                
-                Renderer.Pipelines[PipelineType.RimLight].Pipeline.Dispose();
-                Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);    
+                foreach (var (type, pipeline) in Renderer.Pipelines)
+                {
+                    var isMatch = pipeline.FragmentShaderPath == relativePath ||
+                                  pipeline.VertexShaderPath == relativePath;
+
+                    if (isMatch)
+                    {
+                        Renderer.Pipelines[type] = Pipelines.Factories[type].Invoke();
+                        Logs.LogInfo($"Reloaded Pipeline: {type.ToString()}");
+                    }
+                }
             });
         }
     }
