@@ -12,6 +12,9 @@ layout (set = 3, binding = 0) uniform UniformBlock
 	vec4 bounds;
 	vec3 lightColor;
 	float debug;
+	float rimIntensity;
+	float angle;
+	float coneAngle;
 } Uniforms;
 
 layout (location = 0) in vec2 texCoord;
@@ -19,12 +22,13 @@ layout (location = 1) in vec4 color;
 
 layout (location = 0) out vec4 fragColor;
 
-
 void main()
 {
     vec4 c = texture(uniformTexture, texCoord);
 
-	if (texture(depthMap, texCoord).a == 0 && Uniforms.debug == 0)
+	vec4 depth = texture(depthMap, texCoord);
+
+	if ( depth.a == 0 )
 	{
 		discard;
 	}
@@ -53,20 +57,17 @@ void main()
 	rim.y -= sign(value);
 	inFrontOf += value;
 
-	if (inFrontOf == 0)
-		discard;
-
 	vec2 worldPos = Uniforms.bounds.xy + texCoord * Uniforms.bounds.zw;
 	vec2 offset = Uniforms.lightPos - worldPos;
 	vec2 dir = normalize(offset);
 	float relativeLength = length(offset) / Uniforms.lightRadius;
-	float atten = clamp(1.0 - sqrt(relativeLength), 0, 1);
+	float atten = clamp(1.0 - relativeLength, 0, 1);
 	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * atten;
 
-	if (Uniforms.debug > 0)
+	if ( inFrontOf == 0 )
 	{
-		fragColor.rgb = light;
-		return;
+		discard;
 	}
-	fragColor.rgb = light * clamp(dot(dir, rim.xy), 0, 1);
+
+	fragColor.rgba = vec4(light * Uniforms.rimIntensity * clamp(dot(dir, rim.xy), 0, 1), 1);
 }

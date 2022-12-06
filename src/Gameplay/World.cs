@@ -109,7 +109,7 @@ public static class CameraDebug
 
 public class World
 {
-    public Color AmbientColor = new Color(0, 0, 0, 0.8f);
+    public Color AmbientColor = new Color(80, 80, 80, 255);
 
     public const int DefaultGridSize = 16;
     public bool IsLoaded { get; private set; }
@@ -146,6 +146,9 @@ public class World
 
     public Level Level = new();
     public LDtkAsset LDtk = new();
+    public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
+    public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
+    public float RimLightIntensity = 3f;
 
     public World()
     {
@@ -703,55 +706,91 @@ public class World
     public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
         RenderTarget lightSource, RenderTarget lightTarget, double alpha)
     {
+        // render lights
+        renderer.DrawSprite(renderer.BlankSprite, Matrix3x2.CreateScale(renderDestination.Width, renderDestination.Height).ToMatrix4x4(), Color.White);
+        renderer.UpdateBuffers(ref commandBuffer);
+        renderer.SpriteBatch.Discard();
+        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.Light);
+        DrawAllLights(
+            ref commandBuffer,
+            renderDestination.Size(),
+            camera.ZoomedBounds,
+            new[]
+            {
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp),
+            },
+            false
+        );
+        renderer.EndRenderPass(ref commandBuffer);
+
+        // render light to game
+        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
+
+        // render entities for use with rim light
         DrawEntities(renderer, alpha);
         var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
-        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection);
+        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection); // lightSource contains only entities
 
-        renderer.DrawRect(Vector2.Zero, renderDestination.Size().ToVec2(), Color.Transparent);
+        // render rim
+        renderer.DrawSprite(renderer.BlankSprite, Matrix3x2.CreateScale(renderDestination.Width, renderDestination.Height).ToMatrix4x4(), Color.White);
         renderer.UpdateBuffers(ref commandBuffer);
-        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.RimLight);
-        var cameraBounds = camera.ZoomedBounds;
-        // TODO (marpe): First draw all lights to rt1
-        // Use rt1 to draw rim light rt2
-        // Combine rt1 and r2
+        renderer.SpriteBatch.Discard();
+        renderer.BeginRenderPass(ref commandBuffer, lightTarget, Color.Transparent, PipelineType.RimLight);
+        DrawAllLights(
+            ref commandBuffer,
+            renderDestination.Size(),
+            camera.ZoomedBounds,
+            new[]
+            {
+                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp),
+                new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
+            },
+            true
+        );
+        renderer.EndRenderPass(ref commandBuffer);
+
+        // render rim light to game
+        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, RimLightToDestinationBlend);
+    }
+
+    private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings,
+        bool useRimIntensity)
+    {
         for (var i = 0; i < Lights.Count; i++)
         {
             var light = Lights[i];
-            var vertUniform = Renderer.GetViewProjection(lightTarget.Width, lightTarget.Height);
-            var fragmentBindings = new[]
-            {
-                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp), new TextureSamplerBinding(lightSource, Renderer.PointClamp)
-            };
-            commandBuffer.BindFragmentSamplers(fragmentBindings);
+            if (!light.IsEnabled)
+                continue;
+            var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
             var fragUniform = new Pipelines.RimLightUniforms()
             {
                 LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
                 LightIntensity = light.Intensity,
                 LightRadius = Math.Max(light.Width, light.Height),
-                TexelSize = new Vector4(
-                    1.0f / renderDestination.Width,
-                    1.0f / renderDestination.Height,
-                    renderDestination.Width,
-                    renderDestination.Height
-                ),
                 LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
+                Debug = useRimIntensity ? RimLightIntensity : ((DebugLights || light.Debug) ? 1.0f : 0),
+                Angle = light.Angle,
+                ConeAngle = light.ConeAngle, // TODO (marpe): Not working atm
+
+                TexelSize = new Vector4(
+                    1.0f / renderDestinationSize.X,
+                    1.0f / renderDestinationSize.Y,
+                    renderDestinationSize.X,
+                    renderDestinationSize.Y
+                ),
                 Bounds = new Vector4(
                     cameraBounds.Min.X,
                     cameraBounds.Min.Y,
                     cameraBounds.Width,
                     cameraBounds.Height
                 ),
-                Debug = DebugLights || light.Debug ? 1.0f : 0,
             };
-            var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
             var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
-            // TODO (marpe): Render a quad the size of the light
+            var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
+            commandBuffer.BindFragmentSamplers(fragmentBindings);
             SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
         }
-
-        renderer.EndRenderPass(ref commandBuffer);
-
-        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }

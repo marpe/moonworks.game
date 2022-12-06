@@ -106,7 +106,7 @@ public unsafe class MyEditorMain : MyGameMain
                     onComplete = () => { World.StartLevel(levelIdentifier); };
                 }
 
-                Shared.Game.QueueSetLdtk(ldtkAsset, onComplete);
+                QueueSetLdtk(ldtkAsset, onComplete);
             });
         }
         else if (extension == ".aseprite")
@@ -124,8 +124,14 @@ public unsafe class MyEditorMain : MyGameMain
         }
         else if (extension == ".spv")
         {
-            Renderer.Pipelines[PipelineType.RimLight].Pipeline.Dispose();
-            Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
+            QueueAction(() =>
+            {
+                Renderer.Pipelines[PipelineType.Light].Pipeline.Dispose();
+                Renderer.Pipelines[PipelineType.Light] = Pipelines.CreateRimLightPipeline(GraphicsDevice);
+                
+                Renderer.Pipelines[PipelineType.RimLight].Pipeline.Dispose();
+                Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(GraphicsDevice);    
+            });
         }
     }
 

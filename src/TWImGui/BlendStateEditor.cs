@@ -134,7 +134,13 @@ public static unsafe class BlendStateEditor
         {
             state = ColorAttachmentBlendState.Opaque;
         }
-
+        
+        ImGui.SameLine();
+        if (ImGui.Button("Additive", default))
+        {
+            state = ColorAttachmentBlendState.Additive;
+        }
+        
         ImGui.PopID();
         return !AreEqual(prevState, state);
     }

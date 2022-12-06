@@ -138,6 +138,17 @@ public static class ColorExt
         return color.MultiplyAlpha(alpha);
     }
 
+    public static Color MultiplyRGB(this Color self, float value)
+    {
+        return new Color
+        {
+            R = (byte)(self.R * value),
+            G = (byte)(self.G * value),
+            B = (byte)(self.B * value),
+            A = self.A
+        };
+    }
+
     public static Color MultiplyRGB(this Color self, Color other)
     {
         return new Color

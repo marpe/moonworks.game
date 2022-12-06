@@ -194,6 +194,7 @@ public class MyGameMain : Game
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
         Renderer.Clear(ref commandBuffer, RenderTargets.LightSource, Color.Transparent);
+        Renderer.Clear(ref commandBuffer, RenderTargets.LightTarget, Color.Transparent);
         DrawWorld(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
 
         Shared.Menus.Draw(Renderer, ref commandBuffer, RenderTargets.MenuRender, alpha);
@@ -319,7 +320,7 @@ public class MyGameMain : Game
             World.Draw(renderer, Camera, alpha);
 
             // draw ambient background color
-            // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), Color.Black * 0.75f);
+            // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
 
             var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);

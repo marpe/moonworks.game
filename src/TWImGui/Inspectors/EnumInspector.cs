@@ -229,11 +229,11 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
         return result;
     }
 
-    public static bool InspectEnum<T>(string label, ref T value) where T : Enum
+    public static bool InspectEnum<T>(string label, ref T value, bool useButtons = false) where T : Enum
     {
         var entry = GetOrCreateCacheEntry(typeof(T));
         var tmp = (int)(object)value;
-        if (InspectEnum(label, ref tmp, entry))
+        if (InspectEnum(label, ref tmp, entry, useButtons))
         {
             value = (T)(object)tmp;
             return true;

@@ -71,6 +71,11 @@ public static class ContentPaths
             public const string sprite_frag_spv = @"Content\Shaders\imgui\sprite.frag.spv";
             public const string sprite_vert_spv = @"Content\Shaders\imgui\sprite.vert.spv";
         }
+        public static class PixelArtShader
+        {
+            public const string from_godot_txt = @"Content\Shaders\PixelArtShader\from_godot.txt";
+            public const string shadertoy_txt = @"Content\Shaders\PixelArtShader\shadertoy.txt";
+        }
         public static class Pixelize
         {
             public const string pixelize_transition_frag_spv = @"Content\Shaders\Pixelize\pixelize_transition.frag.spv";
@@ -78,6 +83,7 @@ public static class ContentPaths
         }
         public static class RimLight
         {
+            public const string light_frag_spv = @"Content\Shaders\RimLight\light.frag.spv";
             public const string rim_light_frag_spv = @"Content\Shaders\RimLight\rim_light.frag.spv";
             public const string rim_light_vert_spv = @"Content\Shaders\RimLight\rim_light.vert.spv";
         }

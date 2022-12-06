@@ -132,6 +132,11 @@ public class SpriteBatch
         DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings);
     }
 
+    public void Discard()
+    {
+        _numSprites = 0;
+    }
+
     private void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings)
     {
         MaxDrawCalls = Math.Max(MaxDrawCalls, DrawCalls);

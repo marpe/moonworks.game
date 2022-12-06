@@ -85,6 +85,7 @@ public partial class Entity
         { EntityType.Bullet, typeof(Bullet) },
     };
 
+    [HideInInspector]
     public static string[] Identifiers = new[]
     {
         "Enemy",
@@ -122,10 +123,14 @@ public partial class RefTest
 
 public partial class Light
 {
+    [Range(0, 5)]
     public float Intensity;
     public Color Color;
+    [Range(0, 360)]
     public float Angle;
+    [Range(0, 360)]
     public float ConeAngle;
+    public bool IsEnabled;
 }
 
 public partial class Bullet
