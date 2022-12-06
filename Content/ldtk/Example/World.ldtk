@@ -10,7 +10,7 @@
 	},
 	"jsonVersion": "1.1.3",
 	"appBuildId": 458364,
-	"nextUid": 162,
+	"nextUid": 163,
 	"identifierStyle": "Capitalize",
 	"worldLayout": null,
 	"worldGridWidth": null,
@@ -1400,84 +1400,26 @@
 		{ "id": "Slug", "tileId": 7, "color": 13652805, "__tileSrcRect": [0,16,16,16] }
 	], "iconTilesetUid": 2, "externalRelPath": null, "externalFileChecksum": null, "tags": [] }], "externalEnums": [], "levelFields": [
 		{
-			"identifier": "Float",
-			"__type": "Float",
-			"uid": 144,
-			"type": "F_Float",
+			"identifier": "AmbientLight",
+			"__type": "Color",
+			"uid": 162,
+			"type": "F_Color",
 			"isArray": false,
 			"canBeNull": false,
 			"arrayMinLength": null,
 			"arrayMaxLength": null,
-			"editorDisplayMode": "Hidden",
+			"editorDisplayMode": "NameAndValue",
 			"editorDisplayPos": "Above",
-			"editorAlwaysShow": false,
+			"editorAlwaysShow": true,
 			"editorCutLongValues": true,
 			"editorTextSuffix": null,
 			"editorTextPrefix": null,
-			"useForSmartColor": false,
+			"useForSmartColor": true,
 			"min": null,
 			"max": null,
 			"regex": null,
 			"acceptFileTypes": null,
-			"defaultOverride": null,
-			"textLanguageMode": null,
-			"symmetricalRef": false,
-			"autoChainRef": true,
-			"allowOutOfLevelRef": true,
-			"allowedRefs": "OnlySame",
-			"allowedRefTags": [],
-			"tilesetUid": null
-		},
-		{
-			"identifier": "Tile",
-			"__type": "Array<Tile>",
-			"uid": 145,
-			"type": "F_Tile",
-			"isArray": true,
-			"canBeNull": false,
-			"arrayMinLength": null,
-			"arrayMaxLength": null,
-			"editorDisplayMode": "EntityTile",
-			"editorDisplayPos": "Above",
-			"editorAlwaysShow": false,
-			"editorCutLongValues": true,
-			"editorTextSuffix": null,
-			"editorTextPrefix": null,
-			"useForSmartColor": false,
-			"min": null,
-			"max": null,
-			"regex": null,
-			"acceptFileTypes": null,
-			"defaultOverride": null,
-			"textLanguageMode": null,
-			"symmetricalRef": false,
-			"autoChainRef": true,
-			"allowOutOfLevelRef": true,
-			"allowedRefs": "OnlySame",
-			"allowedRefTags": [],
-			"tilesetUid": 1
-		},
-		{
-			"identifier": "Multilines",
-			"__type": "String",
-			"uid": 146,
-			"type": "F_Text",
-			"isArray": false,
-			"canBeNull": true,
-			"arrayMinLength": null,
-			"arrayMaxLength": null,
-			"editorDisplayMode": "Hidden",
-			"editorDisplayPos": "Above",
-			"editorAlwaysShow": false,
-			"editorCutLongValues": true,
-			"editorTextSuffix": null,
-			"editorTextPrefix": null,
-			"useForSmartColor": false,
-			"min": null,
-			"max": null,
-			"regex": null,
-			"acceptFileTypes": null,
-			"defaultOverride": null,
+			"defaultOverride": { "id": "V_Int", "params": [11119017] },
 			"textLanguageMode": null,
 			"symmetricalRef": false,
 			"autoChainRef": true,
@@ -1505,30 +1447,10 @@
 			"bgPos": null,
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
-			"__smartColor": "#FDEDE4",
+			"__smartColor": "#D0D0D0",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [
-				{ "__identifier": "Float", "__value": 3.4, "__type": "Float", "__tile": null, "defUid": 144, "realEditorValues": [{ "id": "V_Float", "params": [3.4] }] },
-				{ "__identifier": "Tile", "__value": [
-					{ "tilesetUid": 1, "x": 80, "y": 48, "w": 16, "h": 16 },
-					{ "tilesetUid": 1, "x": 16, "y": 0, "w": 16, "h": 16 },
-					{ "tilesetUid": 1, "x": 48, "y": 48, "w": 16, "h": 16 }
-				], "__type": "Array<Tile>", "__tile": { "tilesetUid": 1, "x": 80, "y": 48, "w": 16, "h": 16 }, "defUid": 145, "realEditorValues": [ {
-					"id": "V_String",
-					"params": ["80,48,16,16"]
-				}, {
-					"id": "V_String",
-					"params": ["16,0,16,16"]
-				}, {
-					"id": "V_String",
-					"params": ["48,48,16,16"]
-				} ] },
-				{ "__identifier": "Multilines", "__value": "test 1234\n1234", "__type": "String", "__tile": null, "defUid": 146, "realEditorValues": [{
-					"id": "V_String",
-					"params": ["test 1234\n1234"]
-				}] }
-			],
+			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
 				{
 					"__identifier": "Lights",
@@ -2039,14 +1961,10 @@
 			"bgPos": null,
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
-			"__smartColor": "#FDEDE4",
+			"__smartColor": "#D0D0D0",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [
-				{ "__identifier": "Float", "__value": 0, "__type": "Float", "__tile": null, "defUid": 144, "realEditorValues": [] },
-				{ "__identifier": "Tile", "__value": [], "__type": "Array<Tile>", "__tile": null, "defUid": 145, "realEditorValues": [] },
-				{ "__identifier": "Multilines", "__value": null, "__type": "String", "__tile": null, "defUid": 146, "realEditorValues": [] }
-			],
+			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
 				{
 					"__identifier": "Lights",
@@ -2692,14 +2610,10 @@
 			"bgPos": null,
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
-			"__smartColor": "#FDEDE4",
+			"__smartColor": "#CFCFCF",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [
-				{ "__identifier": "Float", "__value": 0, "__type": "Float", "__tile": null, "defUid": 144, "realEditorValues": [] },
-				{ "__identifier": "Tile", "__value": [], "__type": "Array<Tile>", "__tile": null, "defUid": 145, "realEditorValues": [] },
-				{ "__identifier": "Multilines", "__value": null, "__type": "String", "__tile": null, "defUid": 146, "realEditorValues": [] }
-			],
+			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A8A8A8", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [{ "id": "V_Int", "params": [11053224] }] }],
 			"layerInstances": [
 				{
 					"__identifier": "Lights",
@@ -2724,7 +2638,48 @@
 					"seed": 6159708,
 					"overrideTilesetUid": null,
 					"gridTiles": [],
-					"entityInstances": []
+					"entityInstances": [
+						{
+							"__identifier": "Light",
+							"__grid": [10,5],
+							"__pivot": [0.5,0.5],
+							"__tags": ["Light"],
+							"__tile": { "tilesetUid": 152, "x": 80, "y": 112, "w": 16, "h": 16 },
+							"__smartColor": "#F8FF9B",
+							"iid": "a1abfae0-5110-11ed-96fa-6fc2f85dd05e",
+							"width": 320,
+							"height": 320,
+							"defUid": 151,
+							"px": [168,88],
+							"fieldInstances": [
+								{ "__identifier": "Intensity", "__value": 0.6, "__type": "Float", "__tile": null, "defUid": 153, "realEditorValues": [] },
+								{ "__identifier": "Color", "__value": "#F8FF9B", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [16318363] }] },
+								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
+								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
+								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+							]
+						},
+						{
+							"__identifier": "Light",
+							"__grid": [30,5],
+							"__pivot": [0.5,0.5],
+							"__tags": ["Light"],
+							"__tile": { "tilesetUid": 152, "x": 80, "y": 112, "w": 16, "h": 16 },
+							"__smartColor": "#FFFFFF",
+							"iid": "bebe2630-5110-11ed-96fa-674551b96e1d",
+							"width": 288,
+							"height": 288,
+							"defUid": 151,
+							"px": [488,88],
+							"fieldInstances": [
+								{ "__identifier": "Intensity", "__value": 0.6, "__type": "Float", "__tile": null, "defUid": 153, "realEditorValues": [] },
+								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
+								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
+								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
+								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
+							]
+						}
+					]
 				},
 				{
 					"__identifier": "Enemies",
@@ -3295,14 +3250,10 @@
 			"bgPos": null,
 			"bgPivotX": 0.5,
 			"bgPivotY": 0.5,
-			"__smartColor": "#FDEDE4",
+			"__smartColor": "#D0D0D0",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [
-				{ "__identifier": "Float", "__value": 0, "__type": "Float", "__tile": null, "defUid": 144, "realEditorValues": [] },
-				{ "__identifier": "Tile", "__value": [], "__type": "Array<Tile>", "__tile": null, "defUid": 145, "realEditorValues": [] },
-				{ "__identifier": "Multilines", "__value": null, "__type": "String", "__tile": null, "defUid": 146, "realEditorValues": [] }
-			],
+			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
 				{
 					"__identifier": "Lights",

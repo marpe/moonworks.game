@@ -148,9 +148,8 @@ public class World
     public LDtkAsset LDtk = new();
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
     public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
-    
-    [Range(0, 5, 0.1f)]
-    [CVar("light_rim_intensity", "Sets the intensity of the rim lighting")]
+
+    [Range(0, 5, 0.1f)] [CVar("light_rim_intensity", "Sets the intensity of the rim lighting")]
     public static float RimLightIntensity = 1f;
 
     public World()
@@ -184,6 +183,15 @@ public class World
 
         var level = FindLevel(levelIdentifier, LDtk.LdtkRaw);
 
+        foreach (var field in level.FieldInstances)
+        {
+            if (field.Identifier == "AmbientLight")
+            {
+                var fieldValue = (JToken)field.Value;
+                AmbientColor = fieldValue.ToObject<Color>(ContentManager.JsonSerializer);
+            }
+        }
+        
         Enemies.Clear();
         Bullets.Clear();
         Lights.Clear();
@@ -729,6 +737,14 @@ public class World
         // render light to game
         renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
+
+        // draw ground for use with rim light
+        for (var layerIndex = Level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
+        {
+            var layer = Level.LayerInstances[layerIndex];
+            var layerDef = GetLayerDefinition(LDtk.LdtkRaw, layer.LayerDefUid);
+            DrawLayer(renderer, LDtk.LdtkRaw, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds);
+        }
 
         // render entities for use with rim light
         DrawEntities(renderer, alpha);
