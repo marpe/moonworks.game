@@ -45,10 +45,10 @@ public static class BindHandler
             if (!_buttons.ContainsKey(buttonId))
                 _buttons[buttonId] = new Binds.ButtonBind();
 
-            var state = _buttons[buttonId];
-            state.WasActive = state.Active;
-            state.Active = true;
-            state.GameUpdateCount = Shared.Game.Time.UpdateCount;
+            var button = _buttons[buttonId];
+            button.WasActive = button.Active;
+            button.Active = true;
+            button.GameUpdateCount = Shared.Game.Time.UpdateCount;
         }
 
         foreach (var mouseButton in inputState.MouseButtonsDown)
@@ -57,10 +57,10 @@ public static class BindHandler
             if (!_buttons.ContainsKey(buttonId))
                 _buttons[buttonId] = new Binds.ButtonBind();
 
-            var state = _buttons[buttonId];
-            state.WasActive = state.Active;
-            state.Active = true;
-            state.GameUpdateCount = Shared.Game.Time.UpdateCount;
+            var button = _buttons[buttonId];
+            button.WasActive = button.Active;
+            button.Active = true;
+            button.GameUpdateCount = Shared.Game.Time.UpdateCount;
         }
 
         _buttonsToClear.Clear();
@@ -175,29 +175,6 @@ public static class BindHandler
             Shared.Console.ExecuteCommand(cmd, split);
             return;
         }
-
-        if (IsButtonDown(buttonId))
-        {
-            // continued press
-            if (!cmdKey.StartsWith('+'))
-                return;
-
-            Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, keyStr });
-
-            return;
-        }
-
-        if (!IsButtonDown(buttonId))
-        {
-            // released/idle key
-            if (!cmdKey.StartsWith('+'))
-                return;
-
-            var upCmdKey = $"-{cmdKey.AsSpan().Slice(1)}";
-            var upCmd = Shared.Console.Commands[upCmdKey];
-            Shared.Console.ExecuteCommand(upCmd, new[] { cmdKey, keyStr });
-            return;
-        }
     }
 }
 
@@ -248,10 +225,10 @@ public static class Binds
             if (Left.Active)
                 cmd.MovementX += -1;
 
-            cmd.IsFiring = !Fire1.WasActive && Fire1.Active;
-            cmd.Respawn = !Respawn.WasActive && Respawn.Active;
+            cmd.IsFiring = (!Fire1.WasActive && Fire1.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Fire1.Active;
+            cmd.Respawn = (!Respawn.WasActive && Respawn.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Respawn.Active;
             cmd.IsJumpDown = Jump.Active;
-            cmd.IsJumpPressed = !Jump.WasActive && Jump.Active;
+            cmd.IsJumpPressed = (!Jump.WasActive && Jump.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Jump.Active;
             cmd.MoveToMouse = MoveToMouse.Active;
 
             return cmd;
@@ -484,39 +461,23 @@ public static class Binds
     {
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
-            // don't trigger down actions if the world hasn't been updated yet
-            // unless it was a command types in the console (in which case no source button is in the args)
-            if (bind.WorldUpdateCount != 0 && Shared.Game.World.IsLoaded &&
-                bind.WorldUpdateCount == Shared.Game.World.WorldUpdateCount &&
-                args.Length > 1)
-                return;
-            var wasActive = bind.Active;
+            bind.WasActive = bind.Active;
             bind.Active = true;
-            bind.WasActive = wasActive;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
             bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
-            bind.WorldUpdateCount = Shared.Game.World?.WorldUpdateCount ?? 0;
-            bind.WorldTimestamp = Shared.Game.World?.WorldTotalElapsedTime ?? 0;
+            bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
+            bind.WorldTimestamp = Shared.Game.World.WorldTotalElapsedTime;
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
-            // don't trigger up actions if the world hasn't been updated yet
-            if (bind.WorldUpdateCount != 0 && Shared.Game.World.IsLoaded &&
-                bind.WorldUpdateCount == Shared.Game.World.WorldUpdateCount)
-                return;
-            // also skip if sources is empty, since it means the bind was triggered by typing it in the console
-            // in which case we want to repeat the action, unless the -command was typed in which case args wont contain a button source
-            if (bind.Sources[0] == "" && args.Length > 1)
-                return;
-            var wasActive = bind.Active;
+            bind.WasActive = bind.Active;
             bind.Active = false;
-            bind.WasActive = wasActive;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
             bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
-            bind.WorldUpdateCount = Shared.Game.World?.WorldUpdateCount ?? 0;
-            bind.WorldTimestamp = Shared.Game.World?.WorldTotalElapsedTime ?? 0;
+            bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
+            bind.WorldTimestamp = Shared.Game.World.WorldTotalElapsedTime;
         };
         var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
         var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
