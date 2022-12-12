@@ -183,9 +183,6 @@ public static class Binds
     public class ButtonBind
     {
         public string[] Sources = { "", "" }; // The id of the button which triggered this bind
-        public float GameTimestamp;
-        public float WorldTimestamp;
-        public float TimeHeld;
         public bool Active;
         public bool WasActive;
         public ulong GameUpdateCount;
@@ -465,9 +462,7 @@ public static class Binds
             bind.Active = true;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
-            bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
             bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
-            bind.WorldTimestamp = Shared.Game.World.WorldTotalElapsedTime;
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
@@ -475,9 +470,7 @@ public static class Binds
             bind.Active = false;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
             bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
-            bind.GameTimestamp = Shared.Game.Time.TotalElapsedTime;
             bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
-            bind.WorldTimestamp = Shared.Game.World.WorldTotalElapsedTime;
         };
         var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
         var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
