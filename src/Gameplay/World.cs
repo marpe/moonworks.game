@@ -144,7 +144,7 @@ public class World
 
     public float FreezeFrameTimer;
 
-    public Level Level = new();
+    public ldtk.Level Level = new();
     public LDtkAsset LDtk = new();
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
     public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
@@ -158,7 +158,7 @@ public class World
         // StartLevel("World_Level_1");
     }
 
-    public static Level FindLevel(string identifier, LdtkJson ldtk)
+    public static ldtk.Level FindLevel(string identifier, LdtkJson ldtk)
     {
         var levels = ldtk.Worlds.Length > 0 ? ldtk.Worlds[0].Levels : ldtk.Levels;
         for (var i = 0; i < levels.Length; i++)
@@ -240,7 +240,7 @@ public class World
         Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
-    private static List<Entity> LoadEntitiesInLevel(Level level)
+    private static List<Entity> LoadEntitiesInLevel(ldtk.Level level)
     {
         var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)
@@ -328,7 +328,6 @@ public class World
         UpdatePlayer(deltaSeconds, input, camera);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
-        camera.Update(deltaSeconds, input);
     }
 
     private void UpdateBullets(float deltaSeconds)
@@ -410,9 +409,9 @@ public class World
     }
 
 
-    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
+    private void DrawLevel(Renderer renderer, ldtk.Level level, Bounds cameraBounds)
     {
-        var color = ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
+        var color = level.BgColor == null ? Color.White : ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
         renderer.DrawRect(level.Bounds, color);
 
         for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
@@ -481,7 +480,7 @@ public class World
         }
     }
 
-    private void DrawLayer(Renderer renderer, LdtkJson ldtk, Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
+    private void DrawLayer(Renderer renderer, LdtkJson ldtk, ldtk.Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
     {
         if (!layer.TilesetDefUid.HasValue)
             return;
@@ -581,7 +580,7 @@ public class World
         if (IsLoaded)
             return;
 
-        Level = new Level();
+        Level = new ldtk.Level();
         LDtk = new LDtkAsset();
 
 
@@ -659,7 +658,7 @@ public class World
         Bullets.Add(bullet);
     }
 
-    private static EntityDefinition GetEntityDefinition(LdtkJson ldtkRaw, EntityType entityType)
+    private static ldtk.EntityDefinition GetEntityDefinition(LdtkJson ldtkRaw, EntityType entityType)
     {
         for (var i = 0; i < ldtkRaw.Defs.Entities.Length; i++)
         {

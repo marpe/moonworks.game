@@ -97,4 +97,8 @@ public static class ContentPaths
     {
         public const string menu_background_png = @"Content\Textures\menu-background.png";
     }
+    public static class worlds
+    {
+        public const string worlds_json = @"Content\worlds\worlds.json";
+    }
 }

@@ -345,7 +345,7 @@ public class Camera
             }
         }
 
-        input.KeyboardEnabled = input.MouseEnabled = false;
+        // input.KeyboardEnabled = input.MouseEnabled = false;
     }
 
     [InspectorCallable]

@@ -13,6 +13,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
     public InputDebugWindow(MyEditorMain editor) : base(WindowTitle)
     {
+        KeyboardShortcut = "^I";
         _editor = editor;
     }
 
@@ -21,16 +22,20 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         if (!IsOpen)
             return;
 
+        void DrawTableHeaders()
+        {
+            ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.None, 200);
+            ImGui.TableSetupColumn("Active", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 20);
+            ImGui.TableSetupColumn("WasActive", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 20);
+            ImGui.TableSetupColumn("WU", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 50);
+            ImGui.TableSetupColumn("GU", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 50);
+        }
+
         var flags = ImGuiWindowFlags.NoCollapse;
         ImGui.SetNextWindowSize(new Num.Vector2(1920, 1080), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 800));
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
-            if (ImGuiExt.ColoredButton(FontAwesome6.TrashCan, Color.Red))
-            {
-                BindHandler.Clear();
-            }
-
             var i = 0;
             void DrawBind(string label, Binds.ButtonBind bind)
             {
@@ -58,13 +63,11 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
             if (ImGui.BeginTable("Buttons", 5, tableFlags, new Num.Vector2(0, 150)))
             {
-                ImGui.TableSetupColumn("Key");
-                ImGui.TableSetupColumn("Active");
-                ImGui.TableSetupColumn("WasActive");
-                ImGui.TableSetupColumn("WU");
-                ImGui.TableSetupColumn("GU");
+                DrawTableHeaders();
 
-                foreach (var (key, value) in BindHandler.Buttons)
+                ImGui.TableHeadersRow();
+
+                foreach (var (key, value) in Binds.Buttons)
                 {
                     ImGui.PushID(i);
                     i++;
@@ -90,11 +93,9 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             
             if (ImGui.BeginTable("Camera", 5, tableFlags, new Num.Vector2(0, 350)))
             {
-                ImGui.TableSetupColumn("Key");
-                ImGui.TableSetupColumn("Active");
-                ImGui.TableSetupColumn("WasActive");
-                ImGui.TableSetupColumn("WU");
-                ImGui.TableSetupColumn("GU");
+                DrawTableHeaders();
+
+                ImGui.TableHeadersRow();
 
                 DrawBind("ZoomIn", Binds.Camera.ZoomIn);
                 DrawBind("ZoomOut", Binds.Camera.ZoomOut);
@@ -112,11 +113,9 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             
             if (ImGui.BeginTable("Player", 5, tableFlags, new Num.Vector2(0, 0)))
             {
-                ImGui.TableSetupColumn("Key");
-                ImGui.TableSetupColumn("Active");
-                ImGui.TableSetupColumn("WasActive");
-                ImGui.TableSetupColumn("WU");
-                ImGui.TableSetupColumn("GU");
+                DrawTableHeaders();
+
+                ImGui.TableHeadersRow();
 
                 DrawBind("Right", Binds.Player.Right);
                 DrawBind("Left", Binds.Player.Left);

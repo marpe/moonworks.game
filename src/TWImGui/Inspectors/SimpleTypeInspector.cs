@@ -15,6 +15,7 @@ public unsafe class SimpleTypeInspector : Inspector
     public static bool HideReadOnly = true;
 
     public static readonly RangeSettings DefaultRangeSettings = new RangeSettings(-(ImGuiExt.FLT_MAX / 2), ImGuiExt.FLT_MAX / 2, 1, true);
+    public static readonly RangeSettings UnsignedDefaultRangeSettings = new RangeSettings(0, uint.MaxValue, 1, true);
 
     private Func<object> _getter = null!;
     private Action<object> _setter = null!;
@@ -27,7 +28,8 @@ public unsafe class SimpleTypeInspector : Inspector
         _setter = SetValue;
     }
 
-    public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings, string format = "%.4g", ImGuiSliderFlags flags = ImGuiSliderFlags.None)
+    public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings, string format = "%.4g",
+        ImGuiSliderFlags flags = ImGuiSliderFlags.None)
     {
         if (rangeSettings.UseDragVersion)
         {
@@ -51,8 +53,22 @@ public unsafe class SimpleTypeInspector : Inspector
             flags
         );
     }
+    
+    public static bool InspectInputUint(string name, ref uint value)
+    {
+        var data = (void*)ImGuiExt.RefPtr(ref value);
+        var step = 1u;
+        var stepFast = 10u;
+        var stepPtr = (void*)ImGuiExt.RefPtr(ref step);
+        var stepFastPtr = (void*)ImGuiExt.RefPtr(ref stepFast);
+        return ImGui.InputScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, data, stepPtr, stepFastPtr, "%u", ImGuiInputTextFlags.None);
+    }
 
-
+    public static bool InspectInputInt(string name, ref int value)
+    {
+        return ImGui.InputInt(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value));
+    }
+    
     public static bool InspectInt(string name, ref int value, RangeSettings rangeSettings)
     {
         if (rangeSettings.UseDragVersion)
@@ -76,16 +92,21 @@ public unsafe class SimpleTypeInspector : Inspector
         );
     }
 
-    public static bool InspectUInt(string name, ref uint value)
+    public static bool InspectUInt(string name, ref uint value, RangeSettings? rangeSettings = null)
     {
-        var result = false;
-        var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
-        if (ImGui.DragScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, valuePtr, default, default, default, default))
-        {
-            result = true;
-        }
+        rangeSettings ??= UnsignedDefaultRangeSettings;
 
-        return result;
+        var valuePtr = (void*)ImGuiExt.RefPtr(ref value);
+        var stepSize = (uint)rangeSettings.Value.StepSize;
+        var minValue = (uint)rangeSettings.Value.MinValue;
+        var minValuePtr = (void*)ImGuiExt.RefPtr(ref minValue);
+        var maxValue = (uint)rangeSettings.Value.MaxValue;
+        var maxValuePtr = (void*)ImGuiExt.RefPtr(ref maxValue);
+
+        if (rangeSettings.Value.UseDragVersion)
+            return ImGui.DragScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, valuePtr, stepSize, minValuePtr, maxValuePtr, "%u");
+
+        return ImGui.SliderScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, valuePtr, minValuePtr, maxValuePtr, "%u");
     }
 
     public static bool InspectString(string name, ref string value)
@@ -94,7 +115,7 @@ public unsafe class SimpleTypeInspector : Inspector
         var inputBuffer = new ImGuiInputBuffer(value, 100);
         fixed (byte* data = inputBuffer.Bytes)
         {
-            if (ImGui.InputText(ImGuiExt.LabelPrefix(name), data, (nuint)inputBuffer.MaxLength))
+            if (ImGui.InputText(ImGuiExt.LabelPrefix(name), data, (nuint)inputBuffer.MaxLength, ImGuiInputTextFlags.AutoSelectAll))
             {
                 value = ImGuiExt.StringFromPtr(data);
                 result = true;
@@ -277,10 +298,10 @@ public unsafe class SimpleTypeInspector : Inspector
         }
         else if (type == typeof(Vector2))
         {
-            var value = ((Vector2)getter()).ToNumerics();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1.0f, 0, 0, "%.4g"))
+            var value = (Vector2)getter();
+            if (InspectVector2(name, ref value))
             {
-                setter(value.ToXNA());
+                setter(value);
                 result = true;
             }
         }
@@ -338,6 +359,19 @@ public unsafe class SimpleTypeInspector : Inspector
         if (isReadOnly)
         {
             ImGui.EndDisabled();
+        }
+
+        return result;
+    }
+
+    public static bool InspectVector2(string name, ref Vector2 value)
+    {
+        var numValue = value.ToNumerics();
+        var result = false;
+        if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref numValue), 1.0f, 0, 0, "%.4g"))
+        {
+            value = numValue.ToXNA();
+            result = true;
         }
 
         return result;

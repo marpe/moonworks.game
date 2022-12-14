@@ -195,6 +195,8 @@ public class ColorConverter : JsonConverter<Color>
 {
     public override void WriteJson(JsonWriter writer, Color value, JsonSerializer serializer)
     {
+        var strValue = ColorExt.ToHex(value);
+        writer.WriteValue(strValue);
     }
 
     public override Color ReadJson(JsonReader reader, Type objectType, Color existingValue, bool hasExistingValue,

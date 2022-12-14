@@ -685,7 +685,7 @@ public static unsafe class ImGuiExt
 
         if (textSize.X <= 0)
         {
-            ImGui.SetNextItemWidth(-1);
+            // ImGui.SetNextItemWidth(-1); // TODO (marpe): Investigate what I broke when this got commented out
             return label;
         }
 
@@ -697,7 +697,8 @@ public static unsafe class ImGuiExt
         var frameHeight = ImGui.GetFrameHeight();
         var min = ImGui.GetCursorScreenPos();
         var itemInnerSpacingX = ImGui.GetStyle()->ItemInnerSpacing.X;
-        var labelWidth = itemWidth * 0.7f + itemInnerSpacingX;
+        var labelWidthRatio = 0.4f;
+        var labelWidth = itemWidth * labelWidthRatio + itemInnerSpacingX;
         var max = min + new Num.Vector2(Math.Min(textSize.X + itemInnerSpacingX, labelWidth), frameHeight);
         ImGuiInternal.RenderTextClipped(min, max, label, &textSize, new Num.Vector2(0, 0.5f));
 
@@ -720,7 +721,13 @@ public static unsafe class ImGuiExt
 
         ImGui.SameLine();
 
-        ImGui.SetCursorPosX(x + itemWidth * 0.7f + itemInnerSpacingX);
+        ImGui.SetCursorPosX(x + itemWidth * labelWidthRatio + itemInnerSpacingX);
+
+        // TODO (marpe): This was an attempt at making this respect ImGui.SetNextItemWidth
+        /*var cursorX = ImGui.GetCursorPosX();
+        var availX = ImGui.GetContentRegionAvail().X;
+        var calcItemWidth = ImGui.CalcItemWidth();
+        // ImGui.SetNextItemWidth(calcItemWidth);*/
         ImGui.SetNextItemWidth(-1);
 
         return preserveLabel ? label : "##" + label;
@@ -1063,7 +1070,8 @@ public static unsafe class ImGuiExt
         var framePaddingX = ImGui.GetStyle()->FramePadding.X;
         var avail = fullWidth ? ImGui.GetContentRegionAvail() : new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
 
-        var rowWidth = Math.Max(avail.X - 10f, minSize);
+        var rightPadding = 0;
+        var rowWidth = Math.Max(avail.X - rightPadding, minSize);
 
         var minItemsPerRow = (int)(rowWidth / minSize);
 

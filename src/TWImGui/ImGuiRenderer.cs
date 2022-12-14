@@ -31,7 +31,7 @@ public unsafe class ImGuiRenderer : IDisposable
     private readonly Sampler _linearSampler;
     private readonly Sampler _pointSampler;
 
-    public bool UsePointSampler;
+    public bool UsePointSampler = true;
 
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
     private readonly Dictionary<IntPtr, Texture> _textures = new();
@@ -83,6 +83,8 @@ public unsafe class ImGuiRenderer : IDisposable
         io->GetClipboardTextFn = &GetClipboardText;
         io->SetClipboardTextFn = &SetClipboardText;
 
+        io->HoverDelayNormal = 1.0f;
+        
         // Set the backend name
         {
             var name = "MoonWorks.SDL";

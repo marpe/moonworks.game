@@ -10,6 +10,7 @@ public struct LDtkAsset
 
 public class ContentManager
 {
+    public static readonly JsonSerializerSettings JsonSerializerSettings = new() { Converters = { new ColorConverter() } };
     public static readonly JsonSerializer JsonSerializer = new() { Converters = { new ColorConverter() } };
 
     private readonly MyGameMain _game;
@@ -105,6 +106,11 @@ public class ContentManager
         return _loadedTTFFonts[path];
     }
 
+    public bool HasTexture(string path)
+    {
+        return _loadedTextures.ContainsKey(path);
+    }
+    
     public Texture GetTexture(string path)
     {
         return _loadedTextures[path];

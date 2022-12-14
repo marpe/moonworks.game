@@ -19,6 +19,7 @@ public unsafe class MyEditorMain : MyGameMain
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private bool _firstTime = true;
     private Texture _imGuiRenderTarget;
+    public Texture _editorRenderTarget;
 
     private bool _screenshot;
 
@@ -42,6 +43,8 @@ public unsafe class MyEditorMain : MyGameMain
     public float _renderDurationMs;
     public float _gameUpdateDurationMs;
 
+    public EditorWindow EditorWindow;
+
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
@@ -52,11 +55,17 @@ public unsafe class MyEditorMain : MyGameMain
             GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
+        _editorRenderTarget = Texture.CreateTexture2D(
+            GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
+        );
 
         _demoWindow = new ImGuiDemoWindow();
 
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
+
+        EditorWindow = new EditorWindow(this);
 
         var imguiSw = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
@@ -167,12 +176,12 @@ public unsafe class MyEditorMain : MyGameMain
         {
             new LoadingScreenDebugWindow(),
             new WorldWindow(),
-            new EntityEditorWindow(this),
             _gameWindow,
             _debugWindow,
             _demoWindow,
             new RenderTargetsWindow(this),
             new InputDebugWindow(this),
+            EditorWindow,
         };
         foreach (var window in windows)
         {
@@ -218,19 +227,18 @@ public unsafe class MyEditorMain : MyGameMain
         {
             ImGuiInternal.DockBuilderRemoveNodeChildNodes(dockId);
 
-            var leftWidth = 0.15f;
-            var dockLeft = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, null, &dockId);
-
-            uint topLeft;
-            uint bottomLeft;
-            var leftSplit = ImGuiInternal.DockBuilderSplitNode(dockLeft, ImGuiDir.Up, 0.5f, &topLeft, &bottomLeft);
+            var leftWidth = 0.33f;
+            uint dockLeftId;
+            uint dockCenterId;
+            var splitParent = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
 
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
-            var dockRight = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Right, rightWidth, null, &dockId);
-            ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, topLeft);
-            ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, topLeft);
-            ImGuiInternal.DockBuilderDockWindow(EntityEditorWindow.WindowTitle, bottomLeft);
-            ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRight);
+            uint dockRightId;
+            var rightSplitParent = ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
+            ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(EditorWindow.TablesWindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
 
             ImGuiInternal.DockBuilderFinish(dockId);
             _firstTime = false;
@@ -289,6 +297,7 @@ public unsafe class MyEditorMain : MyGameMain
             var io = ImGui.GetIO();
             if (io->WantCaptureKeyboard)
                 InputHandler.KeyboardEnabled = false;
+            // disable mouse input if we have a window focused, or the game window is open and we're not hovering it
             if (io->NavActive || (_gameWindow.IsOpen && !_gameWindow.IsHoveringGameWindow))
                 InputHandler.MouseEnabled = false;
 
@@ -299,6 +308,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _gameUpdateStopwatch.Restart();
         base.Update(dt);
+        EditorWindow.Update(Time.ElapsedTime);
         _gameUpdateStopwatch.Stop();
         _gameUpdateDurationMs = _gameUpdateStopwatch.GetElapsedMilliseconds();
 
@@ -335,6 +345,8 @@ public unsafe class MyEditorMain : MyGameMain
         _renderGameStopwatch.Stop();
         _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
+        EditorWindow.Draw(Renderer, _editorRenderTarget, alpha);
+        
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
             _imguiRenderStopwatch.Restart();

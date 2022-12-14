@@ -98,10 +98,9 @@ public class MyGameMain : Game
 
         InputHandler.BeginFrame(Time.ElapsedTime);
         
-        // TODO (marpe): refactor 
-        BindHandler.AddState(InputState.Create(InputHandler));
-        BindHandler.HandleBoundKeys();
-
+        Binds.UpdateButtonStates(InputState.Create(InputHandler));
+        Binds.ExecuteTriggeredBinds();
+        
         SetInputViewport();
 
         UpdateScreens();
@@ -141,7 +140,7 @@ public class MyGameMain : Game
             Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
             return;
         }
-
+        
         UpdateWorld(Time.ElapsedTime);
     }
 
@@ -341,10 +340,10 @@ public class MyGameMain : Game
 
         var doUpdate = IsStepping ||
                        (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
-
         if (doUpdate)
         {
             World.Update(deltaSeconds, InputHandler, Camera);
+            Camera.Update(deltaSeconds, InputHandler);
         }
         else
         {
