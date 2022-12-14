@@ -10,7 +10,7 @@
 	},
 	"jsonVersion": "1.1.3",
 	"appBuildId": 458364,
-	"nextUid": 165,
+	"nextUid": 168,
 	"identifierStyle": "Capitalize",
 	"worldLayout": null,
 	"worldGridWidth": null,
@@ -53,7 +53,11 @@
 			"parallaxScaling": true,
 			"requiredTags": [],
 			"excludedTags": [],
-			"intGridValues": [{ "value": 1, "identifier": null, "color": "#000000" }],
+			"intGridValues": [
+				{ "value": 1, "identifier": null, "color": "#000000" },
+				{ "value": 2, "identifier": null, "color": "#FF0000" },
+				{ "value": 3, "identifier": null, "color": "#FF0000" }
+			],
 			"autoTilesetDefUid": null,
 			"autoRuleGroups": [],
 			"autoSourceLayerDefUid": null,
@@ -916,6 +920,93 @@
 					"allowedRefs": "OnlySame",
 					"allowedRefTags": [],
 					"tilesetUid": null
+				},
+				{
+					"identifier": "Another",
+					"__type": "LocalEnum.EnemyType",
+					"uid": 165,
+					"type": "F_Enum(118)",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayPos": "Above",
+					"editorAlwaysShow": false,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "EnemyType",
+					"__type": "Array<LocalEnum.EnemyType>",
+					"uid": 166,
+					"type": "F_Enum(118)",
+					"isArray": true,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayPos": "Above",
+					"editorAlwaysShow": false,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"min": null,
+					"max": null,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": null,
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefTags": [],
+					"tilesetUid": null
+				},
+				{
+					"identifier": "TestInt",
+					"__type": "Int",
+					"uid": 167,
+					"type": "F_Int",
+					"isArray": false,
+					"canBeNull": false,
+					"arrayMinLength": null,
+					"arrayMaxLength": null,
+					"editorDisplayMode": "Hidden",
+					"editorDisplayPos": "Above",
+					"editorAlwaysShow": false,
+					"editorCutLongValues": true,
+					"editorTextSuffix": null,
+					"editorTextPrefix": null,
+					"useForSmartColor": false,
+					"min": 5,
+					"max": 10,
+					"regex": null,
+					"acceptFileTypes": null,
+					"defaultOverride": { "id": "V_Int", "params": [7] },
+					"textLanguageMode": null,
+					"symmetricalRef": false,
+					"autoChainRef": true,
+					"allowOutOfLevelRef": true,
+					"allowedRefs": "OnlySame",
+					"allowedRefTags": [],
+					"tilesetUid": null
 				}
 			]
 		},
@@ -1527,12 +1618,12 @@
 					"visible": true,
 					"optionalRules": [],
 					"intGridCsv": [
+						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+						0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+						0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,3,0,0,0,0,
+						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+						0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,3,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
@@ -1765,7 +1856,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -1791,7 +1885,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -1823,7 +1920,10 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2227,7 +2327,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2253,7 +2356,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2300,7 +2406,10 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2340,7 +2449,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2419,7 +2531,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2439,7 +2554,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2459,7 +2577,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2479,7 +2600,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2499,7 +2623,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2519,7 +2646,10 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2539,7 +2669,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						}
 					]
@@ -2970,7 +3103,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2996,7 +3132,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3043,7 +3182,10 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3083,7 +3225,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3162,7 +3307,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3182,7 +3330,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3202,7 +3353,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3222,7 +3376,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3242,7 +3399,10 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3262,7 +3422,10 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3282,7 +3445,10 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] }
+								}] },
+								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
+								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
+								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
 							]
 						}
 					]

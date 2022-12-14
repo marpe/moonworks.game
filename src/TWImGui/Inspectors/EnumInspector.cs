@@ -134,6 +134,7 @@ public unsafe class EnumInspector : IInspectorWithTarget, IInspectorWithMemberIn
     {
         if (useButtons)
         {
+            ImGuiExt.LabelPrefix(label); ImGui.NewLine();
             return ImGuiExt.EnumButtons(entry.Names, entry.ValuesAsInt, ref value, entry.IsFlag, ImGuiExt.Colors[0]);
         }
         

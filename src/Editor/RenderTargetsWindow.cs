@@ -1,5 +1,7 @@
 ﻿using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using Vector2 = System.Numerics.Vector2;
+using Vector4 = System.Numerics.Vector4;
 
 namespace MyGame.Editor;
 
@@ -29,8 +31,8 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             return;
 
         var flags = ImGuiWindowFlags.NoCollapse;
-        ImGui.SetNextWindowSize(new Num.Vector2(1920, 1080), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(480, 270), new Num.Vector2(1920, 1080));
+        ImGui.SetNextWindowSize(new Vector2(1920, 1080), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(480, 270), new Vector2(1920, 1080));
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
             GameWindow.EnsureTextureIsBound(ref _lightPtr, _editor.RenderTargets.LightSource, _editor.ImGuiRenderer);
@@ -43,7 +45,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             ImGui.BeginGroup();
             {
                 var widthAvail = ImGui.GetContentRegionAvail().X;
-                if (ImGui.BeginChild("TargetButtons", new Num.Vector2(widthAvail * 0.5f, 20), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGui.BeginChild("TargetButtons", new Vector2(widthAvail * 0.5f, 20), false, ImGuiWindowFlags.NoScrollbar))
                 {
                     EnumInspector.InspectEnum("CurrentTarget", ref CurrentTarget);
                 }
@@ -51,7 +53,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
                 ImGui.EndChild();
 
                 ImGui.SameLine();
-                if (ImGui.BeginChild("Colors", new Num.Vector2(widthAvail * 0.5f - ImGui.GetStyle()->ItemInnerSpacing.X, 20), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGui.BeginChild("Colors", new Vector2(widthAvail * 0.5f - ImGui.GetStyle()->ItemInnerSpacing.X, 20), false, ImGuiWindowFlags.NoScrollbar))
                 {
                     SimpleTypeInspector.InspectColor("##BackgroundColor", ref _backgroundColor);
                     ImGui.SameLine();
@@ -76,7 +78,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             var contentAvail = ImGui.GetContentRegionAvail();
 
             var cursorPos = ImGui.GetCursorScreenPos();
-            var imageSize = new Num.Vector2(contentAvail.X, contentAvail.X * (1080f / 1920f));
+            var imageSize = new Vector2(contentAvail.X, contentAvail.X * (1080f / 1920f));
             var dl = ImGui.GetWindowDrawList();
             dl->AddRectFilled(cursorPos, cursorPos + imageSize, _backgroundColor.PackedValue);
             ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(cursorPos, cursorPos + imageSize), _stripesColor.PackedValue);
@@ -84,10 +86,10 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             ImGui.Image(
                 ptr!.Value.ToPointer(),
                 imageSize,
-                new Num.Vector2(0, 0),
-                new Num.Vector2(1, 1),
-                new Num.Vector4(1.0f, 1.0f, 1.0f, 1.0f),
-                new Num.Vector4(1.0f, 0, 0, 1f)
+                new Vector2(0, 0),
+                new Vector2(1, 1),
+                new Vector4(1.0f, 1.0f, 1.0f, 1.0f),
+                new Vector4(1.0f, 0, 0, 1f)
             );
         }
 

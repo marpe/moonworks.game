@@ -1,5 +1,6 @@
 ﻿using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -32,8 +33,8 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         }
 
         var flags = ImGuiWindowFlags.NoCollapse;
-        ImGui.SetNextWindowSize(new Num.Vector2(1920, 1080), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 800));
+        ImGui.SetNextWindowSize(new Vector2(1920, 1080), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 800));
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
             var i = 0;
@@ -61,7 +62,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Hideable |
                              ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
 
-            if (ImGui.BeginTable("Buttons", 5, tableFlags, new Num.Vector2(0, 150)))
+            if (ImGui.BeginTable("Buttons", 5, tableFlags, new Vector2(0, 150)))
             {
                 DrawTableHeaders();
 
@@ -91,7 +92,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                 ImGui.EndTable();
             }
             
-            if (ImGui.BeginTable("Camera", 5, tableFlags, new Num.Vector2(0, 350)))
+            if (ImGui.BeginTable("Camera", 5, tableFlags, new Vector2(0, 350)))
             {
                 DrawTableHeaders();
 
@@ -111,7 +112,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                 ImGui.EndTable();
             }
             
-            if (ImGui.BeginTable("Player", 5, tableFlags, new Num.Vector2(0, 0)))
+            if (ImGui.BeginTable("Player", 5, tableFlags, new Vector2(0, 0)))
             {
                 DrawTableHeaders();
 
@@ -133,8 +134,8 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             var child1DefaultWidth = 150;
 
             var bb = new ImRect(
-                cursorPos + new Num.Vector2(child1DefaultWidth + _sz1, 0),
-                cursorPos + new Num.Vector2(child1DefaultWidth + _sz1 + 5, windowHeight)
+                cursorPos + new Vector2(child1DefaultWidth + _sz1, 0),
+                cursorPos + new Vector2(child1DefaultWidth + _sz1 + 5, windowHeight)
             ); // bb.Min == child0->Pos, bb-Max child1->Pos
 
 
@@ -144,13 +145,13 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             {
             }
 
-            if (ImGui.BeginChild("Child1", new Num.Vector2(child1DefaultWidth + _sz1, 0), true))
+            if (ImGui.BeginChild("Child1", new Vector2(child1DefaultWidth + _sz1, 0), true))
             {
             }
 
             ImGui.EndChild();
             ImGui.SameLine();
-            if (ImGui.BeginChild("Child2", new Num.Vector2(contentAvail.X - (child1DefaultWidth + _sz1) - 5, 0), true))
+            if (ImGui.BeginChild("Child2", new Vector2(contentAvail.X - (child1DefaultWidth + _sz1) - 5, 0), true))
             {
             }
             ImGui.EndChild();

@@ -10,8 +10,15 @@ public struct LDtkAsset
 
 public class ContentManager
 {
-    public static readonly JsonSerializerSettings JsonSerializerSettings = new() { Converters = { new ColorConverter() } };
-    public static readonly JsonSerializer JsonSerializer = new() { Converters = { new ColorConverter() } };
+    public static readonly JsonSerializerSettings JsonSerializerSettings = new()
+    {
+        TypeNameHandling = TypeNameHandling.Auto,
+        Converters = { new ColorConverter() }
+    };
+    public static readonly JsonSerializer JsonSerializer = new()
+    {
+        Converters = { new ColorConverter() }
+    };
 
     private readonly MyGameMain _game;
     private static StringBuilder _sb = new();

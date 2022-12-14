@@ -1,5 +1,6 @@
 ﻿using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -8,7 +9,7 @@ public static class ImGuiBorderlessTitle
     public unsafe static void Draw(Window window, MyEditorMain editor)
     {
         var mainViewport = ImGui.GetMainViewport();
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
         ImGuiInternal.BeginViewportSideBar("SideBar", mainViewport, ImGuiDir.Up, 34, ImGuiWindowFlags.NoDecoration);
         ImGui.PopStyleVar();
         var contentAvail = ImGui.GetContentRegionAvail();
@@ -35,7 +36,7 @@ public static class ImGuiBorderlessTitle
 
         ImGui.SetItemAllowOverlap();   
 
-        ImGui.SetCursorPos(new Num.Vector2(contentAvail.X - 29 * 3 - 6, 6));
+        ImGui.SetCursorPos(new Vector2(contentAvail.X - 29 * 3 - 6, 6));
         if (ImGuiExt.ColoredButton(FontAwesome6.WindowMinimize, Color.White * 0.5f, Color.Transparent, "Minimize")) 
         {
             window.IsMinimized = true;

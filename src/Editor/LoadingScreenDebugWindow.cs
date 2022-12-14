@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -26,7 +27,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
         {
             var transitionType = (int)LoadingScreen.TransitionType;
             ImGuiExt.LabelPrefix("TransitionType");
-            ImGui.Dummy(Num.Vector2.Zero);
+            ImGui.Dummy(Vector2.Zero);
 
             if (BlendStateEditor.ComboStep("##TransitionType", true, ref transitionType, _transitionTypeNames))
             {
@@ -54,7 +55,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
             if (LoadingScreen.Debug)
             {
                 SimpleTypeInspector.InspectFloat("DeltaSeconds", ref _deltaSeconds, new RangeSettings(1f / 120f, 1f / 5f, 0.01f, false));
-                if (ImGuiExt.ColoredButton("Step", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
+                if (ImGuiExt.ColoredButton("Step", new Vector2(-ImGuiExt.FLT_MIN, 0)))
                 {
                     Shared.LoadingScreen.UpdateState(_deltaSeconds);
                 }
@@ -66,7 +67,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
             _loadingScreenInspector?.Draw();
 
             var label = Shared.LoadingScreen.State == TransitionState.Hidden ? "Start Loading" : "Loading";
-            if (ImGui.Button(label, new Num.Vector2(-ImGuiExt.FLT_MIN, 30)))
+            if (ImGui.Button(label, new Vector2(-ImGuiExt.FLT_MIN, 30)))
             {
                 LoadingScreen.TestLoad(_sleepDurationInSeconds);
             }
@@ -77,7 +78,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
                     ? 0.5f + (1.0f - Shared.LoadingScreen.Progress) * 0.5f
                     : Shared.LoadingScreen.Progress * 0.5f;
                 ImGui.SetNextItemWidth(-1);
-                ImGui.ProgressBar(t, new Num.Vector2(0, 6f), "");
+                ImGui.ProgressBar(t, new Vector2(0, 6f), "");
             }
 
             // ImGuiExt.BufferingBar("LoadingProgressBar", Shared.LoadingScreen.Progress, new Num.Vector2(size.X, 4), 0xff2e2e2e, ImGuiExt.Colors[0].PackedValue, 2f);

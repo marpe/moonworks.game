@@ -500,8 +500,10 @@ public static unsafe class ImGuiExt
             var labelWidth = ImGui.CalcTextSize(label, true);
             if (labelWidth.X > 0)
             {
-                RenderText(label, true); ImGui.NewLine();    
+                RenderText(label, true);
+                ImGui.NewLine();
             }
+
             ImGui.Spacing();
             ImGui.SetNextItemWidth(frameHeight * 12.0f);
             float* pRefColor = null;
@@ -1068,7 +1070,8 @@ public static unsafe class ImGuiExt
         }
 
         var framePaddingX = ImGui.GetStyle()->FramePadding.X;
-        var avail = fullWidth ? ImGui.GetContentRegionAvail() : new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
+        var minButtonSize = new Num.Vector2(minSize * (labels.Length + framePaddingX), 0);
+        var avail = fullWidth ? ImGui.GetContentRegionAvail() : minButtonSize;
 
         var rightPadding = 0;
         var rowWidth = Math.Max(avail.X - rightPadding, minSize);
@@ -1081,13 +1084,11 @@ public static unsafe class ImGuiExt
         var enumRowHeight = ImGui.GetFrameHeightWithSpacing() + 2;
 
         var dl = ImGui.GetWindowDrawList();
-        var rounding = 0; // ImGui.GetStyle().FrameRounding;
 
         var btnColors = GetButtonColors(color);
 
-        var rectMin = cursorScreenPos;
-        var rectMax = rectMin + new Num.Vector2(rowWidth, enumRowHeight * numRows);
-        dl->AddRectFilled(rectMin, rectMax, btnColors.Inactive.PackedValue, rounding);
+        // var rounding = 0; // ImGui.GetStyle().FrameRounding;
+        // dl->AddRectFilled(cursorScreenPos, cursorScreenPos + new Num.Vector2(rowWidth, enumRowHeight * numRows), btnColors.Inactive.PackedValue, rounding);
 
         var offsetX = 0f;
         for (var k = 0; k < labels.Length; k++)
@@ -1142,17 +1143,20 @@ public static unsafe class ImGuiExt
             }
             else
             {
+                // new row
                 offsetX = 0;
                 cursorScreenPos = ImGui.GetCursorScreenPos();
+                avail = fullWidth ? ImGui.GetContentRegionAvail() : minButtonSize;
+                rowWidth = Math.Max(avail.X - rightPadding, minSize);
                 dl->AddLine(
-                    new Num.Vector2(rectMin.X, cursorScreenPos.Y - 1),
-                    new Num.Vector2(rectMax.X, cursorScreenPos.Y - 1),
+                    new Num.Vector2(cursorScreenPos.X, cursorScreenPos.Y - 1),
+                    new Num.Vector2(cursorScreenPos.X + rowWidth, cursorScreenPos.Y - 1),
                     btnColors.Border.PackedValue
                 );
             }
         }
 
-        dl->AddRect(rectMin, rectMax, btnColors.Border.PackedValue, rounding);
+        // dl->AddRect(rectMin, rectMax, btnColors.Border.PackedValue, rounding);
 
         ImGui.PopStyleVar();
 
@@ -1180,6 +1184,114 @@ public static unsafe class ImGuiExt
         }
 
         drawList->PopClipRect();
+    }
+
+    public static void SetupDockSpace(string dockspaceId, Action<uint> setupCallback, bool keepAlive = false)
+    {
+        var dockspaceID = ImGui.GetID(dockspaceId);
+
+        ImGuiWindowClass workspaceWindowClass;
+        workspaceWindowClass.ClassId = dockspaceID;
+        workspaceWindowClass.DockingAllowUnclassed = false;
+
+        if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
+        {
+            var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace |
+                            ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
+                            ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
+            ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
+            var contentAvail = ImGui.GetContentRegionAvail();
+            var size = new Num.Vector2(MathF.Max(4.0f, contentAvail.X), MathF.Max(4.0f, contentAvail.Y));
+            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, size);
+            //
+            setupCallback.Invoke(dockspaceID);
+            //
+            ImGuiInternal.DockBuilderFinish(dockspaceID);
+        }
+
+        var flags = keepAlive ? ImGuiDockNodeFlags.KeepAliveOnly : ImGuiDockNodeFlags.None | ImGuiDockNodeFlags.NoSplit;
+        ImGui.DockSpace(dockspaceID, new Num.Vector2(0.0f, 0.0f), flags, &workspaceWindowClass);
+    }
+
+    public static bool PivotPointEditor(string label, ref double pivotX, ref double pivotY, float size, uint color)
+    {
+        if (ImGuiInternal.GetCurrentWindow()->SkipItems)
+            return false;
+
+        var pivotAnchors = new Num.Vector2[]
+        {
+            new(0, 0),
+            new(0.5f, 0),
+            new(1, 0),
+
+            new(0, 0.5f),
+            new(0.5f, 0.5f),
+            new(1, 0.5f),
+
+            new(0, 1),
+            new(0.5f, 1),
+            new(1, 1),
+        };
+
+        ImGuiExt.LabelPrefix(label);
+
+        var itemSpacing = ImGui.GetStyle()->ItemSpacing;
+        var result = false;
+        if (ImGui.BeginChild(label, new Num.Vector2(size + itemSpacing.X * 2.0f, size + itemSpacing.Y * 2f)))
+        {
+            var dl = ImGui.GetWindowDrawList();
+            var cursor = ImGui.GetCursorScreenPos();
+            var pivotRectSize = new Num.Vector2(size, size);
+            var basePadding = new Num.Vector2(size / 4);
+            var rectTopLeft = basePadding + cursor;
+            var anchorRadius = MathF.Max(6, size / 8f);
+            dl->AddRectFilled(rectTopLeft, rectTopLeft + pivotRectSize, color);
+            dl->AddRect(rectTopLeft, rectTopLeft + pivotRectSize, Color.White.PackedValue);
+            for (var i = 0; i < pivotAnchors.Length; i++)
+            {
+                var anchorCenter = pivotAnchors[i] * size;
+                var isSelected = MathF.Approx((float)pivotX, pivotAnchors[i].X) && MathF.Approx((float)pivotY, pivotAnchors[i].Y);
+
+                ImGui.SetCursorScreenPos(rectTopLeft + anchorCenter - Num.Vector2.One * anchorRadius);
+                if (ImGui.InvisibleButton($"Anchor{i}", new Num.Vector2(anchorRadius * 2, anchorRadius * 2)))
+                {
+                    pivotX = pivotAnchors[i].X;
+                    pivotY = pivotAnchors[i].Y;
+                    result = true;
+                }
+
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip(pivotAnchors[i].ToString());
+                }
+
+                if (isSelected)
+                {
+                    var fillColor = Color.White;
+                    var borderColor = Color.Blue;
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 1.5f, fillColor.PackedValue);
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius * 0.8f, borderColor.PackedValue);
+                    dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius * 1.5f, borderColor.PackedValue);
+                }
+                else
+                {
+                    var alpha = ImGui.IsItemHovered() ? 0.8f : 0.4f;
+                    var fillColor = Color.White.MultiplyAlpha(alpha);
+                    var borderColor = Color.Black.MultiplyAlpha(alpha);
+                    dl->AddCircleFilled(rectTopLeft + anchorCenter, anchorRadius, fillColor.PackedValue);
+                    dl->AddCircle(rectTopLeft + anchorCenter, anchorRadius, borderColor.PackedValue);
+                }
+            }
+        }
+
+        ImGui.EndChild();
+        return result;
+    }
+
+    public static void RectWithOutline(ImDrawList* dl, Num.Vector2 min, Num.Vector2 max, Color fillColor, Color outlineColor, float rounding = 4.0f)
+    {
+        dl->AddRectFilled(min, max, fillColor.PackedValue, rounding);
+        dl->AddRect(min, max, outlineColor.PackedValue, rounding);
     }
 }
 

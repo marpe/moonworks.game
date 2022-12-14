@@ -45,6 +45,8 @@ public unsafe class MyEditorMain : MyGameMain
 
     public EditorWindow EditorWindow;
 
+    public WorldsRoot.WorldsRoot WorldsRoot = new();
+
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
         frameLimiterSettings, targetTimestep, debugMode)
@@ -65,7 +67,7 @@ public unsafe class MyEditorMain : MyGameMain
         _gameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
 
-        EditorWindow = new EditorWindow(this);
+        EditorWindow = new EditorWindow(this) { IsOpen = true };
 
         var imguiSw = Stopwatch.StartNew();
         ImGuiRenderer = new ImGuiRenderer(this);
@@ -87,7 +89,26 @@ public unsafe class MyEditorMain : MyGameMain
 
         _fileWatcher = new FileWatcher("Content", "*", OnFileChanged);
 
+        LoadIcons(ImGuiRenderer);
+
+        LoadWorld(ContentPaths.worlds.worlds_json);
+
         sw.StopAndLog("MyEditorMain");
+    }
+
+    private static void LoadIcons(ImGuiRenderer renderer)
+    {
+        var iconPaths = typeof(ContentPaths.icons).GetFields()
+            .Select(f => f.GetRawConstantValue())
+            .Cast<string>()
+            .ToArray();
+
+        Shared.Content.LoadAndAddTextures(iconPaths);
+
+        foreach (var path in iconPaths)
+        {
+            renderer.BindTexture(Shared.Content.GetTexture(path));
+        }
     }
 
     private void OnFileChanged(FileEvent e)
@@ -106,7 +127,7 @@ public unsafe class MyEditorMain : MyGameMain
                 // TODO (marpe): Fix
                 var ldtkAsset = new LDtkAsset();
                 ldtkAsset.LdtkRaw = ldtk;
-                
+
                 // start the same level we're currently on
                 Action? onComplete = null;
                 if (World.IsLoaded)
@@ -155,9 +176,30 @@ public unsafe class MyEditorMain : MyGameMain
         SDL.SDL_SetWindowBordered(MainWindow.Handle, MainWindow.IsBorderless ? SDL.SDL_bool.SDL_TRUE : SDL.SDL_bool.SDL_FALSE);
     }
 
+    private void LoadWorld(string path)
+    {
+        if (File.Exists(path))
+        {
+            var json = File.ReadAllText(path);
+            WorldsRoot = JsonConvert.DeserializeObject<WorldsRoot.WorldsRoot>(json, ContentManager.JsonSerializerSettings) ??
+                         throw new InvalidOperationException();
+            Logs.LogInfo($"World loaded: {path}");
+        }
+    }
+
+    private void SaveWorld()
+    {
+        var json = JsonConvert.SerializeObject(WorldsRoot, Formatting.Indented, ContentManager.JsonSerializerSettings);
+        var filename = ContentPaths.worlds.worlds_json;
+        File.WriteAllText(filename, json);
+        Logs.LogInfo($"Saved to {filename}");
+    }
+
     private void AddDefaultMenus()
     {
         var file = new ImGuiMenu("File")
+            .AddChild(new ImGuiMenu("Save", "^S", () => SaveWorld()))
+            .AddChild(new ImGuiMenu("Load", "^O", () => LoadWorld(ContentPaths.worlds.worlds_json)))
             .AddChild(new ImGuiMenu("Quit", "^Q", () => Quit()));
         _menuItems.Add(file);
         var imgui = new ImGuiMenu("ImGui")
@@ -182,6 +224,11 @@ public unsafe class MyEditorMain : MyGameMain
             new RenderTargetsWindow(this),
             new InputDebugWindow(this),
             EditorWindow,
+            new EntityDefWindow(this) { IsOpen = true },
+            new LayerDefWindow(this) { IsOpen = true },
+            new LevelsWindow(this) { IsOpen = true },
+            new TileSetDefWindow(this) { IsOpen = true },
+            new WorldsWindow(this) { IsOpen = true },
         };
         foreach (var window in windows)
         {
@@ -230,14 +277,20 @@ public unsafe class MyEditorMain : MyGameMain
             var leftWidth = 0.33f;
             uint dockLeftId;
             uint dockCenterId;
-            var splitParent = ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
+            ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
 
             var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
             uint dockRightId;
-            var rightSplitParent = ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
+            ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
+
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(EditorWindow.TablesWindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(EditorWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(EntityDefWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(LayerDefWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockLeftId);
+            ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
 
             ImGuiInternal.DockBuilderFinish(dockId);
@@ -258,7 +311,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (_gameWindow.IsHoveringGameWindow)
         {
             var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
-            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameViewTitle)
+            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameWindowTitle)
                 return;
         }
 
@@ -346,7 +399,7 @@ public unsafe class MyEditorMain : MyGameMain
         _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
         EditorWindow.Draw(Renderer, _editorRenderTarget, alpha);
-        
+
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
             _imguiRenderStopwatch.Restart();

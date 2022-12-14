@@ -191,7 +191,7 @@ public class World
                 AmbientColor = fieldValue.ToObject<Color>(ContentManager.JsonSerializer);
             }
         }
-        
+
         Enemies.Clear();
         Bullets.Clear();
         Lights.Clear();

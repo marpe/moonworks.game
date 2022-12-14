@@ -1,4 +1,6 @@
-﻿namespace MyGame.WorldsRoot;
+﻿using System.Runtime.Serialization;
+
+namespace MyGame.WorldsRoot;
 
 public static class IdGen
 {
@@ -9,6 +11,8 @@ public static class IdGen
 public class WorldsRoot
 {
     public string Version = "0.0.1";
+
+    public int DefaultGridSize = 16;
     public List<NewWorld> Worlds = new();
     public List<EntityDefinition> EntityDefinitions = new();
     public List<FieldDef> LevelFieldDefinitions = new();
@@ -72,18 +76,64 @@ public class FieldDef
 {
     public int Uid = IdGen.NewId;
     public string Identifier = "Field";
-    public bool IsArray;
     public FieldType FieldType;
+    public object? DefaultValue = null;
+    public bool IsArray;
 
     public FieldDef()
     {
+    }
+
+    public static Type GetActualType(FieldType type, bool isArray)
+    {
+        return type switch
+        {
+            FieldType.Int => isArray ? typeof(List<int>) : typeof(int),
+            FieldType.Float => isArray ? typeof(List<float>) : typeof(float),
+            FieldType.String => isArray ? typeof(List<string>) : typeof(string),
+            FieldType.Bool => isArray ? typeof(List<bool>) : typeof(bool),
+            FieldType.Color => isArray ? typeof(List<Color>) : typeof(Color),
+            FieldType.Point => isArray ? typeof(List<Point>) : typeof(Point),
+            FieldType.Vector2 => isArray ? typeof(List<Vector2>) : typeof(Vector2),
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    public static Color GetFieldColor(FieldType type)
+    {
+        return type switch
+        {
+            FieldType.Int => ImGuiExt.Colors[0],
+            FieldType.Float => ImGuiExt.Colors[1],
+            FieldType.String => ImGuiExt.Colors[2],
+            FieldType.Bool => ImGuiExt.Colors[3],
+            FieldType.Color => ImGuiExt.Colors[4],
+            FieldType.Point => ImGuiExt.Colors[5],
+            FieldType.Vector2 => ImGuiExt.Colors[6],
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
+
+    public static object GetDefaultValue(FieldType type, bool isArray)
+    {
+        return type switch
+        {
+            FieldType.Int => isArray ? new List<int>() : default(int),
+            FieldType.Float => isArray ? new List<float>() : default(float),
+            FieldType.String => isArray ? new List<string>() : "",
+            FieldType.Bool => isArray ? new List<bool>() : false,
+            FieldType.Color => isArray ? new List<Color>() : Color.White,
+            FieldType.Point => isArray ? new List<Point>() : Point.Zero,
+            FieldType.Vector2 => isArray ? new List<Vector2>() : Vector2.Zero,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 }
 
 public class FieldInstance
 {
     public int FieldDefId;
-    public dynamic Value = "";
+    public object? Value;
 }
 
 public class NewWorld
@@ -105,10 +155,9 @@ public class Level
     public string Identifier = "Level";
     public uint Width;
     public uint Height;
-    [JsonIgnore]
-    public UPoint Size => new(Width, Height);
+    [JsonIgnore] public UPoint Size => new(Width, Height);
     public Color BackgroundColor = Color.White;
- 
+
     public List<FieldInstance> FieldInstances = new();
     public List<LayerInstance> LayerInstances = new();
 
@@ -132,8 +181,7 @@ public class EntityInstance
     public Point Position;
     public uint Width;
     public uint Height;
-    [JsonIgnore]
-    public UPoint Size => new(Width, Height);
+    [JsonIgnore] public UPoint Size => new(Width, Height);
 }
 
 public class EntityDefinition
@@ -142,8 +190,7 @@ public class EntityDefinition
     public Color Color;
     public uint Width;
     public uint Height;
-    [JsonIgnore]
-    public UPoint Size => new(Width, Height);
+    [JsonIgnore] public UPoint Size => new(Width, Height);
     public string Identifier = "";
     public float FillOpacity;
     public bool KeepAspectRatio;

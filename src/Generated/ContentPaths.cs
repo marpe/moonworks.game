@@ -38,6 +38,13 @@ public static class ContentPaths
         public const string Roboto_Bold_ttf = @"Content\fonts\Roboto-Bold.ttf";
         public const string Roboto_Regular_ttf = @"Content\fonts\Roboto-Regular.ttf";
     }
+    public static class icons
+    {
+        public const string autoLayer_png = @"Content\icons\autoLayer.png";
+        public const string entity_png = @"Content\icons\entity.png";
+        public const string intGrid_png = @"Content\icons\intGrid.png";
+        public const string tile_png = @"Content\icons\tile.png";
+    }
     public static class ldtk
     {
         public static class Example
@@ -99,6 +106,9 @@ public static class ContentPaths
     }
     public static class worlds
     {
+        public const string Characters_png = @"Content\worlds\Characters.png";
+        public const string finalbossblues_icons_full_16_png = @"Content\worlds\finalbossblues-icons_full_16.png";
+        public const string Tilemap_png = @"Content\worlds\Tilemap.png";
         public const string worlds_json = @"Content\worlds\worlds.json";
     }
 }

@@ -1,13 +1,16 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
 public unsafe class GameWindow : ImGuiEditorWindow
 {
     public const string WindowTitle = "Game";
-    public const string GameViewTitle = "GameView";
+    public const string GameWindowTitle = "GameView";
+    private const string ToolbarWindowName = "GameToolbar";
+    
     private IntPtr? _gameRenderTextureId;
     public Matrix4x4 GameRenderViewportTransform;
 
@@ -19,7 +22,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
     /// <summary>
     /// User panning offset
     /// </summary>
-    private Num.Vector2 _gameRenderPosition = Num.Vector2.Zero;
+    private Vector2 _gameRenderPosition = Vector2.Zero;
 
     private MyEditorMain _editor;
 
@@ -33,9 +36,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
     /// <summary>
     /// Used to set zoom to fill window height/width
     /// </summary>
-    private Num.Vector2 _gameViewWindowSize;
+    private Vector2 _gameViewWindowSize;
 
-    public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Num.Vector2.Zero;
+
+    public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Vector2.Zero;
 
     public GameWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -63,59 +67,37 @@ public unsafe class GameWindow : ImGuiEditorWindow
         if (!IsOpen)
             return;
 
-        SetupDockSpace();
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
+        
+        ImGui.SetNextWindowSize(new Vector2(1000, 800), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 850));
+        var flags = ImGuiWindowFlags.NoCollapse;
+        var result = ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
+        ImGuiExt.SetupDockSpace("GameViewDockspace", InitializeDockSpace, !result);
+        ImGui.End();
+        
+        ImGui.PopStyleVar();
+        
         DrawGameView();
         DrawToolbar();
     }
 
-    private void SetupDockSpace()
+    private static void InitializeDockSpace(uint dockspaceID)
     {
-        var flags = ImGuiWindowFlags.NoCollapse; /*ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollWithMouse |
-                    ImGuiWindowFlags.NoFocusOnAppearing | ImGuiWindowFlags.NoBringToFrontOnFocus | ImGuiWindowFlags.NoScrollbar;*/
-
-        var dockspaceID = ImGui.GetID("GameViewDockspace");
-
-        ImGuiWindowClass workspaceWindowClass;
-        workspaceWindowClass.ClassId = dockspaceID;
-        workspaceWindowClass.DockingAllowUnclassed = false;
-
-        ImGui.SetNextWindowSize(new Num.Vector2(1000, 800), ImGuiCond.FirstUseEver);
-
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(0, 0));
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 850));
-        ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
-
-        if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
-        {
-            var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace | ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
-                            ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
-            ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
-            var contentAvail = ImGui.GetContentRegionAvail();
-            var size = new Num.Vector2(MathF.Max(4.0f, contentAvail.X), MathF.Max(4.0f, contentAvail.Y));
-            ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, size);
-
-            uint upNode, downNode;
-            ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Up, 0.05f, &upNode, &downNode);
-            ImGuiInternal.DockBuilderDockWindow("GameToolbar", upNode);
-            ImGuiInternal.DockBuilderDockWindow(GameViewTitle, downNode);
-            ImGuiInternal.DockBuilderFinish(dockspaceID);
-        }
-
-        ImGui.DockSpace(dockspaceID, new Num.Vector2(0, 0), ImGuiDockNodeFlags.None, &workspaceWindowClass); // ImGuiDockNodeFlags.NoResize
-
-        ImGui.End();
-        ImGui.PopStyleVar();
+        uint upNode, downNode;
+        ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Up, 0.05f, &upNode, &downNode);
+        ImGuiInternal.DockBuilderDockWindow(ToolbarWindowName, upNode);
+        ImGuiInternal.DockBuilderDockWindow(GameWindowTitle, downNode);
     }
-
-
+    
     private void DrawGameView()
     {
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         /*ImGuiWindowClass windowClass;
         windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
         ImGui.SetNextWindowClass(&windowClass);*/
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
-        ImGui.Begin(GameViewTitle, default, flags);
+        ImGui.Begin(GameWindowTitle, default, flags);
         ImGui.PopStyleVar();
 
         var contentMin = ImGui.GetWindowContentRegionMin();
@@ -127,7 +109,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         var windowSize = ImGui.GetWindowSize();
         var (viewportTransform, viewport) = Renderer.GetViewportTransform(windowSize.ToXNA().ToPoint(), _editor.RenderTargets.CompositeRender.Size);
 
-        var viewportPosition = new Num.Vector2(viewport.X, viewport.Y);
+        var viewportPosition = new Vector2(viewport.X, viewport.Y);
         var cursorScreenPosition = ImGui.GetCursorScreenPos();
 
         var viewportSize = viewport.Size.ToNumerics();
@@ -143,8 +125,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
             (void*)_gameRenderTextureId.Value,
             gameRenderMin,
             gameRenderMax,
-            Num.Vector2.Zero,
-            Num.Vector2.One,
+            Vector2.Zero,
+            Vector2.One,
             Color.White.PackedValue
         );
 
@@ -216,7 +198,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void DrawToolbar()
     {
-        if (ImGui.Begin("GameToolbar", default, ImGuiWindowFlags.NoScrollbar))
+        if (ImGui.Begin(ToolbarWindowName, default, ImGuiWindowFlags.NoScrollbar))
         {
             if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
             {
@@ -227,14 +209,14 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlassPlus, ImGuiExt.Colors[0], "Fill height"))
             {
-                _gameRenderScale = _gameViewWindowSize.X / (float)_gameViewWindowSize.Y;
+                _gameRenderScale = _gameViewWindowSize.X / _gameViewWindowSize.Y;
             }
 
             ImGui.SameLine();
 
-            ImGui.BeginChild("ZoomChild", new System.Numerics.Vector2(60, 30), false);
+            ImGui.BeginChild("ZoomChild", new Vector2(60, 30));
             var tmpZoom = _gameRenderScale * 100 + 0.01f;
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(ImGui.GetStyle()->FramePadding.X, ImGui.GetStyle()->FramePadding.Y + 2));
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(ImGui.GetStyle()->FramePadding.X, ImGui.GetStyle()->FramePadding.Y + 2));
             if (SimpleTypeInspector.InspectFloat("##Zoom", ref tmpZoom, new RangeSettings(50, 1000, 1, true), "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
             {
                 _gameRenderScale = MathF.Exp(MathF.Lerp(MathF.Log(_gameRenderScale), MathF.Log(tmpZoom / 100f), 0.1f));
@@ -271,10 +253,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
     private void ResetPanAndZoom()
     {
         _gameRenderScale = 1.0f;
-        _gameRenderPosition = Num.Vector2.Zero;
+        _gameRenderPosition = Vector2.Zero;
     }
 
-    private void SetGameRenderViewportTransform(System.Numerics.Vector2 gameRenderMin, Matrix4x4 viewportTransform)
+    private void SetGameRenderViewportTransform(Vector2 gameRenderMin, Matrix4x4 viewportTransform)
     {
         var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
         var gameRenderOffset = gameRenderMin - windowViewportPosition;
@@ -331,11 +313,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
         var windowPos = ImGui.GetWindowPos();
         var windowPadding = 10f;
-        var overlayPos = new Num.Vector2(
+        var overlayPos = new Vector2(
             windowPos.X + contentMax.X - windowPadding,
             windowPos.Y + contentMin.Y + windowPadding
         );
-        var windowPosPivot = new Num.Vector2(
+        var windowPosPivot = new Vector2(
             1.0f,
             0
         );
@@ -351,10 +333,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 $"GameRenderOffset: {gameRenderOffset.ToString()}");
 
             ImGui.Separator();*/
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Num.Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushFont(_editor.ImGuiRenderer.GetFont(ImGuiFont.Tiny));
 
-            void PrintVector(string label, Vector2 v)
+            void PrintVector(string label, MoonWorks.Math.Float.Vector2 v)
             {
                 var avail = ImGui.GetContentRegionAvail();
                 ImGui.Text(label);
@@ -369,7 +351,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             PrintVector("Pos", mousePosition);
             var view = _editor.Camera.GetView();
             Matrix3x2.Invert(view, out var invertedView);
-            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+            var mouseInWorld = MoonWorks.Math.Float.Vector2.Transform(mousePosition, invertedView);
             PrintVector("World", mouseInWorld);
             var mouseCell = Entity.ToCell(mouseInWorld);
             PrintVector("Cel", mouseCell);
@@ -389,7 +371,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 ImGui.EndPopup();
             }
 
-            ImGui.Dummy(new Num.Vector2(200, 0));
+            ImGui.Dummy(new Vector2(200, 0));
 
             ImGui.PopFont();
             ImGui.PopStyleVar();

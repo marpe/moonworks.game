@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -12,8 +13,8 @@ public unsafe static class ImGuiMainMenu
             if (depth == 0)
             {
                 var style = ImGui.GetStyle();
-                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
-                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
+                ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
+                ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
             }
 
             var result = ImGui.BeginMenu(menu.Text, menu.IsEnabled ?? true);
@@ -50,7 +51,7 @@ public unsafe static class ImGuiMainMenu
     public static void DrawMenu(List<ImGuiMenu> menus, SortedList<string, ImGuiEditorWindow> windows)
     {
         var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
         var result = ImGui.BeginMainMenuBar();
         ImGui.PopStyleVar();
         if (!result)
@@ -63,8 +64,8 @@ public unsafe static class ImGuiMainMenu
             DrawMenu(menus[i]);
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(style->FramePadding.X, MAIN_MENU_PADDING_Y));
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(style->ItemSpacing.X, style->FramePadding.Y * 2f));
         var windowMenu = ImGui.BeginMenu("Window");
         ImGui.PopStyleVar(2);
         if (windowMenu)
@@ -97,7 +98,7 @@ public unsafe static class ImGuiMainMenu
         ImGui.SetCursorPosX((max.X - numButtons * buttonWidth) / 2);
         ImGui.SetCursorPosY(ImGui.GetStyle()->FramePadding.Y);
 
-        ImGui.BeginChild("MainMenuButtons", new Num.Vector2(0, 40), false);
+        ImGui.BeginChild("MainMenuButtons", new Vector2(0, 40));
         var (icon, color, tooltip) = MyGameMain.IsPaused switch
         {
             true => (FontAwesome6.Play, Color.Green, "Play"),

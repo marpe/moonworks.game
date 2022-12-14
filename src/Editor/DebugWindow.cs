@@ -1,8 +1,9 @@
 ﻿using Mochi.DearImGui;
+using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
-public static unsafe class CollisionDebug
+public static class CollisionDebug
 {
     private static void DrawCollision(CollisionResult collision)
     {
@@ -120,12 +121,12 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         if (!IsOpen)
             return;
 
-        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(200, 200), new Num.Vector2(800, 850));
+        ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 850));
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();
 
-            if (ImGui.BeginChild("PerformanceMetrics", new Num.Vector2(0, 300)))
+            if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 300)))
             {
                 UpdateMetrics();
                 ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
@@ -137,7 +138,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
                 ImGui.TextUnformatted($"UpdateDuration: {_peakUpdateDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}");
                 ImGui.TextUnformatted($"AddedSprites: {_peakNumAddedSprites:0}");
-                SimpleTypeInspector.InspectInt("UpdateRate", ref _editor.UpdateRate, new RangeSettings() { MinValue = 1, MaxValue = 10 });
+                SimpleTypeInspector.InspectInt("UpdateRate", ref _editor.UpdateRate, new RangeSettings { MinValue = 1, MaxValue = 10 });
             }
 
             ImGui.EndChild();

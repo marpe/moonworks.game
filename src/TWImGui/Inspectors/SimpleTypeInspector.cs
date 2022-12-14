@@ -53,7 +53,7 @@ public unsafe class SimpleTypeInspector : Inspector
             flags
         );
     }
-    
+
     public static bool InspectInputUint(string name, ref uint value)
     {
         var data = (void*)ImGuiExt.RefPtr(ref value);
@@ -68,7 +68,7 @@ public unsafe class SimpleTypeInspector : Inspector
     {
         return ImGui.InputInt(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value));
     }
-    
+
     public static bool InspectInt(string name, ref int value, RangeSettings rangeSettings)
     {
         if (rangeSettings.UseDragVersion)
@@ -202,23 +202,15 @@ public unsafe class SimpleTypeInspector : Inspector
         );
     }
 
-    public static bool DrawSimpleInspector(Type type, string name, Func<object> getter, Action<object> setter, bool isReadOnly,
-        RangeSettings? rangeSettings = null)
+    public static bool DrawSimpleInspector(Type type, string name, ref object value, bool isReadOnly = false, RangeSettings? rangeSettings = null)
     {
         rangeSettings ??= DefaultRangeSettings;
         var result = false;
 
         if (type == typeof(Rectangle))
         {
-            var value = (Rectangle)getter();
-
-            if (InspectRectangle(name, ref value, isReadOnly))
-            {
-                setter(value);
-                result = true;
-            }
-
-            return result;
+            var rectValue = (Rectangle)value;
+            result |= InspectRectangle(name, ref rectValue, isReadOnly);
         }
 
         if (isReadOnly)
@@ -228,128 +220,96 @@ public unsafe class SimpleTypeInspector : Inspector
 
         if (type == typeof(int))
         {
-            var value = (int)getter();
-
-            if (InspectInt(name, ref value, rangeSettings.Value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (int)value;
+            result |= InspectInt(name, ref tmpValue, rangeSettings.Value);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(uint))
         {
-            var value = (uint)getter();
-
-            if (InspectUInt(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (uint)value;
+            result |= InspectUInt(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(ulong))
         {
-            var value = (ulong)getter();
-
-            if (InspectULong(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (ulong)value;
+            result |= InspectULong(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(bool))
         {
-            var value = (bool)getter();
-
-            if (InspectBool(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (bool)value;
+            result |= InspectBool(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(string))
         {
             // ReSharper disable once NullCoalescingConditionIsAlwaysNotNullAccordingToAPIContract
-            var value = (string)(getter() ?? "");
-            if (InspectString(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (string)(value ?? "");
+            result |= InspectString(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(Point))
         {
-            var value = (Point)getter();
-            if (InspectPoint(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (Point)value;
+            result |= InspectPoint(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(UPoint))
         {
-            var value = (UPoint)getter();
-            var tuple = new ValueTuple<int, int>((int)value.X, (int)value.Y);
+            var tmpValue = (UPoint)value;
+            var tuple = new ValueTuple<int, int>((int)tmpValue.X, (int)tmpValue.Y);
             var xy = &tuple;
             if (ImGui.DragInt2(ImGuiExt.LabelPrefix(name), xy, 1.0f, 0, 0, "%u"))
             {
-                setter(new UPoint((uint)xy->Item1, (uint)xy->Item2));
+                value = new UPoint((uint)xy->Item1, (uint)xy->Item2);
                 result = true;
             }
         }
         else if (type == typeof(Vector2))
         {
-            var value = (Vector2)getter();
-            if (InspectVector2(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (Vector2)value;
+            result |= InspectVector2(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(Num.Vector2))
         {
-            var value = (Num.Vector2)getter();
-            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, 0, 0, "%.4g"))
+            var tmpValue = (Num.Vector2)value;
+            if (ImGui.DragFloat2(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref tmpValue), 1f, 0, 0, "%.4g"))
             {
-                setter(value);
+                value = tmpValue;
                 result = true;
             }
         }
         else if (type == typeof(Vector3))
         {
-            var value = ((Vector3)getter()).ToNumerics();
-            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, default, default, "%.6g"))
+            var tmpValue = ((Vector3)value).ToNumerics();
+            if (ImGui.DragFloat3(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref tmpValue), 1f, default, default, "%.6g"))
             {
-                setter(value.ToXNA());
+                value = tmpValue.ToXNA();
                 result = true;
             }
         }
         else if (type == typeof(Vector4))
         {
-            var value = ((Vector4)getter()).ToNumerics();
-            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref value), 1f, default, default, "%.6g"))
+            var tmpValue = ((Vector4)value).ToNumerics();
+            if (ImGui.DragFloat4(ImGuiExt.LabelPrefix(name), ImGuiExt.RefPtr(ref tmpValue), 1f, default, default, "%.6g"))
             {
-                setter(value.ToXNA());
+                value = tmpValue.ToXNA();
                 result = true;
             }
         }
         else if (type == typeof(Color))
         {
-            var value = (Color)getter();
-            if (InspectColor(name, ref value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (Color)value;
+            result |= InspectColor(name, ref tmpValue);
+            if (result) value = tmpValue;
         }
         else if (type == typeof(float))
         {
-            var value = (float)getter();
-
-            if (InspectFloat(name, ref value, rangeSettings.Value))
-            {
-                setter(value);
-                result = true;
-            }
+            var tmpValue = (float)value;
+            result |= InspectFloat(name, ref tmpValue, rangeSettings.Value);
+            if (result) value = tmpValue;
         }
         else if (ImGuiExt.DebugInspectors)
         {
@@ -359,6 +319,19 @@ public unsafe class SimpleTypeInspector : Inspector
         if (isReadOnly)
         {
             ImGui.EndDisabled();
+        }
+
+        return result;
+    }
+
+    public static bool DrawSimpleInspector(Type type, string name, Func<object> getter, Action<object> setter, bool isReadOnly = false, RangeSettings? rangeSettings = null)
+    {
+        var value = getter();
+        var result = false;
+        if (DrawSimpleInspector(type, name, ref value, isReadOnly, rangeSettings))
+        {
+            setter(value);
+            result = true;
         }
 
         return result;

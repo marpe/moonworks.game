@@ -1,5 +1,4 @@
 ﻿using Mochi.DearImGui;
-using RefreshCS;
 
 namespace MyGame.Editor;
 
@@ -41,7 +40,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         {
             if (ImGui.BeginTabItem("Rendering"))
             {
-                EnumInspector.InspectEnum("TargetBlitPipeline", ref Shared.Game.World.LightsToDestinationBlend, false);
+                EnumInspector.InspectEnum("TargetBlitPipeline", ref Shared.Game.World.LightsToDestinationBlend);
                 
                 ImGuiExt.SeparatorText("Main");
                 if (BlendStateEditor.Draw("MainRimLightBlendState", ref _lightBlendState))
