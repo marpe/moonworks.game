@@ -1186,19 +1186,20 @@ public static unsafe class ImGuiExt
         drawList->PopClipRect();
     }
 
-    public static bool BeginWorkspaceWindow(string windowTitle, string dockspaceId, Action<uint> initializeLayoutCallback, bool* isOpen, ref ImGuiWindowClass windowClass)
+    public static bool BeginWorkspaceWindow(string windowTitle, string dockspaceId, Action<uint> initializeLayoutCallback, bool* isOpen,
+        ref ImGuiWindowClass windowClass, ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags.None)
     {
         ImGui.SetNextWindowSize(new Num.Vector2(1024, 768), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(FLT_MAX, FLT_MAX));
-        var windowFlags = ImGuiWindowFlags.NoCollapse |
-                          ImGuiWindowFlags.NoTitleBar | 
-                          ImGuiWindowFlags.NoDecoration;
+        var windowFlags = ImGuiWindowFlags.NoCollapse; // |
+        // ImGuiWindowFlags.NoTitleBar |
+        // ImGuiWindowFlags.NoDecoration;
         var shouldDrawWindowContents = ImGui.Begin(windowTitle, isOpen, windowFlags);
 
         var dockspaceID = ImGui.GetID(dockspaceId);
 
         windowClass.ClassId = dockspaceID;
-        windowClass.DockingAllowUnclassed = false;
+        windowClass.DockingAllowUnclassed = true;
 
         if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
         {
@@ -1215,9 +1216,17 @@ public static unsafe class ImGuiExt
             ImGuiInternal.DockBuilderFinish(dockspaceID);
         }
 
-        var flags = shouldDrawWindowContents ? ImGuiDockNodeFlags.NoSplit : ImGuiDockNodeFlags.KeepAliveOnly;
+        dockSpaceFlags |= ImGuiDockNodeFlags.NoSplit |
+                          (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton;
+        // ImGuiDockNodeFlags.AutoHideTabBar |
+        // (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_HiddenTabBar;
 
-        ImGui.DockSpace(dockspaceID, new Num.Vector2(0.0f, 0.0f), flags, RefPtr(ref windowClass));
+        ImGui.DockSpace(
+            dockspaceID,
+            ImGui.GetContentRegionAvail(),
+            shouldDrawWindowContents ? dockSpaceFlags : ImGuiDockNodeFlags.KeepAliveOnly,
+            RefPtr(ref windowClass)
+        );
 
         ImGui.End();
 

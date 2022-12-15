@@ -15051,7 +15051,7 @@
     },
     {
       "Uid": 2,
-      "LayerType": 1,
+      "LayerType": 0,
       "Identifier": "Lights",
       "RequiredTags": [
         "Light"

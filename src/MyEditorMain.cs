@@ -46,6 +46,7 @@ public unsafe class MyEditorMain : MyGameMain
     public EditorWindow EditorWindow;
 
     public WorldsRoot.WorldsRoot WorldsRoot = new();
+    public uint ViewportDockSpaceId;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -270,17 +271,17 @@ public unsafe class MyEditorMain : MyGameMain
         var localFlags = (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton);
         localFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton);
                          
-        var dockId = ImGui.DockSpaceOverViewport(mainViewport, flags);
+        ViewportDockSpaceId = ImGui.DockSpaceOverViewport(mainViewport, flags);
 
         if (_firstTime)
         {
-            ImGuiInternal.DockBuilderRemoveNodeChildNodes(dockId);
+            ImGuiInternal.DockBuilderRemoveNodeChildNodes(ViewportDockSpaceId);
 
             var leftWidth = 0.3f;
             var rightWidth = 0.2f;
             uint dockLeftId; uint dockCenterId; uint dockRightId;
 
-            ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
+            ImGuiInternal.DockBuilderSplitNode(ViewportDockSpaceId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
             ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
 
             var leftNode = ImGuiInternal.DockBuilderGetNode(dockLeftId);
@@ -299,11 +300,11 @@ public unsafe class MyEditorMain : MyGameMain
             // ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
 
-            ImGuiInternal.DockBuilderFinish(dockId);
+            ImGuiInternal.DockBuilderFinish(ViewportDockSpaceId);
             _firstTime = false;
         }
 
-        return dockId;
+        return ViewportDockSpaceId;
     }
 
     private void SetMouseCursor()
