@@ -1233,6 +1233,16 @@ public static unsafe class ImGuiExt
         return shouldDrawWindowContents;
     }
 
+    public static void PrintVector(string label, Vector2 v)
+    {
+        var avail = ImGui.GetContentRegionAvail();
+        ImGui.Text(label);
+        ImGui.SameLine(0.33f * avail.X);
+        ImGui.Text($"{v.X:0.##}");
+        ImGui.SameLine(0.66f * avail.X);
+        ImGui.Text($"{v.Y:0.##}");
+    }
+
     public static bool PivotPointEditor(string label, ref double pivotX, ref double pivotY, float size, uint color)
     {
         if (ImGuiInternal.GetCurrentWindow()->SkipItems)

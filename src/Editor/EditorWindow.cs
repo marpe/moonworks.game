@@ -2,10 +2,10 @@
 using Mochi.DearImGui.Internal;
 using MyGame.Cameras;
 using MyGame.WorldsRoot;
+using EntityInstance = MyGame.WorldsRoot.EntityInstance;
 using FieldInstance = MyGame.WorldsRoot.FieldInstance;
 using LayerInstance = MyGame.WorldsRoot.LayerInstance;
 using Level = MyGame.WorldsRoot.Level;
-using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
@@ -27,6 +27,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private readonly TileSetDefWindow _tileSetDefWindow;
     private readonly WorldsWindow _worldsWindow;
 
+    // TODO (marpe): Cleanup
+    public bool IsFocused;
+    public Matrix4x4 PreviewRenderViewportTransform = Matrix4x4.Identity;
+
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
         KeyboardShortcut = "^E";
@@ -41,6 +45,65 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     public void Update(float deltaSeconds)
     {
+        if (_editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Left))
+        {
+            if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+            {
+                var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+                if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
+                {
+                    var level = world.Levels[LevelsWindow.SelectedLevelIndex];
+                    if (_selectedLayerInstanceIndex <= level.LayerInstances.Count - 1)
+                    {
+                        var layerInstance = level.LayerInstances[_selectedLayerInstanceIndex];
+                        var layerDef = _editor.WorldsRoot.LayerDefinitions.FirstOrDefault(x => x.Uid == layerInstance.LayerDefId);
+
+                        if (layerDef != null)
+                        {
+                            var snappedMousePos = GetMousePosition();
+                            var mouseCell = (snappedMousePos - level.WorldPos) / layerDef.GridSize;
+                            var cols = (int)(level.Width / layerDef.GridSize);
+                            var rows = (int)(level.Height / layerDef.GridSize);
+
+                            if (mouseCell.X >= 0 && mouseCell.X < cols && mouseCell.Y >= 0 && mouseCell.Y < rows)
+                            {
+                                var cellIndex = (int)mouseCell.Y * cols + (int)mouseCell.X;
+                                if (layerDef.LayerType == LayerType.IntGrid && cellIndex <= layerInstance.IntGrid.Length - 1 &&
+                                    _selectedIntGridValueIndex <= layerDef.IntGridValues.Count - 1)
+                                {
+                                    layerInstance.IntGrid[cellIndex] = layerDef.IntGridValues[_selectedIntGridValueIndex].Value;
+                                }
+                                else if (layerDef.LayerType == LayerType.Entities && _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
+                                {
+                                    var entityDef = _editor.WorldsRoot.EntityDefinitions[_selectedEntityDefinitionIndex];
+
+                                    var instance = new EntityInstance()
+                                    {
+                                        Position = (mouseCell * layerDef.GridSize).ToPoint(),
+                                        Width = entityDef.Width,
+                                        Height = entityDef.Height,
+                                        EntityDefId = entityDef.Uid,
+                                    };
+
+                                    foreach (var fieldDef in entityDef.FieldDefinitions)
+                                    {
+                                        instance.FieldInstances.Add(
+                                            new FieldInstance
+                                            {
+                                                Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray),
+                                                FieldDefId = fieldDef.Uid
+                                            }
+                                        );
+                                    }
+
+                                    layerInstance.EntityInstances.Add(instance);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private static void MakeTabVisible(string windowTitle)
@@ -98,7 +161,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
 
-
                 if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
                 {
                     var level = world.Levels[LevelsWindow.SelectedLevelIndex];
@@ -144,20 +206,31 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.SetNextWindowDockID(centralNode->ID, ImGuiCond.FirstUseEver);
         if (ImGui.Begin(PreviewWindowTitle))
         {
+            IsFocused = ImGui.IsWindowFocused();
+
             GameWindow.EnsureTextureIsBound(ref _editorRenderTextureId, _editor._editorRenderTarget, _editor.ImGuiRenderer);
             var cursorScreenPosition = ImGui.GetCursorScreenPos();
 
             var editorMin = cursorScreenPosition;
-            var editorMax = editorMin + new Vector2(_editor._editorRenderTarget.Width, _editor._editorRenderTarget.Height);
+            var editorMax = editorMin + new Num.Vector2(_editor._editorRenderTarget.Width, _editor._editorRenderTarget.Height);
             var dl = ImGui.GetWindowDrawList();
+
             dl->AddImage(
                 (void*)_editorRenderTextureId.Value,
                 editorMin,
                 editorMax,
-                Vector2.Zero,
-                Vector2.One,
+                Num.Vector2.Zero,
+                Num.Vector2.One,
                 Color.White.PackedValue
             );
+
+            var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
+            var renderOffset = editorMin - windowViewportPosition;
+
+            PreviewRenderViewportTransform = (
+                Matrix3x2.CreateScale(1.0f, 1.0f) *
+                Matrix3x2.CreateTranslation(renderOffset.X, renderOffset.Y)
+            ).ToMatrix4x4();
 
             if (ImGui.IsMouseDown(ImGuiMouseButton.Middle))
             {
@@ -168,6 +241,39 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 _camera.Zoom += 0.1f * ImGui.GetIO()->MouseWheel * _camera.Zoom;
             }
+
+            var showOverlay = true;
+            if (GameWindow.BeginOverlay("MoseOverlay", ref showOverlay))
+            {
+                var offset = Vector2.Zero;
+
+                if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+                {
+                    var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+                    if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
+                    {
+                        var level = world.Levels[LevelsWindow.SelectedLevelIndex];
+                        offset = level.WorldPos;
+                    }
+                }
+
+                var mousePosition = _editor.InputHandler.MousePosition;
+                ImGuiExt.PrintVector("Pos", mousePosition);
+
+                var view = _camera.GetView();
+                Matrix3x2.Invert(view, out var invertedView);
+                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+                ImGuiExt.PrintVector("World", mouseInWorld);
+
+                ImGuiExt.PrintVector("Level", mouseInWorld - offset);
+
+                var mouseCell = Entity.ToCell(mouseInWorld - offset);
+                ImGuiExt.PrintVector("Cel", mouseCell);
+
+                ImGui.Dummy(new Num.Vector2(200, 0));
+            }
+
+            ImGui.End();
         }
 
         ImGui.End();
@@ -176,7 +282,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private void DrawLayerInstances(List<LayerInstance> layerInstances, List<LayerDef> layerDefs)
     {
         var rowHeight = 40;
-        if (ImGui.BeginTable("LayerInstances", 1, SplitWindow.TableFlags, new Vector2(0, 0)))
+        if (ImGui.BeginTable("LayerInstances", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
         {
             ImGui.TableSetupColumn("Name");
 
@@ -275,7 +381,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     break;
                 }
 
-                if (ImGui.BeginTable("IntGridTable", 1, SplitWindow.TableFlags, new Vector2(0, 0)))
+                if (ImGui.BeginTable("IntGridTable", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
                 {
                     ImGui.TableSetupColumn("Name");
 
@@ -297,13 +403,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                         var dl = ImGui.GetWindowDrawList();
                         var rectHeight = _rowMinHeight * 0.6f;
-                        var min = cursorPos + new Vector2(8, (_rowMinHeight - rectHeight) / 2);
-                        var max = min + new Vector2(32, rectHeight);
+                        var min = cursorPos + new Num.Vector2(8, (_rowMinHeight - rectHeight) / 2);
+                        var max = min + new Num.Vector2(32, rectHeight);
                         ImGuiExt.RectWithOutline(dl, min, max, intGridValue.Color.MultiplyAlpha(0.33f), intGridValue.Color);
                         var label = intGridValue.Value.ToString();
                         var textSize = ImGui.CalcTextSize(label);
                         var rectSize = max - min;
-                        dl->AddText(min + new Vector2((rectSize.X - textSize.X) / 2, (rectSize.Y - textSize.Y) / 2), Color.White.PackedValue,
+                        dl->AddText(min + new Num.Vector2((rectSize.X - textSize.X) / 2, (rectSize.Y - textSize.Y) / 2), Color.White.PackedValue,
                             label);
 
                         ImGui.SameLine(60);
@@ -350,7 +456,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 var tileSetDefs = root.TileSetDefinitions;
                 var gridSize = root.DefaultGridSize;
 
-                if (ImGui.BeginTable("EntityDefTable", 1, SplitWindow.TableFlags, new Vector2(0, 0)))
+                if (ImGui.BeginTable("EntityDefTable", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
                 {
                     ImGui.TableSetupColumn("Value");
 
@@ -386,12 +492,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                             var tileSize = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
                             var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
                             var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
-                            var uvMin = new Vector2(1.0f / texture.Width * cellX * gridSize,
+                            var uvMin = new Num.Vector2(1.0f / texture.Width * cellX * gridSize,
                                 1.0f / texture.Height * cellY * gridSize);
-                            var uvMax = uvMin + new Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
-                            var iconSize = new Vector2(32, 32);
+                            var uvMax = uvMin + new Num.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
+                            var iconSize = new Num.Vector2(32, 32);
                             var iconPos = cursorPos + iconSize / 2;
-                            var rectPadding = new Vector2(4, 4);
+                            var rectPadding = new Num.Vector2(4, 4);
                             ImGuiExt.RectWithOutline(
                                 dl,
                                 iconPos - rectPadding,
@@ -443,11 +549,81 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 var transform = Matrix3x2.CreateScale(level.Width, level.Height) *
                                 Matrix3x2.CreateTranslation(level.WorldPos.X, level.WorldPos.Y);
                 renderer.DrawSprite(renderer.BlankSprite, transform.ToMatrix4x4(), level.BackgroundColor);
+
+                foreach (var layer in level.LayerInstances)
+                {
+                    var layerDef = _editor.WorldsRoot.LayerDefinitions.FirstOrDefault(x => x.Uid == layer.LayerDefId);
+                    if (layerDef == null)
+                        continue;
+                    if (layerDef.LayerType == LayerType.IntGrid)
+                    {
+                        var cols = (int)(level.Width / layerDef.GridSize);
+                        var rows = (int)(level.Height / layerDef.GridSize);
+                        for (var i = 0; i < layer.IntGrid.Length; i++)
+                        {
+                            var cellValue = layer.IntGrid[i];
+                            if (cellValue != 0)
+                            {
+                                var cellTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                                                    Matrix3x2.CreateTranslation(
+                                                        level.WorldPos.X + (i % cols) * layerDef.GridSize,
+                                                        level.WorldPos.Y + (i / cols) * layerDef.GridSize
+                                                    );
+                                var intDef = layerDef.IntGridValues.First(x => x.Value == cellValue);
+                                renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(), intDef.Color);
+                            }
+                        }
+                    }
+                    else if (layerDef.LayerType == LayerType.Entities)
+                    {
+                        foreach (var entityInstance in layer.EntityInstances)
+                        {
+                            var entityDef = _editor.WorldsRoot.EntityDefinitions.FirstOrDefault(x => x.Uid == entityInstance.EntityDefId);
+                            if (entityDef == null)
+                                continue;
+                            var entityTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                                                  Matrix3x2.CreateTranslation(
+                                                      level.WorldPos.X + entityInstance.Position.X,
+                                                      level.WorldPos.Y + entityInstance.Position.Y
+                                                  );
+                            renderer.DrawSprite(renderer.BlankSprite, entityTransform.ToMatrix4x4(), entityDef.Color);
+                        }
+                    }
+                }
             }
         }
+
+        var snappedMousePos = GetMousePosition();
+
+        renderer.DrawRectOutline(snappedMousePos, snappedMousePos + new Vector2(16, 16), Color.Red, 2f);
 
         renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
 
         _editor.GraphicsDevice.Submit(commandBuffer);
+    }
+
+    private Vector2 GetMousePosition()
+    {
+        var mousePosition = _editor.InputHandler.MousePosition;
+        var view = _camera.GetView();
+        Matrix3x2.Invert(view, out var invertedView);
+        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+
+        var offset = Vector2.Zero;
+        if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+        {
+            var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+            if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
+            {
+                var level = world.Levels[LevelsWindow.SelectedLevelIndex];
+                offset = level.WorldPos;
+            }
+        }
+
+        var gridSize = 16;
+        return new Vector2(
+            MathF.Floor((mouseInWorld.X - offset.X /* - gridSize * 0.5f*/) / gridSize) * gridSize,
+            MathF.Floor((mouseInWorld.Y - offset.Y /* - gridSize * 0.5f*/) / gridSize) * gridSize
+        ) + offset;
     }
 }

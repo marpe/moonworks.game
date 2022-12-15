@@ -234,9 +234,13 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void SetInputViewport()
     {
-        if (!IsHidden && _gameWindow.IsOpen)
+        if (!IsHidden && _gameWindow.IsOpen && _gameWindow.IsFocused)
         {
-            InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform);
+            InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform); // TODO (marpe): Refactor this
+        }
+        else if (!IsHidden && EditorWindow.IsOpen && EditorWindow.IsFocused)
+        {
+            InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
         }
         else
         {

@@ -186,6 +186,7 @@ public class EntityInstance
 
 public class EntityDefinition
 {
+    public int Uid = IdGen.NewId;
     public List<FieldDef> FieldDefinitions = new();
     public Color Color;
     public uint Width;
