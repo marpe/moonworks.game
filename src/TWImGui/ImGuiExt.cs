@@ -1318,6 +1318,45 @@ public static unsafe class ImGuiExt
         return result;
     }
 
+    public static void DrawGrid(ImDrawList* draw, int gridSize, Vector2 scale, Vector2 min, Vector2 max, Color color, Color axesColor, float thickness)
+    {
+        var dt = Vector2.One * gridSize / scale;
+
+        var minSpaceBetweenLines = 10f;
+        var xy0 = min + (max - min) * 0.5f;
+
+        var lastLine = float.MinValue;
+        for (var x = min.X - dt.X; x <= max.X + dt.X; x += dt.X)
+        {
+            if (x - lastLine < minSpaceBetweenLines)
+                continue;
+            draw->AddLine(
+                new(x, min.Y - dt.Y),
+                new(x, max.Y + dt.Y),
+                color.PackedValue,
+                thickness
+            );
+            lastLine = x;
+        }
+
+        lastLine = float.MinValue;
+        for (var y = min.Y - dt.Y; y <= max.Y + dt.Y; y += dt.Y)
+        {
+            if (y - lastLine < minSpaceBetweenLines)
+                continue;
+            draw->AddLine(
+                new(min.X - dt.X, y),
+                new(max.X + dt.X, y),
+                color.PackedValue,
+                thickness
+            );
+            lastLine = y;
+        }
+
+        draw->AddLine(new(xy0.X, min.Y - dt.Y), new(xy0.X, max.Y + dt.Y), axesColor.PackedValue, 3f);
+        draw->AddLine(new(min.X - dt.X, xy0.Y), new(max.X + dt.X, xy0.Y), axesColor.PackedValue, 3f);
+    }
+
     public static void RectWithOutline(ImDrawList* dl, Num.Vector2 min, Num.Vector2 max, Color fillColor, Color outlineColor, float rounding = 4.0f)
     {
         dl->AddRectFilled(min, max, fillColor.PackedValue, rounding);

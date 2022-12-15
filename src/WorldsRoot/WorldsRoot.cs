@@ -171,6 +171,8 @@ public class LayerInstance
     public int LayerDefId;
     public int[] IntGrid = Array.Empty<int>();
     public List<EntityInstance> EntityInstances = new();
+
+    public bool IsVisible = true;
 }
 
 public class EntityInstance

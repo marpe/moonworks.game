@@ -35,37 +35,6 @@
 	"flags": ["MultiWorlds"],
 	"defs": { "layers": [
 		{
-			"__type": "IntGrid",
-			"identifier": "IntGrid",
-			"type": "IntGrid",
-			"uid": 164,
-			"gridSize": 16,
-			"guideGridWid": 0,
-			"guideGridHei": 0,
-			"displayOpacity": 1,
-			"inactiveOpacity": 1,
-			"hideInList": false,
-			"hideFieldsWhenInactive": false,
-			"pxOffsetX": 0,
-			"pxOffsetY": 0,
-			"parallaxFactorX": 0,
-			"parallaxFactorY": 0,
-			"parallaxScaling": true,
-			"requiredTags": [],
-			"excludedTags": [],
-			"intGridValues": [
-				{ "value": 1, "identifier": null, "color": "#000000" },
-				{ "value": 2, "identifier": null, "color": "#FF0000" },
-				{ "value": 3, "identifier": null, "color": "#FF0000" }
-			],
-			"autoTilesetDefUid": null,
-			"autoRuleGroups": [],
-			"autoSourceLayerDefUid": null,
-			"tilesetDefUid": null,
-			"tilePivotX": 0,
-			"tilePivotY": 0
-		},
-		{
 			"__type": "Entities",
 			"identifier": "Lights",
 			"type": "Entities",
@@ -920,93 +889,6 @@
 					"allowedRefs": "OnlySame",
 					"allowedRefTags": [],
 					"tilesetUid": null
-				},
-				{
-					"identifier": "Another",
-					"__type": "LocalEnum.EnemyType",
-					"uid": 165,
-					"type": "F_Enum(118)",
-					"isArray": false,
-					"canBeNull": false,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": null,
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
-				},
-				{
-					"identifier": "EnemyType",
-					"__type": "Array<LocalEnum.EnemyType>",
-					"uid": 166,
-					"type": "F_Enum(118)",
-					"isArray": true,
-					"canBeNull": false,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": null,
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
-				},
-				{
-					"identifier": "TestInt",
-					"__type": "Int",
-					"uid": 167,
-					"type": "F_Int",
-					"isArray": false,
-					"canBeNull": false,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": 5,
-					"max": 10,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": { "id": "V_Int", "params": [7] },
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
 				}
 			]
 		},
@@ -1123,38 +1005,6 @@
 					"tilesetUid": null
 				},
 				{
-					"identifier": "TileTest",
-					"__type": "Tile",
-					"uid": 140,
-					"type": "F_Tile",
-					"isArray": false,
-					"canBeNull": true,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "ValueOnly",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": {
-						"id": "V_String",
-						"params": ["112,32,16,16"]
-					},
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": 1
-				},
-				{
 					"identifier": "Float",
 					"__type": "Float",
 					"uid": 141,
@@ -1164,64 +1014,6 @@
 					"arrayMinLength": null,
 					"arrayMaxLength": null,
 					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": null,
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
-				},
-				{
-					"identifier": "EnemyType",
-					"__type": "LocalEnum.EnemyType",
-					"uid": 142,
-					"type": "F_Enum(118)",
-					"isArray": false,
-					"canBeNull": true,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": null,
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
-				},
-				{
-					"identifier": "AnotherRef",
-					"__type": "EntityRef",
-					"uid": 147,
-					"type": "F_EntityRef",
-					"isArray": false,
-					"canBeNull": true,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "RefLinkBetweenCenters",
 					"editorDisplayPos": "Above",
 					"editorAlwaysShow": false,
 					"editorCutLongValues": true,
@@ -1417,35 +1209,6 @@
 					"allowedRefs": "OnlySame",
 					"allowedRefTags": [],
 					"tilesetUid": null
-				},
-				{
-					"identifier": "TestArr",
-					"__type": "Array<Int>",
-					"uid": 163,
-					"type": "F_Int",
-					"isArray": true,
-					"canBeNull": false,
-					"arrayMinLength": null,
-					"arrayMaxLength": null,
-					"editorDisplayMode": "Hidden",
-					"editorDisplayPos": "Above",
-					"editorAlwaysShow": false,
-					"editorCutLongValues": true,
-					"editorTextSuffix": null,
-					"editorTextPrefix": null,
-					"useForSmartColor": false,
-					"min": null,
-					"max": null,
-					"regex": null,
-					"acceptFileTypes": null,
-					"defaultOverride": null,
-					"textLanguageMode": null,
-					"symmetricalRef": false,
-					"autoChainRef": true,
-					"allowOutOfLevelRef": true,
-					"allowedRefs": "OnlySame",
-					"allowedRefTags": [],
-					"tilesetUid": null
 				}
 			]
 		},
@@ -1600,46 +1363,6 @@
 			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
 				{
-					"__identifier": "IntGrid",
-					"__type": "IntGrid",
-					"__cWid": 24,
-					"__cHei": 20,
-					"__gridSize": 16,
-					"__opacity": 1,
-					"__pxTotalOffsetX": 0,
-					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": null,
-					"__tilesetRelPath": null,
-					"iid": "bbfea380-7820-11ed-98dd-67b2f4b4b6ef",
-					"levelId": 0,
-					"layerDefUid": 164,
-					"pxOffsetX": 0,
-					"pxOffsetY": 0,
-					"visible": true,
-					"optionalRules": [],
-					"intGridCsv": [
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,3,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,3,3,3,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-					],
-					"autoLayerTiles": [],
-					"seed": 2115464,
-					"overrideTilesetUid": null,
-					"gridTiles": [],
-					"entityInstances": []
-				},
-				{
 					"__identifier": "Lights",
 					"__type": "Entities",
 					"__cWid": 24,
@@ -1683,8 +1406,7 @@
 								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
 									"id": "V_Bool",
 									"params": [ false ]
-								}] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1707,8 +1429,7 @@
 								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
 									"id": "V_Bool",
 									"params": [ false ]
-								}] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1731,8 +1452,7 @@
 								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
 									"id": "V_Bool",
 									"params": [ false ]
-								}] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1755,8 +1475,7 @@
 								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
 									"id": "V_Bool",
 									"params": [ false ]
-								}] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1779,8 +1498,7 @@
 								{ "__identifier": "IsEnabled", "__value": false, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [{
 									"id": "V_Bool",
 									"params": [ false ]
-								}] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1800,14 +1518,7 @@
 								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] },
-								{ "__identifier": "TestArr", "__value": [1,2,3,4,5], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [
-									{ "id": "V_Int", "params": [1] },
-									{ "id": "V_Int", "params": [2] },
-									{ "id": "V_Int", "params": [3] },
-									{ "id": "V_Int", "params": [4] },
-									{ "id": "V_Int", "params": [5] }
-								] }
+								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
 							]
 						}
 					]
@@ -1856,10 +1567,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1885,10 +1593,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1920,10 +1625,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -1931,7 +1633,7 @@
 							"__grid": [11,4],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "c2437690-5110-11ed-9fac-073c3c8d5f55",
 							"width": 16,
@@ -1948,13 +1650,7 @@
 									"id": "V_String",
 									"params": ["f06ca1e0-5110-11ed-9fac-f7fe2c26f251"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 0, "y": 48, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["0,48,16,16"]
-								}] },
-								{ "__identifier": "Float", "__value": 5, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [5] }] },
-								{ "__identifier": "EnemyType", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": 5, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [5] }] }
 							]
 						},
 						{
@@ -1962,7 +1658,7 @@
 							"__grid": [15,4],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "f06ca1e0-5110-11ed-9fac-f7fe2c26f251",
 							"width": 16,
@@ -1979,16 +1675,7 @@
 									"id": "V_String",
 									"params": ["c2437690-5110-11ed-9fac-073c3c8d5f55"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 48, "y": 48, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["48,48,16,16"]
-								}] },
-								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] }
 							]
 						},
 						{
@@ -1996,7 +1683,7 @@
 							"__grid": [13,1],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "0859f7d0-5110-11ed-9fac-df38f2825846",
 							"width": 16,
@@ -2005,10 +1692,7 @@
 							"px": [208,16],
 							"fieldInstances": [
 								{ "__identifier": "Test", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 124, "realEditorValues": [] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [] },
-								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2191,57 +1875,6 @@
 			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
 				{
-					"__identifier": "IntGrid",
-					"__type": "IntGrid",
-					"__cWid": 42,
-					"__cHei": 20,
-					"__gridSize": 16,
-					"__opacity": 1,
-					"__pxTotalOffsetX": 0,
-					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": null,
-					"__tilesetRelPath": null,
-					"iid": "bbff18b0-7820-11ed-98dd-630ce3945791",
-					"levelId": 108,
-					"layerDefUid": 164,
-					"pxOffsetX": 0,
-					"pxOffsetY": 0,
-					"visible": true,
-					"optionalRules": [],
-					"intGridCsv": [
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-						
-					],
-					"autoLayerTiles": [],
-					"seed": 9974475,
-					"overrideTilesetUid": null,
-					"gridTiles": [],
-					"entityInstances": []
-				},
-				{
 					"__identifier": "Lights",
 					"__type": "Entities",
 					"__cWid": 42,
@@ -2327,10 +1960,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2356,10 +1986,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2406,10 +2033,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2449,10 +2073,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2460,7 +2081,7 @@
 							"__grid": [35,10],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "4f427ba0-b4d0-11ec-91cc-bf56ca2ddc83",
 							"width": 16,
@@ -2477,10 +2098,7 @@
 									"id": "V_String",
 									"params": ["50694860-b4d0-11ec-91cc-17a195b86efe"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [] },
-								{ "__identifier": "Float", "__value": 1, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [1] }] },
-								{ "__identifier": "EnemyType", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": 1, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [1] }] }
 							]
 						},
 						{
@@ -2488,7 +2106,7 @@
 							"__grid": [40,9],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "50694860-b4d0-11ec-91cc-17a195b86efe",
 							"width": 16,
@@ -2505,13 +2123,7 @@
 									"id": "V_String",
 									"params": ["4f427ba0-b4d0-11ec-91cc-bf56ca2ddc83"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [] },
-								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] }
 							]
 						},
 						{
@@ -2531,10 +2143,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2554,10 +2163,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2577,10 +2183,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2600,10 +2203,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2623,10 +2223,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2646,10 +2243,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -2669,10 +2263,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						}
 					]
@@ -2924,57 +2515,6 @@
 			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A8A8A8", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [{ "id": "V_Int", "params": [11053224] }] }],
 			"layerInstances": [
 				{
-					"__identifier": "IntGrid",
-					"__type": "IntGrid",
-					"__cWid": 42,
-					"__cHei": 20,
-					"__gridSize": 16,
-					"__opacity": 1,
-					"__pxTotalOffsetX": 0,
-					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": null,
-					"__tilesetRelPath": null,
-					"iid": "bbffb4f0-7820-11ed-98dd-3b620a260f16",
-					"levelId": 149,
-					"layerDefUid": 164,
-					"pxOffsetX": 0,
-					"pxOffsetY": 0,
-					"visible": true,
-					"optionalRules": [],
-					"intGridCsv": [
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-						
-					],
-					"autoLayerTiles": [],
-					"seed": 1749570,
-					"overrideTilesetUid": null,
-					"gridTiles": [],
-					"entityInstances": []
-				},
-				{
 					"__identifier": "Lights",
 					"__type": "Entities",
 					"__cWid": 42,
@@ -3015,8 +2555,7 @@
 								{ "__identifier": "Color", "__value": "#F8FF9B", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [{ "id": "V_Int", "params": [16318363] }] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3036,8 +2575,7 @@
 								{ "__identifier": "Color", "__value": "#FFFFFF", "__type": "Color", "__tile": null, "defUid": 154, "realEditorValues": [] },
 								{ "__identifier": "Angle", "__value": 270, "__type": "Float", "__tile": null, "defUid": 155, "realEditorValues": [] },
 								{ "__identifier": "ConeAngle", "__value": 360, "__type": "Float", "__tile": null, "defUid": 156, "realEditorValues": [] },
-								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] },
-								{ "__identifier": "TestArr", "__value": [], "__type": "Array<Int>", "__tile": null, "defUid": 163, "realEditorValues": [] }
+								{ "__identifier": "IsEnabled", "__value": true, "__type": "Bool", "__tile": null, "defUid": 161, "realEditorValues": [] }
 							]
 						}
 					]
@@ -3103,10 +2641,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3132,10 +2667,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3182,10 +2714,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3225,10 +2754,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3236,7 +2762,7 @@
 							"__grid": [35,10],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "9ccfc7b1-5110-11ed-91f0-fb6d0b0267e0",
 							"width": 16,
@@ -3253,10 +2779,7 @@
 									"id": "V_String",
 									"params": ["9ccfc7b2-5110-11ed-91f0-b7fe87f7c258"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [] },
-								{ "__identifier": "Float", "__value": 1, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [1] }] },
-								{ "__identifier": "EnemyType", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": 1, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [{ "id": "V_Float", "params": [1] }] }
 							]
 						},
 						{
@@ -3264,7 +2787,7 @@
 							"__grid": [40,9],
 							"__pivot": [0,0],
 							"__tags": [],
-							"__tile": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 },
+							"__tile": { "tilesetUid": 1, "x": 16, "y": 48, "w": 16, "h": 16 },
 							"__smartColor": "#94D9B3",
 							"iid": "9ccfc7b2-5110-11ed-91f0-b7fe87f7c258",
 							"width": 16,
@@ -3281,13 +2804,7 @@
 									"id": "V_String",
 									"params": ["9ccfc7b1-5110-11ed-91f0-fb6d0b0267e0"]
 								}] },
-								{ "__identifier": "TileTest", "__value": { "tilesetUid": 1, "x": 112, "y": 32, "w": 16, "h": 16 }, "__type": "Tile", "__tile": null, "defUid": 140, "realEditorValues": [] },
-								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 142, "realEditorValues": [{
-									"id": "V_String",
-									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "AnotherRef", "__value": null, "__type": "EntityRef", "__tile": null, "defUid": 147, "realEditorValues": [] }
+								{ "__identifier": "Float", "__value": null, "__type": "Float", "__tile": null, "defUid": 141, "realEditorValues": [] }
 							]
 						},
 						{
@@ -3307,10 +2824,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3330,10 +2844,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3353,10 +2864,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3376,10 +2884,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3399,10 +2904,7 @@
 								{ "__identifier": "Type", "__value": "YellowBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 16, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["YellowBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3422,10 +2924,7 @@
 								{ "__identifier": "Type", "__value": "BlueBee", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 48, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["BlueBee"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						},
 						{
@@ -3445,10 +2944,7 @@
 								{ "__identifier": "Type", "__value": "Slug", "__type": "LocalEnum.EnemyType", "__tile": { "tilesetUid": 2, "x": 0, "y": 16, "w": 16, "h": 16 }, "defUid": 119, "realEditorValues": [{
 									"id": "V_String",
 									"params": ["Slug"]
-								}] },
-								{ "__identifier": "Another", "__value": null, "__type": "LocalEnum.EnemyType", "__tile": null, "defUid": 165, "realEditorValues": [] },
-								{ "__identifier": "EnemyType", "__value": [], "__type": "Array<LocalEnum.EnemyType>", "__tile": null, "defUid": 166, "realEditorValues": [] },
-								{ "__identifier": "TestInt", "__value": 7, "__type": "Int", "__tile": null, "defUid": 167, "realEditorValues": [] }
+								}] }
 							]
 						}
 					]
@@ -3649,145 +3145,6 @@
 			"externalRelPath": null,
 			"fieldInstances": [{ "__identifier": "AmbientLight", "__value": "#A9A9A9", "__type": "Color", "__tile": null, "defUid": 162, "realEditorValues": [] }],
 			"layerInstances": [
-				{
-					"__identifier": "IntGrid",
-					"__type": "IntGrid",
-					"__cWid": 70,
-					"__cHei": 56,
-					"__gridSize": 16,
-					"__opacity": 1,
-					"__pxTotalOffsetX": 0,
-					"__pxTotalOffsetY": 0,
-					"__tilesetDefUid": null,
-					"__tilesetRelPath": null,
-					"iid": "bc002a20-7820-11ed-98dd-f76dcc669d63",
-					"levelId": 148,
-					"layerDefUid": 164,
-					"pxOffsetX": 0,
-					"pxOffsetY": 0,
-					"visible": true,
-					"optionalRules": [],
-					"intGridCsv": [
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-						0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
-						
-					],
-					"autoLayerTiles": [],
-					"seed": 1682216,
-					"overrideTilesetUid": null,
-					"gridTiles": [],
-					"entityInstances": []
-				},
 				{
 					"__identifier": "Lights",
 					"__type": "Entities",
