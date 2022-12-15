@@ -83,7 +83,7 @@ public unsafe class ImGuiRenderer : IDisposable
         io->GetClipboardTextFn = &GetClipboardText;
         io->SetClipboardTextFn = &SetClipboardText;
 
-        io->HoverDelayNormal = 1.0f;
+        io->HoverDelayNormal = 2.0f;
         
         // Set the backend name
         {

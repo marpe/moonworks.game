@@ -8,8 +8,9 @@ namespace MyGame.Editor;
 
 public abstract unsafe class SplitWindow : ImGuiEditorWindow
 {
-    public string LeftTitle;
-    public string RightTitle;
+    private string _leftTitle;
+    private string _rightTitle;
+    private string _dockSpaceId;
     protected MyEditorMain Editor;
     private Action _drawLeft;
     private Action _drawRight;
@@ -18,19 +19,89 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
                                                ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
                                                ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.NoPadOuterX;
 
+    private readonly Action<uint> _initializeDockSpace;
+
     protected WorldsRoot.WorldsRoot Root => Editor.WorldsRoot;
+
+    protected virtual void PushStyles()
+    {
+        var origFramePadding = ImGui.GetStyle()->FramePadding;
+        var origItemSpacing = ImGui.GetStyle()->ItemSpacing;
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, origFramePadding * 3f);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, origItemSpacing * 2f);
+        ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
+        ImGui.PushItemWidth(ImGui.GetWindowWidth());
+    }
+
+    protected virtual void PopStyles()
+    {
+        ImGui.PopStyleVar(3);
+        ImGui.PopItemWidth();
+    }
 
     protected SplitWindow(string title, MyEditorMain editor) : base(title)
     {
         Editor = editor;
-        LeftTitle = $"{title}_Left";
-        RightTitle = $"{title}_Right";
+        _leftTitle = $"{title}_Left";
+        _rightTitle = $"{title}_Right";
+        _dockSpaceId = $"{title}_DockSpace";
 
-        _drawLeft = DrawLeft;
-        _drawRight = DrawRight;
+        _drawLeft = () =>
+        {
+            PushStyles();
+            DrawLeft();
+            PopStyles();
+        };
+        _drawRight = () =>
+        {
+            PushStyles();
+            DrawRight();
+            PopStyles();
+        };
+        _initializeDockSpace = InitializeDockSpace;
     }
 
-    public static void SetDockSpaceFlags()
+    public override void Draw()
+    {
+        if (!IsOpen)
+            return;
+
+        var windowClass = new ImGuiWindowClass();
+        var result = ImGuiExt.BeginWorkspaceWindow(Title, _dockSpaceId, _initializeDockSpace, null, ref windowClass);
+
+        if (result)
+        {
+            DrawSplit(_leftTitle, _drawLeft, windowClass);
+            DrawSplit(_rightTitle, _drawRight, windowClass);
+        }
+    }
+
+    private void InitializeDockSpace(uint dockSpaceID)
+    {
+        var rightDockID = 0u;
+        var leftDockID = 0u;
+        ImGuiInternal.DockBuilderSplitNode(dockSpaceID, ImGuiDir.Left, 0.5f, &leftDockID, &rightDockID);
+
+        ImGuiInternal.DockBuilderDockWindow(_leftTitle, leftDockID);
+        ImGuiInternal.DockBuilderDockWindow(_rightTitle, rightDockID);
+    }
+
+    private static void DrawSplit(string title, Action drawContent, ImGuiWindowClass windowClass)
+    {
+        ImGui.SetNextWindowClass(&windowClass);
+        var windowFlags = ImGuiWindowFlags.NoCollapse |
+                          ImGuiWindowFlags.NoTitleBar |
+                          ImGuiWindowFlags.NoDecoration;
+        if (ImGui.Begin(title, default, windowFlags))
+        {
+            drawContent();
+        }
+
+        SetDockSpaceFlags();
+        ImGui.End();
+    }
+
+    private static void SetDockSpaceFlags()
     {
         var dockNode = ImGuiInternal.GetWindowDockNode();
         if (dockNode != null)
@@ -40,28 +111,6 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe);
             dockNode->LocalFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
         }
-    }
-
-    public override void Draw()
-    {
-        if (!IsOpen)
-            return;
-
-        CreateDockSpace(Title, ref IsOpen, InitializeDockSpace(LeftTitle, RightTitle));
-
-        DrawSplit(LeftTitle, _drawLeft);
-        DrawSplit(RightTitle, _drawRight);
-    }
-
-    private static void DrawSplit(string title, Action drawContent)
-    {
-        if (ImGui.Begin(title))
-        {
-            drawContent();
-        }
-
-        SetDockSpaceFlags();
-        ImGui.End();
     }
 
     protected abstract void DrawLeft();
@@ -111,27 +160,6 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         ImGui.PopStyleColor(4);
         ImGui.PopStyleVar();
         return result;
-    }
-
-    private static void CreateDockSpace(string title, ref bool isOpen, Action<uint> initializeLayout, ImGuiWindowFlags flags = ImGuiWindowFlags.NoCollapse)
-    {
-        ImGui.SetNextWindowSize(new Vector2(800, 850), ImGuiCond.Appearing);
-        ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 850));
-        var result = ImGui.Begin(title, ImGuiExt.RefPtr(ref isOpen), flags);
-        ImGuiExt.SetupDockSpace($"{title}_DockSpace", initializeLayout, !result);
-        ImGui.End();
-    }
-
-    private static Action<uint> InitializeDockSpace(string leftWindowTitle, string rightWindowTitle)
-    {
-        return dockspaceID =>
-        {
-            var rightDockID = 0u;
-            var leftDockID = 0u;
-            ImGuiInternal.DockBuilderSplitNode(dockspaceID, ImGuiDir.Left, 0.5f, &leftDockID, &rightDockID);
-            ImGuiInternal.DockBuilderDockWindow(leftWindowTitle, leftDockID);
-            ImGuiInternal.DockBuilderDockWindow(rightWindowTitle, rightDockID);
-        };
     }
 
     public static void Icon(string iconPath, Color color, int rowHeight)
@@ -220,7 +248,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
         ImGui.PopStyleVar();
     }
-    
+
     public static int ButtonGroup(string firstLabel, string secondLabel, int minWidth)
     {
         var result = -1;

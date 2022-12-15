@@ -144,99 +144,81 @@ public unsafe class EntityDefWindow : SplitWindow
         {
             var entityDef = entities[_selectedEntityDefinitionIndex];
 
-            var origFramePadding = ImGui.GetStyle()->FramePadding;
-            var origItemSpacing = ImGui.GetStyle()->ItemSpacing;
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, origFramePadding * 3f);
-            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, origItemSpacing * 2f);
-            ImGui.PushItemWidth(ImGui.GetWindowWidth());
-
-            var identifier = entityDef.Identifier;
-
-            string HideIfNarrow(string label, float minWidth)
-            {
-                return ImGui.GetContentRegionAvail().X < minWidth ? $"##{label}" : label;
-            }
-
-            var minWidth = 200;
-
-            if (SimpleTypeInspector.InspectString(HideIfNarrow("Identifier", minWidth), ref identifier))
-            {
-                entities[_selectedEntityDefinitionIndex].Identifier = identifier;
-            }
-
+            SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
             SimpleTypeInspector.InspectInputUint("TilesetId", ref entityDef.TilesetId);
-
             SimpleTypeInspector.InspectInputUint("TileId", ref entityDef.TileId);
 
             var (ix, iy) = entityDef.Size;
             var (x, y) = ((int)ix, (int)iy);
-            if (ImGuiExt.InspectPoint(HideIfNarrow("Size", minWidth), ref x, ref y))
+            if (ImGuiExt.InspectPoint("Size", ref x, ref y))
             {
                 entityDef.Width = (uint)x;
                 entityDef.Height = (uint)y;
             }
 
-            ImGuiExt.LabelPrefix(HideIfNarrow("Tags", minWidth));
+            DrawTags(entityDef);
 
-            var tagToRemove = -1;
-            for (var i = 0; i < entityDef.Tags.Count; i++)
-            {
-                // var colorIndex = (2 + i) % ImGuiExt.Colors.Length;
-                var tag = entityDef.Tags[i];
-
-                var textSize = ImGui.CalcTextSize(tag);
-                var fieldWidth = textSize.X + 2 * ImGui.GetStyle()->FramePadding.X;
-                if (fieldWidth + 30 > ImGui.GetContentRegionAvail().X)
-                    ImGui.NewLine();
-                ImGui.SetNextItemWidth(fieldWidth);
-                if (SimpleTypeInspector.InspectString($"##Tag{i}", ref tag))
-                {
-                    entityDef.Tags[i] = tag;
-                }
-
-                ImGui.SameLine(0, 0);
-
-                if (ImGuiExt.ColoredButton($"{FontAwesome6.Trash}##DeleteTag{i}", ImGuiExt.Colors[2], new Vector2(0, 26)))
-                {
-                    tagToRemove = i;
-                }
-
-                ImGui.SameLine();
-                if (ImGui.GetContentRegionAvail().X < 30)
-                    ImGui.NewLine();
-            }
-
-            if (tagToRemove != -1)
-            {
-                entityDef.Tags.RemoveAt(tagToRemove);
-            }
-
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 2));
-            ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
-            if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.White, new Color(95, 111, 165), new Vector2(26, 26), "Add Tag"))
-            {
-                entityDef.Tags.Add("");
-            }
-
-            ImGui.PopFont();
-            ImGui.PopStyleVar();
-
-            if (SimpleTypeInspector.InspectColor(HideIfNarrow("Smart Color", minWidth), ref entityDef.Color, _refColor, ImGuiColorEditFlags.NoAlpha))
+            if (SimpleTypeInspector.InspectColor("Smart Color", ref entityDef.Color, _refColor, ImGuiColorEditFlags.NoAlpha))
             {
                 entityDef.Color = entityDef.Color;
             }
 
             var (pivotX, pivotY) = (entityDef.PivotX, entityDef.PivotY);
-            if (ImGuiExt.PivotPointEditor(HideIfNarrow("Pivot Point", minWidth), ref pivotX, ref pivotY, 40, entityDef.Color.PackedValue))
+            if (ImGuiExt.PivotPointEditor("Pivot Point", ref pivotX, ref pivotY, 40, entityDef.Color.PackedValue))
             {
                 entityDef.PivotX = pivotX;
                 entityDef.PivotY = pivotY;
             }
 
             FieldDefEditor.DrawFieldEditor(entityDef.FieldDefinitions, ref _selectedFieldDefinitionIndex);
-
-            ImGui.PopStyleVar(2);
-            ImGui.PopItemWidth();
         }
+    }
+
+    private static void DrawTags(EntityDefinition entityDef)
+    {
+        ImGuiExt.LabelPrefix("Tags");
+
+        var tagToRemove = -1;
+        for (var i = 0; i < entityDef.Tags.Count; i++)
+        {
+            // var colorIndex = (2 + i) % ImGuiExt.Colors.Length;
+            var tag = entityDef.Tags[i];
+
+            var textSize = ImGui.CalcTextSize(tag);
+            var fieldWidth = textSize.X + 2 * ImGui.GetStyle()->FramePadding.X;
+            if (fieldWidth + 30 > ImGui.GetContentRegionAvail().X)
+                ImGui.NewLine();
+            ImGui.SetNextItemWidth(fieldWidth);
+            if (SimpleTypeInspector.InspectString($"##Tag{i}", ref tag))
+            {
+                entityDef.Tags[i] = tag;
+            }
+
+            ImGui.SameLine(0, 0);
+
+            if (ImGuiExt.ColoredButton($"{FontAwesome6.Trash}##DeleteTag{i}", ImGuiExt.Colors[2], new Vector2(0, 26)))
+            {
+                tagToRemove = i;
+            }
+
+            ImGui.SameLine();
+            if (ImGui.GetContentRegionAvail().X < 30)
+                ImGui.NewLine();
+        }
+
+        if (tagToRemove != -1)
+        {
+            entityDef.Tags.RemoveAt(tagToRemove);
+        }
+
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 2));
+        ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+        if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.White, new Color(95, 111, 165), new Vector2(26, 26), "Add Tag"))
+        {
+            entityDef.Tags.Add("");
+        }
+
+        ImGui.PopFont();
+        ImGui.PopStyleVar();
     }
 }

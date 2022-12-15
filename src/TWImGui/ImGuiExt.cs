@@ -685,7 +685,7 @@ public static unsafe class ImGuiExt
         // label
         var textSize = ImGui.CalcTextSize(label, true);
 
-        if (textSize.X <= 0)
+        if (textSize.X <= 0 || ImGui.GetContentRegionAvail().X < 200f)
         {
             // ImGui.SetNextItemWidth(-1); // TODO (marpe): Investigate what I broke when this got commented out
             return label;
@@ -1186,13 +1186,19 @@ public static unsafe class ImGuiExt
         drawList->PopClipRect();
     }
 
-    public static void SetupDockSpace(string dockspaceId, Action<uint> setupCallback, bool keepAlive = false)
+    public static bool BeginWorkspaceWindow(string windowTitle, string dockspaceId, Action<uint> initializeLayoutCallback, bool* isOpen, ref ImGuiWindowClass windowClass)
     {
+        ImGui.SetNextWindowSize(new Num.Vector2(1024, 768), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(FLT_MAX, FLT_MAX));
+        var windowFlags = ImGuiWindowFlags.NoCollapse |
+                          ImGuiWindowFlags.NoTitleBar | 
+                          ImGuiWindowFlags.NoDecoration;
+        var shouldDrawWindowContents = ImGui.Begin(windowTitle, isOpen, windowFlags);
+
         var dockspaceID = ImGui.GetID(dockspaceId);
 
-        ImGuiWindowClass workspaceWindowClass;
-        workspaceWindowClass.ClassId = dockspaceID;
-        workspaceWindowClass.DockingAllowUnclassed = false;
+        windowClass.ClassId = dockspaceID;
+        windowClass.DockingAllowUnclassed = false;
 
         if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
         {
@@ -1200,17 +1206,22 @@ public static unsafe class ImGuiExt
                             ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |
                             ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton;
             ImGuiInternal.DockBuilderAddNode(dockspaceID, (ImGuiDockNodeFlags)dockFlags);
-            var contentAvail = ImGui.GetContentRegionAvail();
-            var size = new Num.Vector2(MathF.Max(4.0f, contentAvail.X), MathF.Max(4.0f, contentAvail.Y));
+            var windowSize = ImGui.GetWindowSize();
+            var size = new Num.Vector2(MathF.Max(4.0f, windowSize.X), MathF.Max(4.0f, windowSize.Y));
             ImGuiInternal.DockBuilderSetNodeSize(dockspaceID, size);
             //
-            setupCallback.Invoke(dockspaceID);
+            initializeLayoutCallback.Invoke(dockspaceID);
             //
             ImGuiInternal.DockBuilderFinish(dockspaceID);
         }
 
-        var flags = keepAlive ? ImGuiDockNodeFlags.KeepAliveOnly : ImGuiDockNodeFlags.None | ImGuiDockNodeFlags.NoSplit;
-        ImGui.DockSpace(dockspaceID, new Num.Vector2(0.0f, 0.0f), flags, &workspaceWindowClass);
+        var flags = shouldDrawWindowContents ? ImGuiDockNodeFlags.NoSplit : ImGuiDockNodeFlags.KeepAliveOnly;
+
+        ImGui.DockSpace(dockspaceID, new Num.Vector2(0.0f, 0.0f), flags, RefPtr(ref windowClass));
+
+        ImGui.End();
+
+        return shouldDrawWindowContents;
     }
 
     public static bool PivotPointEditor(string label, ref double pivotX, ref double pivotY, float size, uint color)
@@ -1233,7 +1244,7 @@ public static unsafe class ImGuiExt
             new(1, 1),
         };
 
-        ImGuiExt.LabelPrefix(label);
+        LabelPrefix(label);
 
         var itemSpacing = ImGui.GetStyle()->ItemSpacing;
         var result = false;

@@ -10,7 +10,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
     public const string WindowTitle = "Game";
     public const string GameWindowTitle = "GameView";
     private const string ToolbarWindowName = "GameToolbar";
-    
+
     private IntPtr? _gameRenderTextureId;
     public Matrix4x4 GameRenderViewportTransform;
 
@@ -68,18 +68,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
             return;
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 0));
-        
-        ImGui.SetNextWindowSize(new Vector2(1000, 800), ImGuiCond.FirstUseEver);
-        ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 850));
-        var flags = ImGuiWindowFlags.NoCollapse;
-        var result = ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags);
-        ImGuiExt.SetupDockSpace("GameViewDockspace", InitializeDockSpace, !result);
-        ImGui.End();
-        
+        var windowClass = new ImGuiWindowClass();
+        var result = ImGuiExt.BeginWorkspaceWindow(WindowTitle, "GameViewDockspace", InitializeDockSpace, null, ref windowClass);
         ImGui.PopStyleVar();
-        
-        DrawGameView();
-        DrawToolbar();
+
+        if (result)
+        {
+            DrawGameView(windowClass);
+            DrawToolbar(windowClass);
+        }
     }
 
     private static void InitializeDockSpace(uint dockspaceID)
@@ -89,14 +86,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGuiInternal.DockBuilderDockWindow(ToolbarWindowName, upNode);
         ImGuiInternal.DockBuilderDockWindow(GameWindowTitle, downNode);
     }
-    
-    private void DrawGameView()
+
+    private void DrawGameView(ImGuiWindowClass imGuiWindowClass)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
         /*ImGuiWindowClass windowClass;
         windowClass.ViewportFlagsOverrideSet = ImGuiViewportFlags.NoAutoMerge;
         ImGui.SetNextWindowClass(&windowClass);*/
         var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar;
+        ImGui.SetNextWindowClass(&imGuiWindowClass);
         ImGui.Begin(GameWindowTitle, default, flags);
         ImGui.PopStyleVar();
 
@@ -196,8 +194,9 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
-    private void DrawToolbar()
+    private void DrawToolbar(ImGuiWindowClass imGuiWindowClass)
     {
+        ImGui.SetNextWindowClass(&imGuiWindowClass);
         if (ImGui.Begin(ToolbarWindowName, default, ImGuiWindowFlags.NoScrollbar))
         {
             if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
@@ -221,6 +220,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             {
                 _gameRenderScale = MathF.Exp(MathF.Lerp(MathF.Log(_gameRenderScale), MathF.Log(tmpZoom / 100f), 0.1f));
             }
+
             ImGui.PopStyleVar();
 
             ImGui.EndChild();

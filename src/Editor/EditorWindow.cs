@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 using MyGame.Cameras;
 using MyGame.WorldsRoot;
 using FieldInstance = MyGame.WorldsRoot.FieldInstance;
@@ -20,20 +21,118 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private int _selectedIntGridValueIndex;
     private int _selectedEntityDefinitionIndex;
 
+    private readonly EntityDefWindow _entityDefWindow;
+    private readonly LayerDefWindow _layerDefWindow;
+    private readonly LevelsWindow _levelsWindow;
+    private readonly TileSetDefWindow _tileSetDefWindow;
+    private readonly WorldsWindow _worldsWindow;
+
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
         KeyboardShortcut = "^E";
         _editor = editor;
+
+        _entityDefWindow = new EntityDefWindow(editor) { IsOpen = true };
+        _layerDefWindow = new LayerDefWindow(editor) { IsOpen = true };
+        _levelsWindow = new LevelsWindow(editor) { IsOpen = true };
+        _tileSetDefWindow = new TileSetDefWindow(editor) { IsOpen = true };
+        _worldsWindow = new WorldsWindow(editor) { IsOpen = true };
     }
 
     public void Update(float deltaSeconds)
     {
     }
 
+    private static void MakeTabVisible(string windowTitle)
+    {
+        var window = ImGuiInternal.FindWindowByName(windowTitle);
+        if (window == null || window->DockNode == null || window->DockNode->TabBar == null)
+            return;
+        window->DockNode->TabBar->NextSelectedTabId = window->TabId;
+    }
+
     public override void Draw()
     {
         if (!IsOpen)
             return;
+
+        var windowClass = new ImGuiWindowClass();
+
+
+        void InitializeLayout(uint dockSpaceId)
+        {
+            uint topDockId = 0u;
+            uint bottomDockId = 0u;
+            ImGuiInternal.DockBuilderSplitNode(dockSpaceId, ImGuiDir.Up, 0.4f, ImGuiExt.RefPtr(ref topDockId), ImGuiExt.RefPtr(ref bottomDockId));
+
+            var topNode = ImGuiInternal.DockBuilderGetNode(topDockId);
+            var bottomNode = ImGuiInternal.DockBuilderGetNode(bottomDockId);
+
+            var topNodeFlags = (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingSplitMe) |
+                               (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe) |
+                               (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoTabBar);
+
+            var bottomNodeFlags = ImGuiDockNodeFlags.AutoHideTabBar |
+                                  (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingSplitMe) |
+                                  (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoDockingOverMe) |
+                                  (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton) |
+                                  (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton) |
+                                  (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_HiddenTabBar);
+
+            topNode->LocalFlags = topNodeFlags;
+            bottomNode->LocalFlags = bottomNodeFlags;
+
+            ImGuiInternal.DockBuilderDockWindow("ToolbarWindow", topDockId);
+            ImGuiInternal.DockBuilderDockWindow(EntityDefWindow.WindowTitle, bottomDockId);
+            ImGuiInternal.DockBuilderDockWindow(LayerDefWindow.WindowTitle, bottomDockId);
+            ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, bottomDockId);
+            ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, bottomDockId);
+            ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, bottomDockId);
+            ImGuiInternal.DockBuilderDockWindow("CurrentLevelWindow", bottomDockId);
+        }
+
+        var shouldDrawContent = ImGuiExt.BeginWorkspaceWindow(WindowTitle, "EditorDockSpace", InitializeLayout, ImGuiExt.RefPtr(ref IsOpen), ref windowClass);
+
+        if (shouldDrawContent)
+        {
+            if (ImGui.Begin("ToolbarWindow"))
+            {
+                if (ImGuiExt.ColoredButton("Test"))
+                {
+                    MakeTabVisible(LayerDefWindow.WindowTitle);
+                }
+
+                ImGui.SameLine();
+                if (ImGuiExt.ColoredButton("Test2"))
+                {
+                    MakeTabVisible(EntityDefWindow.WindowTitle);
+                }
+
+                ImGui.SameLine();
+                if (ImGuiExt.ColoredButton("Test3"))
+                {
+                    MakeTabVisible(LevelsWindow.WindowTitle);
+                }
+            }
+
+            windowClass.TabItemFlagsOverrideSet |= ImGuiTabItemFlags.NoReorder |
+                                                   ImGuiTabItemFlags.NoCloseWithMiddleMouseButton |
+                                                   ImGuiTabItemFlags.NoTooltip;
+            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags.AutoHideTabBar;
+
+            ImGui.SetNextWindowClass(&windowClass);
+            _entityDefWindow.Draw();
+            ImGui.SetNextWindowClass(&windowClass);
+            _layerDefWindow.Draw();
+            ImGui.SetNextWindowClass(&windowClass);
+            _levelsWindow.Draw();
+            ImGui.SetNextWindowClass(&windowClass);
+            _tileSetDefWindow.Draw();
+            ImGui.SetNextWindowClass(&windowClass);
+            _worldsWindow.Draw();
+
+            ImGui.End();
+        }
 
         DrawPreviewWindow();
 
@@ -42,7 +141,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawCurrentLevelData()
     {
-        if (ImGui.Begin(WindowTitle))
+        if (ImGui.Begin("CurrentLevelWindow"))
         {
             if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
             {
@@ -88,6 +187,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawPreviewWindow()
     {
+        ImGui.SetNextWindowSize(new Num.Vector2(1024, 768), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(ImGuiExt.FLT_MAX, ImGuiExt.FLT_MAX));
         if (ImGui.Begin(PreviewWindowTitle))
         {
             GameWindow.EnsureTextureIsBound(ref _editorRenderTextureId, _editor._editorRenderTarget, _editor.ImGuiRenderer);

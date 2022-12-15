@@ -135,7 +135,7 @@ public class LevelsWindow : SplitWindow
         var level = world.Levels[SelectedLevelIndex];
 
         SimpleTypeInspector.InspectString("Identifier", ref level.Identifier);
-        var rangeSettings = new RangeSettings(16, 16000, 1, false);
+        var rangeSettings = new RangeSettings(16, 16000, 1f, true);
         if (SimpleTypeInspector.InspectUInt("Width", ref level.Width, rangeSettings))
         {
             ResizeLayers(level, Root.LayerDefinitions);
@@ -149,10 +149,14 @@ public class LevelsWindow : SplitWindow
         var layerDef = Root.LayerDefinitions.FirstOrDefault();
         if (layerDef != null)
         {
-            ImGui.BeginDisabled();
-            var gridSize = new Point((int)(level.Width / layerDef.GridSize), (int)(level.Height / layerDef.GridSize));
-            SimpleTypeInspector.InspectPoint("Cells", ref gridSize);
-            ImGui.EndDisabled();
+            var gridSize = new UPoint(level.Width / layerDef.GridSize, level.Height / layerDef.GridSize);
+            var minGridSize = (uint)(rangeSettings.MinValue / layerDef.GridSize);
+            var maxGridSize = (uint)(rangeSettings.MaxValue / layerDef.GridSize);
+            if (SimpleTypeInspector.InspectUPoint("Cells", ref gridSize, 1.0f, (int)minGridSize, (int)maxGridSize))
+            {
+                level.Width = Math.Clamp(gridSize.X * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
+                level.Height = Math.Clamp(gridSize.Y * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
+            }
         }
 
         SimpleTypeInspector.InspectPoint("WorldPos", ref level.WorldPos);
@@ -244,7 +248,8 @@ public class LevelsWindow : SplitWindow
                 else
                 {
                     var indexToRemove = -1;
-                    if (ImGui.BeginTable("Value", 2,  ImGuiTableFlags.BordersH | ImGuiTableFlags.PreciseWidths | ImGuiTableFlags.SizingFixedFit, new Vector2(0, 0)))
+                    if (ImGui.BeginTable("Value", 2, ImGuiTableFlags.BordersH | ImGuiTableFlags.PreciseWidths | ImGuiTableFlags.SizingFixedFit,
+                            new Vector2(0, 0)))
                     {
                         ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
                         ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.NoResize);

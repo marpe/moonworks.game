@@ -10,7 +10,7 @@
       "Mochi.DearImGui/0.0.0-dev0": {
         "dependencies": {
           "Microsoft.SourceLink.GitHub": "1.0.0",
-          "Mochi.DearImGui.Native.win-x64": "0.0.0-dev0"
+          "Mochi.DearImGui.Native.win-x64-debug": "0.0.0-dev0"
         },
         "runtime": {
           "Mochi.DearImGui.dll": {}
@@ -24,7 +24,7 @@
           "Microsoft.SourceLink.Common": "1.0.0"
         }
       },
-      "Mochi.DearImGui.Native.win-x64/0.0.0-dev0": {
+      "Mochi.DearImGui.Native.win-x64-debug/0.0.0-dev0": {
         "runtime": {
           "Mochi.DearImGui.Native.DummyAssembly.dll": {}
         }
@@ -58,7 +58,7 @@
       "path": "microsoft.sourcelink.github/1.0.0",
       "hashPath": "microsoft.sourcelink.github.1.0.0.nupkg.sha512"
     },
-    "Mochi.DearImGui.Native.win-x64/0.0.0-dev0": {
+    "Mochi.DearImGui.Native.win-x64-debug/0.0.0-dev0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

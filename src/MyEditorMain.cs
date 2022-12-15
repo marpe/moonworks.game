@@ -224,11 +224,6 @@ public unsafe class MyEditorMain : MyGameMain
             new RenderTargetsWindow(this),
             new InputDebugWindow(this),
             EditorWindow,
-            new EntityDefWindow(this) { IsOpen = true },
-            new LayerDefWindow(this) { IsOpen = true },
-            new LevelsWindow(this) { IsOpen = true },
-            new TileSetDefWindow(this) { IsOpen = true },
-            new WorldsWindow(this) { IsOpen = true },
         };
         foreach (var window in windows)
         {
@@ -268,29 +263,40 @@ public unsafe class MyEditorMain : MyGameMain
 
     private uint SetupDockSpace(ImGuiViewport* mainViewport)
     {
-        var dockId = ImGui.DockSpaceOverViewport(mainViewport, ImGuiDockNodeFlags.PassthruCentralNode);
+        var flags = ImGuiDockNodeFlags.PassthruCentralNode;
+        flags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton);
+        flags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton);
+
+        var localFlags = (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton);
+        localFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton);
+                         
+        var dockId = ImGui.DockSpaceOverViewport(mainViewport, flags);
 
         if (_firstTime)
         {
             ImGuiInternal.DockBuilderRemoveNodeChildNodes(dockId);
 
-            var leftWidth = 0.33f;
-            uint dockLeftId;
-            uint dockCenterId;
-            ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
+            var leftWidth = 0.3f;
+            var rightWidth = 0.2f;
+            uint dockLeftId; uint dockCenterId; uint dockRightId;
 
-            var rightWidth = leftWidth / (1.0f - leftWidth); // 1.0f / (1.0f - leftWidth) - 1.0f;
-            uint dockRightId;
+            ImGuiInternal.DockBuilderSplitNode(dockId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
             ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
+
+            var leftNode = ImGuiInternal.DockBuilderGetNode(dockLeftId);
+            var rightNode = ImGuiInternal.DockBuilderGetNode(dockRightId);
+
+            leftNode->LocalFlags |= localFlags;
+            rightNode->LocalFlags |= localFlags;
 
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(EditorWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(EntityDefWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(LayerDefWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockLeftId);
-            ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockLeftId);
+            // ImGuiInternal.DockBuilderDockWindow(EntityDefWindow.WindowTitle, dockLeftId);
+            // ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, dockLeftId);
+            // ImGuiInternal.DockBuilderDockWindow(LayerDefWindow.WindowTitle, dockLeftId);
+            // ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockLeftId);
+            // ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
 
             ImGuiInternal.DockBuilderFinish(dockId);
