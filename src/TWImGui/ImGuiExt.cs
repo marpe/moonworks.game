@@ -468,7 +468,7 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
 
         var frameHeight = ImGui.GetFrameHeight();
-        var colorButtonSize = new Num.Vector2(frameHeight * 2.0f, frameHeight);
+        var colorButtonSize = new Num.Vector2(frameHeight * 1.2f, frameHeight);
         if (ImGui.ColorButton("##button", colorNum, flags, colorButtonSize))
         {
             openPicker = true;

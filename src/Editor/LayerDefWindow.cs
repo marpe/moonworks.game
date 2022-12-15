@@ -112,28 +112,23 @@ public unsafe class LayerDefWindow : SplitWindow
                               ImGuiTableFlags.PreciseWidths | ImGuiTableFlags.SizingFixedFit |
                               ImGuiTableFlags.RowBg;
 
-            if (ImGui.BeginTable("IntGridValues", 4, tableFlags2, new Vector2(0, 100)))
+            var rowHeight = 60;
+            var valueToRemove = -1;
+
+            ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, new Vector2(ImGui.GetStyle()->CellPadding.X * 2f, ImGui.GetStyle()->CellPadding.Y * 2.5f));
+            if (ImGui.BeginTable("IntGridValues", 4, tableFlags2, new Vector2(0, 0)))
             {
                 ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.None, 32);
                 ImGui.TableSetupColumn("Identifier", ImGuiTableColumnFlags.WidthStretch);
-                ImGui.TableSetupColumn("Color", ImGuiTableColumnFlags.None, 50);
-                ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.NoHeaderLabel, 40);
+                ImGui.TableSetupColumn("Color", ImGuiTableColumnFlags.None, 20);
+                ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.NoHeaderLabel, 30);
 
-                var valueToRemove = -1;
                 for (var i = 0; i < layerDef.IntGridValues.Count; i++)
                 {
                     ImGui.PushID(i);
-                    ImGui.TableNextRow();
+                    ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
                     ImGui.TableNextColumn();
-                    var dl = ImGui.GetWindowDrawList();
-                    var min = ImGui.GetCursorScreenPos();
-                    dl->AddRectFilled(min, min + new Vector2(32, ImGui.GetFrameHeightWithSpacing()),
-                        layerDef.IntGridValues[i].Color.MultiplyAlpha(0.33f).PackedValue, 4f);
-                    dl->AddRect(min, min + new Vector2(32, ImGui.GetFrameHeightWithSpacing()), layerDef.IntGridValues[i].Color.PackedValue, 4f);
-                    var label = (i + 1).ToString();
-                    var textSize = ImGui.CalcTextSize(label);
-                    var textPos = min + new Vector2(14 - textSize.X * 0.5f, 4);
-                    dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 18f, textPos, Color.White.PackedValue, label);
+                    DrawIntValue((i + 1).ToString(), new Vector2(rowHeight, rowHeight) * 0.6f, layerDef.IntGridValues[i].Color);
                     ImGui.TableNextColumn();
                     ImGui.SetNextItemWidth(-1);
                     ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 5f));
@@ -142,34 +137,50 @@ public unsafe class LayerDefWindow : SplitWindow
                     SimpleTypeInspector.InspectColor("##Color", ref layerDef.IntGridValues[i].Color);
                     ImGui.PopStyleVar();
                     ImGui.TableNextColumn();
-                    if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.White, ImGuiExt.Colors[2], "Remove", new Vector2(40, 0),
-                            new Vector2(ImGui.GetStyle()->FramePadding.X, 4)))
+                    ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(4, 2));
+                    if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.White, ImGuiExt.Colors[2], "Remove", new Vector2(30, 0), new Vector2(ImGui.GetStyle()->FramePadding.X, 4)))
                     {
                         valueToRemove = i;
                     }
-
+                    ImGui.PopStyleVar();
                     ImGui.PopID();
                 }
 
                 ImGui.EndTable();
+            }
+            ImGui.PopStyleVar();
+            
+            if (valueToRemove != -1)
+            {
+                layerDef.IntGridValues.RemoveAt(valueToRemove);
+            }
 
-                if (valueToRemove != -1)
+            if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.White, ImGuiExt.Colors[0], new Vector2(-1, 0), "Add"))
+            {
+                var value = layerDef.IntGridValues.Count + 1;
+                layerDef.IntGridValues.Add(new IntGridValue
                 {
-                    layerDef.IntGridValues.RemoveAt(valueToRemove);
-                }
-
-                if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.White, ImGuiExt.Colors[0], new Vector2(-1, 0), "Add"))
-                {
-                    var value = layerDef.IntGridValues.Count + 1;
-                    layerDef.IntGridValues.Add(new IntGridValue
-                    {
-                        Value = value,
-                        Color = ImGuiExt.Colors[value % ImGuiExt.Colors.Length],
-                        Identifier = "Identifier",
-                    });
-                }
+                    Value = value,
+                    Color = ImGuiExt.Colors[value % ImGuiExt.Colors.Length],
+                    Identifier = "Identifier",
+                });
             }
         }
+    }
+
+    private static void DrawIntValue(string label, Vector2 size, Color color)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        var min = ImGui.GetCursorScreenPos();
+        var max = min + size;
+        var fillColor = color.MultiplyAlpha(0.33f);
+        var outlineColor = color;
+        
+        ImGuiExt.RectWithOutline(dl, min, max, fillColor, outlineColor, 4f);
+        
+        var textSize = ImGui.CalcTextSize(label);
+        var textPos = min + size * 0.5f - textSize * 0.5f;
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 18f, textPos, Color.White.PackedValue, label);
     }
 
     private void DrawLayerDefTags(LayerDef layerDef)

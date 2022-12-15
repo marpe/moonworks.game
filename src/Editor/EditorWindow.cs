@@ -63,7 +63,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             uint topDockId = 0u;
             uint bottomDockId = 0u;
-            ImGuiInternal.DockBuilderSplitNode(dockSpaceId, ImGuiDir.Up, 0.4f, ImGuiExt.RefPtr(ref topDockId), ImGuiExt.RefPtr(ref bottomDockId));
+            ImGuiInternal.DockBuilderSplitNode(dockSpaceId, ImGuiDir.Up, 0.2f, ImGuiExt.RefPtr(ref topDockId), ImGuiExt.RefPtr(ref bottomDockId));
 
             var topNode = ImGuiInternal.DockBuilderGetNode(topDockId);
             var bottomNode = ImGuiInternal.DockBuilderGetNode(bottomDockId);
@@ -115,20 +115,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 }
             }
 
-            windowClass.TabItemFlagsOverrideSet |= ImGuiTabItemFlags.NoReorder |
-                                                   ImGuiTabItemFlags.NoCloseWithMiddleMouseButton |
-                                                   ImGuiTabItemFlags.NoTooltip;
-            windowClass.DockNodeFlagsOverrideSet |= ImGuiDockNodeFlags.AutoHideTabBar;
-
-            ImGui.SetNextWindowClass(&windowClass);
             _entityDefWindow.Draw();
-            ImGui.SetNextWindowClass(&windowClass);
             _layerDefWindow.Draw();
-            ImGui.SetNextWindowClass(&windowClass);
             _levelsWindow.Draw();
-            ImGui.SetNextWindowClass(&windowClass);
             _tileSetDefWindow.Draw();
-            ImGui.SetNextWindowClass(&windowClass);
             _worldsWindow.Draw();
 
             ImGui.End();
