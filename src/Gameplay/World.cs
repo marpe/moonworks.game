@@ -70,7 +70,9 @@ public class World
             }
         }
 
-        throw new InvalidOperationException($"Level not found: {identifier}");
+        Logs.LogError($"Level not found: {identifier}");
+
+        return root.Worlds.FirstOrDefault()?.Levels.FirstOrDefault() ?? throw new InvalidOperationException();
     }
 
     public void SetRoot(RootJson root)
