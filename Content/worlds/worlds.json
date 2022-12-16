@@ -31,14 +31,6 @@
                     "Y": 0
                   },
                   {
-                    "X": 0,
-                    "Y": 10
-                  },
-                  {
-                    "X": 0,
-                    "Y": 23
-                  },
-                  {
                     "X": 27,
                     "Y": 0
                   },
@@ -3874,30 +3866,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "faf3b1f7-1bf9-4429-baa9-046eabfee4a3",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 598,
-                    "Y": 137
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "fec9f71f-eb75-4f8c-b05e-0d64d9bbb94d",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -4381,30 +4349,6 @@
                   "Position": {
                     "X": 728,
                     "Y": 163
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "50b4c88b-a55e-4d0f-9788-bf506f42a280",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 232,
-                    "Y": 99
                   },
                   "Width": 16,
                   "Height": 16
@@ -5130,30 +5074,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "67793065-b7ea-4953-987a-74610fbde223",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 256,
-                    "Y": 320
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "4cfca68f-2888-4458-8b60-79c262456b5e",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -5298,78 +5218,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "32894b33-272c-4b62-8905-9f0e0e766884",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 240,
-                    "Y": 208
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "b363db98-5d2b-4331-8d72-077e46f08089",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 288,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c0049a12-009d-4131-8b11-feeb44049874",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 560,
-                    "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "4c92e67b-0266-49b5-9df9-298eb01f8bf1",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -5389,30 +5237,6 @@
                   "Position": {
                     "X": 640,
                     "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "6c3fe822-a2d7-4a0e-899e-9992c452eed5",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 624,
-                    "Y": 176
                   },
                   "Width": 16,
                   "Height": 16
@@ -5569,17 +5393,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "497a0b01-f9c9-4adb-91d6-06fadf231110",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 272,
-                    "Y": 80
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "d48a9de8-75e8-4a52-8c95-83aa7b8ad2a5",
                   "EntityDefId": 8,
                   "FieldInstances": [],
@@ -5597,28 +5410,6 @@
                   "Position": {
                     "X": 368,
                     "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "b5ff2d6c-305f-4e65-a9fd-bf601f4b6105",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 640,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "58be4462-b0e0-495f-85ec-77ae5497f51f",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 544,
-                    "Y": 352
                   },
                   "Width": 16,
                   "Height": 16
@@ -6034,54 +5825,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "2e58250b-3aa0-40bd-977a-0fc0e1305ace",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 528,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c0a62b58-1de5-4cfc-b299-b25be3a31ec6",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 512,
-                    "Y": 64
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "0ad63404-4fa9-41a3-8903-0eeaaf97d8a4",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -6106,30 +5849,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "defd85c3-680d-4f96-bfd8-1659fc931a28",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 80
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "bb032378-ae73-481b-a18d-be7c8372a650",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -6149,102 +5868,6 @@
                   "Position": {
                     "X": 496,
                     "Y": 0
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "fbd9dda0-309f-4fea-b56e-dbccd6cc81d2",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 96
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "2fc476b7-6105-4f02-8742-a6cca8772767",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 32
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1756ac13-35ac-485d-83de-434e1799f545",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "9c6c363c-a126-475a-9333-399917b687ab",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 96
                   },
                   "Width": 16,
                   "Height": 16
@@ -6293,78 +5916,6 @@
                   "Position": {
                     "X": 496,
                     "Y": 96
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "ea8e220a-cf56-4749-abbd-a3dfe17e0911",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 480,
-                    "Y": 80
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "fa874078-49d8-4391-995b-cb850480663e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "39c42705-fda1-4359-885d-7e28f12b26f5",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 480,
-                    "Y": 80
                   },
                   "Width": 16,
                   "Height": 16
@@ -6514,54 +6065,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "fe2bed2a-68a1-401a-bbe5-7ca679b1b7e8",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 368,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c0130fd8-6e93-4f78-92df-9ada0e76cc54",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 368,
-                    "Y": 32
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "ea95b194-9462-4c76-9a91-aa6b140bad7c",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -6634,54 +6137,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "6438000b-c286-4987-b05f-71c18ae1f7eb",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 32
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "36d1c751-b245-4f07-b337-5efe13ab5929",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 32
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "cd4b4e91-fe83-4660-82b3-3eeba8f146f0",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -6730,102 +6185,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "c40f368f-f05e-4e51-9c84-a5255c09e96e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "5f825719-cd85-4689-830f-48dfb8009eb6",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "467f396f-054f-4f8f-b378-855cf11b708c",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "a47ecf8f-c484-4ded-8b2a-4c9c8bf1fbd4",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 32
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "d81f9c87-e1b1-4519-9e0f-63234f742c7f",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -6845,30 +6204,6 @@
                   "Position": {
                     "X": 336,
                     "Y": 16
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "b40456e3-9d79-450c-a892-509ab824c7c6",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 32
                   },
                   "Width": 16,
                   "Height": 16
@@ -7050,22 +6385,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "82a5b893-0441-4b65-b745-c536af03793c",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 560,
-                    "Y": 336
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "8da00072-7e02-47c0-9577-db25f45dcd26",
                   "EntityDefId": 9,
                   "FieldInstances": [
@@ -7082,22 +6401,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "9f915e30-a9b8-4bdc-90e2-fde81853b08f",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 528,
-                    "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "48b5dff2-1aea-49ec-8050-76894fca2933",
                   "EntityDefId": 9,
                   "FieldInstances": [
@@ -7109,38 +6412,6 @@
                   "Position": {
                     "X": 512,
                     "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "f073cf1d-bcd3-4808-a177-98b638e25e01",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 432,
-                    "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "0970bf6a-cfb7-4289-9ef2-261a03198381",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 288
                   },
                   "Width": 16,
                   "Height": 16
@@ -7338,22 +6609,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "95617606-9c02-4238-8679-4d51bc13b62d",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "78428e45-a385-4e9f-a9e2-7db68b4a7802",
                   "EntityDefId": 9,
                   "FieldInstances": [
@@ -7365,57 +6620,6 @@
                   "Position": {
                     "X": 336,
                     "Y": 128
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1f05decd-2e07-4602-8841-bdaea112dfad",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "8d3ab1c7-00d9-4ff5-b78e-32b320a6f964",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 464,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "df5dd4b9-a117-4935-9bf2-bd55f1404480",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 848,
-                    "Y": 416
                   },
                   "Width": 16,
                   "Height": 16
@@ -7476,28 +6680,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "a691251e-bd8d-431c-969a-2f7ba28777e4",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 400,
-                    "Y": 304
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "068d54e7-cb44-493c-8a31-2e3845723715",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 384,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "3e222a82-ba67-4199-9bc0-ea31b40858ae",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -7526,22 +6708,6 @@
                   "Position": {
                     "X": 448,
                     "Y": 624
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "549239f0-7fa1-49a6-8faa-7889e5e32e61",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 800,
-                    "Y": 448
                   },
                   "Width": 16,
                   "Height": 16
@@ -7611,38 +6777,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "2a4af627-e932-457d-a19e-8bbf333e34bc",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 320
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "756aa8ee-631b-4b3d-a3ce-9851db62e951",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 496,
-                    "Y": 320
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "2895994d-0f50-45e6-a3d6-39c8e2947a8f",
                   "EntityDefId": 9,
                   "FieldInstances": [
@@ -7675,38 +6809,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "53e8a094-5e37-4524-833a-8c90781db6b1",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 448,
-                    "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "311c1006-77f6-4e6e-87af-63ba36038ca0",
-                  "EntityDefId": 9,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 26,
-                      "Value": false
-                    }
-                  ],
-                  "Position": {
-                    "X": 480,
-                    "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "d1d7d7a3-2728-493b-bc28-cfc8d85e84e7",
                   "EntityDefId": 9,
                   "FieldInstances": [
@@ -7718,30 +6820,6 @@
                   "Position": {
                     "X": 464,
                     "Y": 304
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "9e131ce9-be51-4cc4-b5f3-be2634f1b1c4",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 624,
-                    "Y": 192
                   },
                   "Width": 16,
                   "Height": 16
@@ -7795,78 +6873,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "5afbf755-99b9-4ab2-85cc-40e45b173efc",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 384,
-                    "Y": 272
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "5ec6c1e6-9709-4607-af77-8d4f240a4bea",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 384,
-                    "Y": 288
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "38d1e690-10ef-436b-9c61-ed96e4fe6bc9",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 448,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "2902b3c7-f887-432b-ad49-70d490deeeeb",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -7886,54 +6892,6 @@
                   "Position": {
                     "X": 368,
                     "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "a3f9036c-f357-4bea-aa30-c7c12b225e29",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 336,
-                    "Y": 256
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c08ca522-a53b-493e-af05-e30408bb85e5",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 288,
-                    "Y": 288
                   },
                   "Width": 16,
                   "Height": 16
@@ -8179,30 +7137,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "c05f1344-b10e-4ec7-b9c8-e9fd3ec7629b",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 768,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "4024fe83-37ea-487e-9a60-a63a65306c40",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -8222,78 +7156,6 @@
                   "Position": {
                     "X": 800,
                     "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "76a06c86-43e7-4985-83a9-c9a88a276be0",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 736,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "0f3ec2b8-0af5-4d10-83b0-3ee40f2cb1c2",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 672,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "8a5d163b-b4e1-4ee2-a7c5-98e189f9be30",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 672,
-                    "Y": 416
                   },
                   "Width": 16,
                   "Height": 16
@@ -8467,30 +7329,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "7dc7130a-6579-4803-a85a-106336fa0743",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 512,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "57d13fd5-2a7e-4a31-b2c0-badae9180a86",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -8510,54 +7348,6 @@
                   "Position": {
                     "X": 448,
                     "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "e24a3573-29e0-42db-9bd1-bc5ff8d9a7d1",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 416,
-                    "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "4e49b5a6-79dd-44da-a437-851251ac2809",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 384,
-                    "Y": 208
                   },
                   "Width": 16,
                   "Height": 16
@@ -8635,30 +7425,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "7fb690ab-aaa3-417d-870c-cc9a5d643977",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 176,
-                    "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "718aa9f0-534e-4e87-be3e-b7702ea1751d",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -8678,30 +7444,6 @@
                   "Position": {
                     "X": 128,
                     "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "73a79710-3b95-4ea6-bb20-5097d7d0598a",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 128,
-                    "Y": 208
                   },
                   "Width": 16,
                   "Height": 16
@@ -8750,30 +7492,6 @@
                   "Position": {
                     "X": 160,
                     "Y": 160
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "b3809fef-5965-4527-ba0d-027b720f2f19",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 112,
-                    "Y": 240
                   },
                   "Width": 16,
                   "Height": 16
@@ -8947,30 +7665,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "01145bd1-c853-4029-aacb-412240e5d94e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 160,
-                    "Y": 272
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "14152e8a-8316-452c-9ec9-cd3ec98435c1",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -9067,102 +7761,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "99bedcd8-c590-4dcc-b8b4-d0685a9f2eb9",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 128,
-                    "Y": 256
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "e2628d16-11e8-4eaf-a737-827f8e9d71f2",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 144,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1cc0c017-20ea-4bfd-b814-b07a3a97c88c",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 160,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "2ef1c17b-b056-4fe7-8d05-564e1bd0671c",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 160,
-                    "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "b1adf066-112b-453e-847d-7f6240bbc171",
                   "EntityDefId": 3,
                   "FieldInstances": [
@@ -9182,54 +7780,6 @@
                   "Position": {
                     "X": 176,
                     "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "643294d6-fbd5-4155-b159-423cc73717ab",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 256,
-                    "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "05c34db4-fc15-4eef-afe0-b793458ad57e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [
-                    {
-                      "FieldDefId": 8,
-                      "Value": 0.0
-                    },
-                    {
-                      "FieldDefId": 14,
-                      "Value": false
-                    },
-                    {
-                      "FieldDefId": 20,
-                      "Value": "#FFFFFF"
-                    }
-                  ],
-                  "Position": {
-                    "X": 256,
-                    "Y": 224
                   },
                   "Width": 16,
                   "Height": 16
@@ -9556,17 +8106,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "bfb9d09e-ebd8-4257-9296-53d1b611d507",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 176,
-                    "Y": 256
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "fa502da3-5ba2-40e1-b466-91274866bad8",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -9611,17 +8150,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "47dc6bf7-fbb4-4247-89ca-9e7ea942bcef",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 592,
-                    "Y": 208
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "122c9cf8-7ffb-4801-9553-0646c995b434",
                   "EntityDefId": 8,
                   "FieldInstances": [],
@@ -9650,17 +8178,6 @@
                   "Position": {
                     "X": 96,
                     "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c2b483a3-a2b3-485e-9317-c1c1e7a667fb",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 432,
-                    "Y": 144
                   },
                   "Width": 16,
                   "Height": 16
@@ -9837,6 +8354,411 @@
                   "Position": {
                     "X": 928,
                     "Y": 592
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c97c905d-f230-48aa-9a6f-fdeac28cff13",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 144,
+                    "Y": 320
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "86bc7c66-7ca7-48dd-bc7e-c505d212a432",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 704
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f116bedb-7689-4840-9ad5-e52c549051bf",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 704
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e4085e5c-2b0c-44ce-b348-bec4993e0cf0",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 704
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "d98b66e1-2261-474b-818d-ac173214d148",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 320,
+                    "Y": 704
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "411361fa-9764-4b62-a4d3-a0f918f7b595",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 192,
+                    "Y": 752
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "97fda8d3-8608-4d38-8b78-91c251cde4e8",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 192,
+                    "Y": 768
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "77718f32-b430-4750-9f17-8e9c4c92526d",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 160,
+                    "Y": 768
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "68e66545-84f8-492b-9dd8-4666fffa2fa7",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 128,
+                    "Y": 752
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "a6547077-882c-42c5-a40b-e27f6ec7b81f",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 848,
+                    "Y": 528
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "2f034b68-faf2-42de-add3-30e2e4f32aa4",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 864,
+                    "Y": 512
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "3c7adc78-f6b5-409e-9014-fe4673b64c2b",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 1168,
+                    "Y": 192
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "a58b0f2c-e8cb-4e45-a163-faaf8ad0b0bc",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 1184,
+                    "Y": 256
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "bcf8a53c-d61a-4198-8349-3f58786efe3b",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 752,
+                    "Y": 80
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "fa2d9a15-eac9-454f-b4cb-7b215f342f06",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 656,
+                    "Y": 32
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4a863e8f-f90f-49ff-a34b-30fc06e3f8cb",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 896,
+                    "Y": 48
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1f63d0b5-8a75-4402-9f44-f678a9e06d66",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 128
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "8638834c-3457-4d75-8806-a74897d873d9",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 208,
+                    "Y": 224
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e0a5486a-aad7-4442-8f77-04da2ffe7dc1",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 288,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "206f40a4-20dd-49c7-818d-12ba2cc0c7f4",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 368,
+                    "Y": 224
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "55c8b487-714b-4e10-9110-13617407f70d",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "78bd0103-d12f-462f-aaba-cb0166aac2f9",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 240
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f3ae3438-4a2a-40a9-a554-354b74e995e2",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 336,
+                    "Y": 304
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "682e1b0b-31e9-408f-ad91-2d08418fda87",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 304,
+                    "Y": 256
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "9e73390f-b799-4023-ad5f-aa709aa76c1f",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 64,
+                    "Y": 48
                   },
                   "Width": 16,
                   "Height": 16
@@ -14427,6 +13349,102 @@
                   },
                   "Width": 16,
                   "Height": 16
+                },
+                {
+                  "Iid": "1c38cde2-3557-4970-a43f-68349b4d4552",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 864,
+                    "Y": 224
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "91b967c4-c15f-4667-8ec6-9868f1c8a1e6",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 464,
+                    "Y": 208
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "87403715-25d4-4c74-b390-c53782af9f41",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 464,
+                    "Y": 224
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "5a9fee6c-6020-4a6e-a31e-4890fade77d8",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 448,
+                    "Y": 240
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f986facd-a262-4d1b-aefe-8e27481adf13",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 448,
+                    "Y": 272
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e0f538aa-fe6b-4a5f-8e70-dbf072f09417",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 32,
+                    "Y": 64
+                  },
+                  "Width": 16,
+                  "Height": 16
                 }
               ],
               "IsVisible": true
@@ -14441,9 +13459,9 @@
             "Y": -5
           },
           "Identifier": "Level 2",
-          "Width": 990,
-          "Height": 904,
-          "BackgroundColor": "#D89F9F",
+          "Width": 976,
+          "Height": 912,
+          "BackgroundColor": "#DEEBB2",
           "FieldInstances": [
             {
               "FieldDefId": 18,
@@ -14524,6 +13542,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14743,6 +13762,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14792,6 +13812,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14803,6 +13824,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14851,6 +13873,8 @@
                 0,
                 0,
                 0,
+                1,
+                1,
                 0,
                 0,
                 0,
@@ -14861,6 +13885,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14910,6 +13935,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14920,6 +13946,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -14969,14 +13996,18 @@
                 0,
                 0,
                 0,
+                1,
+                1,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15037,6 +14068,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15087,6 +14119,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15148,6 +14181,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15184,6 +14218,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15208,6 +14243,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15225,6 +14261,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15242,6 +14279,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15283,6 +14321,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15300,6 +14339,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15341,6 +14382,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15357,6 +14399,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15372,6 +14416,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15396,6 +14441,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15413,6 +14459,9 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15429,6 +14478,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15451,6 +14501,12 @@
                 0,
                 0,
                 0,
+                1,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15464,6 +14520,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15477,10 +14535,12 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15501,10 +14561,13 @@
                 0,
                 0,
                 0,
+                1,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15518,6 +14581,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15537,6 +14602,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15554,12 +14620,15 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15573,6 +14642,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15589,6 +14660,9 @@
                 0,
                 0,
                 0,
+                1,
+                1,
+                1,
                 0,
                 0,
                 0,
@@ -15605,6 +14679,8 @@
                 0,
                 0,
                 0,
+                12,
+                1,
                 0,
                 0,
                 0,
@@ -15613,6 +14689,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15626,6 +14703,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15637,9 +14716,11 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15658,13 +14739,18 @@
                 0,
                 0,
                 0,
+                1,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15678,6 +14764,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15692,12 +14780,14 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15707,17 +14797,21 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15731,6 +14825,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15744,6 +14840,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15753,28 +14850,34 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15783,6 +14886,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15800,6 +14905,8 @@
                 0,
                 0,
                 0,
+                1,
+                1,
                 0,
                 0,
                 0,
@@ -15807,21 +14914,29 @@
                 0,
                 0,
                 0,
+                1,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
+                1,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15832,6 +14947,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15845,6 +14962,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15856,6 +14974,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15863,16 +14982,21 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15883,6 +15007,9 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15895,6 +15022,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15907,19 +15035,27 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -15932,6 +15068,12 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15941,6 +15083,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -15953,18 +15096,27 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
                 0,
+                1,
+                12,
                 0,
+                1,
+                12,
+                12,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15978,15 +15130,43 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -15994,6 +15174,9 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16008,6 +15191,9 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16015,7 +15201,40 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16035,6 +15254,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16047,6 +15267,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -16059,6 +15280,9 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16091,6 +15315,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16104,6 +15329,7 @@
                 0,
                 0,
                 0,
+                1,
                 0,
                 0,
                 0,
@@ -16150,6 +15376,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16164,6 +15391,10 @@
                 0,
                 0,
                 0,
+                1,
+                1,
+                1,
+                1,
                 0,
                 0,
                 0,
@@ -16207,6 +15438,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16267,6 +15499,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16327,6 +15560,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16387,6 +15621,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16448,6 +15683,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16508,6 +15744,7 @@
                 0,
                 0,
                 0,
+                12,
                 0,
                 0,
                 0,
@@ -16568,6 +15805,12 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16622,7 +15865,31 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16642,6 +15909,8 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16658,9 +15927,34 @@
                 0,
                 0,
                 0,
+                12,
+                12,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
+                12,
+                12,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16670,8 +15964,15 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16688,12 +15989,50 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16727,9 +16066,32 @@
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -16781,357 +16143,13 @@
                 0,
                 0,
                 0,
+                12,
                 0,
+                12,
                 0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
+                12,
+                12,
+                12,
                 0,
                 0,
                 0,
@@ -17884,7 +16902,822 @@
             {
               "LayerDefId": 1,
               "IntGrid": [],
-              "EntityInstances": [],
+              "EntityInstances": [
+                {
+                  "Iid": "e0eb18c0-c8fa-40b1-819e-bcdcbd038c45",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 464,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "16f58d39-8d6e-4189-bae5-e2ca5ef4ec49",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 656,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c857b60b-21b6-4482-96d7-9b4f053599b1",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 560,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "b07ad430-26b8-405b-bf34-522f380fb3c5",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 496,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4b8ff8ca-5a3c-4dec-9191-d491bd484c97",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 480,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4fcbabd3-6bbf-40ca-b30e-d36a5c0932e5",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 336,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "d7c0d5b3-5983-4c7f-a6ac-dae0586f45f5",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 304,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "113fdc0b-fd62-4a0c-a4fa-e0ccc5111bdf",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "462b26d7-0cc7-43f5-be3d-faa936c2055c",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 448,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4ddbec8e-581a-491d-8b21-7d4b4869b6aa",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 688,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "020dcf28-0f34-4b74-b979-93653aea53ca",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 784,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "9e3c7651-7bb3-42d2-b2b4-172bc8165984",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 592,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4d9b41ac-d950-445a-b031-1861a5714416",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 224,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1ab0fd72-47eb-4cc2-89f2-fc673b82ad81",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 128,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "00cf862b-7383-45a1-bac6-9d6c629510c0",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 336,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e09b669c-9616-44ce-bac9-c2efc871c2e8",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 272,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "10d220ad-6ab1-4603-ac01-7f7b263db516",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 240,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "990b59ac-882f-48ed-a273-15baad8007be",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 400,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f32d96e4-74b2-42be-8ae3-63d2d5aecc67",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 576,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "71b39e47-f606-49fc-bd2e-d934d5b9bbf5",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 624,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "0afab75b-5972-4e41-a556-b41d69fe6d94",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 240,
+                    "Y": 304
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "5cc6bb97-1f6d-4fab-b64c-ae27235681df",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 144,
+                    "Y": 288
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1f1b7b78-7abc-4e89-aa32-5a9cd50fdd6e",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 448,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "fbf0559c-75ba-44be-86d1-04a55b1f3803",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 720,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "7890626c-422e-4132-8a5c-6526c11a82d1",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 672,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "2304b4fc-1d81-40da-80f4-60430ccb3ad4",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 352,
+                    "Y": 320
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "a0444a45-b5ea-49c3-b105-cf93e48960c7",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 512,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "6cade6da-9cff-458e-bca8-1e2d0df5ba99",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "85276be7-86f3-48a2-80bf-9e5b79bfb8fe",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "13f13ca4-7f5c-496b-86fb-67b56731e911",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "24cd45b6-a258-481d-924b-d8ede037ba27",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "10726294-4135-4443-9e93-ba4c4c31b418",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "dbe5c23d-1578-4bb5-8e6b-11c1395e3ebc",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "3bdfc743-ccde-4174-8fd3-712fdd6cf090",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "9df7bbde-65be-4e97-aedb-30d4f9387f47",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 496,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "54b6831b-5102-4749-8c32-2c8cd677545b",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f04c62f9-4ed9-4ca9-9abf-324c9a6d42c0",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 320
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "83798fb1-f915-4afa-b30a-01462ba9cd74",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 272,
+                    "Y": 288
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "23ca198e-8d13-4683-a964-9bd5e57191e3",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 288,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "de30646b-8640-44d5-a2bf-f910a0238697",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 368,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "87f43f5a-a0e8-4756-aa80-3bfaade53783",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 528,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "3fa146ab-2f20-49df-828b-b2513d13595b",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 544,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e334e26d-3709-4c3a-b0fa-a7c32ba9b6e7",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 544,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f6a2c797-6131-48f3-bd9c-d278ac9d453a",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 560,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e8262b9a-c245-4fbc-b9fb-2ab40a18f54a",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 560,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "038b41d7-dbce-4566-8f47-45a9fe31ec41",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 560,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1794f539-2c79-45d9-8503-ea005e37c00b",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 384,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e1f62e45-90ef-49bf-a59c-8c86e97929ca",
+                  "EntityDefId": 3,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 8,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 14,
+                      "Value": false
+                    },
+                    {
+                      "FieldDefId": 20,
+                      "Value": "#FFFFFF"
+                    }
+                  ],
+                  "Position": {
+                    "X": 384,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                }
+              ],
               "IsVisible": true
             },
             {
@@ -21307,7 +21140,168 @@
                 0,
                 0
               ],
-              "EntityInstances": [],
+              "EntityInstances": [
+                {
+                  "Iid": "c48e3c52-0a76-4826-a4f7-c20360026a04",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 192,
+                    "Y": 512
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "0bd2c0e8-7f47-4359-9ae0-6a93c3867614",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 368,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c961cee8-702c-4b1c-815f-4e2064e21b5c",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 544,
+                    "Y": 240
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "cedb81f6-4a06-4469-93c7-32ef41e68ba0",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 144,
+                    "Y": 192
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "473fb51b-8003-45a1-a97f-0070c74a0b2f",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 688,
+                    "Y": 496
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c4f8d3d1-1862-4807-999c-3c64571a0e05",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 720,
+                    "Y": 208
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "bc11f066-72b3-4bff-b74a-134dff47586d",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 320,
+                    "Y": 176
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "d093e862-06f5-4574-b559-719641ef0f15",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 528,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "26d578cc-f80a-45b7-9179-1752a468291a",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 160,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "edad73f1-6515-4463-9dd9-bb9688ecc092",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 26,
+                      "Value": false
+                    }
+                  ],
+                  "Position": {
+                    "X": 624,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                }
+              ],
               "IsVisible": true
             }
           ]
@@ -21371,7 +21365,7 @@
       "ResizableX": false,
       "ResizableY": false,
       "ShowName": false,
-      "TilesetId": 6,
+      "TileSetDefId": 0,
       "TileId": 1,
       "PivotX": 0.5,
       "PivotY": 0.5,
@@ -21393,7 +21387,7 @@
       "ResizableX": false,
       "ResizableY": false,
       "ShowName": false,
-      "TilesetId": 6,
+      "TileSetDefId": 0,
       "TileId": 13,
       "PivotX": 0.5,
       "PivotY": 0.5,
@@ -21411,7 +21405,7 @@
       "ResizableX": false,
       "ResizableY": false,
       "ShowName": false,
-      "TilesetId": 6,
+      "TileSetDefId": 0,
       "TileId": 10,
       "PivotX": 0.5,
       "PivotY": 0.5,
@@ -21428,7 +21422,7 @@
           "IsArray": false
         }
       ],
-      "Color": "#FFE940",
+      "Color": "#FFE200",
       "Width": 16,
       "Height": 16,
       "Identifier": "Light",
@@ -21437,13 +21431,31 @@
       "ResizableX": false,
       "ResizableY": false,
       "ShowName": false,
-      "TilesetId": 5,
-      "TileId": 112,
+      "TileSetDefId": 0,
+      "TileId": 1,
       "PivotX": 0.5,
       "PivotY": 0.5,
       "Tags": [
         "Light"
       ]
+    },
+    {
+      "Uid": 20,
+      "FieldDefinitions": [],
+      "Color": "#C52E20",
+      "Width": 16,
+      "Height": 16,
+      "Identifier": "Bullet",
+      "FillOpacity": 0.08,
+      "KeepAspectRatio": true,
+      "ResizableX": false,
+      "ResizableY": false,
+      "ShowName": false,
+      "TileSetDefId": 0,
+      "TileId": 4,
+      "PivotX": 0.5,
+      "PivotY": 0.5,
+      "Tags": []
     }
   ],
   "LevelFieldDefinitions": [
@@ -21483,8 +21495,8 @@
         },
         {
           "Value": 8,
-          "Identifier": "Grass",
-          "Color": "#D3D3D3"
+          "Identifier": "Grassss",
+          "Color": "#F28F8F"
         },
         {
           "Value": 9,
@@ -21506,6 +21518,126 @@
           "Identifier": "Left_Ground",
           "Color": "#ADFF2F"
         }
+      ],
+      "TileSetDefId": 0,
+      "AutoRuleGroups": [
+        {
+          "Uid": 22,
+          "Name": "New Group",
+          "Rules": [
+            {
+              "UId": 25,
+              "Size": 1,
+              "IsActive": true,
+              "BreakOnMatch": true,
+              "Pattern": [
+                0,
+                0
+              ],
+              "TileIds": [],
+              "Chance": 1.0
+            },
+            {
+              "UId": 27,
+              "Size": 3,
+              "IsActive": true,
+              "BreakOnMatch": true,
+              "Pattern": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "TileIds": [],
+              "Chance": 1.0
+            }
+          ],
+          "IsActive": true
+        },
+        {
+          "Uid": 24,
+          "Name": "New Group",
+          "Rules": [
+            {
+              "UId": 27,
+              "Size": 3,
+              "IsActive": true,
+              "BreakOnMatch": true,
+              "Pattern": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "TileIds": [],
+              "Chance": 1.0
+            }
+          ],
+          "IsActive": true
+        },
+        {
+          "Uid": 26,
+          "Name": "New Group",
+          "Rules": [
+            {
+              "UId": 29,
+              "Size": 3,
+              "IsActive": true,
+              "BreakOnMatch": true,
+              "Pattern": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "TileIds": [],
+              "Chance": 1.0
+            }
+          ],
+          "IsActive": true
+        }
       ]
     },
     {
@@ -21517,7 +21649,9 @@
         "Light"
       ],
       "GridSize": 16,
-      "IntGridValues": []
+      "IntGridValues": [],
+      "TileSetDefId": 0,
+      "AutoRuleGroups": []
     },
     {
       "Uid": 2,
@@ -21528,7 +21662,9 @@
       ],
       "ExcludedTags": [],
       "GridSize": 16,
-      "IntGridValues": []
+      "IntGridValues": [],
+      "TileSetDefId": 0,
+      "AutoRuleGroups": []
     }
   ],
   "TileSetDefinitions": [
@@ -21540,7 +21676,7 @@
     {
       "Uid": 5,
       "Identifier": "finalbossblues",
-      "Path": "finalbossblues-icons_full_16.png"
+      "Path": "finalbossblues-icons_full_16.aseprite"
     },
     {
       "Uid": 6,

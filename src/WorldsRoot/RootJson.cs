@@ -8,20 +8,15 @@ public static class IdGen
     public static int NewId => _idCounter++;
 }
 
-public class WorldsRoot
+public class RootJson
 {
     public string Version = "0.0.1";
-
     public int DefaultGridSize = 16;
-    public List<NewWorld> Worlds = new();
+    public List<World> Worlds = new();
     public List<EntityDefinition> EntityDefinitions = new();
     public List<FieldDef> LevelFieldDefinitions = new();
     public List<LayerDef> LayerDefinitions = new();
     public List<TileSetDef> TileSetDefinitions = new();
-
-    public WorldsRoot()
-    {
-    }
 }
 
 public class TileSetDef
@@ -48,10 +43,32 @@ public class LayerDef
     public List<string> ExcludedTags = new();
     public uint GridSize = 16;
     public List<IntGridValue> IntGridValues = new();
+    public uint TileSetDefId;
 
+    public List<AutoRuleGroup> AutoRuleGroups = new();
+    
     public LayerDef()
     {
     }
+}
+
+public class AutoRuleGroup
+{
+    public int Uid = IdGen.NewId;
+    public string Name = "New Group";
+    public List<AutoRule> Rules = new();
+    public bool IsActive;
+}
+
+public class AutoRule
+{
+    public int UId = IdGen.NewId;
+    public int Size = 3;
+    public bool IsActive;
+    public bool BreakOnMatch = true;
+    public List<int> Pattern = new();
+    public List<int> TileIds = new();
+    public float Chance = 1.0f;
 }
 
 public class IntGridValue
@@ -136,13 +153,13 @@ public class FieldInstance
     public object? Value;
 }
 
-public class NewWorld
+public class World
 {
     public Guid Iid = Guid.NewGuid();
     public List<Level> Levels = new();
     public string Identifier = "World";
 
-    public NewWorld()
+    public World()
     {
     }
 }
@@ -155,9 +172,13 @@ public class Level
     public string Identifier = "Level";
     public uint Width;
     public uint Height;
-    [JsonIgnore] public UPoint Size => new(Width, Height);
-    public Color BackgroundColor = Color.White;
+    [JsonIgnore]
+    public UPoint Size => new(Width, Height);
 
+    [JsonIgnore] public Rectangle Bounds => new(WorldPos.X, WorldPos.Y, (int)Width, (int)Height);
+    
+    public Color BackgroundColor = Color.White;
+    
     public List<FieldInstance> FieldInstances = new();
     public List<LayerInstance> LayerInstances = new();
 
@@ -200,7 +221,7 @@ public class EntityDefinition
     public bool ResizableX;
     public bool ResizableY;
     public bool ShowName;
-    public uint TilesetId;
+    public uint TileSetDefId;
     public uint TileId;
     public double PivotX;
     public double PivotY;

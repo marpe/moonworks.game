@@ -1,29 +1,25 @@
-﻿namespace MyGame;
+﻿using MyGame.WorldsRoot;
+
+namespace MyGame;
 
 [CustomInspector<GroupInspector>]
 public partial class Entity
 {
-    [HideInInspector]
-    public bool IsInitialized;
+    [HideInInspector] public bool IsInitialized;
 
-    [HideInInspector]
-    public bool IsDestroyed;
+    [HideInInspector] public bool IsDestroyed;
 
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
 
-    [HideInInspector]
-    public int Width => Size.X;
-    
-    [HideInInspector]
-    public int Height => Size.Y;
+    [HideInInspector] public int Width => Size.X;
 
-    [HideInInspector]
-    public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
+    [HideInInspector] public int Height => Size.Y;
+
+    [HideInInspector] public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
 
     private World? _world;
 
-    [HideInInspector]
-    public World World => _world ?? throw new InvalidOperationException();
+    [HideInInspector] public World World => _world ?? throw new InvalidOperationException();
 
     public CoroutineManager CoroutineManager = new();
 
@@ -34,11 +30,10 @@ public partial class Entity
     {
         ImGuiExt.InspectVector2("Position", ref Position.Current.X, ref Position.Current.Y);
     }
-    
+
     public Point Cell => ToCell(Position);
-    
-    [HideInInspector]
-    public float TotalTimeActive;
+
+    [HideInInspector] public float TotalTimeActive;
 
     public bool DrawDebug;
 
@@ -66,19 +61,21 @@ public partial class Entity
 
     public bool HasCollision(int x, int y)
     {
-        var levelMin = World.Level.Position / World.DefaultGridSize;
-        var levelMax = levelMin + World.Level.Size / World.DefaultGridSize;
+        var levelMin = World.Level.WorldPos / World.DefaultGridSize;
+        var levelGridSize = new Point((int)World.Level.Width, (int)World.Level.Height) / World.DefaultGridSize;
+        var levelMax = levelMin + levelGridSize;
 
         if (x < levelMin.X || y < levelMin.Y || x >= levelMax.X || y >= levelMax.Y)
             return true;
 
         foreach (var layer in World.Level.LayerInstances)
         {
-            if (layer.Identifier != "Tiles" || layer.Type != "IntGrid")
+            var layerDef = World.GetLayerDefinition(_world!.Root, layer.LayerDefId);
+            if (layerDef.Identifier != "Tiles" || layerDef.LayerType != LayerType.IntGrid)
                 continue;
 
             var (ix, iy) = (x - levelMin.X, y - levelMin.Y);
-            var value = layer.IntGridCsv[iy * layer.CWid + ix];
+            var value = layer.IntGrid[iy * levelGridSize.X + ix];
             if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
                 return true;
         }
@@ -109,7 +106,7 @@ public partial class Entity
 
         return false;
     }
-    
+
     public static Point ToCell(Vector2 position, int gridSize = World.DefaultGridSize)
     {
         return new Point(MathF.FloorToInt(position.X / gridSize), MathF.FloorToInt(position.Y / gridSize));

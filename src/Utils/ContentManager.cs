@@ -2,12 +2,6 @@ using MoonWorks.Audio;
 
 namespace MyGame.Utils;
 
-public struct LDtkAsset
-{
-    public LdtkJson LdtkRaw;
-    public Texture[] Textures;
-}
-
 public class ContentManager
 {
     public static readonly JsonSerializerSettings JsonSerializerSettings = new()
@@ -15,6 +9,7 @@ public class ContentManager
         TypeNameHandling = TypeNameHandling.Auto,
         Converters = { new ColorConverter() }
     };
+
     public static readonly JsonSerializer JsonSerializer = new()
     {
         Converters = { new ColorConverter() }
@@ -27,7 +22,7 @@ public class ContentManager
     private Dictionary<string, BMFont> _loadedBMFonts = new();
     private Dictionary<string, StaticSound> _loadedSound = new();
     private Dictionary<string, TTFFont> _loadedTTFFonts = new();
-    private Dictionary<string, LDtkAsset> _loadedLDtks = new();
+    private Dictionary<string, WorldsRoot.RootJson> _loadedRoots = new();
 
     public ContentManager(MyGameMain game)
     {
@@ -50,43 +45,15 @@ public class ContentManager
         AddTexture(path, texture);
     }
 
-    public static LdtkJson LoadLDtk(string path)
+    public WorldsRoot.RootJson LoadRoot(string path, bool forceReload)
     {
-        var jsonString = File.ReadAllText(path);
-        var ldtk = LdtkJson.FromJson(jsonString);
-        
-        // TODO (marpe): Remove ugly hack
-        for (var i = 0; i < ldtk.Defs.Tilesets.Length; i++)
-        {
-            var def = ldtk.Defs.Tilesets[i];
-            if (def.RelPath != null)
-            {
-                var combinedPath = Path.Combine(Path.GetDirectoryName(path) ?? "", def.RelPath);
-                ldtk.Defs.Tilesets[i].RelPath = combinedPath;
-            }
-        }
+        if (!forceReload && _loadedRoots.TryGetValue(path, out var root))
+            return root;
 
-        return ldtk;
-    }
-
-    public LDtkAsset LoadAndAddLDtkWithTextures(string path)
-    {
-        var asset = new LDtkAsset();
-        asset.LdtkRaw = LoadLDtk(path);
-
-        var texturePaths = asset.LdtkRaw.Defs.Tilesets.Where(x => x.RelPath != null)
-            .Select(x => x.RelPath)
-            .ToList();
-        LoadAndAddTextures(texturePaths);
-        asset.Textures = texturePaths.Select(GetTexture).ToArray();
-
-        if (_loadedLDtks.ContainsKey(path))
-        {
-            Logs.LogWarn($"LDtk has already been loaded: {path}");
-        }
-
-        _loadedLDtks[path] = asset;
-        return asset;
+        var json = File.ReadAllText(path);
+        var newRoot = JsonConvert.DeserializeObject<WorldsRoot.RootJson>(json, JsonSerializerSettings) ?? throw new InvalidOperationException();
+        _loadedRoots[path] = newRoot;
+        return newRoot;
     }
 
     public BMFont LoadAndAddBMFont(string path)
@@ -117,7 +84,7 @@ public class ContentManager
     {
         return _loadedTextures.ContainsKey(path);
     }
-    
+
     public Texture GetTexture(string path)
     {
         return _loadedTextures[path];
@@ -174,11 +141,13 @@ public class ContentManager
             var extension = Path.GetExtension(texturePath);
             if (extension == ".aseprite")
             {
-                texturesPendingSubmit.Add(texturePath, TextureUtils.LoadAseprite(_game.GraphicsDevice, ref commandBuffer, texturePath));
+                var asepriteTexture = TextureUtils.LoadAseprite(_game.GraphicsDevice, ref commandBuffer, texturePath);
+                texturesPendingSubmit.Add(texturePath, asepriteTexture);
             }
             else if (extension == ".png")
             {
-                AddTexture(texturePath, Texture.LoadPNG(_game.GraphicsDevice, commandBuffer, texturePath));
+                var pngTexture = Texture.LoadPNG(_game.GraphicsDevice, commandBuffer, texturePath);
+                AddTexture(texturePath, pngTexture);
             }
             else
             {

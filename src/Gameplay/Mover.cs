@@ -65,7 +65,7 @@ public class Mover
         var startPosition = position = Parent.Position.Current;
         startPosition = startPosition.Floor();
         var levelSize = Parent.World.Level.Size;
-        var levelPos = Parent.World.Level.Position;
+        var levelPos = Parent.World.Level.WorldPos;
 
         for (var dy = 0; dy < levelSize.Y; dy++)
         {

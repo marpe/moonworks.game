@@ -22,13 +22,13 @@ public unsafe class TileSetDefWindow : SplitWindow
             ImGui.TableSetupColumn("Name");
 
             var tileSetToDelete = -1;
-            for (var i = 0; i < Root.TileSetDefinitions.Count; i++)
+            for (var i = 0; i < RootJson.TileSetDefinitions.Count; i++)
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
 
                 ImGui.PushID(i);
-                var tilesetDef = Root.TileSetDefinitions[i];
+                var tilesetDef = RootJson.TileSetDefinitions[i];
 
                 var isSelected = _selectedTileSetDefinitionIndex == i;
                 var color = ImGuiExt.Colors[3];
@@ -59,7 +59,7 @@ public unsafe class TileSetDefWindow : SplitWindow
 
             if (tileSetToDelete != -1)
             {
-                Root.TileSetDefinitions.RemoveAt(tileSetToDelete);
+                RootJson.TileSetDefinitions.RemoveAt(tileSetToDelete);
             }
 
             ImGui.EndTable();
@@ -71,15 +71,15 @@ public unsafe class TileSetDefWindow : SplitWindow
         DrawTileSetDefinitions();
         if (ImGuiExt.ColoredButton("+ Add TileSet Definition", new Vector2(-1, 0)))
         {
-            Root.TileSetDefinitions.Add(new TileSetDef());
+            RootJson.TileSetDefinitions.Add(new TileSetDef());
         }
     }
 
     protected override void DrawRight()
     {
-        if (_selectedTileSetDefinitionIndex <= Root.TileSetDefinitions.Count - 1)
+        if (_selectedTileSetDefinitionIndex <= RootJson.TileSetDefinitions.Count - 1)
         {
-            var tileSetDef = Root.TileSetDefinitions[_selectedTileSetDefinitionIndex];
+            var tileSetDef = RootJson.TileSetDefinitions[_selectedTileSetDefinitionIndex];
 
             SimpleTypeInspector.InspectInputInt("Uid", ref tileSetDef.Uid);
             SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);

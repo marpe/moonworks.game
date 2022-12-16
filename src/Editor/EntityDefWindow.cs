@@ -34,7 +34,7 @@ public unsafe class EntityDefWindow : SplitWindow
                 ResizableY = false,
 
                 ShowName = false,
-                TilesetId = 0,
+                TileSetDefId = 0,
                 TileId = 0,
                 PivotX = 0.5,
                 PivotY = 0.5,
@@ -43,13 +43,13 @@ public unsafe class EntityDefWindow : SplitWindow
             };
 
             _refColor = Color.Green;
-            Root.EntityDefinitions.Add(def);
+            RootJson.EntityDefinitions.Add(def);
         }
         else if (btnResult == 1)
         {
         }
 
-        DrawEntityDefTable(Root.EntityDefinitions, ref _selectedEntityDefinitionIndex, Root.TileSetDefinitions, Root.DefaultGridSize);
+        DrawEntityDefTable(RootJson.EntityDefinitions, ref _selectedEntityDefinitionIndex, RootJson.TileSetDefinitions, RootJson.DefaultGridSize);
 
         SimpleTypeInspector.InspectInt("MinHeight", ref _rowMinHeight, new RangeSettings(ImGui.GetFrameHeightWithSpacing(), 100, 1, false));
     }
@@ -87,7 +87,7 @@ public unsafe class EntityDefWindow : SplitWindow
                     ImGui.EndPopup();
                 }
 
-                var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TilesetId);
+                var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
                 if (tileSet != null)
                 {
                     var dl = ImGui.GetWindowDrawList();
@@ -139,13 +139,13 @@ public unsafe class EntityDefWindow : SplitWindow
 
     protected override void DrawRight()
     {
-        var entities = Root.EntityDefinitions;
+        var entities = RootJson.EntityDefinitions;
         if (_selectedEntityDefinitionIndex >= 0 && _selectedEntityDefinitionIndex < entities.Count)
         {
             var entityDef = entities[_selectedEntityDefinitionIndex];
 
             SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
-            SimpleTypeInspector.InspectInputUint("TilesetId", ref entityDef.TilesetId);
+            SimpleTypeInspector.InspectInputUint("TilesetId", ref entityDef.TileSetDefId);
             SimpleTypeInspector.InspectInputUint("TileId", ref entityDef.TileId);
 
             var (ix, iy) = entityDef.Size;

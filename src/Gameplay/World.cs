@@ -1,111 +1,9 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using MyGame.Cameras;
+using MyGame.Editor;
+using MyGame.WorldsRoot;
 
 namespace MyGame;
-
-public static class MouseDebug
-{
-    public static Vector2 MousePivot = new Vector2(0f, 0f);
-    public static Point MouseSize = new Point(8, 12);
-
-    [CVar("mouse.debug", "Toggle mouse debugging", false)]
-    public static bool DebugMouse;
-
-    public static void DrawMousePosition(Renderer renderer)
-    {
-        if (!DebugMouse)
-            return;
-
-        var mousePosition = Shared.Game.InputHandler.MousePosition;
-        var view = Shared.Game.Camera.GetView();
-        Matrix3x2.Invert(view, out var invertedView);
-        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-        var mouseCell = Entity.ToCell(mouseInWorld);
-
-        var mouseCellRect = new Rectangle(
-            mouseCell.X * World.DefaultGridSize,
-            mouseCell.Y * World.DefaultGridSize,
-            World.DefaultGridSize,
-            World.DefaultGridSize
-        );
-        renderer.DrawRectOutline(mouseCellRect, Color.Red * 0.5f, 1f);
-
-        var mousePosRect = new Bounds(
-            mouseInWorld.X,
-            mouseInWorld.Y,
-            MouseSize.X,
-            MouseSize.Y
-        );
-        renderer.DrawRectOutline(mousePosRect, Color.Blue * 0.5f);
-
-        var mouseRenderRect = new Bounds(
-            mouseInWorld.X,
-            mouseInWorld.Y,
-            MouseSize.X,
-            MouseSize.Y
-        );
-        renderer.DrawRectOutline(mouseRenderRect, Color.Magenta * 0.5f);
-
-        // renderer.DrawPoint(mouseInWorld, Color.Red, 2f);
-    }
-}
-
-public static class CameraDebug
-{
-    [CVar("cam.debug", "Toggle camera debugging")]
-    public static bool DebugCamera;
-
-    public static void DrawCameraBounds(Renderer renderer, Camera camera)
-    {
-        if (!DebugCamera)
-            return;
-
-        var cameraBounds = camera.ZoomedBounds;
-        var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
-        renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);
-
-        var offset = camera.TargetPosition - camera.Position;
-        var dz = camera.DeadZone / 2;
-        var lengthX = MathF.Abs(offset.X) - dz.X;
-        var lengthY = MathF.Abs(offset.Y) - dz.Y;
-        var isDeadZoneActive = lengthX > 0 || lengthY > 0;
-        if (isDeadZoneActive)
-        {
-            var pointOnDeadZone = new Vector2(
-                MathF.Clamp(camera.TargetPosition.X, camera.Position.X - dz.X, camera.Position.X + dz.X),
-                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Y - dz.Y, camera.Position.Y + dz.Y)
-            );
-            renderer.DrawLine(pointOnDeadZone, camera.TargetPosition, Color.Red);
-        }
-
-        renderer.DrawRectOutline(camera.Position - dz, camera.Position + dz, Color.Magenta * (isDeadZoneActive ? 1.0f : 0.33f));
-        renderer.DrawPoint(camera.TargetPosition, Color.Cyan, 4f);
-
-        var posInLevel = camera.Position - camera.LevelBounds.MinVec();
-        var cameraMin = posInLevel - camera.ZoomedSize * 0.5f;
-        var cameraMax = posInLevel + camera.ZoomedSize * 0.5f;
-
-        if (camera.Velocity.X < 0 && cameraMin.X < camera.BrakeZone.X)
-        {
-            renderer.DrawLine(camera.Position, camera.Position - new Vector2(camera.BrakeZone.X - cameraMin.X, 0), Color.Red);
-        }
-        else if (camera.Velocity.X > 0 && cameraMax.X > camera.LevelBounds.Width - camera.BrakeZone.X)
-        {
-            renderer.DrawLine(camera.Position, camera.Position + new Vector2(cameraMax.X - (camera.LevelBounds.Width - camera.BrakeZone.X), 0), Color.Red);
-        }
-
-        if (camera.Velocity.Y < 0 && cameraMin.Y < camera.BrakeZone.Y)
-        {
-            renderer.DrawLine(camera.Position, camera.Position - new Vector2(0, camera.BrakeZone.Y - cameraMin.Y), Color.Red);
-        }
-        else if (camera.Velocity.Y > 0 && cameraMax.Y > camera.LevelBounds.Height - camera.BrakeZone.Y)
-        {
-            renderer.DrawLine(camera.Position, camera.Position + new Vector2(0, cameraMax.Y - (camera.LevelBounds.Height - camera.BrakeZone.Y)), Color.Red);
-        }
-
-        renderer.DrawRectOutline(camera.LevelBounds.MinVec() + camera.BrakeZone, camera.LevelBounds.MaxVec() - camera.BrakeZone, Color.Green);
-    }
-}
 
 public class World
 {
@@ -144,13 +42,14 @@ public class World
 
     public float FreezeFrameTimer;
 
-    public ldtk.Level Level = new();
-    public LDtkAsset LDtk = new();
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
     public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
 
     [Range(0, 5, 0.1f)] [CVar("light_rim_intensity", "Sets the intensity of the rim lighting")]
     public static float RimLightIntensity = 1f;
+
+    public RootJson Root = new();
+    public Level Level = new();
 
     public World()
     {
@@ -158,21 +57,25 @@ public class World
         // StartLevel("World_Level_1");
     }
 
-    public static ldtk.Level FindLevel(string identifier, LdtkJson ldtk)
+    public static Level FindLevel(string identifier, RootJson root)
     {
-        var levels = ldtk.Worlds.Length > 0 ? ldtk.Worlds[0].Levels : ldtk.Levels;
-        for (var i = 0; i < levels.Length; i++)
+        for (var i = 0; i < root.Worlds.Count; i++)
         {
-            if (levels[i].Identifier == identifier)
-                return levels[i];
+            for (var j = 0; j < root.Worlds[i].Levels.Count; j++)
+            {
+                if (root.Worlds[i].Levels[j].Identifier == identifier)
+                {
+                    return root.Worlds[i].Levels[j];
+                }
+            }
         }
 
         throw new InvalidOperationException($"Level not found: {identifier}");
     }
 
-    public void SetLDtk(LDtkAsset ldtk)
+    public void SetRoot(RootJson root)
     {
-        LDtk = ldtk;
+        Root = root;
         IsLoaded = true;
     }
 
@@ -181,14 +84,21 @@ public class World
     {
         WorldTotalElapsedTime = WorldUpdateCount = 0;
 
-        var level = FindLevel(levelIdentifier, LDtk.LdtkRaw);
+        var level = FindLevel(levelIdentifier, Root);
 
         foreach (var field in level.FieldInstances)
         {
-            if (field.Identifier == "AmbientLight")
+            var fieldDef = Root.LevelFieldDefinitions.FirstOrDefault(x => x.Uid == field.FieldDefId);
+            if (fieldDef == null)
             {
-                var fieldValue = (JToken)field.Value;
-                AmbientColor = fieldValue.ToObject<Color>(ContentManager.JsonSerializer);
+                Logs.LogError($"Could not find a field definition with id \"{field.FieldDefId}\"");
+                continue;
+            }
+
+            if (fieldDef.Identifier == "AmbientLight")
+            {
+                var fieldValue = (Color?)field.Value;
+                AmbientColor = fieldValue ?? Color.White;
             }
         }
 
@@ -198,9 +108,10 @@ public class World
 
         Level = level;
 
-        var entities = LoadEntitiesInLevel(level);
+        var entities = LoadEntitiesInLevel(Root, level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
-        Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy).Cast<Enemy>());
+        Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy || x.EntityType == EntityType.Slug || x.EntityType == EntityType.BlueBee)
+            .Cast<Enemy>());
         Lights.AddRange(entities.Where(x => x.EntityType == EntityType.Light).Cast<Light>());
     }
 
@@ -214,9 +125,9 @@ public class World
         }
 
         var world = Shared.Game.World;
-        var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
-        var currIndex = Array.IndexOf(levels, world.Level);
-        var nextIndex = (currIndex + 1) % levels.Length;
+        var levels = world.Root.Worlds[0].Levels;
+        var currIndex = levels.IndexOf(world.Level);
+        var nextIndex = (currIndex + 1) % levels.Count;
         var nextLevel = levels[nextIndex];
         world.StartLevel(nextLevel.Identifier);
         Logs.LogInfo($"Set next level {nextLevel.Identifier} ({nextIndex})");
@@ -232,41 +143,49 @@ public class World
         }
 
         var world = Shared.Game.World;
-        var levels = world.LDtk.LdtkRaw.Worlds.Length > 0 ? world.LDtk.LdtkRaw.Worlds[0].Levels : world.LDtk.LdtkRaw.Levels;
-        var currIndex = Array.IndexOf(levels, world.Level);
-        var prevIndex = (levels.Length + (currIndex - 1)) % levels.Length;
+        var levels = world.Root.Worlds[0].Levels;
+        var currIndex = levels.IndexOf(world.Level);
+        var prevIndex = (levels.Count + (currIndex - 1)) % levels.Count;
         var prevLevel = levels[prevIndex];
         world.StartLevel(prevLevel.Identifier);
         Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
-    private static List<Entity> LoadEntitiesInLevel(ldtk.Level level)
+    private static List<Entity> LoadEntitiesInLevel(RootJson root, Level level)
     {
         var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)
         {
-            if (layer.Type != "Entities")
+            var layerDef = GetLayerDefinition(root, layer.LayerDefId);
+            if (layerDef.LayerType != LayerType.Entities)
                 continue;
 
             foreach (var entityInstance in layer.EntityInstances)
             {
-                var parsedType = Enum.Parse<EntityType>(entityInstance.Identifier);
+                var entityDef = GetEntityDefinition(root, entityInstance.EntityDefId);
+                var parsedType = Enum.Parse<EntityType>(entityDef.Identifier);
                 var type = Entity.TypeMap[parsedType];
                 var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
 
                 entity.EntityType = parsedType;
-                entity.Iid = Guid.Parse(entityInstance.Iid);
-                entity.Pivot = entityInstance.PivotVec;
+                entity.Iid = entityInstance.Iid;
+                entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
                 entity.Size = entityInstance.Size;
-                entity.Position = new Position(level.Position + entityInstance.Position - entity.Pivot * entity.Size);
-                entity.SmartColor = ColorExt.FromHex(entityInstance.SmartColor.AsSpan(1));
+                entity.Position = new Position(level.WorldPos + entityInstance.Position - entity.Pivot * entity.Size);
+                entity.SmartColor = entityDef.Color;
 
                 foreach (var field in entityInstance.FieldInstances)
                 {
-                    var fieldValue = (JToken)field.Value;
-                    var fieldInfo = entity.GetType().GetField(field.Identifier) ?? throw new InvalidOperationException();
-                    var deserializedValue = fieldValue?.ToObject(fieldInfo.FieldType, ContentManager.JsonSerializer);
-                    fieldInfo.SetValue(entity, deserializedValue);
+                    var fieldDef = entityDef.FieldDefinitions.First(x => x.Uid == field.FieldDefId);
+                    var fieldValue = field.Value;
+                    var fieldInfo = entity.GetType().GetField(fieldDef.Identifier);
+                    if (fieldInfo == null)
+                    {
+                        Logs.LogError($"Entity is missing field: {fieldDef.Identifier}");
+                        continue;
+                    }
+
+                    fieldInfo.SetValue(entity, fieldValue);
                 }
 
                 entities.Add(entity);
@@ -409,20 +328,20 @@ public class World
     }
 
 
-    private void DrawLevel(Renderer renderer, ldtk.Level level, Bounds cameraBounds)
+    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
-        var color = level.BgColor == null ? Color.White : ColorExt.FromHex(level.BgColor.AsSpan().Slice(1));
+        var color = level.BackgroundColor;
         renderer.DrawRect(level.Bounds, color);
 
-        for (var layerIndex = level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
+        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(LDtk.LdtkRaw, layer.LayerDefUid);
-            DrawLayer(renderer, LDtk.LdtkRaw, level, layer, layerDef, (Rectangle)cameraBounds);
+            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
+            DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
         if (Debug && DebugLevel)
-            renderer.DrawRectOutline(level.Position, level.Position + level.Size, Color.Blue, 1.0f);
+            renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
 
     private void DrawBullets(Renderer renderer, double alpha)
@@ -459,6 +378,11 @@ public class World
 
     private void DrawEnemies(Renderer renderer, double alpha)
     {
+        if (!Shared.Content.HasTexture(ContentPaths.ldtk.Example.Characters_png))
+        {
+            Shared.Content.LoadAndAddTextures(new[] { ContentPaths.ldtk.Example.Characters_png });
+        }
+
         var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         for (var i = 0; i < Enemies.Count; i++)
         {
@@ -480,34 +404,31 @@ public class World
         }
     }
 
-    private void DrawLayer(Renderer renderer, LdtkJson ldtk, ldtk.Level level, LayerInstance layer, LayerDefinition layerDef, Rectangle cameraBounds)
+    private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
-        if (!layer.TilesetDefUid.HasValue)
-            return;
-
-        var tilesetDef = GetTilesetDef(ldtk, layerDef.TilesetDefUid!.Value);
-        var texture = Shared.Content.GetTexture(tilesetDef.RelPath);
-
-        var layerWidth = layer.CWid;
-        var layerHeight = layer.CHei;
+        var cols = level.Width / layerDef.GridSize;
+        var rows = level.Height / layerDef.GridSize;
 
         var boundsMin = cameraBounds
             .MinVec(); // WorldToTilePosition(cameraBounds.MinVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
         var boundsMax = cameraBounds
             .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
 
-        if (layer.Type == "IntGrid" && layer.Identifier == "Tiles" && Debug && DebugLevel)
+        if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
         {
-            for (var i = 0; i < layer.IntGridCsv.Length; i++)
+            var tilesetDef = GetTilesetDef(Root, 0); // TODO (marpe): Add TileSetId to LayerDef
+            var texture = SplitWindow.GetTileSetTexture(tilesetDef.Path);
+
+            for (var i = 0; i < layer.IntGrid.Length; i++)
             {
-                var value = layer.IntGridCsv[i];
+                var value = layer.IntGrid[i];
                 var enumValue = (LayerDefs.Tiles)value;
                 if (enumValue is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
                 {
-                    var gridSize = layer.GridSize;
-                    var gridY = (int)(i / layer.CWid);
-                    var gridX = (int)(i % layer.CWid);
-                    var min = level.Position + layer.TotalOffset + new Vector2(gridX, gridY) * gridSize;
+                    var gridSize = layerDef.GridSize;
+                    var gridY = (int)(i / cols);
+                    var gridX = (int)(i % cols);
+                    var min = level.WorldPos + new Vector2(gridX, gridY) * gridSize;
                     var max = min + new Vector2(gridSize, gridSize);
                     var intGridValue = layerDef.IntGridValues[value - 1];
                     var color = LayerDefs.TilesColors[enumValue]; // ColorExt.FromHex(intGridValue.Color.AsSpan().Slice(1));
@@ -515,74 +436,25 @@ public class World
                 }
             }
         }
-
-        for (var i = 0; i < layer.GridTiles.Length; i++)
-        {
-            var tile = layer.GridTiles[i];
-            var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X + layer.GridSize < boundsMin.X || tilePos.Y + layer.GridSize < boundsMin.Y ||
-                tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
-            {
-                continue;
-            }
-
-            RenderTile(renderer, tilePos, tile, layer, texture);
-        }
-
-        for (var i = 0; i < layer.AutoLayerTiles.Length; i++)
-        {
-            var tile = layer.AutoLayerTiles[i];
-            var tilePos = level.Position + layer.TotalOffset + tile.Position;
-            if (tilePos.X + layer.GridSize < boundsMin.X || tilePos.Y + layer.GridSize < boundsMin.Y ||
-                tilePos.X > boundsMax.X || tilePos.Y > boundsMax.Y)
-            {
-                continue;
-            }
-
-            RenderTile(renderer, tilePos, tile, layer, texture);
-        }
-
-        /*for (var x = min.X; x <= max.X; x++)
-            {
-                for (var y = min.Y; y <= max.Y; y++)
-                {
-                    // var tile = layer.Tiles[x, y];
-                    // if (tile == null)
-                        // continue;
-                    // RenderTile(batcher, tile, layer.LayerInstance, levelPosition, texture);
-                }
-            }*/
     }
 
-    private static TilesetDefinition GetTilesetDef(LdtkJson ldtk, long tilesetUid)
+    private static TileSetDef GetTilesetDef(RootJson root, long tilesetUid)
     {
-        for (var i = 0; i < ldtk.Defs.Tilesets.Length; i++)
+        for (var i = 0; i < root.TileSetDefinitions.Count; i++)
         {
-            if (ldtk.Defs.Tilesets[i].Uid == tilesetUid)
+            if (root.TileSetDefinitions[i].Uid == tilesetUid)
             {
-                return ldtk.Defs.Tilesets[i];
+                return root.TileSetDefinitions[i];
             }
         }
 
         throw new Exception($"Could not find a TilesetDefinition with id \"{tilesetUid}\"");
     }
 
-    private static void RenderTile(Renderer renderer, Point position, TileInstance tile, LayerInstance layer, Texture texture)
-    {
-        var srcRect = new Rectangle((int)tile.Src[0], (int)tile.Src[1], (int)layer.GridSize, (int)layer.GridSize);
-        var sprite = new Sprite(texture, srcRect);
-        var transform = Matrix3x2.CreateTranslation(position.X, position.Y);
-        renderer.DrawSprite(sprite, transform.ToMatrix4x4(), Color.White);
-    }
-
     public void Unload()
     {
         if (IsLoaded)
             return;
-
-        Level = new ldtk.Level();
-        LDtk = new LDtkAsset();
-
 
         Player = new();
         Enemies.Clear();
@@ -620,31 +492,15 @@ public class World
         }
     }
 
-    private static Dictionary<long, string> LoadTilesets(ReadOnlySpan<char> ldtkPath, TilesetDefinition[] tilesets)
-    {
-        var mapping = new Dictionary<long, string>();
-
-        foreach (var tilesetDef in tilesets)
-        {
-            if (string.IsNullOrWhiteSpace(tilesetDef.RelPath))
-                continue;
-
-            var tilesetPath = Path.Combine(Path.GetDirectoryName(ldtkPath).ToString(), tilesetDef.RelPath);
-            mapping.Add(tilesetDef.Uid, tilesetPath);
-        }
-
-        return mapping;
-    }
-
     public void SpawnBullet(Vector2 position, int direction)
     {
         var bullet = new Bullet();
-        var def = GetEntityDefinition(LDtk.LdtkRaw, EntityType.Bullet);
+        var def = GetEntityDefinition(Root, EntityType.Bullet);
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
-        bullet.Pivot = def.PivotVec;
+        bullet.Pivot = new Vector2(def.PivotX, def.PivotY);
         bullet.Size = def.Size;
-        bullet.SmartColor = ColorExt.FromHex(def.Color.AsSpan(1));
+        bullet.SmartColor = def.Color;
         bullet.Iid = Guid.NewGuid();
         bullet.EntityType = EntityType.Bullet;
 
@@ -658,23 +514,36 @@ public class World
         Bullets.Add(bullet);
     }
 
-    private static ldtk.EntityDefinition GetEntityDefinition(LdtkJson ldtkRaw, EntityType entityType)
+    private static EntityDefinition GetEntityDefinition(RootJson root, int entityDefId)
     {
-        for (var i = 0; i < ldtkRaw.Defs.Entities.Length; i++)
+        for (var i = 0; i < root.EntityDefinitions.Count; i++)
         {
-            if (ldtkRaw.Defs.Entities[i].Identifier == Entity.Identifiers[(int)entityType])
-                return ldtkRaw.Defs.Entities[i];
+            if (root.EntityDefinitions[i].Uid == entityDefId)
+                return root.EntityDefinitions[i];
         }
 
         throw new InvalidOperationException();
     }
 
-    public static LayerDefinition GetLayerDefinition(LdtkJson ldtkRaw, long layerDefUid)
+    private static EntityDefinition GetEntityDefinition(RootJson root, EntityType entityType)
     {
-        for (var i = 0; i < ldtkRaw.Defs.Layers.Length; i++)
+        for (var i = 0; i < root.EntityDefinitions.Count; i++)
         {
-            if (ldtkRaw.Defs.Layers[i].Uid == layerDefUid)
-                return ldtkRaw.Defs.Layers[i];
+            if (root.EntityDefinitions[i].Identifier == Entity.Identifiers[(int)entityType])
+                return root.EntityDefinitions[i];
+        }
+
+        throw new InvalidOperationException();
+    }
+
+    public static LayerDef GetLayerDefinition(RootJson root, long layerDefUid)
+    {
+        for (var j = 0; j < root.LayerDefinitions.Count; j++)
+        {
+            if (root.LayerDefinitions[j].Uid == layerDefUid)
+            {
+                return root.LayerDefinitions[j];
+            }
         }
 
         throw new InvalidOperationException();
@@ -738,11 +607,11 @@ public class World
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
 
         // draw ground for use with rim light
-        for (var layerIndex = Level.LayerInstances.Length - 1; layerIndex >= 0; layerIndex--)
+        for (var layerIndex = Level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = Level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(LDtk.LdtkRaw, layer.LayerDefUid);
-            DrawLayer(renderer, LDtk.LdtkRaw, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds);
+            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
+            DrawLayer(renderer, Root, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds);
         }
 
         // render entities for use with rim light

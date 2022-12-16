@@ -6,6 +6,7 @@ using MyGame.Cameras;
 using MyGame.Debug;
 using MyGame.Fonts;
 using MyGame.Screens.Transitions;
+using MyGame.WorldsRoot;
 
 namespace MyGame;
 
@@ -248,7 +249,7 @@ public class MyGameMain : Game
         }
     }
 
-    public void LoadLdtk(Func<LDtkAsset> ldtkLoader, Action? onCompleteCallback)
+    public void LoadRoot(Func<RootJson> rootLoader, Action? onCompleteCallback)
     {
         if (Shared.LoadingScreen.IsLoading)
         {
@@ -266,8 +267,8 @@ public class MyGameMain : Game
 
         Shared.LoadingScreen.LoadAsync(() =>
         {
-            var ldtk = ldtkLoader();
-            QueueSetLdtk(ldtk, onCompleteCallback);
+            var root = rootLoader();
+            QueueSetRoot(root, onCompleteCallback);
         });
     }
 
@@ -371,7 +372,7 @@ public class MyGameMain : Game
         _queuedActions.Enqueue(callback);
     }
 
-    public void QueueSetLdtk(LDtkAsset ldtk, Action? onCompleteCallback)
+    public void QueueSetRoot(RootJson root, Action? onCompleteCallback)
     {
         QueueAction(() =>
         {
@@ -380,7 +381,7 @@ public class MyGameMain : Game
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             UnloadWorld();
-            World.SetLDtk(ldtk);
+            World.SetRoot(root);
             onCompleteCallback?.Invoke();
         });
     }
@@ -406,11 +407,11 @@ public class MyGameMain : Game
     public static void Restart(bool immediate = true)
     {
         Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Starting load");
-        var ldtkLoader = () => Shared.Content.LoadAndAddLDtkWithTextures(ContentPaths.ldtk.Example.World_ldtk);
+        var rootLoader = () => Shared.Content.LoadRoot(ContentPaths.worlds.worlds_json, true);
         if (immediate)
-            Shared.Game.QueueSetLdtk(ldtkLoader(), World.NextLevel);
+            Shared.Game.QueueSetRoot(rootLoader(), World.NextLevel);
         else
-            Shared.Game.LoadLdtk(ldtkLoader, World.NextLevel);
+            Shared.Game.LoadRoot(rootLoader, World.NextLevel);
     }
     
     [ConsoleHandler("step")]

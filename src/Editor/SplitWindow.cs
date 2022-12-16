@@ -21,7 +21,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     private readonly Action<uint> _initializeDockSpace;
 
-    protected WorldsRoot.WorldsRoot Root => Editor.WorldsRoot;
+    protected WorldsRoot.RootJson RootJson => Editor.RootJson;
 
     protected virtual void PushStyles()
     {

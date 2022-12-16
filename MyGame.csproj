@@ -25,7 +25,6 @@
         <DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
-        <ProjectReference Include="lib\ldtk\LDtk.csproj" />
         <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
     </ItemGroup>
     <ItemGroup>

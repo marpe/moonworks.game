@@ -25,14 +25,6 @@ public partial class Bullet : Entity
             Flip = SpriteFlip.FlipHorizontally;
     }
 
-    private static Point GetLevelSize(LdtkJson ldtk, int levelIndex)
-    {
-        var isMultiWorld = ldtk.Worlds.Length > 0;
-        var levels = isMultiWorld ? ldtk.Worlds[0].Levels : ldtk.Levels;
-        var level = levels[levelIndex];
-        return new Point((int)(level.PxWid / World.DefaultGridSize), (int)(level.PxHei / World.DefaultGridSize));
-    }
-
     public Matrix4x4 GetTransform(double alpha)
     {
         var xform = Matrix3x2.CreateTranslation(Size * Pivot - Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize)) *

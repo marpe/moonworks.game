@@ -45,7 +45,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         _worldsWindow = new WorldsWindow(editor) { IsOpen = true };
     }
 
-    private bool GetSelectedLayerInstance([NotNullWhen(true)] out NewWorld? world, [NotNullWhen(true)] out Level? level,
+    private bool GetSelectedLayerInstance([NotNullWhen(true)] out WorldsRoot.World? world, [NotNullWhen(true)] out Level? level,
         [NotNullWhen(true)] out LayerInstance? layerInstance, [NotNullWhen(true)] out LayerDef? layerDef)
     {
         layerInstance = null;
@@ -53,10 +53,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         level = null;
         world = null;
 
-        if (WorldsWindow.SelectedWorldIndex > _editor.WorldsRoot.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex > _editor.RootJson.Worlds.Count - 1)
             return false;
 
-        world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+        world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
         if (LevelsWindow.SelectedLevelIndex > world.Levels.Count - 1)
             return false;
 
@@ -66,7 +66,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return false;
 
         var instance = level.LayerInstances[_selectedLayerInstanceIndex];
-        var def = _editor.WorldsRoot.LayerDefinitions.FirstOrDefault(x => x.Uid == instance.LayerDefId);
+        var def = _editor.RootJson.LayerDefinitions.FirstOrDefault(x => x.Uid == instance.LayerDefId);
         if (def == null)
             return false;
 
@@ -122,10 +122,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 if (!leftMousePressed)
                     break;
 
-                if (_selectedEntityDefinitionIndex > _editor.WorldsRoot.EntityDefinitions.Count - 1)
+                if (_selectedEntityDefinitionIndex > _editor.RootJson.EntityDefinitions.Count - 1)
                     break;
 
-                var entityDef = _editor.WorldsRoot.EntityDefinitions[_selectedEntityDefinitionIndex];
+                var entityDef = _editor.RootJson.EntityDefinitions[_selectedEntityDefinitionIndex];
 
                 if (IsExcluded(entityDef, layerDef))
                     break;
@@ -232,9 +232,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var windowFlags = ImGuiWindowFlags.NoCollapse;
         if (ImGui.Begin("CurrentLevelWindow", default, windowFlags))
         {
-            if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+            if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
             {
-                var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+                var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
 
                 if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
                 {
@@ -251,15 +251,15 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     {
         ImGuiExt.SeparatorText("Layers");
 
-        for (var i = 0; i < _editor.WorldsRoot.LayerDefinitions.Count; i++)
+        for (var i = 0; i < _editor.RootJson.LayerDefinitions.Count; i++)
         {
-            if (level.LayerInstances.Any(x => x.LayerDefId == _editor.WorldsRoot.LayerDefinitions[i].Uid))
+            if (level.LayerInstances.Any(x => x.LayerDefId == _editor.RootJson.LayerDefinitions[i].Uid))
                 continue;
-            var layerInstance = CreateLayerInstance(_editor.WorldsRoot.LayerDefinitions[i], level);
+            var layerInstance = CreateLayerInstance(_editor.RootJson.LayerDefinitions[i], level);
             level.LayerInstances.Add(layerInstance);
         }
 
-        DrawLayerInstances(level.LayerInstances, _editor.WorldsRoot.LayerDefinitions);
+        DrawLayerInstances(level.LayerInstances, _editor.RootJson.LayerDefinitions);
     }
 
     private static LayerInstance CreateLayerInstance(LayerDef layerDef, Level level)
@@ -322,9 +322,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 var offset = Vector2.Zero;
 
-                if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+                if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
                 {
-                    var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+                    var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
                     if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
                     {
                         var level = world.Levels[LevelsWindow.SelectedLevelIndex];
@@ -442,7 +442,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var layerDef = layerDefs.FirstOrDefault(x => x.Uid == layerInstance.LayerDefId);
             if (layerDef != null)
             {
-                DrawSelectedLayerBrushes(layerDef, _editor.WorldsRoot, ref _selectedIntGridValueIndex, ref _selectedEntityDefinitionIndex);
+                DrawSelectedLayerBrushes(layerDef, _editor.RootJson, ref _selectedIntGridValueIndex, ref _selectedEntityDefinitionIndex);
             }
             else
             {
@@ -455,7 +455,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
-    private static void DrawSelectedLayerBrushes(LayerDef layerDef, WorldsRoot.WorldsRoot root, ref int selectedIntGridValueIndex,
+    private static void DrawSelectedLayerBrushes(LayerDef layerDef, WorldsRoot.RootJson rootJson, ref int selectedIntGridValueIndex,
         ref int selectedEntityDefinitionIndex)
     {
         switch (layerDef.LayerType)
@@ -512,7 +512,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 break;
             case LayerType.Entities:
 
-                var entityDefs = root.EntityDefinitions;
+                var entityDefs = rootJson.EntityDefinitions;
 
                 if (entityDefs.Count == 0)
                 {
@@ -520,8 +520,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     break;
                 }
 
-                var tileSetDefs = root.TileSetDefinitions;
-                var gridSize = root.DefaultGridSize;
+                var tileSetDefs = rootJson.TileSetDefinitions;
+                var gridSize = rootJson.DefaultGridSize;
 
                 if (ImGui.BeginTable("EntityDefTable", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
                 {
@@ -554,7 +554,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                             ImGui.EndPopup();
                         }
 
-                        var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TilesetId);
+                        var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
                         if (tileSet != null)
                         {
                             var dl = ImGui.GetWindowDrawList();
@@ -648,9 +648,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var commandBuffer = _editor.GraphicsDevice.AcquireCommandBuffer();
         var viewProjection = _camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
 
-        if (WorldsWindow.SelectedWorldIndex <= _editor.WorldsRoot.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
         {
-            var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+            var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
             foreach (var level in world.Levels)
             {
                 var transform = Matrix3x2.CreateScale(level.Width, level.Height) *
@@ -665,7 +665,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawGrid(renderer, Color.Black * 0.1f, 1.0f / _camera.Zoom);
 
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.AlphaBlend);
 
         _editor.GraphicsDevice.Submit(commandBuffer);
     }
@@ -679,75 +679,88 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 continue;
 
             var isSelected = _selectedLayerInstanceIndex == i;
-            var layerDef = _editor.WorldsRoot.LayerDefinitions.FirstOrDefault(x => x.Uid == layer.LayerDefId);
+            var layerDef = _editor.RootJson.LayerDefinitions.FirstOrDefault(x => x.Uid == layer.LayerDefId);
             if (layerDef == null)
                 continue;
 
             if (layerDef.LayerType == LayerType.IntGrid)
             {
-                var cols = (int)(level.Width / layerDef.GridSize);
-                var rows = (int)(level.Height / layerDef.GridSize);
-                for (var j = 0; j < layer.IntGrid.Length; j++)
-                {
-                    var cellValue = layer.IntGrid[j];
-                    if (cellValue != 0)
-                    {
-                        var cellTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
-                                            Matrix3x2.CreateTranslation(
-                                                level.WorldPos.X + (j % cols) * layerDef.GridSize,
-                                                level.WorldPos.Y + (j / cols) * layerDef.GridSize
-                                            );
-                        var intDef = layerDef.IntGridValues.First(x => x.Value == cellValue);
-                        renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(),
-                            isSelected ? intDef.Color : intDef.Color * 0.5f);
-                    }
-                }
+                DrawIntGridLayer(renderer, level, layerDef, layer, isSelected);
             }
             else if (layerDef.LayerType == LayerType.Entities)
             {
-                foreach (var entityInstance in layer.EntityInstances)
-                {
-                    var entityDef = _editor.WorldsRoot.EntityDefinitions.FirstOrDefault(x => x.Uid == entityInstance.EntityDefId);
-                    if (entityDef == null)
-                        continue;
+                DrawEntityLayer(renderer, level, layer, layerDef, isSelected);
+            }
+        }
+    }
 
-                    var tileSetDef = _editor.WorldsRoot.TileSetDefinitions.FirstOrDefault(x => x.Uid == entityDef.TilesetId);
-                    var sprite = renderer.BlankSprite;
-                    Matrix4x4 entityTransform;
-                    Color color;
+    private void DrawEntityLayer(Renderer renderer, Level level, LayerInstance layer, LayerDef layerDef, bool isSelected)
+    {
+        for (var k = 0; k < layer.EntityInstances.Count; k++)
+        {
+            var entityInstance = layer.EntityInstances[k];
+            var entityDefId = entityInstance.EntityDefId;
+            var entityDef = _editor.RootJson.EntityDefinitions.FirstOrDefault(x => x.Uid == entityDefId);
+            if (entityDef == null)
+                continue;
 
-                    if (tileSetDef != null)
-                    {
-                        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                        var gridSize = _editor.WorldsRoot.DefaultGridSize;
-                        var tileSize = new Point(
-                            (int)(texture.Width / gridSize),
-                            (int)(texture.Height / gridSize)
-                        );
-                        var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
-                        var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
-                        sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), gridSize, gridSize));
-                        entityTransform = (
-                            Matrix3x2.CreateScale(1f, 1f) *
-                            Matrix3x2.CreateTranslation(
-                                level.WorldPos.X + entityInstance.Position.X,
-                                level.WorldPos.Y + entityInstance.Position.Y
-                            )).ToMatrix4x4();
-                        color = Color.White;
-                    }
-                    else
-                    {
-                        entityTransform = (
-                            Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
-                            Matrix3x2.CreateTranslation(
-                                level.WorldPos.X + entityInstance.Position.X,
-                                level.WorldPos.Y + entityInstance.Position.Y
-                            )).ToMatrix4x4();
-                        color = entityDef.Color;
-                    }
+            var tileSetId = entityDef.TileSetDefId;
+            var tileSetDef = _editor.RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == tileSetId);
+            var sprite = renderer.BlankSprite;
+            Matrix4x4 entityTransform;
+            Color color;
 
-                    renderer.DrawSprite(sprite, entityTransform, isSelected ? color : color * 0.5f);
-                }
+            if (tileSetDef != null)
+            {
+                var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+                var gridSize = _editor.RootJson.DefaultGridSize;
+                var tileSize = new Point(
+                    (int)(texture.Width / gridSize),
+                    (int)(texture.Height / gridSize)
+                );
+                var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
+                var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
+                sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), gridSize, gridSize));
+                entityTransform = (
+                    Matrix3x2.CreateScale(1f, 1f) *
+                    Matrix3x2.CreateTranslation(
+                        level.WorldPos.X + entityInstance.Position.X,
+                        level.WorldPos.Y + entityInstance.Position.Y
+                    )).ToMatrix4x4();
+                color = Color.White;
+            }
+            else
+            {
+                entityTransform = (
+                    Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                    Matrix3x2.CreateTranslation(
+                        level.WorldPos.X + entityInstance.Position.X,
+                        level.WorldPos.Y + entityInstance.Position.Y
+                    )).ToMatrix4x4();
+                color = entityDef.Color;
+            }
+
+            renderer.DrawSprite(sprite, entityTransform, isSelected ? color : color * 0.5f);
+        }
+    }
+
+    private static void DrawIntGridLayer(Renderer renderer, Level level, LayerDef layerDef, LayerInstance layer, bool isSelected)
+    {
+        var cols = (int)(level.Width / layerDef.GridSize);
+        var rows = (int)(level.Height / layerDef.GridSize);
+        for (var j = 0; j < layer.IntGrid.Length; j++)
+        {
+            var cellValue = layer.IntGrid[j];
+            if (cellValue != 0)
+            {
+                var cellTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                                    Matrix3x2.CreateTranslation(
+                                        level.WorldPos.X + (j % cols) * layerDef.GridSize,
+                                        level.WorldPos.Y + (j / cols) * layerDef.GridSize
+                                    );
+                var intDef = layerDef.IntGridValues.First(x => x.Value == cellValue);
+                renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(),
+                    isSelected ? intDef.Color : intDef.Color * 0.5f);
             }
         }
     }
@@ -757,8 +770,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (GetSelectedLevel(out var level))
         {
             var (mouseInWorld, mouseInLevel, mouseInGrid) = GetMousePositions();
-            var mouseSnappedToGrid = mouseInGrid * _editor.WorldsRoot.DefaultGridSize + level.WorldPos;
-            renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.WorldsRoot.DefaultGridSize, Color.Red, 2f);
+            var mouseSnappedToGrid = mouseInGrid * _editor.RootJson.DefaultGridSize + level.WorldPos;
+            renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);
         }
     }
 
@@ -766,10 +779,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     {
         level = null;
 
-        if (WorldsWindow.SelectedWorldIndex > _editor.WorldsRoot.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex > _editor.RootJson.Worlds.Count - 1)
             return false;
 
-        var world = _editor.WorldsRoot.Worlds[WorldsWindow.SelectedWorldIndex];
+        var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
         if (LevelsWindow.SelectedLevelIndex > world.Levels.Count - 1)
             return false;
 
@@ -784,7 +797,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return;
         }
 
-        var gridSize = _editor.WorldsRoot.DefaultGridSize;
+        var gridSize = _editor.RootJson.DefaultGridSize;
 
         var startX = level.WorldPos.X;
         var endX = level.WorldPos.X + level.Size.X;
@@ -819,7 +832,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             mouseInLevel = mouseInWorld - level.WorldPos;
 
 
-            var gridSize = _editor.WorldsRoot.DefaultGridSize;
+            var gridSize = _editor.RootJson.DefaultGridSize;
             mouseInWorld -= level.WorldPos;
             var col = MathF.FloorToInt(mouseInWorld.X / gridSize);
             var row = MathF.FloorToInt(mouseInWorld.Y / gridSize);

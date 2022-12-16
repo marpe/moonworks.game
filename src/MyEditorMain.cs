@@ -45,7 +45,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     public EditorWindow EditorWindow;
 
-    public WorldsRoot.WorldsRoot WorldsRoot = new();
+    public WorldsRoot.RootJson RootJson = new();
     public uint ViewportDockSpaceId;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
@@ -117,17 +117,13 @@ public unsafe class MyEditorMain : MyGameMain
         Logs.LogInfo($"File changed: {e.FullPath}, {e.ChangeType}");
         var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
         var extension = Path.GetExtension(relativePath);
-        if (extension == ".ldtk")
+        if (extension == ".json")
         {
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
 
-                var ldtk = ContentManager.LoadLDtk(relativePath);
-
-                // TODO (marpe): Fix
-                var ldtkAsset = new LDtkAsset();
-                ldtkAsset.LdtkRaw = ldtk;
+                var rootJson = Shared.Content.LoadRoot(relativePath, true);
 
                 // start the same level we're currently on
                 Action? onComplete = null;
@@ -137,7 +133,7 @@ public unsafe class MyEditorMain : MyGameMain
                     onComplete = () => { World.StartLevel(levelIdentifier); };
                 }
 
-                QueueSetLdtk(ldtkAsset, onComplete);
+                QueueSetRoot(rootJson, onComplete);
             });
         }
         else if (extension == ".aseprite")
@@ -181,16 +177,14 @@ public unsafe class MyEditorMain : MyGameMain
     {
         if (File.Exists(path))
         {
-            var json = File.ReadAllText(path);
-            WorldsRoot = JsonConvert.DeserializeObject<WorldsRoot.WorldsRoot>(json, ContentManager.JsonSerializerSettings) ??
-                         throw new InvalidOperationException();
+            RootJson = Shared.Content.LoadRoot(path, true);
             Logs.LogInfo($"World loaded: {path}");
         }
     }
 
     private void SaveWorld()
     {
-        var json = JsonConvert.SerializeObject(WorldsRoot, Formatting.Indented, ContentManager.JsonSerializerSettings);
+        var json = JsonConvert.SerializeObject(RootJson, Formatting.Indented, ContentManager.JsonSerializerSettings);
         var filename = ContentPaths.worlds.worlds_json;
         File.WriteAllText(filename, json);
         Logs.LogInfo($"Saved to {filename}");
@@ -238,7 +232,7 @@ public unsafe class MyEditorMain : MyGameMain
         {
             InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform); // TODO (marpe): Refactor this
         }
-        else if (!IsHidden && EditorWindow.IsOpen && EditorWindow.IsFocused)
+        else if (!IsHidden && EditorWindow.IsOpen)
         {
             InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
         }

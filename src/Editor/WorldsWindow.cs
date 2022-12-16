@@ -22,13 +22,13 @@ public class WorldsWindow : SplitWindow
             ImGui.TableSetupColumn("Name");
 
             var worldToDelete = -1;
-            for (var i = 0; i < Root.Worlds.Count; i++)
+            for (var i = 0; i < RootJson.Worlds.Count; i++)
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
 
                 ImGui.PushID(i);
-                var world = Root.Worlds[i];
+                var world = RootJson.Worlds[i];
 
 
                 var color = ImGuiExt.Colors[1];
@@ -60,7 +60,7 @@ public class WorldsWindow : SplitWindow
 
             if (worldToDelete != -1)
             {
-                Root.Worlds.RemoveAt(worldToDelete);
+                RootJson.Worlds.RemoveAt(worldToDelete);
             }
 
             ImGui.EndTable();
@@ -72,19 +72,19 @@ public class WorldsWindow : SplitWindow
         DrawWorlds();
         if (ImGuiExt.ColoredButton("+ Add World", new Vector2(-1, 0)))
         {
-            Root.Worlds.Add(new NewWorld());
+            RootJson.Worlds.Add(new WorldsRoot.World());
         }
     }
 
     protected override void DrawRight()
     {
-        if (SelectedWorldIndex <= Root.Worlds.Count - 1)
+        if (SelectedWorldIndex <= RootJson.Worlds.Count - 1)
         {
-            DrawSelectedWorldProperties(Root.Worlds[SelectedWorldIndex]);
+            DrawSelectedWorldProperties(RootJson.Worlds[SelectedWorldIndex]);
         }
     }
     
-    private void DrawSelectedWorldProperties(NewWorld world)
+    private void DrawSelectedWorldProperties(WorldsRoot.World world)
     {
         ImGui.PushID("World");
 

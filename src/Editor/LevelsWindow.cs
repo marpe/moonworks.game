@@ -19,13 +19,13 @@ public class LevelsWindow : SplitWindow
 
     private void DrawLevels()
     {
-        if (WorldsWindow.SelectedWorldIndex > Root.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex > RootJson.Worlds.Count - 1)
         {
             ImGui.TextDisabled("Select a world");
             return;
         }
 
-        var world = Root.Worlds[WorldsWindow.SelectedWorldIndex];
+        var world = RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
 
         if (world.Levels.Count == 0)
         {
@@ -86,7 +86,7 @@ public class LevelsWindow : SplitWindow
     {
         DrawLevels();
 
-        if (WorldsWindow.SelectedWorldIndex > Root.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex > RootJson.Worlds.Count - 1)
         {
             ImGui.TextDisabled("Select a world");
             return;
@@ -94,12 +94,12 @@ public class LevelsWindow : SplitWindow
 
         if (ImGuiExt.ColoredButton("+ Add Level", new Vector2(-1, 0)))
         {
-            Root.Worlds[WorldsWindow.SelectedWorldIndex].Levels.Add(new Level());
+            RootJson.Worlds[WorldsWindow.SelectedWorldIndex].Levels.Add(new Level());
         }
 
         var fieldDefRemoved = (FieldDef def) =>
         {
-            foreach (var world in Root.Worlds)
+            foreach (var world in RootJson.Worlds)
             {
                 foreach (var level in world.Levels)
                 {
@@ -114,15 +114,15 @@ public class LevelsWindow : SplitWindow
             }
         };
 
-        FieldDefEditor.DrawFieldEditor(Root.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex, fieldDefRemoved);
+        FieldDefEditor.DrawFieldEditor(RootJson.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex, fieldDefRemoved);
     }
 
     protected override void DrawRight()
     {
-        if (WorldsWindow.SelectedWorldIndex > Root.Worlds.Count - 1)
+        if (WorldsWindow.SelectedWorldIndex > RootJson.Worlds.Count - 1)
             return;
 
-        var world = Root.Worlds[WorldsWindow.SelectedWorldIndex];
+        var world = RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
 
         if (SelectedLevelIndex > world.Levels.Count - 1)
         {
@@ -138,15 +138,15 @@ public class LevelsWindow : SplitWindow
         var rangeSettings = new RangeSettings(16, 16000, 1f, true);
         if (SimpleTypeInspector.InspectUInt("Width", ref level.Width, rangeSettings))
         {
-            ResizeLayers(level, Root.LayerDefinitions);
+            ResizeLayers(level, RootJson.LayerDefinitions);
         }
 
         if (SimpleTypeInspector.InspectUInt("Height", ref level.Height, rangeSettings))
         {
-            ResizeLayers(level, Root.LayerDefinitions);
+            ResizeLayers(level, RootJson.LayerDefinitions);
         }
 
-        var layerDef = Root.LayerDefinitions.FirstOrDefault();
+        var layerDef = RootJson.LayerDefinitions.FirstOrDefault();
         if (layerDef != null)
         {
             var gridSize = new UPoint(level.Width / layerDef.GridSize, level.Height / layerDef.GridSize);
@@ -162,7 +162,7 @@ public class LevelsWindow : SplitWindow
         SimpleTypeInspector.InspectPoint("WorldPos", ref level.WorldPos);
         SimpleTypeInspector.InspectColor("BackgroundColor", ref level.BackgroundColor);
 
-        DrawFieldInstances(level.FieldInstances, Root.LevelFieldDefinitions);
+        DrawFieldInstances(level.FieldInstances, RootJson.LevelFieldDefinitions);
 
         ImGui.PopItemWidth();
     }
