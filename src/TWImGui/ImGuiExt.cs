@@ -562,7 +562,7 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleColor(ImGuiCol.BorderShadow, Color.Transparent.PackedValue);
         ImGui.PushStyleColor(ImGuiCol.Border, Color.Transparent.PackedValue);
         var style = ImGui.GetStyle();
-        ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, new Num.Vector2(0, 0.5f));
+        ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, new Num.Vector2(0.5f, 0.5f));
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(0, style->FramePadding.Y));
         var result = ImGui.Button(text, size);
         ImGui.PopStyleVar(2);
@@ -685,7 +685,7 @@ public static unsafe class ImGuiExt
         // label
         var textSize = ImGui.CalcTextSize(label, true);
 
-        if (textSize.X <= 0 || ImGui.GetContentRegionAvail().X < 200f)
+        if (textSize.X <= 0)
         {
             // ImGui.SetNextItemWidth(-1); // TODO (marpe): Investigate what I broke when this got commented out
             return label;
@@ -1165,22 +1165,20 @@ public static unsafe class ImGuiExt
         return result;
     }
 
-    public static void FillWithStripes(ImDrawList* drawList, ImRect areaOnScreen, uint stripesColor, float patternWidth = 16)
+    public static void FillWithStripes(ImDrawList* drawList, ImRect rect, uint stripesColor, float patternWidth = 16)
     {
-        drawList->PushClipRect(areaOnScreen.Min, areaOnScreen.Max, true);
-        var stripeOffset = patternWidth;
-        var lineWidth = stripeOffset / 2.7f;
+        drawList->PushClipRect(rect.Min, rect.Max, true);
+        var lineWidth = patternWidth / 2.7f;
 
-        var h = areaOnScreen.GetHeight();
-        var stripeCount = (int)((areaOnScreen.GetWidth() + h + 3 * lineWidth) / stripeOffset);
-        var p = areaOnScreen.Min - new Num.Vector2(h + lineWidth, +lineWidth);
-        var offset = new Num.Vector2(h + 2 * lineWidth,
-            h + 2 * lineWidth);
+        var height = rect.GetHeight();
+        var stripeCount = (int)((rect.GetWidth() + height + 3 * lineWidth) / patternWidth);
+        var position = rect.Min - new Num.Vector2(height + lineWidth, lineWidth);
+        var offset = new Num.Vector2(height + 2 * lineWidth, height + 2 * lineWidth);
 
         for (var i = 0; i < stripeCount; i++)
         {
-            drawList->AddLine(p, p + offset, stripesColor, lineWidth);
-            p.X += stripeOffset;
+            drawList->AddLine(position, position + offset, stripesColor, lineWidth);
+            position.X += patternWidth;
         }
 
         drawList->PopClipRect();
@@ -1361,6 +1359,82 @@ public static unsafe class ImGuiExt
     {
         dl->AddRectFilled(min, max, fillColor.PackedValue, rounding);
         dl->AddRect(min, max, outlineColor.PackedValue, rounding);
+    }
+
+    public static bool DrawTileSetIcon(string id, uint gridSize, Texture texture, uint tileId, Num.Vector2 iconPos, Num.Vector2 iconSize, bool drawOutline,
+        Color outlineColor,
+        float padding = 4f)
+    {
+        var dl = ImGui.GetWindowDrawList();
+
+        var cellSize = new Point(
+            (int)(texture.Width / gridSize),
+            (int)(texture.Height / gridSize)
+        );
+        var cellX = cellSize.X > 0 ? tileId % cellSize.X : 0;
+        var cellY = cellSize.X > 0 ? (int)(tileId / cellSize.X) : 0;
+        var uvMin = new Num.Vector2(
+            1.0f / texture.Width * cellX * gridSize,
+            1.0f / texture.Height * cellY * gridSize
+        );
+        var relCellSize = new Num.Vector2(
+            gridSize / (float)texture.Width,
+            gridSize / (float)texture.Height
+        );
+        var uvMax = uvMin + relCellSize;
+
+        var pad = new Num.Vector2(padding);
+        if (drawOutline)
+        {
+            RectWithOutline(
+                dl,
+                iconPos,
+                iconPos + iconSize + pad * 2,
+                outlineColor.MultiplyAlpha(0.2f),
+                outlineColor.MultiplyAlpha(0.6f),
+                2f
+            );
+        }
+
+        /*dl->AddImage(
+            (void*)texture.Handle,
+            iconPos,
+            iconPos + iconSize,
+            uvMin,
+            uvMax
+        );
+        return ImGui.InvisibleButton(id, iconSize);*/
+
+
+        if (!drawOutline)
+            FillWithStripes(dl, new ImRect(iconPos, iconPos + iconSize + pad * 2), Color.White.MultiplyAlpha(0.1f).PackedValue);
+
+        var wasHovered = ImGui.GetCurrentContext()->HoveredIdPreviousFrame == ImGui.GetID(id);
+        var transparent = Color.Transparent.ToNumerics();
+        ImGui.PushStyleColor(ImGuiCol.Button, transparent);
+        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, transparent);
+        ImGui.PushStyleColor(ImGuiCol.ButtonActive, transparent);
+        ImGui.PushStyleColor(ImGuiCol.BorderShadow, transparent);
+        ImGui.PushStyleColor(ImGuiCol.Border,
+            drawOutline ? transparent : (wasHovered ? Color.Yellow.ToNumerics() : Color.Yellow.MultiplyAlpha(0.33f).ToNumerics()));
+        ImGui.PushStyleColor(ImGuiCol.Text, transparent);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(padding));
+
+        ImGui.SetCursorScreenPos(iconPos);
+        var result = ImGui.ImageButton(
+            id,
+            (void*)texture.Handle,
+            iconSize,
+            uvMin,
+            uvMax,
+            transparent,
+            Color.White.ToNumerics()
+        );
+
+        ImGui.PopStyleColor(6);
+        ImGui.PopStyleVar();
+
+        return result;
     }
 }
 

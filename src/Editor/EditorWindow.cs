@@ -85,6 +85,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
             return;
 
+        if (!layerInstance.IsVisible)
+            return;
+        
         var (mouseWorld, mouseLevel, mouseGrid) = GetMousePositions();
         var cols = (int)(level.Width / layerDef.GridSize);
         var rows = (int)(level.Height / layerDef.GridSize);
@@ -307,18 +310,18 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 Matrix3x2.CreateTranslation(renderOffset.X, renderOffset.Y)
             ).ToMatrix4x4();
 
-            if (ImGui.IsMouseDown(ImGuiMouseButton.Middle))
+            if (ImGui.IsWindowHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Middle))
             {
                 _camera.Position += -ImGui.GetIO()->MouseDelta.ToXNA() * 1.0f / _camera.Zoom;
             }
 
-            if (ImGui.GetIO()->MouseWheel != 0)
+            if (ImGui.IsWindowHovered() && ImGui.GetIO()->MouseWheel != 0)
             {
                 _camera.Zoom += 0.1f * ImGui.GetIO()->MouseWheel * _camera.Zoom;
             }
 
             var showOverlay = true;
-            if (GameWindow.BeginOverlay("MoseOverlay", ref showOverlay))
+            if (GameWindow.BeginOverlay("MouseOverlay", ref showOverlay))
             {
                 var offset = Vector2.Zero;
 
@@ -767,12 +770,18 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawMouse(Renderer renderer)
     {
-        if (GetSelectedLevel(out var level))
-        {
-            var (mouseInWorld, mouseInLevel, mouseInGrid) = GetMousePositions();
-            var mouseSnappedToGrid = mouseInGrid * _editor.RootJson.DefaultGridSize + level.WorldPos;
-            renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);
-        }
+        /*if (!GetSelectedLevel(out var level))
+            return;*/
+
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+            return;
+
+        if (!layerInstance.IsVisible)
+            return;
+        
+        var (mouseInWorld, mouseInLevel, mouseInGrid) = GetMousePositions();
+        var mouseSnappedToGrid = mouseInGrid * _editor.RootJson.DefaultGridSize + level.WorldPos;
+        renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);
     }
 
     private bool GetSelectedLevel([NotNullWhen(true)] out Level? level)

@@ -30,15 +30,15 @@ public unsafe class SimpleTypeInspector : Inspector
         _setter = SetValue;
     }
 
-    private static void DrawFieldTooltip(string name)
+    public static void DrawFieldTooltip(string tooltip)
     {
-        var textSize = ImGui.CalcTextSize(name, true);
+        var textSize = ImGui.CalcTextSize(tooltip, true);
         if (textSize.X > 0 && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled | ImGuiHoveredFlags.DelayNormal))
         {
             ImGui.BeginTooltip();
             var min = ImGui.GetCursorScreenPos();
             var max = min + textSize;
-            ImGuiInternal.RenderTextClipped(min, max, name, &textSize, new System.Numerics.Vector2(0, 0.5f));
+            ImGuiInternal.RenderTextClipped(min, max, tooltip, &textSize, new System.Numerics.Vector2(0, 0.5f));
             ImGui.Dummy(textSize);
             ImGui.EndTooltip();
         }

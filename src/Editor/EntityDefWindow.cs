@@ -88,37 +88,13 @@ public unsafe class EntityDefWindow : SplitWindow
                 }
 
                 var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
-                if (tileSet != null)
+                if (tileSet != null && tileSet.Path != "")
                 {
-                    var dl = ImGui.GetWindowDrawList();
-                    var texture = GetTileSetTexture(tileSet.Path);
-
-                    // TODO (marpe): Replace gridSize with whatever grid size is being used for the tileset
-                    var tileSize = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
-                    var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
-                    var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
-                    var uvMin = new Vector2(1.0f / texture.Width * cellX * gridSize,
-                        1.0f / texture.Height * cellY * gridSize);
-                    var uvMax = uvMin + new Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
                     var lineHeight = Math.Max(_rowMinHeight, ImGui.GetTextLineHeight());
                     var iconSize = new Vector2(lineHeight, lineHeight) * 0.5f;
+                    var texture = GetTileSetTexture(tileSet.Path);
                     var iconPos = cursorPos + new Vector2(30, (int)((lineHeight - ImGui.GetStyle()->FramePadding.Y) / 2)) - iconSize / 2;
-                    var padding = new Vector2(4, 4);
-                    ImGuiExt.RectWithOutline(
-                        dl,
-                        iconPos - padding,
-                        iconPos + iconSize + padding * 2,
-                        entityDef.Color.MultiplyAlpha(0.2f),
-                        entityDef.Color.MultiplyAlpha(0.6f),
-                        2f
-                    );
-                    dl->AddImage(
-                        (void*)texture.Handle,
-                        iconPos,
-                        iconPos + iconSize,
-                        uvMin,
-                        uvMax
-                    );
+                    ImGuiExt.DrawTileSetIcon("Icon", (uint)gridSize, texture, entityDef.TileId, iconPos, iconSize, true, entityDef.Color);
                 }
 
                 ImGui.SameLine(0, 70f);
@@ -136,6 +112,7 @@ public unsafe class EntityDefWindow : SplitWindow
             ImGui.EndTable();
         }
     }
+
 
     protected override void DrawRight()
     {

@@ -6,6 +6,10 @@ namespace MyGame.Editor;
 
 public unsafe class LayerDefWindow : SplitWindow
 {
+    public const int ANYTHING_TILE_ID = 10000;
+    public const int NOTHING_TILE_ID = -ANYTHING_TILE_ID;
+    private static int[] _ruleMatrixSizes = new[] { 1, 3, 5, 7 };
+    private static string[] _ruleMatrixLabels = new[] { "1x1", "3x3", "5x5", "7x7" };
     private static int _rowMinHeight = 60;
     private int _selectedLayerDefIndex;
     private string _tempExcludedTag = "";
@@ -120,7 +124,11 @@ public unsafe class LayerDefWindow : SplitWindow
 
             DrawIntGridValues(tableFlags2, layerDef, rowHeight);
 
-            DrawAutoRuleGroups(tableFlags2, layerDef, rowHeight);
+            var tileSetDef = RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == layerDef.TileSetDefId);
+            if (tileSetDef != null && tileSetDef.Path != "") // TODO (marpe): Check that the texture is loaded etc
+            {
+                DrawAutoRuleGroups(tableFlags2, layerDef, tileSetDef, rowHeight);
+            }
         }
     }
 
@@ -185,14 +193,13 @@ public unsafe class LayerDefWindow : SplitWindow
         ImGui.PopID();
     }
 
-    private static void DrawAutoRuleGroups(ImGuiTableFlags tableFlags2, LayerDef layerDef, int rowHeight)
+    private static void DrawAutoRuleGroups(ImGuiTableFlags tableFlags2, LayerDef layerDef, TileSetDef tileSetDef, int rowHeight)
     {
         ImGui.PushID("AutoRules");
         var valueToRemove = -1;
-        if (ImGui.BeginTable("AutoRuleGroups", 2, tableFlags2, new Vector2(0, 0)))
+        if (ImGui.BeginTable("AutoRuleGroups", 1, tableFlags2, new Vector2(0, 0)))
         {
             ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
-            ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.None, 36);
 
             for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
             {
@@ -201,52 +208,10 @@ public unsafe class LayerDefWindow : SplitWindow
                 ImGui.TableNextColumn();
 
                 var group = layerDef.AutoRuleGroups[i];
-                ImGui.SetNextItemWidth(-1);
+                ImGui.SetNextItemWidth(-100);
                 SimpleTypeInspector.InspectString("##Name", ref group.Name);
 
-                if (group.Rules.Count > 0)
-                {
-                    if (ImGui.BeginTable("GroupRules", 2, tableFlags2, new Vector2(0, 0)))
-                    {
-                        ImGui.TableSetupColumn("Rules", ImGuiTableColumnFlags.WidthStretch);
-                        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthStretch);
-
-                        for (var k = 0; k < group.Rules.Count; k++)
-                        {
-                            ImGui.TableNextRow();
-                            ImGui.TableNextColumn();
-                            ImGui.PushID(k);
-                            var rule = group.Rules[k];
-                            DrawRuleMatrix(rule, layerDef.IntGridValues);
-                            ImGui.TableNextColumn();
-                            DrawSizeCombo(ref rule.Size);
-
-                            ImGui.SetNextItemWidth(-1);
-                            SimpleTypeInspector.InspectInputUint("##NewTileId", ref _tempTileId);
-                            ImGui.SetNextItemWidth(-1);
-                            if (ImGuiExt.ColoredButton("+", ImGuiExt.Colors[1], new Vector2(-ImGuiExt.FLT_MIN, 0)))
-                            {
-                                if (!rule.TileIds.Contains((int)_tempTileId))
-                                    rule.TileIds.Add((int)_tempTileId);
-                            }
-
-                            for (var m = 0; m < rule.TileIds.Count; m++)
-                            {
-                                ImGuiExt.ColoredButton(rule.TileIds[m].ToString());
-                                if (m < rule.TileIds.Count - 1 && (m == 0 || m % 5 != 0))
-                                    ImGui.SameLine();
-                            }
-
-                            ImGui.PopID();
-                        }
-
-                        ImGui.EndTable();
-                    }
-                }
-
-
-                ImGui.TableNextColumn();
-
+                ImGui.SameLine();
                 if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.Orange, new Vector2(30, 0), "Add Rule"))
                 {
                     group.Rules.Add(
@@ -259,6 +224,112 @@ public unsafe class LayerDefWindow : SplitWindow
                         }
                     );
                 }
+
+                ImGui.SameLine();
+                if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.Red, new Vector2(30, 0), "Remove Group"))
+                {
+                    valueToRemove = i;
+                }
+
+                if (group.Rules.Count > 0)
+                {
+                    if (ImGui.BeginTable("GroupRules", 3, tableFlags2 | ImGuiTableFlags.BordersV, new Vector2(0, 0)))
+                    {
+                        ImGui.TableSetupColumn("DragDrop", ImGuiTableColumnFlags.WidthFixed);
+                        ImGui.TableSetupColumn("Rules", ImGuiTableColumnFlags.WidthStretch);
+                        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthStretch);
+
+                        for (var k = 0; k < group.Rules.Count; k++)
+                        {
+                            var rule = group.Rules[k];
+                            ImGui.PushID(k);
+                            ImGui.TableNextRow();
+                            ImGui.TableNextColumn();
+
+                            ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, new Vector2(40, 40));
+
+                            if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
+                            {
+                                ImGui.SetDragDropPayload($"Group{i}_Rule_Row", &k, sizeof(int));
+                                ImGui.Text($"Dragging rule {k}");
+                                ImGui.EndDragDropSource();
+                            }
+
+                            if (ImGui.BeginDragDropTarget())
+                            {
+                                var payload = ImGui.AcceptDragDropPayload($"Group{i}_Rule_Row");
+                                if (payload != null)
+                                {
+                                    var rowIndex = *(int*)payload->Data;
+                                    group.Rules[k] = group.Rules[rowIndex];
+                                    group.Rules[rowIndex] = rule;
+                                }
+
+                                ImGui.EndDragDropTarget();
+                            }
+
+                            ImGui.TableNextColumn();
+                            DrawRuleMatrix(rule, layerDef.IntGridValues);
+                            ImGui.TableNextColumn();
+                            DrawSizeCombo(ref rule.Size);
+
+                            ImGui.SetNextItemWidth(250);
+                            SimpleTypeInspector.InspectBool("BreakOnMatch", ref rule.BreakOnMatch);
+                            SimpleTypeInspector.InspectBool("IsActive", ref rule.IsActive);
+                            SimpleTypeInspector.InspectFloat("Chance", ref rule.Chance, new RangeSettings(0, 1.0f, 0.1f, false));
+
+                            if (ImGuiExt.ColoredButton("+", ImGuiExt.Colors[1], new Vector2(-ImGuiExt.FLT_MIN, 28), "Add TileId"))
+                            {
+                                ImGui.OpenPopup("TileIdPopup");
+                            }
+
+                            if (TileSetIdPopup.DrawTileSetIdPopup(layerDef, tileSetDef, out var tileId))
+                            {
+                                if (!rule.TileIds.Contains(tileId))
+                                    rule.TileIds.Add(tileId);
+                            }
+
+                            if (rule.TileIds.Count == 0)
+                            {
+                                ImGui.TextDisabled("No TileId have been assigned");
+                            }
+                            else
+                            {
+                                var tileIdToRemove = -1;
+                                var texture = GetTileSetTexture(tileSetDef.Path);
+                                var iconSize = new Vector2(layerDef.GridSize * 2f);
+                                for (var m = 0; m < rule.TileIds.Count; m++)
+                                {
+                                    ImGui.PushID(m);
+                                    var iconPos = ImGui.GetCursorScreenPos();
+                                    if (ImGuiExt.DrawTileSetIcon("TileId", layerDef.GridSize, texture, (uint)rule.TileIds[m], iconPos, iconSize, false,
+                                            Color.White))
+                                    {
+                                        tileIdToRemove = m;
+                                    }
+
+                                    DrawZoomedTileTooltip(layerDef.GridSize, $"#{rule.TileIds[m]}", (uint)rule.TileIds[m], texture, iconSize);
+
+                                    ImGui.PopID();
+
+                                    ImGui.SameLine();
+                                    if (ImGui.GetContentRegionAvail().X < iconSize.X + ImGui.GetStyle()->ItemSpacing.X)
+                                        ImGui.NewLine();
+                                }
+
+                                if (tileIdToRemove != -1)
+                                {
+                                    rule.TileIds.RemoveAt(tileIdToRemove);
+                                }
+                            }
+
+                            ImGui.PopID();
+                        }
+
+                        ImGui.EndTable();
+                    }
+                }
+
 
                 ImGui.PopID();
             }
@@ -284,6 +355,40 @@ public unsafe class LayerDefWindow : SplitWindow
         ImGui.PopID();
     }
 
+    private static void DrawZoomedTileTooltip(uint gridSize, string label, uint tileId, Texture texture, Vector2 iconSize)
+    {
+        if (!ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+            return;
+
+        ImGui.SetNextWindowBgAlpha(1.0f);
+        // ImGui.PushStyleColor(ImGuiCol.PopupBg, Color.Black.PackedValue);
+        ImGui.BeginTooltip();
+
+        ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+        var labelSize = ImGui.CalcTextSize(label);
+        ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - labelSize.X) * 0.5f);
+        ImGui.Text(label);
+        ImGui.PopFont();
+        ImGuiExt.DrawTileSetIcon("TileIdZoomed", gridSize, texture, tileId, ImGui.GetCursorScreenPos(), iconSize * 4, false, Color.White);
+
+        /*
+            var dl = ImGui.GetForegroundDrawList();
+            var label = $"#{rule.TileIds[m]}";
+            var labelSize = ImGui.CalcTextSize(label);
+            var labelPos = cursorPosStart + avail - labelSize - new Vector2(10, 8);
+            dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, labelPos + Vector2.One, Color.Black.PackedValue, label);
+            dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, labelPos, Color.White.MultiplyAlpha(0.8f).PackedValue, label);*/
+        ImGui.EndTooltip();
+        // ImGui.PopStyleColor();
+    }
+
+    private static void AddText(string text, Vector2 position, int rowHeight, Color textColor)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, position + new Vector2(0, rowHeight * 0.5f - ImGui.GetTextLineHeight() / 2),
+            textColor.PackedValue, text, 0, default);
+    }
+
     private static void DrawRuleMatrix(AutoRule rule, List<IntGridValue> intGridValues)
     {
         while (rule.Pattern.Count > rule.Size * rule.Size)
@@ -296,25 +401,196 @@ public unsafe class LayerDefWindow : SplitWindow
             rule.Pattern.Add(0);
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(3, 3));
         for (var y = 0; y < rule.Size; y++)
         {
+            ImGui.PushID(y);
             for (var x = 0; x < rule.Size; x++)
             {
-                var value = rule.Pattern[y * rule.Size + x];
-                var color = intGridValues.FirstOrDefault(i => i.Value == value)?.Color ?? Color.Black;
-                ImGuiExt.ColoredButton($"{value.ToString()}##{x}_{y}", color, new Vector2(30));
+                ImGui.PushID(x);
+                var patternIndex = y * rule.Size + x;
+                var patternValue = rule.Pattern[patternIndex];
+                var intValue = intGridValues.FirstOrDefault(i => i.Value == patternValue || i.Value == -patternValue);
+                var (buttonColor, textColor, label) = (intValue?.Color, patternValue) switch
+                {
+                    (not null, _) => (intValue.Color, Color.White, "##PatternValue"),
+                    (null, ANYTHING_TILE_ID) => (Color.White, Color.Black, FontAwesome6.CircleQuestion),
+                    (null, NOTHING_TILE_ID) => (Color.Black, ImGuiExt.Colors[2], FontAwesome6.CircleXmark),
+                    _ => (new Color(20, 20, 20), Color.White, "##PatternValue"),
+                };
+                var popupName = "RulePopup";
+
+                var cursorPos = ImGui.GetCursorScreenPos();
+                var buttonSize = 40;
+                if (ImGuiExt.ColoredButton(label, textColor, buttonColor, new Vector2(buttonSize), null))
+                {
+                    ImGui.OpenPopup(popupName);
+                }
+
+                DrawRuleTooltip(rule.Pattern[patternIndex], intValue);
+
+                if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
+                {
+                    rule.Pattern[patternIndex] = 0;
+                }
+
+                ImGui.SetNextWindowPos(cursorPos + new Vector2(0, buttonSize), ImGuiCond.Always, Vector2.Zero);
+                DrawIntGridValuePopup(rule, intGridValues, popupName, patternValue, patternIndex);
+
                 if (x < rule.Size - 1)
-                    ImGui.SameLine(0, 0);
+                    ImGui.SameLine(0);
+
+                ImGui.PopID();
             }
+
+            ImGui.PopID();
         }
 
         ImGui.PopStyleVar();
     }
 
-    private static int[] _ruleMatrixSizes = new[] { 1, 3, 5, 7 };
-    private static string[] _ruleMatrixLabels = new[] { "1x1", "3x3", "5x5", "7x7" };
-    private static uint _tempTileId;
+    private static void DrawRuleTooltip(int patternValue, IntGridValue? intValue)
+    {
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+        {
+            ImGui.BeginTooltip();
+
+            if (intValue != null)
+            {
+                ImGui.Text("Tile should ");
+                ImGui.SameLine();
+                if (patternValue < 0)
+                {
+                    ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                    ImGui.TextColored(ImGuiExt.Colors[2].ToNumerics(), "NOT ");
+                    ImGui.PopFont();
+                    ImGui.SameLine();
+                }
+
+                ImGui.Text($"contain \"");
+                ImGui.SameLine();
+                ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                ImGui.TextColored(intValue.Color.ToNumerics(), $"{intValue.Identifier} ({intValue.Value})");
+                ImGui.PopFont();
+                ImGui.SameLine();
+                ImGui.Text("\" to match");
+            }
+            else if (patternValue == ANYTHING_TILE_ID)
+            {
+                ImGui.Text("This tile should contain ");
+                ImGui.SameLine();
+                ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                ImGui.Text("ANY");
+                ImGui.SameLine();
+                ImGui.PopFont();
+                ImGui.Text("value to match");
+            }
+            else if (patternValue == NOTHING_TILE_ID)
+            {
+                ImGui.Text("This tile should ");
+                ImGui.SameLine();
+                ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                ImGui.TextColored(ImGuiExt.Colors[2].ToNumerics(), "NOT");
+                ImGui.SameLine();
+                ImGui.PopFont();
+                ImGui.Text(" contain ");
+                ImGui.SameLine();
+                ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
+                ImGui.Text("ANY");
+                ImGui.SameLine();
+                ImGui.PopFont();
+                ImGui.Text(" value to match");
+            }
+            else
+            {
+                ImGui.Text("This tile doesn't matter");
+            }
+
+            ImGui.EndTooltip();
+        }
+    }
+
+    private static void DrawIntGridValuePopup(AutoRule rule, List<IntGridValue> intGridValues, string popupName, int value, int patternIndex)
+    {
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.CellPadding, Vector2.Zero);
+        ImGui.SetNextWindowBgAlpha(1.0f);
+        if (ImGui.BeginPopup(popupName, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            var rowHeight = 36;
+            if (ImGui.BeginTable("TileType", 1, TableFlags, new Vector2(200, 0)))
+            {
+                ImGui.TableSetupColumn("Value");
+                for (var k = 0; k < intGridValues.Count; k++)
+                {
+                    ImGui.PushID(k);
+                    var intGridValue = intGridValues[k];
+                    var isSelected = value == intGridValue.Value || value == -intGridValue.Value;
+                    if (DrawIntGridValueRow(intGridValue.Value, intGridValue.Identifier, isSelected, intGridValue.Color, rowHeight, out var selectedValue))
+                    {
+                        rule.Pattern[patternIndex] = selectedValue;
+                        ImGui.CloseCurrentPopup();
+                    }
+
+                    ImGui.PopID();
+                }
+
+                // draw anything/nothing
+
+                ImGui.PushID(ANYTHING_TILE_ID);
+
+                if (DrawIntGridValueRow(ANYTHING_TILE_ID, "Anything", value == ANYTHING_TILE_ID, Color.White, rowHeight, out var selected1))
+                {
+                    rule.Pattern[patternIndex] = selected1;
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.PopID();
+                ImGui.PushID(NOTHING_TILE_ID);
+                if (DrawIntGridValueRow(NOTHING_TILE_ID, "Nothing", value == NOTHING_TILE_ID, Color.DarkGray, rowHeight, out var selected2))
+                {
+                    rule.Pattern[patternIndex] = selected2;
+                    ImGui.CloseCurrentPopup();
+                }
+
+                ImGui.PopID();
+
+                ImGui.EndTable();
+            }
+
+            ImGui.EndPopup();
+        }
+
+        ImGui.PopStyleVar(2);
+    }
+
+
+    private static bool DrawIntGridValueRow(int currValue, string identifier, bool isSelected, Color color, int rowHeight, out int selectedValue)
+    {
+        var result = false;
+        selectedValue = -1;
+        ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
+        ImGui.TableNextColumn();
+        var cursorPos = ImGui.GetCursorScreenPos();
+
+        if (GiantButton("##Selectable", isSelected, color, rowHeight))
+        {
+            result = true;
+            selectedValue = currValue;
+        }
+
+        if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
+        {
+            result = true;
+            selectedValue = -currValue;
+        }
+
+        var currValueStr = currValue.ToString();
+        var leftPadding = new Vector2(20, 0);
+        AddText(currValueStr, cursorPos + leftPadding, rowHeight, color);
+        AddText(identifier, cursorPos + leftPadding + new Vector2(45, 0) + new Vector2(20, 0), rowHeight, color);
+        return result;
+    }
 
     private static void DrawSizeCombo(ref int size)
     {
