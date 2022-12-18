@@ -24,6 +24,7 @@ public class TileSetDef
     public int Uid = IdGen.NewId;
     public string Identifier = "TileSet";
     public string Path = "";
+    public uint TileGridSize = 16;
 }
 
 public enum LayerType

@@ -97,8 +97,8 @@ public unsafe class EntityDefWindow : SplitWindow
                     ImGuiExt.DrawTileSetIcon("Icon", (uint)gridSize, texture, entityDef.TileId, iconPos, iconSize, true, entityDef.Color);
                 }
 
-                ImGui.SameLine(0, 70f);
-
+                ImGui.SetCursorScreenPos(cursorPos);
+                ImGui.SetCursorPosX(100);
                 GiantLabel(entityDef.Identifier, entityDef.Color, _rowMinHeight);
 
                 ImGui.PopID();
@@ -122,8 +122,28 @@ public unsafe class EntityDefWindow : SplitWindow
             var entityDef = entities[_selectedEntityDefinitionIndex];
 
             SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
-            SimpleTypeInspector.InspectInputUint("TilesetId", ref entityDef.TileSetDefId);
+
+            TileSetDefCombo.DrawTileSetDefCombo("TileSetDefId", ref entityDef.TileSetDefId, RootJson.TileSetDefinitions);
+
             SimpleTypeInspector.InspectInputUint("TileId", ref entityDef.TileId);
+
+            if (ImGuiExt.ColoredButton("Select Tile", new Num.Vector2(-ImGuiExt.FLT_MIN, ImGui.GetFrameHeight())))
+            {
+                ImGui.OpenPopup("TileIdPopup");
+            }
+
+            var tileSetDef = RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
+            if (tileSetDef != null)
+            {
+                if (TileSetIdPopup.DrawTileSetIdPopup(tileSetDef, out var tileId))
+                {
+                    entityDef.TileId = (uint)tileId;
+                }
+            }
+            else if (entityDef.TileSetDefId != 0)
+            {
+                ImGui.TextDisabled($"Could not find a tileset with id \"{entityDef.TileSetDefId}\"");
+            }
 
             var (ix, iy) = entityDef.Size;
             var (x, y) = ((int)ix, (int)iy);

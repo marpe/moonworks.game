@@ -20,7 +20,7 @@ public static unsafe class ImGuiExt
 
     public static Color CheckboxBorderColor = new(92, 92, 92);
 
-    private static readonly Dictionary<uint, bool> _openFoldouts = new();
+    public static readonly Dictionary<uint, bool> OpenFoldouts = new();
 
     private static readonly Stack<Color> _colorStack = new();
     public static Num.Vector2 ButtonPadding => new(6f, 4f);
@@ -109,9 +109,9 @@ public static unsafe class ImGuiExt
     public static bool Fold(string label)
     {
         var id = ImGui.GetID(label);
-        if (!_openFoldouts.ContainsKey(id))
+        if (!OpenFoldouts.ContainsKey(id))
         {
-            _openFoldouts.Add(id, false);
+            OpenFoldouts.Add(id, false);
         }
 
         var avail = ImGui.GetContentRegionAvail();
@@ -120,7 +120,7 @@ public static unsafe class ImGuiExt
         var cursorStart = ImGui.GetCursorScreenPos();
         if (ImGui.InvisibleButton(label, size))
         {
-            _openFoldouts[id] = !_openFoldouts[id];
+            OpenFoldouts[id] = !OpenFoldouts[id];
         }
 
         var isHovered = ImGui.IsItemHovered();
@@ -144,10 +144,10 @@ public static unsafe class ImGuiExt
 
         var padding = new Num.Vector2(0, (size.Y - ImGui.GetTextLineHeight()) * 0.5f);
         var textDisabledColor = ImGui.GetColorU32(ImGuiCol.TextDisabled);
-        dl->AddText(cursorStart + padding, textDisabledColor, _openFoldouts[id] ? FontAwesome6.ChevronDown : FontAwesome6.ChevronRight);
+        dl->AddText(cursorStart + padding, textDisabledColor, OpenFoldouts[id] ? FontAwesome6.ChevronDown : FontAwesome6.ChevronRight);
         dl->AddText(cursorStart + padding + new Num.Vector2(labelOffsetX, 0), textDisabledColor, label);
 
-        return _openFoldouts[id];
+        return OpenFoldouts[id];
     }
 
     public static bool BeginPropTable(string id, ImGuiTableFlags flags = DefaultTableFlags | ImGuiTableFlags.ContextMenuInBody)

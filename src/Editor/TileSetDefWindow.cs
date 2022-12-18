@@ -84,7 +84,8 @@ public unsafe class TileSetDefWindow : SplitWindow
             SimpleTypeInspector.InspectInputInt("Uid", ref tileSetDef.Uid);
             SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);
             SimpleTypeInspector.InspectString("Path", ref tileSetDef.Path);
-
+            SimpleTypeInspector.InspectInputUint("TileGridSize", ref tileSetDef.TileGridSize);
+                
             if (tileSetDef.Path != "")
             {
                 var texture = GetTileSetTexture(tileSetDef.Path);

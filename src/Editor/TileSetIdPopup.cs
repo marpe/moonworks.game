@@ -11,7 +11,7 @@ public static unsafe class TileSetIdPopup
     public static float Scale = 4f;
     public static Vector2 Offset = Vector2.Zero;
 
-    public static bool DrawTileSetIdPopup(LayerDef layerDef, TileSetDef tileSetDef, out int selectedTileId)
+    public static bool DrawTileSetIdPopup(TileSetDef tileSetDef, out int selectedTileId)
     {
         selectedTileId = -1;
         var result = false;
@@ -34,7 +34,7 @@ public static unsafe class TileSetIdPopup
             var texturePosition = cursorPos + ImGui.GetWindowSize() * 0.5f - textureSize * 0.5f + Offset * Scale;
             var dl = ImGui.GetWindowDrawList();
 
-            
+
             ImGui.SetCursorScreenPos(texturePosition);
             ImGui.Image(
                 (void*)texture.Handle,
@@ -44,15 +44,16 @@ public static unsafe class TileSetIdPopup
                 Color.White.ToNumerics(),
                 Color.Black.ToNumerics()
             );
-            ImGuiExt.FillWithStripes(dl, new ImRect(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize()), Color.White.MultiplyAlpha(0.025f).PackedValue);
+            ImGuiExt.FillWithStripes(dl, new ImRect(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize()),
+                Color.White.MultiplyAlpha(0.025f).PackedValue);
             ImGuiExt.FillWithStripes(dl, new ImRect(texturePosition, texturePosition + textureSize), Color.White.MultiplyAlpha(0.1f).PackedValue);
 
             var textureWidth = texture.Width;
             var textureHeight = texture.Height;
-            var cols = textureWidth / layerDef.GridSize;
-            var rows = textureHeight / layerDef.GridSize;
+            var cols = textureWidth / tileSetDef.TileGridSize;
+            var rows = textureHeight / tileSetDef.TileGridSize;
 
-            var cellSize = new Vector2(layerDef.GridSize * Scale);
+            var cellSize = new Vector2(tileSetDef.TileGridSize * Scale);
             if (ImGui.IsItemHovered())
             {
                 var mouseCellX = (int)((ImGui.GetMousePos().X - texturePosition.X) / cellSize.X);

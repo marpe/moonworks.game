@@ -20758,7 +20758,7 @@
       "ResizableY": false,
       "ShowName": false,
       "TileSetDefId": 6,
-      "TileId": 1,
+      "TileId": 0,
       "PivotX": 0.5,
       "PivotY": 0.5,
       "Tags": [
@@ -20780,7 +20780,7 @@
       "ResizableY": false,
       "ShowName": false,
       "TileSetDefId": 6,
-      "TileId": 13,
+      "TileId": 12,
       "PivotX": 0.5,
       "PivotY": 0.5,
       "Tags": []
@@ -20915,7 +20915,7 @@
       "AutoRuleGroups": [
         {
           "Uid": 22,
-          "Name": "New Group",
+          "Name": "New Group 0",
           "Rules": [
             {
               "UId": 27,
@@ -20923,15 +20923,15 @@
               "IsActive": true,
               "BreakOnMatch": true,
               "Pattern": [
-                1,
-                1,
-                1,
-                2,
+                0,
+                0,
+                0,
+                0,
                 10,
-                2,
-                8,
-                7,
-                9,
+                0,
+                0,
+                0,
+                0,
                 0,
                 0,
                 0,
@@ -20944,14 +20944,7 @@
               ],
               "TileIds": [
                 3,
-                5,
-                2,
-                1,
-                7,
-                4,
-                444,
-                555,
-                33
+                5
               ],
               "Chance": 1.0
             },
@@ -20975,7 +20968,7 @@
         },
         {
           "Uid": 24,
-          "Name": "New Group",
+          "Name": "New Group 1",
           "Rules": [
             {
               "UId": 27,
@@ -21010,7 +21003,7 @@
         },
         {
           "Uid": 26,
-          "Name": "New Group",
+          "Name": "New Group 2",
           "Rules": [
             {
               "UId": 29,
@@ -21076,17 +21069,20 @@
     {
       "Uid": 0,
       "Identifier": "Level",
-      "Path": "Tilemap.png"
+      "Path": "Tilemap.png",
+      "TileGridSize": 16
     },
     {
       "Uid": 5,
       "Identifier": "finalbossblues",
-      "Path": "finalbossblues-icons_full_16.aseprite"
+      "Path": "finalbossblues-icons_full_16.aseprite",
+      "TileGridSize": 16
     },
     {
       "Uid": 6,
       "Identifier": "Characters",
-      "Path": "Characters.png"
+      "Path": "Characters.png",
+      "TileGridSize": 16
     }
   ]
 }

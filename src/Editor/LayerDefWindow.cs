@@ -16,6 +16,11 @@ public unsafe class LayerDefWindow : SplitWindow
     private string _tempRequiredTag = "";
     public const string WindowTitle = "Layers";
 
+    private static ImGuiTableFlags _horizontalBordersTableFlags = ImGuiTableFlags.BordersH | ImGuiTableFlags.BordersOuter |
+                                                                  ImGuiTableFlags.Hideable | ImGuiTableFlags.PreciseWidths |
+                                                                  ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg;
+
+
     public LayerDefWindow(MyEditorMain editor) : base(WindowTitle, editor)
     {
     }
@@ -111,26 +116,23 @@ public unsafe class LayerDefWindow : SplitWindow
         }
         else if (layerDef.LayerType == LayerType.IntGrid)
         {
-            SimpleTypeInspector.InspectInputUint("TileSetDefId", ref layerDef.TileSetDefId);
+            TileSetDefCombo.DrawTileSetDefCombo("TileSetDefId", ref layerDef.TileSetDefId, RootJson.TileSetDefinitions);
         }
 
         if (layerDef.LayerType == LayerType.IntGrid)
         {
-            var tableFlags2 = ImGuiTableFlags.BordersH | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Hideable |
-                              ImGuiTableFlags.PreciseWidths | ImGuiTableFlags.SizingFixedFit |
-                              ImGuiTableFlags.RowBg;
-
             var rowHeight = 60;
 
-            DrawIntGridValues(tableFlags2, layerDef, rowHeight);
+            DrawIntGridValues(_horizontalBordersTableFlags, layerDef, rowHeight);
 
             var tileSetDef = RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == layerDef.TileSetDefId);
             if (tileSetDef != null && tileSetDef.Path != "") // TODO (marpe): Check that the texture is loaded etc
             {
-                DrawAutoRuleGroups(tableFlags2, layerDef, tileSetDef, rowHeight);
+                DrawAutoRuleGroups(layerDef, tileSetDef);
             }
         }
     }
+
 
     private static void DrawIntGridValues(ImGuiTableFlags tableFlags2, LayerDef layerDef, int rowHeight)
     {
@@ -193,148 +195,86 @@ public unsafe class LayerDefWindow : SplitWindow
         ImGui.PopID();
     }
 
-    private static void DrawAutoRuleGroups(ImGuiTableFlags tableFlags2, LayerDef layerDef, TileSetDef tileSetDef, int rowHeight)
+    private static void DrawAutoRuleGroups(LayerDef layerDef, TileSetDef tileSetDef)
     {
-        ImGui.PushID("AutoRules");
-        var valueToRemove = -1;
-        if (ImGui.BeginTable("AutoRuleGroups", 1, tableFlags2, new Vector2(0, 0)))
+        void DragAndDropButton(string id, int index, Vector2 buttonSize, AutoRuleGroup group)
         {
-            ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
+            ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, buttonSize);
 
-            for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
+            if (ImGui.BeginDragDropSource())
             {
-                ImGui.PushID(i);
-                ImGui.TableNextRow();
-                ImGui.TableNextColumn();
-
-                var group = layerDef.AutoRuleGroups[i];
-                ImGui.SetNextItemWidth(-100);
-                SimpleTypeInspector.InspectString("##Name", ref group.Name);
-
-                ImGui.SameLine();
-                if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.Orange, new Vector2(30, 0), "Add Rule"))
-                {
-                    group.Rules.Add(
-                        new AutoRule
-                        {
-                            UId = IdGen.NewId,
-                            BreakOnMatch = true,
-                            IsActive = true,
-                            Chance = 1.0f,
-                        }
-                    );
-                }
-
-                ImGui.SameLine();
-                if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.Red, new Vector2(30, 0), "Remove Group"))
-                {
-                    valueToRemove = i;
-                }
-
-                if (group.Rules.Count > 0)
-                {
-                    if (ImGui.BeginTable("GroupRules", 3, tableFlags2 | ImGuiTableFlags.BordersV, new Vector2(0, 0)))
-                    {
-                        ImGui.TableSetupColumn("DragDrop", ImGuiTableColumnFlags.WidthFixed);
-                        ImGui.TableSetupColumn("Rules", ImGuiTableColumnFlags.WidthStretch);
-                        ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthStretch);
-
-                        for (var k = 0; k < group.Rules.Count; k++)
-                        {
-                            var rule = group.Rules[k];
-                            ImGui.PushID(k);
-                            ImGui.TableNextRow();
-                            ImGui.TableNextColumn();
-
-                            ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, new Vector2(40, 40));
-
-                            if (ImGui.BeginDragDropSource(ImGuiDragDropFlags.None))
-                            {
-                                ImGui.SetDragDropPayload($"Group{i}_Rule_Row", &k, sizeof(int));
-                                ImGui.Text($"Dragging rule {k}");
-                                ImGui.EndDragDropSource();
-                            }
-
-                            if (ImGui.BeginDragDropTarget())
-                            {
-                                var payload = ImGui.AcceptDragDropPayload($"Group{i}_Rule_Row");
-                                if (payload != null)
-                                {
-                                    var rowIndex = *(int*)payload->Data;
-                                    group.Rules[k] = group.Rules[rowIndex];
-                                    group.Rules[rowIndex] = rule;
-                                }
-
-                                ImGui.EndDragDropTarget();
-                            }
-
-                            ImGui.TableNextColumn();
-                            DrawRuleMatrix(rule, layerDef.IntGridValues);
-                            ImGui.TableNextColumn();
-                            DrawSizeCombo(ref rule.Size);
-
-                            ImGui.SetNextItemWidth(250);
-                            SimpleTypeInspector.InspectBool("BreakOnMatch", ref rule.BreakOnMatch);
-                            SimpleTypeInspector.InspectBool("IsActive", ref rule.IsActive);
-                            SimpleTypeInspector.InspectFloat("Chance", ref rule.Chance, new RangeSettings(0, 1.0f, 0.1f, false));
-
-                            if (ImGuiExt.ColoredButton("+", ImGuiExt.Colors[1], new Vector2(-ImGuiExt.FLT_MIN, 28), "Add TileId"))
-                            {
-                                ImGui.OpenPopup("TileIdPopup");
-                            }
-
-                            if (TileSetIdPopup.DrawTileSetIdPopup(layerDef, tileSetDef, out var tileId))
-                            {
-                                if (!rule.TileIds.Contains(tileId))
-                                    rule.TileIds.Add(tileId);
-                            }
-
-                            if (rule.TileIds.Count == 0)
-                            {
-                                ImGui.TextDisabled("No TileId have been assigned");
-                            }
-                            else
-                            {
-                                var tileIdToRemove = -1;
-                                var texture = GetTileSetTexture(tileSetDef.Path);
-                                var iconSize = new Vector2(layerDef.GridSize * 2f);
-                                for (var m = 0; m < rule.TileIds.Count; m++)
-                                {
-                                    ImGui.PushID(m);
-                                    var iconPos = ImGui.GetCursorScreenPos();
-                                    if (ImGuiExt.DrawTileSetIcon("TileId", layerDef.GridSize, texture, (uint)rule.TileIds[m], iconPos, iconSize, false,
-                                            Color.White))
-                                    {
-                                        tileIdToRemove = m;
-                                    }
-
-                                    DrawZoomedTileTooltip(layerDef.GridSize, $"#{rule.TileIds[m]}", (uint)rule.TileIds[m], texture, iconSize);
-
-                                    ImGui.PopID();
-
-                                    ImGui.SameLine();
-                                    if (ImGui.GetContentRegionAvail().X < iconSize.X + ImGui.GetStyle()->ItemSpacing.X)
-                                        ImGui.NewLine();
-                                }
-
-                                if (tileIdToRemove != -1)
-                                {
-                                    rule.TileIds.RemoveAt(tileIdToRemove);
-                                }
-                            }
-
-                            ImGui.PopID();
-                        }
-
-                        ImGui.EndTable();
-                    }
-                }
-
-
-                ImGui.PopID();
+                ImGui.SetDragDropPayload(id, &index, sizeof(int));
+                ImGui.Text($"Dragging group {group.Name} ({group.Uid})");
+                ImGui.EndDragDropSource();
             }
 
-            ImGui.EndTable();
+            if (ImGui.BeginDragDropTarget())
+            {
+                var payload = ImGui.AcceptDragDropPayload(id);
+                if (payload != null)
+                {
+                    var rowIndex = *(int*)payload->Data;
+                    layerDef.AutoRuleGroups[index] = layerDef.AutoRuleGroups[rowIndex];
+                    layerDef.AutoRuleGroups[rowIndex] = group;
+                }
+
+                ImGui.EndDragDropTarget();
+            }
+        }
+
+        ImGui.PushID("AutoRules");
+        var valueToRemove = -1;
+
+        for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
+        {
+            ImGui.PushID(i);
+            var group = layerDef.AutoRuleGroups[i];
+
+            DragAndDropButton($"AutoRuleGroups", i, new Vector2(30, ImGui.GetFrameHeight()), group);
+            ImGui.SameLine();
+
+            var foldoutId = ImGui.GetID($"AutoRuleGroup{i}");
+            ImGuiExt.OpenFoldouts.TryGetValue(foldoutId, out var isOpen);
+            var (icon, tooltip) = isOpen switch
+            {
+                true => (FontAwesome6.ChevronDown, "Collapsed"),
+                _ => (FontAwesome6.ChevronRight, "Expand")
+            };
+            if (ImGuiExt.TextButton(icon, tooltip, Color.White.PackedValue, new Vector2(30, ImGui.GetFrameHeight())))
+            {
+                ImGuiExt.OpenFoldouts[foldoutId] = !isOpen;
+            }
+            ImGui.SameLine();
+
+            ImGui.SetNextItemWidth(150);
+            SimpleTypeInspector.InspectString("##Name", ref group.Name);
+
+            ImGui.SameLine();
+            if (ImGuiExt.ColoredButton(FontAwesome6.Plus, Color.Orange, new Vector2(30, ImGui.GetFrameHeight()), "Add Rule"))
+            {
+                group.Rules.Add(
+                    new AutoRule
+                    {
+                        UId = IdGen.NewId,
+                        BreakOnMatch = true,
+                        IsActive = true,
+                        Chance = 1.0f,
+                    }
+                );
+            }
+
+            ImGui.SameLine();
+            if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.Red, new Vector2(30, ImGui.GetFrameHeight()), "Remove Group"))
+            {
+                valueToRemove = i;
+            }
+
+            if (group.Rules.Count > 0 && isOpen)
+            {
+                DrawGroupRules($"Group{i}_Rule_Row", group, layerDef, tileSetDef);
+            }
+
+            ImGui.PopID();
         }
 
         if (valueToRemove != -1)
@@ -353,6 +293,116 @@ public unsafe class LayerDefWindow : SplitWindow
         }
 
         ImGui.PopID();
+    }
+
+    private static void DrawGroupRules(string id, AutoRuleGroup group, LayerDef layerDef, TileSetDef tileSetDef)
+    {
+        void DragAndDropButton(int index, AutoRule rule)
+        {
+            ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, new Vector2(40, 40));
+
+            if (ImGui.BeginDragDropSource())
+            {
+                ImGui.SetDragDropPayload(id, &index, sizeof(int));
+                ImGui.Text($"Dragging rule {index}");
+                ImGui.EndDragDropSource();
+            }
+
+            if (ImGui.BeginDragDropTarget())
+            {
+                var payload = ImGui.AcceptDragDropPayload(id);
+                if (payload != null)
+                {
+                    var rowIndex = *(int*)payload->Data;
+                    group.Rules[index] = group.Rules[rowIndex];
+                    group.Rules[rowIndex] = rule;
+                }
+
+                ImGui.EndDragDropTarget();
+            }
+        }
+
+        if (ImGui.BeginTable("GroupRules", 3, _horizontalBordersTableFlags | ImGuiTableFlags.BordersV, new Vector2(0, 0)))
+        {
+            ImGui.TableSetupColumn("DragDrop", ImGuiTableColumnFlags.WidthFixed);
+            ImGui.TableSetupColumn("Rules", ImGuiTableColumnFlags.WidthStretch);
+            ImGui.TableSetupColumn("Actions", ImGuiTableColumnFlags.WidthStretch);
+
+            for (var k = 0; k < group.Rules.Count; k++)
+            {
+                var rule = group.Rules[k];
+                ImGui.PushID(k);
+                ImGui.TableNextRow();
+                ImGui.TableNextColumn();
+
+                DragAndDropButton(k, rule);
+
+                ImGui.TableNextColumn();
+                DrawRuleMatrix(rule, layerDef.IntGridValues);
+
+                ImGui.TableNextColumn();
+
+                DrawRuleProperties(layerDef, tileSetDef, rule);
+
+                ImGui.PopID();
+            }
+
+            ImGui.EndTable();
+        }
+    }
+
+    private static void DrawRuleProperties(LayerDef layerDef, TileSetDef tileSetDef, AutoRule rule)
+    {
+        DrawSizeCombo(ref rule.Size);
+        ImGui.SetNextItemWidth(250);
+        SimpleTypeInspector.InspectBool("BreakOnMatch", ref rule.BreakOnMatch);
+        SimpleTypeInspector.InspectBool("IsActive", ref rule.IsActive);
+        SimpleTypeInspector.InspectFloat("Chance", ref rule.Chance, new RangeSettings(0, 1.0f, 0.1f, false));
+
+        if (ImGuiExt.ColoredButton("+", ImGuiExt.Colors[1], new Vector2(-ImGuiExt.FLT_MIN, ImGui.GetFrameHeight()), "Add TileId"))
+        {
+            ImGui.OpenPopup("TileIdPopup");
+        }
+
+        if (TileSetIdPopup.DrawTileSetIdPopup(tileSetDef, out var tileId))
+        {
+            if (!rule.TileIds.Contains(tileId))
+                rule.TileIds.Add(tileId);
+        }
+
+        if (rule.TileIds.Count == 0)
+        {
+            ImGui.TextDisabled("No TileId have been assigned");
+        }
+        else
+        {
+            var tileIdToRemove = -1;
+            var texture = GetTileSetTexture(tileSetDef.Path);
+            var iconSize = new Vector2(layerDef.GridSize * 2f);
+            for (var m = 0; m < rule.TileIds.Count; m++)
+            {
+                ImGui.PushID(m);
+                var iconPos = ImGui.GetCursorScreenPos();
+                if (ImGuiExt.DrawTileSetIcon("TileId", layerDef.GridSize, texture, (uint)rule.TileIds[m], iconPos, iconSize, false,
+                        Color.White))
+                {
+                    tileIdToRemove = m;
+                }
+
+                DrawZoomedTileTooltip(layerDef.GridSize, $"#{rule.TileIds[m]}", (uint)rule.TileIds[m], texture, iconSize);
+
+                ImGui.PopID();
+
+                ImGui.SameLine();
+                if (ImGui.GetContentRegionAvail().X < iconSize.X + ImGui.GetStyle()->ItemSpacing.X)
+                    ImGui.NewLine();
+            }
+
+            if (tileIdToRemove != -1)
+            {
+                rule.TileIds.RemoveAt(tileIdToRemove);
+            }
+        }
     }
 
     private static void DrawZoomedTileTooltip(uint gridSize, string label, uint tileId, Texture texture, Vector2 iconSize)
