@@ -94,8 +94,17 @@ public unsafe class LayerDefWindow : SplitWindow
         DrawLayerDefinitions();
         if (ImGuiExt.ColoredButton("+ Add Layer Definition", new Vector2(-1, 0)))
         {
-            RootJson.LayerDefinitions.Add(new LayerDef());
+            RootJson.LayerDefinitions.Add(new LayerDef() { Uid = GetNextId(RootJson.LayerDefinitions)});
         }
+    }
+
+    private int GetNextId(List<LayerDef> layerDefs)
+    {
+        var maxId = 0;
+        for (var i = 0; i < layerDefs.Count; i++)
+            if (maxId < layerDefs[i].Uid)
+                maxId = layerDefs[i].Uid + 1;
+        return maxId;
     }
 
     protected override void DrawRight()
@@ -244,6 +253,7 @@ public unsafe class LayerDefWindow : SplitWindow
             {
                 ImGuiExt.OpenFoldouts[foldoutId] = !isOpen;
             }
+
             ImGui.SameLine();
 
             ImGui.SetNextItemWidth(150);
@@ -255,7 +265,7 @@ public unsafe class LayerDefWindow : SplitWindow
                 group.Rules.Add(
                     new AutoRule
                     {
-                        UId = IdGen.NewId,
+                        Uid = GetNextId(group.Rules),
                         BreakOnMatch = true,
                         IsActive = true,
                         Chance = 1.0f,
@@ -287,12 +297,30 @@ public unsafe class LayerDefWindow : SplitWindow
             layerDef.AutoRuleGroups.Add(new AutoRuleGroup
             {
                 Name = "New Group",
-                Uid = IdGen.NewId,
+                Uid = GetNextId(layerDef.AutoRuleGroups),
                 IsActive = true,
             });
         }
 
         ImGui.PopID();
+    }
+
+    private static int GetNextId(List<AutoRuleGroup> groups)
+    {
+        var maxId = 0;
+        for (var i = 0; i < groups.Count; i++)
+            if (maxId < groups[i].Uid)
+                maxId = groups[i].Uid + 1;
+        return maxId;
+    }
+
+    private static int GetNextId(List<AutoRule> rules)
+    {
+        var maxId = 0;
+        for (var i = 0; i < rules.Count; i++)
+            if (maxId < rules[i].Uid)
+                maxId = rules[i].Uid + 1;
+        return maxId;
     }
 
     private static void DrawGroupRules(string id, AutoRuleGroup group, LayerDef layerDef, TileSetDef tileSetDef)
@@ -446,7 +474,7 @@ public unsafe class LayerDefWindow : SplitWindow
             rule.Pattern.RemoveAt(rule.Pattern.Count - 1);
         }
 
-        for (var ii = 0; ii < rule.Size * rule.Size; ii++)
+        for (var ii = rule.Pattern.Count; ii < rule.Size * rule.Size; ii++)
         {
             rule.Pattern.Add(0);
         }

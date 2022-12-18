@@ -71,8 +71,17 @@ public unsafe class TileSetDefWindow : SplitWindow
         DrawTileSetDefinitions();
         if (ImGuiExt.ColoredButton("+ Add TileSet Definition", new Vector2(-1, 0)))
         {
-            RootJson.TileSetDefinitions.Add(new TileSetDef());
+            RootJson.TileSetDefinitions.Add(new TileSetDef() { Uid = GetNextId(RootJson.TileSetDefinitions)});
         }
+    }
+
+    private static int GetNextId(List<TileSetDef> tileSetDefs)
+    {
+        var maxId = 0;
+        for (var i = 0; i < tileSetDefs.Count; i++)
+            if (maxId < tileSetDefs[i].Uid)
+                maxId = tileSetDefs[i].Uid + 1;
+        return maxId;
     }
 
     protected override void DrawRight()

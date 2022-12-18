@@ -33,7 +33,7 @@ public partial class Enemy : Entity
 
         TimeOffset = Position.Current.X;
 
-        if (Type == EnemyType.Slug)
+        if (EntityType == EntityType.Slug)
         {
             var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
             Velocity.Delta = new Vector2(randomDirection * 50f, 0);
@@ -41,8 +41,14 @@ public partial class Enemy : Entity
 
             _behaviour = new SlugBehaviour();
             _behaviour.Initialize(this);
+
+            if (HasCollision(Position, Size))
+            {
+                Logs.LogWarn("Colliding on spawn, destroying immediately");
+                IsDestroyed = true;
+            }
         }
-        else if (Type == EnemyType.BlueBee || Type == EnemyType.YellowBee)
+        else if (EntityType == EntityType.BlueBee) // || EntityType == EntityType.YellowBee)
         {
             _behaviour = new BeeBehaviour();
             _behaviour.Initialize(this);

@@ -28,8 +28,6 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private static bool _showDebug;
 
-    public bool IsHoveringGameWindow;
-
     [CVar("imgui.mouse_pan_and_zoom", "Toggle mouse pan & zoom control")]
     public static bool IsMousePanAndZoomEnabled = true;
 
@@ -37,9 +35,6 @@ public unsafe class GameWindow : ImGuiEditorWindow
     /// Used to set zoom to fill window height/width
     /// </summary>
     private Vector2 _gameViewWindowSize;
-
-    public bool IsFocused;
-
 
     public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Vector2.Zero;
 
@@ -66,8 +61,6 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     public override void Draw()
     {
-        IsHoveringGameWindow = IsFocused = false;
-
         if (!IsOpen)
             return;
 
@@ -101,9 +94,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.SetNextWindowClass(&imGuiWindowClass);
         if (ImGui.Begin(GameWindowTitle, default, flags))
         {
+            if (ImGui.IsWindowFocused())
+            {
+                MyEditorMain.ActiveInput = ActiveInput.GameWindow;
+            }
+            
             ImGui.PopStyleVar();
-
-            IsFocused = ImGui.IsWindowFocused();
 
             var contentMin = ImGui.GetWindowContentRegionMin();
             var contentMax = ImGui.GetWindowContentRegionMax();
@@ -170,7 +166,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             var windowPos = ImGui.GetWindowPos();
             var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
-            IsHoveringGameWindow = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
+            // IsHoveringGameWindow = /*ImGui.IsWindowFocused() && */bb.Contains(ImGui.GetMousePos());
 
             // exit relative mode on escape 
             if (Shared.Game.Inputs.Mouse.RelativeMode && ImGui.IsKeyPressed(ImGuiKey.Escape))
@@ -297,10 +293,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
         }
 
         // imgui sets WantCaptureKeyboard when an item is active which we don't want for the game window
-        if (ImGui.IsMouseDown(ImGuiMouseButton.Left) ||
-            ImGui.IsMouseDown(ImGuiMouseButton.Middle) ||
-            ImGui.IsMouseDown(ImGuiMouseButton.Right))
+        if (ImGui.IsWindowHovered() &&
+            (ImGui.IsMouseDown(ImGuiMouseButton.Left) ||
+             ImGui.IsMouseDown(ImGuiMouseButton.Middle) ||
+             ImGui.IsMouseDown(ImGuiMouseButton.Right)))
         {
+            ImGui.SetWindowFocus(GameWindowTitle);
             ImGui.SetNextFrameWantCaptureKeyboard(false);
         }
     }

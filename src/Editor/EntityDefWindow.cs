@@ -24,6 +24,7 @@ public unsafe class EntityDefWindow : SplitWindow
         {
             var def = new EntityDefinition
             {
+                Uid = GetNextId(RootJson.EntityDefinitions),
                 Color = Color.Green,
                 Height = 16,
                 Width = 16,
@@ -52,6 +53,15 @@ public unsafe class EntityDefWindow : SplitWindow
         DrawEntityDefTable(RootJson.EntityDefinitions, ref _selectedEntityDefinitionIndex, RootJson.TileSetDefinitions, RootJson.DefaultGridSize);
 
         SimpleTypeInspector.InspectInt("MinHeight", ref _rowMinHeight, new RangeSettings(ImGui.GetFrameHeightWithSpacing(), 100, 1, false));
+    }
+
+    private int GetNextId(List<EntityDefinition> entityDefs)
+    {
+        var maxId = 0;
+        for (var i = 0; i < entityDefs.Count; i++)
+            if (maxId < entityDefs[i].Uid)
+                maxId = entityDefs[i].Uid + 1;
+        return maxId;
     }
 
     private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs, int gridSize)

@@ -6,6 +6,14 @@ using NumVector2 = System.Numerics.Vector2;
 
 namespace MyGame;
 
+public enum ActiveInput
+{
+    None,
+    Game,
+    GameWindow,
+    EditorWindow,
+}
+
 public unsafe class MyEditorMain : MyGameMain
 {
     [CVar("imgui.hidden", "Toggle ImGui screen")]
@@ -47,6 +55,8 @@ public unsafe class MyEditorMain : MyGameMain
 
     public WorldsRoot.RootJson RootJson = new();
     public uint ViewportDockSpaceId;
+
+    public static ActiveInput ActiveInput = ActiveInput.None;
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -228,17 +238,22 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void SetInputViewport()
     {
-        if (!IsHidden && _gameWindow.IsOpen && _gameWindow.IsFocused)
+        switch (ActiveInput)
         {
-            InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform); // TODO (marpe): Refactor this
-        }
-        else if (!IsHidden && EditorWindow.IsOpen)
-        {
-            InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
-        }
-        else
-        {
-            base.SetInputViewport();
+            case ActiveInput.None:
+                InputHandler.SetViewportTransform(Matrix4x4.Identity);
+                break;
+            case ActiveInput.Game:
+                base.SetInputViewport();
+                break;
+            case ActiveInput.GameWindow:
+                InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform);
+                break;
+            case ActiveInput.EditorWindow:
+                InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
         }
     }
 
@@ -313,12 +328,12 @@ public unsafe class MyEditorMain : MyGameMain
         if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
             return;
 
-        if (_gameWindow.IsHoveringGameWindow)
+        /*if (_gameWindow.IsHoveringGameWindow)
         {
             var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
             if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameWindowTitle)
                 return;
-        }
+        }*/
 
         var cursor = ImGui.GetCurrentContext()->HoveredIdDisabled switch
         {
@@ -351,22 +366,36 @@ public unsafe class MyEditorMain : MyGameMain
         if (!IsHidden)
         {
             ImGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputState.Create(InputHandler));
-
-            var io = ImGui.GetIO();
-            if (io->WantCaptureKeyboard)
-                InputHandler.KeyboardEnabled = false;
-            // disable mouse input if we have a window focused, or the game window is open and we're not hovering it
-            if (io->NavActive || (_gameWindow.IsOpen && !_gameWindow.IsHoveringGameWindow))
-                InputHandler.MouseEnabled = false;
-
             _imGuiUpdateCount++;
         }
 
         var wasHidden = IsHidden;
 
         _gameUpdateStopwatch.Restart();
-        base.Update(dt);
+        _fpsDisplay.BeginUpdate();
+        Time.Update(dt);
+
+        UpdateWindowTitle();
+
+        InputHandler.BeginFrame(Time.ElapsedTime);
+        InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
+        InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
+                                    ActiveInput == ActiveInput.Game; // !ImGui.GetIO()->WantCaptureMouse;
+        
+        Binds.UpdateButtonStates(InputState.Create(InputHandler));
+        Binds.ExecuteTriggeredBinds();
+        
+        SetInputViewport();
+
+        UpdateScreens();
+
+        InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow; 
         EditorWindow.Update(Time.ElapsedTime);
+
+        Shared.AudioManager.Update((float)dt.TotalSeconds);
+
+        InputHandler.EndFrame();
+        _fpsDisplay.EndUpdate();
         _gameUpdateStopwatch.Stop();
         _gameUpdateDurationMs = _gameUpdateStopwatch.GetElapsedMilliseconds();
 
@@ -388,6 +417,8 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void Draw(double alpha)
     {
+        ActiveInput = ActiveInput.Game;
+        
         if (IsHidden)
         {
             base.Draw(alpha);

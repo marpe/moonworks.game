@@ -94,7 +94,10 @@ public class LevelsWindow : SplitWindow
 
         if (ImGuiExt.ColoredButton("+ Add Level", new Vector2(-1, 0)))
         {
-            RootJson.Worlds[WorldsWindow.SelectedWorldIndex].Levels.Add(new Level());
+            RootJson.Worlds[WorldsWindow.SelectedWorldIndex].Levels.Add(new Level()
+            {
+                Uid = GetNextId(RootJson.Worlds[WorldsWindow.SelectedWorldIndex].Levels)
+            });
         }
 
         var fieldDefRemoved = (FieldDef def) =>
@@ -115,6 +118,15 @@ public class LevelsWindow : SplitWindow
         };
 
         FieldDefEditor.DrawFieldEditor(RootJson.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex, fieldDefRemoved);
+    }
+
+    private int GetNextId(List<Level> levels)
+    {
+        var maxId = 0;
+        for (var i = 0; i < levels.Count; i++)
+            if (maxId < levels[i].Uid)
+                maxId = levels[i].Uid + 1;
+        return maxId;
     }
 
     protected override void DrawRight()

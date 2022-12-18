@@ -1,8 +1,8 @@
 ﻿<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="MyGame.CodeGen LDtk" type="DotNetProject" factoryName=".NET Project">
-    <option name="EXE_PATH" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net6.0/MyGame.CodeGen.exe" />
-    <option name="PROGRAM_PARAMETERS" value="--ldtk &quot;../../../../../../Content/ldtk/Example/World.ldtk&quot; --ldtk-out &quot;../../../../../../src/Generated/LDtkGenerated.cs&quot; --verbose" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net6.0" />
+  <configuration default="false" name="MyGame.CodeGen Worlds" type="DotNetProject" factoryName=".NET Project">
+    <option name="EXE_PATH" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net7.0/MyGame.CodeGen.exe" />
+    <option name="PROGRAM_PARAMETERS" value="--worlds &quot;../../../../../../Content/worlds/worlds.json&quot; --worlds-out &quot;../../../../../../src/Generated/WorldsGenerated.cs&quot; --verbose" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/lib/codegen/bin/x64/Debug/net7.0" />
     <option name="PASS_PARENT_ENVS" value="1" />
     <option name="USE_EXTERNAL_CONSOLE" value="0" />
     <option name="USE_MONO" value="0" />
@@ -12,7 +12,7 @@
     <option name="PROJECT_ARGUMENTS_TRACKING" value="1" />
     <option name="PROJECT_WORKING_DIRECTORY_TRACKING" value="1" />
     <option name="PROJECT_KIND" value="DotNetCore" />
-    <option name="PROJECT_TFM" value="net6.0" />
+    <option name="PROJECT_TFM" value="net7.0" />
     <method v="2">
       <option name="Build" />
     </method>

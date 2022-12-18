@@ -50,6 +50,7 @@ public class World
 
     public RootJson Root = new();
     public Level Level = new();
+    public bool DrawBackground = true;
 
     public World()
     {
@@ -112,8 +113,8 @@ public class World
 
         var entities = LoadEntitiesInLevel(Root, level);
         Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
-        Enemies.AddRange(entities.Where(x => x.EntityType == EntityType.Enemy || x.EntityType == EntityType.Slug || x.EntityType == EntityType.BlueBee)
-            .Cast<Enemy>());
+        var enemyTypes = new[] { EntityType.BlueBee, EntityType.Slug };
+        Enemies.AddRange(entities.Where(x => enemyTypes.Contains(x.EntityType)).Cast<Enemy>());
         Lights.AddRange(entities.Where(x => x.EntityType == EntityType.Light).Cast<Light>());
     }
 
@@ -175,7 +176,7 @@ public class World
                 entity.Size = entityInstance.Size;
                 entity.Position = new Position(level.WorldPos + entityInstance.Position - entity.Pivot * entity.Size);
                 entity.SmartColor = entityDef.Color;
-
+                
                 foreach (var field in entityInstance.FieldInstances)
                 {
                     var fieldDef = entityDef.FieldDefinitions.First(x => x.Uid == field.FieldDefId);
@@ -187,7 +188,27 @@ public class World
                         continue;
                     }
 
-                    fieldInfo.SetValue(entity, fieldValue);
+                    if (fieldValue == null)
+                    {
+                        Logs.LogError($"Field \"{fieldInfo.Name}\" is null");
+                        continue;
+                    }
+
+                    if (fieldValue.GetType() == fieldInfo.FieldType)
+                    {
+                        fieldInfo.SetValue(entity, fieldValue);
+                        continue;
+                    }
+
+
+                    if (fieldInfo.FieldType == typeof(Color) && fieldValue is string colorStr)
+                    {
+                        fieldInfo.SetValue(entity, ColorExt.FromHex(colorStr.AsSpan(1)));
+                    }
+                    else
+                    {
+                        fieldInfo.SetValue(entity, Convert.ChangeType(fieldValue, fieldInfo.FieldType));
+                    }
                 }
 
                 entities.Add(entity);
@@ -259,6 +280,7 @@ public class World
                 Bullets[i].Initialize(this);
 
             Bullets[i].Update(deltaSeconds);
+            
             if (Bullets[i].IsDestroyed)
                 Bullets.RemoveAt(i);
         }
@@ -282,14 +304,14 @@ public class World
         {
             var entity = Enemies[i];
 
+            if (!entity.IsInitialized)
+                entity.Initialize(this);
+            
             if (entity.IsDestroyed)
             {
                 Enemies.RemoveAt(i);
                 continue;
             }
-
-            if (!entity.IsInitialized)
-                entity.Initialize(this);
 
             entity.Update(deltaSeconds);
         }
@@ -333,7 +355,8 @@ public class World
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
         var color = level.BackgroundColor;
-        renderer.DrawRect(level.Bounds, color);
+        if (DrawBackground)
+            renderer.DrawRect(level.Bounds, color);
 
         for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
@@ -390,11 +413,11 @@ public class World
         {
             var entity = Enemies[i];
 
-            var offset = entity.Type switch
+            var offset = entity.EntityType switch
             {
-                EnemyType.Slug => 5,
-                EnemyType.BlueBee => 3,
-                EnemyType.YellowBee or _ => 1,
+                EntityType.Slug => 5,
+                EntityType.BlueBee => 3,
+                _ => 1,
             };
 
             var frameIndex = (int)(entity.TotalTimeActive * 10) % 2;
@@ -418,27 +441,49 @@ public class World
 
         if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
         {
-            var tilesetDef = GetTilesetDef(Root, 0); // TODO (marpe): Add TileSetId to LayerDef
-            var texture = SplitWindow.GetTileSetTexture(tilesetDef.Path);
+            var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
+            var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
 
             for (var i = 0; i < layer.IntGrid.Length; i++)
             {
                 var value = layer.IntGrid[i];
+                if (value == 0)
+                    continue;
+
                 var enumValue = (LayerDefs.Tiles)value;
-                if (enumValue is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
+
+                var gridSize = layerDef.GridSize;
+                var gridY = (int)(i / cols);
+                var gridX = (int)(i % cols);
+                var min = level.WorldPos + new Vector2(gridX, gridY) * gridSize;
+                var max = min + new Vector2(gridSize, gridSize);
+
+                var color = LayerDefs.TilesColors[enumValue];
+                if (GetIntDef(layerDef, value, out var intDef))
                 {
-                    var gridSize = layerDef.GridSize;
-                    var gridY = (int)(i / cols);
-                    var gridX = (int)(i % cols);
-                    var min = level.WorldPos + new Vector2(gridX, gridY) * gridSize;
-                    var max = min + new Vector2(gridSize, gridSize);
-                    var intGridValue = layerDef.IntGridValues[value - 1];
-                    var color = LayerDefs.TilesColors[enumValue]; // ColorExt.FromHex(intGridValue.Color.AsSpan().Slice(1));
-                    renderer.DrawRect(min, max, color * 0.5f, 0);
+                    color = intDef.Color;
                 }
+
+                renderer.DrawRect(min, max, color * 0.5f, 0);
             }
         }
     }
+
+    private static bool GetIntDef(LayerDef layerDef, int value, [NotNullWhen(true)] out IntGridValue? intValue)
+    {
+        for (var i = 0; i < layerDef.IntGridValues.Count; i++)
+        {
+            if (layerDef.IntGridValues[i].Value == value)
+            {
+                intValue = layerDef.IntGridValues[i];
+                return true;
+            }
+        }
+
+        intValue = null;
+        return false;
+    }
+
 
     private static TileSetDef GetTilesetDef(RootJson root, long tilesetUid)
     {
@@ -450,7 +495,7 @@ public class World
             }
         }
 
-        throw new Exception($"Could not find a TilesetDefinition with id \"{tilesetUid}\"");
+        throw new Exception($"Could not find a TileSetDefinition with id \"{tilesetUid}\"");
     }
 
     public void Unload()
@@ -649,7 +694,7 @@ public class World
     {
         for (var i = 0; i < Lights.Count; i++)
         {
-            var light = Lights[i];
+            /*var light = Lights[i];
             if (!light.IsEnabled)
                 continue;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
@@ -680,7 +725,7 @@ public class World
             var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
             var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
             commandBuffer.BindFragmentSamplers(fragmentBindings);
-            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
+            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);*/
         }
     }
 }

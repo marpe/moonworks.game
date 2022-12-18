@@ -1,12 +1,4 @@
-﻿using System.Runtime.Serialization;
-
-namespace MyGame.WorldsRoot;
-
-public static class IdGen
-{
-    private static int _idCounter;
-    public static int NewId => _idCounter++;
-}
+﻿namespace MyGame.WorldsRoot;
 
 public class RootJson
 {
@@ -21,7 +13,7 @@ public class RootJson
 
 public class TileSetDef
 {
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public string Identifier = "TileSet";
     public string Path = "";
     public uint TileGridSize = 16;
@@ -37,7 +29,7 @@ public enum LayerType
 
 public class LayerDef
 {
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public LayerType LayerType = LayerType.IntGrid;
     public string Identifier = "Layer";
     public List<string> RequiredTags = new();
@@ -55,7 +47,7 @@ public class LayerDef
 
 public class AutoRuleGroup
 {
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public string Name = "New Group";
     public List<AutoRule> Rules = new();
     public bool IsActive;
@@ -63,7 +55,7 @@ public class AutoRuleGroup
 
 public class AutoRule
 {
-    public int UId = IdGen.NewId;
+    public int Uid;
     public int Size = 3;
     public bool IsActive;
     public bool BreakOnMatch = true;
@@ -92,7 +84,7 @@ public enum FieldType
 
 public class FieldDef
 {
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public string Identifier = "Field";
     public FieldType FieldType;
     public object? DefaultValue = null;
@@ -168,7 +160,7 @@ public class World
 public class Level
 {
     public Guid Iid = Guid.NewGuid();
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public Point WorldPos;
     public string Identifier = "Level";
     public uint Width;
@@ -210,7 +202,7 @@ public class EntityInstance
 
 public class EntityDefinition
 {
-    public int Uid = IdGen.NewId;
+    public int Uid;
     public List<FieldDef> FieldDefinitions = new();
     public Color Color;
     public uint Width;

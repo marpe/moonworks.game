@@ -28,7 +28,7 @@ public static unsafe class FieldDefEditor
         ImGui.PushID("FieldEditor");
         ImGuiExt.SeparatorText("Fields");
 
-        DrawAddButtons(200, fieldDefs);
+        DrawAddButtons(200, fieldDefs, ref selectedFieldDefinitionIndex);
 
         ImGui.Separator();
 
@@ -38,7 +38,6 @@ public static unsafe class FieldDefEditor
         }
         else
         {
-
             var rowMinHeight = 40;
 
             if (ImGui.BeginTable("EntityFieldDefs", 1, SplitWindow.TableFlags, new Vector2(0, 0)))
@@ -122,7 +121,7 @@ public static unsafe class FieldDefEditor
         dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, labelPos, Color.White.MultiplyAlpha(0.5f).PackedValue, labelStr);
     }
 
-    private static void DrawAddButtons(int minWidth, List<FieldDef> fieldDefs)
+    private static void DrawAddButtons(int minWidth, List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex)
     {
         var btnResult = SplitWindow.ButtonGroup($"{FontAwesome6.Plus} Single Value", $"{FontAwesome6.Plus} Array", minWidth);
         if (btnResult == 0)
@@ -142,15 +141,25 @@ public static unsafe class FieldDefEditor
             fieldDefs.Add(
                 new FieldDef
                 {
-                    Uid = IdGen.NewId,
-                    Identifier = "Field",
+                    Uid = GetNextId(fieldDefs),
+                    Identifier = "NewField",
                     FieldType = fieldType,
                     IsArray = _isArray
                 }
             );
+
+            selectedFieldDefinitionIndex = fieldDefs.Count - 1;
         }
     }
 
+    private static int GetNextId(List<FieldDef> fieldDefs)
+    {
+        var maxId = 0;
+        for (var i = 0; i < fieldDefs.Count; i++)
+            if (maxId < fieldDefs[i].Uid)
+                maxId = fieldDefs[i].Uid + 1;
+        return maxId;
+    }
 
     private static bool DrawAddFieldDefPopup(string label, out FieldType fieldType)
     {

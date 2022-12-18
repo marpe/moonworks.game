@@ -29,8 +29,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private readonly TileSetDefWindow _tileSetDefWindow;
     private readonly WorldsWindow _worldsWindow;
 
-    // TODO (marpe): Cleanup
-    public bool IsFocused;
     public Matrix4x4 PreviewRenderViewportTransform = Matrix4x4.Identity;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
@@ -87,7 +85,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         if (!layerInstance.IsVisible)
             return;
-        
+
         var (mouseWorld, mouseLevel, mouseGrid) = GetMousePositions();
         var cols = (int)(level.Width / layerDef.GridSize);
         var rows = (int)(level.Height / layerDef.GridSize);
@@ -282,9 +280,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(ImGuiExt.FLT_MAX, ImGuiExt.FLT_MAX));
         var centralNode = ImGuiInternal.DockBuilderGetCentralNode(_editor.ViewportDockSpaceId);
         ImGui.SetNextWindowDockID(centralNode->ID, ImGuiCond.FirstUseEver);
-        if (ImGui.Begin(PreviewWindowTitle))
+        if (ImGui.Begin(PreviewWindowTitle, default, ImGuiWindowFlags.None))
         {
-            IsFocused = ImGui.IsWindowFocused();
+            if (ImGui.IsWindowFocused())
+            {
+                MyEditorMain.ActiveInput = ActiveInput.EditorWindow;
+            }
 
             GameWindow.EnsureTextureIsBound(ref _editorRenderTextureId, _editor._editorRenderTarget, _editor.ImGuiRenderer);
             var cursorScreenPosition = ImGui.GetCursorScreenPos();
@@ -301,6 +302,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 Num.Vector2.One,
                 Color.White.PackedValue
             );
+            ImGui.InvisibleButton("InvButton", editorMax - editorMin);
 
             var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
             var renderOffset = editorMin - windowViewportPosition;
@@ -320,38 +322,53 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 _camera.Zoom += 0.1f * ImGui.GetIO()->MouseWheel * _camera.Zoom;
             }
 
-            var showOverlay = true;
-            if (GameWindow.BeginOverlay("MouseOverlay", ref showOverlay))
+            DrawMouseInfoOverlay();
+
+            // imgui sets WantCaptureKeyboard when an item is active which we don't want for the game window
+            if (ImGui.IsWindowHovered() &&
+                (ImGui.IsMouseDown(ImGuiMouseButton.Left) ||
+                 ImGui.IsMouseDown(ImGuiMouseButton.Middle) ||
+                 ImGui.IsMouseDown(ImGuiMouseButton.Right)))
             {
-                var offset = Vector2.Zero;
+                ImGui.SetWindowFocus(PreviewWindowTitle);
+                ImGui.SetNextFrameWantCaptureKeyboard(false);
+            }
+        }
 
-                if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
+        ImGui.End();
+    }
+
+    private void DrawMouseInfoOverlay()
+    {
+        var showOverlay = true;
+        if (GameWindow.BeginOverlay("MouseOverlay", ref showOverlay))
+        {
+            var offset = Vector2.Zero;
+
+            if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
+            {
+                var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
+                if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
                 {
-                    var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
-                    if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
-                    {
-                        var level = world.Levels[LevelsWindow.SelectedLevelIndex];
-                        offset = level.WorldPos;
-                    }
+                    var level = world.Levels[LevelsWindow.SelectedLevelIndex];
+                    offset = level.WorldPos;
                 }
-
-                var mousePosition = _editor.InputHandler.MousePosition;
-                ImGuiExt.PrintVector("Screen", mousePosition);
-
-                var view = _camera.GetView();
-                Matrix3x2.Invert(view, out var invertedView);
-                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-                ImGuiExt.PrintVector("World", mouseInWorld);
-
-                ImGuiExt.PrintVector("Level", mouseInWorld - offset);
-
-                var mouseCell = Entity.ToCell(mouseInWorld - offset);
-                ImGuiExt.PrintVector("Grid", mouseCell);
-
-                ImGui.Dummy(new Num.Vector2(200, 0));
             }
 
-            ImGui.End();
+            var mousePosition = _editor.InputHandler.MousePosition;
+            ImGuiExt.PrintVector("Screen", mousePosition);
+
+            var view = _camera.GetView();
+            Matrix3x2.Invert(view, out var invertedView);
+            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+            ImGuiExt.PrintVector("World", mouseInWorld);
+
+            ImGuiExt.PrintVector("Level", mouseInWorld - offset);
+
+            var mouseCell = Entity.ToCell(mouseInWorld - offset);
+            ImGuiExt.PrintVector("Grid", mouseCell);
+
+            ImGui.Dummy(new Num.Vector2(200, 0));
         }
 
         ImGui.End();
@@ -456,9 +473,57 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             ImGui.TextDisabled("No layer selected");
         }
+
+        if (ImGuiExt.ColoredButton("Cleanup!"))
+        {
+            for (var i = layerInstances.Count - 1; i >= 0; i--)
+            {
+                var layerInstance = layerInstances[i];
+                if (!GetLayerDefinition(layerInstance.LayerDefId, out var layerDef))
+                {
+                    Logs.LogWarn($"Removing layer instance \"{i}\" since there's no layer definition with id \"{layerInstance.LayerDefId}\"");
+                    layerInstances.RemoveAt(i);
+                    continue;
+                }
+
+                if (layerInstance.EntityInstances.Count > 0 && layerDef.LayerType != LayerType.Entities)
+                {
+                    Logs.LogWarn($"Removing entity instances since the layer isn't an entity layer");
+                    layerInstance.EntityInstances.Clear();
+                }
+
+                if (layerInstance.IntGrid.Length > 0 && layerDef.LayerType != LayerType.IntGrid)
+                {
+                    Logs.LogWarn($"Clearing int grid values since the layer isn\'t of type IntGrid");
+                    layerInstance.IntGrid = Array.Empty<int>();
+                }
+
+                for (var j = layerInstance.EntityInstances.Count - 1; j >= 0; j--)
+                {
+                    var entity = layerInstance.EntityInstances[j];
+                    if (!GetEntityDef(entity.EntityDefId, out var entityDef))
+                    {
+                        Logs.LogWarn($"Removing entity instance since there\'s no entity definition with id \"{entity.EntityDefId}\"");
+                        layerInstance.EntityInstances.RemoveAt(j);
+                        continue;
+                    }
+
+                    for (var i1 = entity.FieldInstances.Count - 1; i1 >= 0; i1--)
+                    {
+                        var fieldInstance = entity.FieldInstances[i1];
+                        if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
+                        {
+                            Logs.LogWarn($"Removing field instance there\'s no field definition with id \"{fieldInstance.FieldDefId}\"");
+                            entity.FieldInstances.RemoveAt(i1);
+                            continue;
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    private static void DrawSelectedLayerBrushes(LayerDef layerDef, WorldsRoot.RootJson rootJson, ref int selectedIntGridValueIndex,
+    private static void DrawSelectedLayerBrushes(LayerDef layerDef, RootJson rootJson, ref int selectedIntGridValueIndex,
         ref int selectedEntityDefinitionIndex)
     {
         switch (layerDef.LayerType)
@@ -673,6 +738,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         _editor.GraphicsDevice.Submit(commandBuffer);
     }
 
+    public static bool GetLayerDefinition(long layerDefUid, [NotNullWhen(true)] out LayerDef? layerDef)
+    {
+        var editor = (MyEditorMain)Shared.Game;
+        for (var j = 0; j < editor.RootJson.LayerDefinitions.Count; j++)
+        {
+            if (editor.RootJson.LayerDefinitions[j].Uid == layerDefUid)
+            {
+                layerDef = editor.RootJson.LayerDefinitions[j];
+                return true;
+            }
+        }
+
+        layerDef = null;
+        return false;
+    }
+
     private void DrawLayerInstances(Renderer renderer, Level level)
     {
         for (var i = 0; i < level.LayerInstances.Count; i++)
@@ -682,8 +763,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 continue;
 
             var isSelected = _selectedLayerInstanceIndex == i;
-            var layerDef = _editor.RootJson.LayerDefinitions.FirstOrDefault(x => x.Uid == layer.LayerDefId);
-            if (layerDef == null)
+            if (!GetLayerDefinition(layer.LayerDefId, out var layerDef))
                 continue;
 
             if (layerDef.LayerType == LayerType.IntGrid)
@@ -697,18 +777,50 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
+    public bool GetEntityDef(int uid, [NotNullWhen(true)] out EntityDefinition? entityDef)
+    {
+        for (var i = 0; i < _editor.RootJson.EntityDefinitions.Count; i++)
+        {
+            if (_editor.RootJson.EntityDefinitions[i].Uid == uid)
+            {
+                entityDef = _editor.RootJson.EntityDefinitions[i];
+                return true;
+            }
+        }
+
+        entityDef = null;
+        return false;
+    }
+
+    public bool GetTileSetDef(uint uid, [NotNullWhen(true)] out TileSetDef? tileSetDef)
+    {
+        for (var i = 0; i < _editor.RootJson.TileSetDefinitions.Count; i++)
+        {
+            if (_editor.RootJson.TileSetDefinitions[i].Uid == uid)
+            {
+                tileSetDef = _editor.RootJson.TileSetDefinitions[i];
+                return true;
+            }
+        }
+
+        tileSetDef = null;
+        return false;
+    }
+
     private void DrawEntityLayer(Renderer renderer, Level level, LayerInstance layer, LayerDef layerDef, bool isSelected)
     {
         for (var k = 0; k < layer.EntityInstances.Count; k++)
         {
             var entityInstance = layer.EntityInstances[k];
             var entityDefId = entityInstance.EntityDefId;
-            var entityDef = _editor.RootJson.EntityDefinitions.FirstOrDefault(x => x.Uid == entityDefId);
-            if (entityDef == null)
+            if (!GetEntityDef(entityDefId, out var entityDef))
+            {
+                DrawWarningRect(renderer, level.WorldPos, layerDef.GridSize, entityInstance.Position);
                 continue;
+            }
 
-            var tileSetId = entityDef.TileSetDefId;
-            var tileSetDef = _editor.RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == tileSetId);
+            GetTileSetDef(entityDef.TileSetDefId, out var tileSetDef);
+
             var sprite = renderer.BlankSprite;
             Matrix4x4 entityTransform;
             Color color;
@@ -744,7 +856,60 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
 
             renderer.DrawSprite(sprite, entityTransform, isSelected ? color : color * 0.5f);
+
+            // Draw blinking rect if there are field instances without matching field definitions
+            for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
+            {
+                if (!GetFieldDef(entityDef, entityInstance.FieldInstances[j].FieldDefId, out var fieldDef))
+                {
+                    DrawWarningRect(renderer, level.WorldPos, layerDef.GridSize, entityInstance.Position);
+                }
+            }
         }
+    }
+
+    private void DrawWarningRect(Renderer renderer, Vector2 worldPos, uint gridSize, Vector2 position)
+    {
+        var scale = gridSize + ((MathF.Sin(_editor.Time.TotalElapsedTime * 3f) + 1.0f) * 0.5f) * gridSize;
+        var transform = (
+            Matrix3x2.CreateTranslation(-0.5f, -0.5f) *
+            Matrix3x2.CreateScale(scale, scale) *
+            Matrix3x2.CreateTranslation(
+                worldPos.X + position.X + gridSize * 0.5f,
+                worldPos.Y + position.Y + gridSize * 0.5f
+            )).ToMatrix4x4();
+        renderer.DrawSprite(renderer.BlankSprite, transform, Color.Red.MultiplyAlpha(0.33f));
+    }
+
+    private static bool GetFieldDef(EntityDefinition entityDef, int fieldDefId, [NotNullWhen(true)] out FieldDef? fieldDef)
+    {
+        for (var i = 0; i < entityDef.FieldDefinitions.Count; i++)
+        {
+            if (entityDef.FieldDefinitions[i].Uid == fieldDefId)
+            {
+                fieldDef = entityDef.FieldDefinitions[i];
+                return true;
+            }
+        }
+
+        fieldDef = null;
+        return false;
+    }
+
+
+    private static bool GetIntDef(LayerDef layerDef, int value, [NotNullWhen(true)] out IntGridValue? intValue)
+    {
+        for (var i = 0; i < layerDef.IntGridValues.Count; i++)
+        {
+            if (layerDef.IntGridValues[i].Value == value)
+            {
+                intValue = layerDef.IntGridValues[i];
+                return true;
+            }
+        }
+
+        intValue = null;
+        return false;
     }
 
     private static void DrawIntGridLayer(Renderer renderer, Level level, LayerDef layerDef, LayerInstance layer, bool isSelected)
@@ -761,9 +926,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                         level.WorldPos.X + (j % cols) * layerDef.GridSize,
                                         level.WorldPos.Y + (j / cols) * layerDef.GridSize
                                     );
-                var intDef = layerDef.IntGridValues.First(x => x.Value == cellValue);
-                renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(),
-                    isSelected ? intDef.Color : intDef.Color * 0.5f);
+
+                var color = Color.Red;
+                if (GetIntDef(layerDef, cellValue, out var intDef))
+                {
+                    color = intDef.Color;
+                }
+
+                renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(), isSelected ? color : color * 0.5f);
             }
         }
     }
@@ -778,7 +948,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         if (!layerInstance.IsVisible)
             return;
-        
+
         var (mouseInWorld, mouseInLevel, mouseInGrid) = GetMousePositions();
         var mouseSnappedToGrid = mouseInGrid * _editor.RootJson.DefaultGridSize + level.WorldPos;
         renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);

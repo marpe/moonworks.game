@@ -35,7 +35,7 @@ public class MyGameMain : Game
 
     protected UPoint _swapSize;
 
-    private readonly FPSDisplay _fpsDisplay;
+    protected readonly FPSDisplay _fpsDisplay;
     private bool _hasRenderedConsole;
     public DebugRenderTarget DebugRenderTarget = DebugRenderTarget.None;
 
@@ -118,7 +118,7 @@ public class MyGameMain : Game
         InputHandler.SetViewportTransform(viewportTransform);
     }
 
-    private void UpdateScreens()
+    protected void UpdateScreens()
     {
         ExecuteQueuedActions();
 
@@ -513,8 +513,8 @@ public class MyGameMain : Game
     }
 
     #endregion
-    
-    private void UpdateWindowTitle()
+
+    protected void UpdateWindowTitle()
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
         {

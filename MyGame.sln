@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGame", "MyGame.csproj", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoonWorks", "lib\MoonWorks\MoonWorks.csproj", "{4545982B-E386-43B7-95BA-AE255C1F5B7C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyGame.CodeGen", "lib\codegen\MyGame.CodeGen.csproj", "{163CFF73-3442-4A83-B170-7134319CA412}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,10 @@ Global
 		{4545982B-E386-43B7-95BA-AE255C1F5B7C}.Debug|x64.Build.0 = Debug|x64
 		{4545982B-E386-43B7-95BA-AE255C1F5B7C}.Release|x64.ActiveCfg = Release|x64
 		{4545982B-E386-43B7-95BA-AE255C1F5B7C}.Release|x64.Build.0 = Release|x64
+		{163CFF73-3442-4A83-B170-7134319CA412}.Debug|x64.ActiveCfg = Debug|x64
+		{163CFF73-3442-4A83-B170-7134319CA412}.Debug|x64.Build.0 = Debug|x64
+		{163CFF73-3442-4A83-B170-7134319CA412}.Release|x64.ActiveCfg = Release|x64
+		{163CFF73-3442-4A83-B170-7134319CA412}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

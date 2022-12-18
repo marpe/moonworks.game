@@ -4,15 +4,16 @@ namespace MyGame.Utils;
 
 public class ContentManager
 {
+    public static ColorConverter ColorConverter = new();
     public static readonly JsonSerializerSettings JsonSerializerSettings = new()
     {
         TypeNameHandling = TypeNameHandling.Auto,
-        Converters = { new ColorConverter() }
+        Converters = { ColorConverter }
     };
 
     public static readonly JsonSerializer JsonSerializer = new()
     {
-        Converters = { new ColorConverter() }
+        Converters = { ColorConverter }
     };
 
     private readonly MyGameMain _game;
