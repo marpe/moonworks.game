@@ -323,7 +323,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 ImGui.BeginDisabled();
                 SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
                 ImGui.EndDisabled();
-                
+
                 SimpleTypeInspector.InspectPoint("Position", ref selectedInstance.Position);
 
                 var tmpPoint = (Point)selectedInstance.Size;
@@ -618,7 +618,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     }
                 }
             }
-            
+
             SortLevelInstances();
 
             Logs.LogInfo("Cleaning done!");
@@ -758,7 +758,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 ImGui.SetNextFrameWantCaptureKeyboard(false);
             }
         }
-        
+
         ImGui.PopStyleVar();
 
         ImGui.End();
@@ -1074,23 +1074,37 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var commandBuffer = _editor.GraphicsDevice.AcquireCommandBuffer();
         var viewProjection = _camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
 
-        if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
+        DrawWorld(renderer);
+
+        if (_mouseIsInLevelBounds && MyEditorMain.ActiveInput == ActiveInput.EditorWindow)
+            DrawMouse(renderer);
+
+        DrawGrid(renderer, Color.Black * 0.1f, 1.0f / _camera.Zoom);
+
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.AlphaBlend);
+
+        _editor.GraphicsDevice.Submit(commandBuffer);
+    }
+
+    private void DrawWorld(Renderer renderer)
+    {
+        if (!GetSelectedWorld(out var world))
+            return;
+
+        for (var i = 0; i < world.Levels.Count; i++)
         {
-            var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
-            for (var i = 0; i < world.Levels.Count; i++)
-            {
-                var level = world.Levels[i];
-                var transform = Matrix3x2.CreateScale(level.Width, level.Height) *
-                                Matrix3x2.CreateTranslation(level.WorldPos.X, level.WorldPos.Y);
-                renderer.DrawSprite(renderer.BlankSprite, transform.ToMatrix4x4(), level.BackgroundColor);
+            var level = world.Levels[i];
+            var transform = Matrix3x2.CreateScale(level.Width, level.Height) *
+                            Matrix3x2.CreateTranslation(level.WorldPos.X, level.WorldPos.Y);
+            renderer.DrawSprite(renderer.BlankSprite, transform.ToMatrix4x4(), level.BackgroundColor);
 
-                DrawLayerInstances(renderer, level);
+            DrawLayerInstances(renderer, level, i == LevelsWindow.SelectedLevelIndex);
 
-                var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
-                renderer.DrawRectOutline(level.WorldPos, level.WorldPos + (Point)level.Size, color, 4f);
-            }
+            var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
+            renderer.DrawRectOutline(level.WorldPos, level.WorldPos + (Point)level.Size, color, 4f);
+        }
 
-            /*foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
+        /*foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
             {
                 foreach (var ((x, y), tile) in ruleCache)
                 {
@@ -1108,16 +1122,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     renderer.DrawSprite(sprite, transform, Color.White);
                 }
             }*/
-        }
-
-        if (_mouseIsInLevelBounds && MyEditorMain.ActiveInput == ActiveInput.EditorWindow)
-            DrawMouse(renderer);
-
-        DrawGrid(renderer, Color.Black * 0.1f, 1.0f / _camera.Zoom);
-
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.AlphaBlend);
-
-        _editor.GraphicsDevice.Submit(commandBuffer);
     }
 
     public static bool GetLayerDefinition(long layerDefUid, [NotNullWhen(true)] out LayerDef? layerDef)
@@ -1136,7 +1140,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         return false;
     }
 
-    private void DrawLayerInstances(Renderer renderer, Level level)
+    private void DrawLayerInstances(Renderer renderer, Level level, bool isSelectedLevel)
     {
         for (var i = level.LayerInstances.Count - 1; i >= 0; i--)
         {
@@ -1152,11 +1156,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 DrawIntGridLayer(renderer, level, layerDef, layer, isSelected);
 
-                DrawAutoLayerTiles(renderer, level, layerDef, layer, isSelected);
+                if (isSelectedLevel)
+                    DrawAutoLayerTiles(renderer, level, layerDef, layer, isSelected);
             }
             else if (layerDef.LayerType == LayerType.Entities)
             {
-                DrawEntityLayer(renderer, level, layer, layerDef, isSelected);
+                if (isSelectedLevel)
+                    DrawEntityLayer(renderer, level, layer, layerDef, isSelected);
             }
         }
     }

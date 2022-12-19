@@ -115,11 +115,18 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     protected abstract void DrawLeft();
     protected abstract void DrawRight();
-
+    
+    private static Dictionary<string, string> _cachedPaths = new();
+    
     public static Texture GetTileSetTexture(string tileSetPath)
     {
-        var worldFileDir = Path.GetDirectoryName(ContentPaths.worlds.worlds_json);
-        var path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
+        if (!_cachedPaths.TryGetValue(tileSetPath, out var path))
+        {
+            var worldFileDir = Path.GetDirectoryName(ContentPaths.worlds.worlds_json);
+            path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
+            _cachedPaths.Add(tileSetPath, path);
+        }
+        
         Texture texture;
 
         var editor = (MyEditorMain)Shared.Game;

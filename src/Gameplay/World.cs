@@ -469,15 +469,14 @@ public class World
         var cols = level.Width / layerDef.GridSize;
         var rows = level.Height / layerDef.GridSize;
 
-
         if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
         {
-            for (var y = boundsMin.Y; y < boundsMax.Y; y++)
+            for (var y = boundsMin.Y; y <= boundsMax.Y; y++)
             {
                 if (y < 0 || y >= rows)
                     continue;
 
-                for (var x = boundsMin.X; x < boundsMax.X; x++)
+                for (var x = boundsMin.X; x <= boundsMax.X; x++)
                 {
                     if (x < 0 || x >= cols)
                         continue;
