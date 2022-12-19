@@ -445,8 +445,8 @@ public class World
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {
             var tile = layer.AutoLayerTiles[i];
-            if (tile.Cell.X < boundsMin.X || tile.Cell.X >= boundsMax.X ||
-                tile.Cell.Y < boundsMin.Y || tile.Cell.Y >= boundsMax.Y)
+            if (tile.Cell.X < boundsMin.X || tile.Cell.X > boundsMax.X ||
+                tile.Cell.Y < boundsMin.Y || tile.Cell.Y > boundsMax.Y)
                 continue;
 
             var sprite = GetTileSprite(texture, tile.TileId, layerDef.GridSize);
