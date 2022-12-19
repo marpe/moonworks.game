@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 using MyGame.WorldsRoot;
 using Vector2 = System.Numerics.Vector2;
 
@@ -71,7 +72,7 @@ public unsafe class TileSetDefWindow : SplitWindow
         DrawTileSetDefinitions();
         if (ImGuiExt.ColoredButton("+ Add TileSet Definition", new Vector2(-1, 0)))
         {
-            RootJson.TileSetDefinitions.Add(new TileSetDef() { Uid = GetNextId(RootJson.TileSetDefinitions)});
+            RootJson.TileSetDefinitions.Add(new TileSetDef() { Uid = GetNextId(RootJson.TileSetDefinitions) });
         }
     }
 
@@ -94,14 +95,23 @@ public unsafe class TileSetDefWindow : SplitWindow
             SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);
             SimpleTypeInspector.InspectString("Path", ref tileSetDef.Path);
             SimpleTypeInspector.InspectInputUint("TileGridSize", ref tileSetDef.TileGridSize);
-                
+
             if (tileSetDef.Path != "")
             {
                 var texture = GetTileSetTexture(tileSetDef.Path);
                 var avail = ImGui.GetContentRegionAvail();
                 var height = MathF.Max(1.0f, texture.Height) / MathF.Max(1.0f, texture.Width) * avail.X;
-                ImGui.Image((void*)texture.Handle, new Vector2(avail.X, height), Vector2.Zero, Vector2.One, Color.White.ToNumerics(),
-                    Color.Black.ToNumerics());
+                var textureSize = new Vector2(avail.X, height);
+                var min = ImGui.GetCursorScreenPos();
+                var max = min + textureSize;
+                ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(min, max), Color.White.MultiplyAlpha(0.33f).PackedValue);
+                ImGui.Image(
+                    (void*)texture.Handle,
+                    textureSize,
+                    Vector2.Zero, Vector2.One,
+                    Color.White.ToNumerics(),
+                    Color.Black.ToNumerics()
+                );
             }
         }
     }

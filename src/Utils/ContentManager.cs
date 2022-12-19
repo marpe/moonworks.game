@@ -8,7 +8,8 @@ public class ContentManager
     public static readonly JsonSerializerSettings JsonSerializerSettings = new()
     {
         TypeNameHandling = TypeNameHandling.Auto,
-        Converters = { ColorConverter }
+        Converters = { ColorConverter },
+        Formatting = Formatting.None
     };
 
     public static readonly JsonSerializer JsonSerializer = new()

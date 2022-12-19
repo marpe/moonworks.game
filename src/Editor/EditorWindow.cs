@@ -30,6 +30,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private readonly WorldsWindow _worldsWindow;
 
     public Matrix4x4 PreviewRenderViewportTransform = Matrix4x4.Identity;
+    private bool _mouseIsInLevelBounds;
+    private bool _levelChanged;
+    private int _selectedEntityInstanceIndex = -1;
+    private int _prevSelectedEntityInstanceIndex;
+    private float _deselectedLayerAlpha;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -75,9 +80,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     public void Update(float deltaSeconds)
     {
-        var leftMouseDown = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Left);
-        var rightMouseDown = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Right);
-        if (leftMouseDown == false && rightMouseDown == false)
+        if (!GetSelectedLevel(out var selectedLevel))
             return;
 
         if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
@@ -90,7 +93,41 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var cols = (int)(level.Width / layerDef.GridSize);
         var rows = (int)(level.Height / layerDef.GridSize);
 
-        if (!(mouseGrid.X >= 0) || !(mouseGrid.X < cols) || !(mouseGrid.Y >= 0) || !(mouseGrid.Y < rows))
+        _mouseIsInLevelBounds = mouseGrid.X >= 0 &&
+                                mouseGrid.X < cols &&
+                                mouseGrid.Y >= 0 &&
+                                mouseGrid.Y < rows;
+
+        var leftMouseDown = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Left);
+        var rightMouseDown = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Right);
+        var middleMouseDown = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Middle);
+        if (!_mouseIsInLevelBounds)
+        {
+            if (rightMouseDown)
+            {
+                for (var i = 0; i < world.Levels.Count; i++)
+                {
+                    var lvl = world.Levels[i];
+                    if (mouseWorld.X >= lvl.WorldPos.X && mouseWorld.X < lvl.WorldPos.X + lvl.Size.X &&
+                        mouseWorld.Y >= lvl.WorldPos.Y && mouseWorld.Y < lvl.WorldPos.Y + lvl.Size.Y)
+                    {
+                        LevelsWindow.SelectedLevelIndex = i;
+                        _levelChanged = true;
+                        return;
+                    }
+                }
+            }
+
+            return;
+        }
+
+        if (_levelChanged && !rightMouseDown)
+            _levelChanged = false;
+
+        if (_levelChanged)
+            return;
+
+        if (!leftMouseDown && !rightMouseDown && !middleMouseDown)
             return;
 
         switch (layerDef.LayerType)
@@ -112,11 +149,19 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 var rightMousePressed = _editor.InputHandler.IsMouseButtonDown(MouseButtonCode.Right);
                 if (rightMousePressed)
                 {
-                    var index = GetEntityAtPosition(mouseLevel, layerInstance.EntityInstances, out _);
+                    var index = GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out _);
                     if (index != -1)
                         layerInstance.EntityInstances.RemoveAt(index);
 
                     break;
+                }
+
+                var middleMousePressed = _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Middle);
+                int selectedEntityInstanceIndex =
+                    GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out var selectedEntityInstance);
+                if (middleMousePressed && selectedEntityInstanceIndex != -1)
+                {
+                    _selectedEntityInstanceIndex = selectedEntityInstanceIndex;
                 }
 
                 var leftMousePressed = _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left);
@@ -130,6 +175,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 if (IsExcluded(entityDef, layerDef))
                     break;
+
+                var prevEntityIndex = GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out _);
+                if (prevEntityIndex != -1)
+                    layerInstance.EntityInstances.RemoveAt(prevEntityIndex);
 
                 var instance = new EntityInstance()
                 {
@@ -163,15 +212,15 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
-    private int GetEntityAtPosition(Vector2 position, List<EntityInstance> entities, out EntityInstance? entity)
+    private static int GetEntityAtPosition(Vector2 position, uint gridSize, List<EntityInstance> entities, out EntityInstance? entity)
     {
         for (var i = 0; i < entities.Count; i++)
         {
             var instance = entities[i];
             if (position.X >= instance.Position.X &&
-                position.X <= instance.Position.X + instance.Width &&
+                position.X <= instance.Position.X + gridSize &&
                 position.Y >= instance.Position.Y &&
-                position.Y <= instance.Position.Y + instance.Height)
+                position.Y <= instance.Position.Y + gridSize)
             {
                 entity = instance;
                 return i;
@@ -225,7 +274,68 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawPreviewWindow();
 
+        DrawSelectedEntityInstancePopup();
+
         DrawCurrentLevelData();
+    }
+
+    private void DrawSelectedEntityInstancePopup()
+    {
+        if (_selectedEntityInstanceIndex == -1)
+            return;
+
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+            return;
+
+        if (_selectedEntityInstanceIndex > layerInstance.EntityInstances.Count - 1)
+            return;
+
+        var selectedInstance = layerInstance.EntityInstances[_selectedEntityInstanceIndex];
+
+        var popupName = "SelectedEntityInstance";
+        if (_prevSelectedEntityInstanceIndex != _selectedEntityInstanceIndex)
+            ImGui.OpenPopup(popupName);
+
+        ImGui.SetNextWindowSize(new Num.Vector2(300, 200), ImGuiCond.Always);
+        if (ImGui.BeginPopup(popupName))
+        {
+            if (GetEntityDef(selectedInstance.EntityDefId, out var entityDef))
+            {
+                var tmpPoint = (Point)selectedInstance.Size;
+                if (ImGuiExt.InspectPoint("Size", ref tmpPoint.X, ref tmpPoint.Y, "W", "Width", "H", "Height", 1, 1, 512))
+                {
+                    selectedInstance.Width = (uint)tmpPoint.X;
+                    selectedInstance.Height = (uint)tmpPoint.Y;
+                }
+
+                FieldInstanceInspector.DrawFieldInstances(selectedInstance.FieldInstances, entityDef.FieldDefinitions);
+            }
+            else
+            {
+                ImGui.TextDisabled($"Could not find a entity definition with id \"{selectedInstance.EntityDefId}\"");
+            }
+
+            ImGui.EndPopup();
+        }
+
+        if (!ImGui.IsPopupOpen(popupName))
+        {
+            _selectedEntityInstanceIndex = -1;
+        }
+
+        _prevSelectedEntityInstanceIndex = _selectedEntityInstanceIndex;
+    }
+
+    private bool GetSelectedWorld([NotNullWhen(true)] out WorldsRoot.World? selectedWorld)
+    {
+        if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
+        {
+            selectedWorld = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
+            return true;
+        }
+
+        selectedWorld = null;
+        return false;
     }
 
     private void DrawCurrentLevelData()
@@ -233,19 +343,143 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var windowFlags = ImGuiWindowFlags.NoCollapse;
         if (ImGui.Begin("CurrentLevelWindow", default, windowFlags))
         {
-            if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
-            {
-                var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
+            DrawLayersInSelectedLevel();
 
-                if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
-                {
-                    var level = world.Levels[LevelsWindow.SelectedLevelIndex];
-                    DrawLayersInLevel(level);
-                }
-            }
+            DrawCleanButton();
+
+            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref _deselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
         }
 
         ImGui.End();
+    }
+
+    private void DrawCleanButton()
+    {
+        if (ImGuiExt.ColoredButton("Cleanup!", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
+        {
+            for (var i = 0; i < _editor.RootJson.Worlds.Count; i++)
+            {
+                var world = _editor.RootJson.Worlds[i];
+                for (var j = 0; j < world.Levels.Count; j++)
+                {
+                    var level = world.Levels[j];
+
+                    var levelSnappedX = (int)(level.WorldPos.X / (float)World.DefaultGridSize) * World.DefaultGridSize;
+                    var levelSnappedY = (int)(level.WorldPos.Y / (float)World.DefaultGridSize) * World.DefaultGridSize;
+
+                    if (levelSnappedX != level.WorldPos.X || levelSnappedY != level.WorldPos.Y)
+                    {
+                        Logs.LogWarn($"Snapping level world position to grid");
+                        level.WorldPos = new Point(levelSnappedX, levelSnappedY);
+                    }
+                    
+                    var levelSnappedWidth = (int)(level.Width / (float)World.DefaultGridSize) * World.DefaultGridSize;
+                    var levelSnappedHeight = (int)(level.Height / (float)World.DefaultGridSize) * World.DefaultGridSize;
+
+                    if (levelSnappedWidth != level.Width || levelSnappedHeight != level.Height)
+                    {
+                        Logs.LogWarn($"Snapping level size to grid");
+                        level.Width = (uint)levelSnappedWidth;
+                        level.Height = (uint)levelSnappedHeight;
+                    }
+                    
+                    for (var k = level.LayerInstances.Count - 1; k >= 0; k--)
+                    {
+                        var layerInstance = level.LayerInstances[k];
+                        if (!GetLayerDefinition(layerInstance.LayerDefId, out var layerDef))
+                        {
+                            Logs.LogWarn($"Removing layer instance \"{k}\" since there's no layer definition with id \"{layerInstance.LayerDefId}\"");
+                            level.LayerInstances.RemoveAt(k);
+                            continue;
+                        }
+
+                        if (layerInstance.EntityInstances.Count > 0 && layerDef.LayerType != LayerType.Entities)
+                        {
+                            Logs.LogWarn($"Removing entity instances since the layer isn't an entity layer");
+                            layerInstance.EntityInstances.Clear();
+                        }
+
+                        if (layerInstance.IntGrid.Length > 0 && layerDef.LayerType != LayerType.IntGrid)
+                        {
+                            Logs.LogWarn($"Clearing int grid values since the layer isn\'t of type IntGrid");
+                            layerInstance.IntGrid = Array.Empty<int>();
+                        }
+
+                        for (var l = layerInstance.EntityInstances.Count - 1; l >= 0; l--)
+                        {
+                            var entity = layerInstance.EntityInstances[l];
+                            if (!GetEntityDef(entity.EntityDefId, out var entityDef))
+                            {
+                                Logs.LogWarn($"Removing entity instance since there\'s no entity definition with id \"{entity.EntityDefId}\"");
+                                layerInstance.EntityInstances.RemoveAt(l);
+                                continue;
+                            }
+
+                            if (IsExcluded(entityDef, layerDef))
+                            {
+                                Logs.LogWarn("Removing entity instance since the layer it's on excludes entities of this type");
+                                layerInstance.EntityInstances.RemoveAt(l);
+                                continue;
+                            }
+
+                            if (entity.Width != entityDef.Width)
+                            {
+                                Logs.LogWarn("Resetting entity instance width to entity definition");
+                                entity.Width = entityDef.Width;
+                            }
+
+                            if (entity.Height != entityDef.Height)
+                            {
+                                Logs.LogWarn("Resetting entity instance height to entity definition");
+                                entity.Height = entityDef.Height;
+                            }
+
+                            var snappedX = (int)(entity.Position.X / (float)layerDef.GridSize) * layerDef.GridSize;
+                            if (snappedX != entity.Position.X)
+                            {
+                                Logs.LogWarn("Snapping entity instance x-position to grid");
+                                entity.Position.X = (int)snappedX;
+                            }
+                            
+                            var snappedY = (int)(entity.Position.Y / (float)layerDef.GridSize) * layerDef.GridSize;
+                            if (snappedY != entity.Position.Y)
+                            {
+                                Logs.LogWarn("Snapping entity instance y-position to grid");
+                                entity.Position.Y = (int)snappedY;
+                            }
+                            
+                            for (var m = entity.FieldInstances.Count - 1; m >= 0; m--)
+                            {
+                                var fieldInstance = entity.FieldInstances[m];
+                                if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
+                                {
+                                    Logs.LogWarn($"Removing field instance there\'s no field definition with id \"{fieldInstance.FieldDefId}\"");
+                                    entity.FieldInstances.RemoveAt(m);
+                                    continue;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            Logs.LogInfo("Cleaning done!");
+        }
+    }
+
+    private void DrawLayersInSelectedLevel()
+    {
+        if (!GetSelectedWorld(out var world))
+        {
+            return;
+        }
+
+        if (!GetSelectedLevel(out var level))
+        {
+            return;
+        }
+
+        DrawLayersInLevel(level);
     }
 
     private void DrawLayersInLevel(Level level)
@@ -280,13 +514,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(ImGuiExt.FLT_MAX, ImGuiExt.FLT_MAX));
         var centralNode = ImGuiInternal.DockBuilderGetCentralNode(_editor.ViewportDockSpaceId);
         ImGui.SetNextWindowDockID(centralNode->ID, ImGuiCond.FirstUseEver);
-        if (ImGui.Begin(PreviewWindowTitle, default, ImGuiWindowFlags.None))
+        if (ImGui.Begin(PreviewWindowTitle, default, ImGuiWindowFlags.NoScrollWithMouse))
         {
-            if (ImGui.IsWindowFocused())
+            // TODO (marpe): Might want to resize the render target to the window
+            /*var previousSize = _editor._editorRenderTarget.Size();
+            var targetSize = ImGui.GetWindowSize().ToXNA().ToPoint();
+            if (TextureUtils.EnsureTextureSize(ref _editor._editorRenderTarget, _editor.GraphicsDevice, targetSize))
             {
-                MyEditorMain.ActiveInput = ActiveInput.EditorWindow;
-            }
-
+                Logs.LogInfo($"EditorRenderTarget resized {previousSize.ToString()} -> {targetSize.ToString()}");
+            }*/
+            
             GameWindow.EnsureTextureIsBound(ref _editorRenderTextureId, _editor._editorRenderTarget, _editor.ImGuiRenderer);
             var cursorScreenPosition = ImGui.GetCursorScreenPos();
 
@@ -303,6 +540,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 Color.White.PackedValue
             );
             ImGui.InvisibleButton("InvButton", editorMax - editorMin);
+
+            if (ImGui.IsItemHovered())
+            {
+                MyEditorMain.ActiveInput = ActiveInput.EditorWindow;
+            }
 
             var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
             var renderOffset = editorMin - windowViewportPosition;
@@ -343,31 +585,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var showOverlay = true;
         if (GameWindow.BeginOverlay("MouseOverlay", ref showOverlay))
         {
-            var offset = Vector2.Zero;
-
-            if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
-            {
-                var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
-                if (LevelsWindow.SelectedLevelIndex <= world.Levels.Count - 1)
-                {
-                    var level = world.Levels[LevelsWindow.SelectedLevelIndex];
-                    offset = level.WorldPos;
-                }
-            }
-
-            var mousePosition = _editor.InputHandler.MousePosition;
-            ImGuiExt.PrintVector("Screen", mousePosition);
-
-            var view = _camera.GetView();
-            Matrix3x2.Invert(view, out var invertedView);
-            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+            var (mouseInWorld, mouseInLevel, mouseCell) = GetMousePositions();
+            ImGuiExt.PrintVector("Screen", _editor.InputHandler.MousePosition);
             ImGuiExt.PrintVector("World", mouseInWorld);
-
-            ImGuiExt.PrintVector("Level", mouseInWorld - offset);
-
-            var mouseCell = Entity.ToCell(mouseInWorld - offset);
+            ImGuiExt.PrintVector("Level", mouseInLevel);
             ImGuiExt.PrintVector("Grid", mouseCell);
-
             ImGui.Dummy(new Num.Vector2(200, 0));
         }
 
@@ -472,54 +694,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         else
         {
             ImGui.TextDisabled("No layer selected");
-        }
-
-        if (ImGuiExt.ColoredButton("Cleanup!"))
-        {
-            for (var i = layerInstances.Count - 1; i >= 0; i--)
-            {
-                var layerInstance = layerInstances[i];
-                if (!GetLayerDefinition(layerInstance.LayerDefId, out var layerDef))
-                {
-                    Logs.LogWarn($"Removing layer instance \"{i}\" since there's no layer definition with id \"{layerInstance.LayerDefId}\"");
-                    layerInstances.RemoveAt(i);
-                    continue;
-                }
-
-                if (layerInstance.EntityInstances.Count > 0 && layerDef.LayerType != LayerType.Entities)
-                {
-                    Logs.LogWarn($"Removing entity instances since the layer isn't an entity layer");
-                    layerInstance.EntityInstances.Clear();
-                }
-
-                if (layerInstance.IntGrid.Length > 0 && layerDef.LayerType != LayerType.IntGrid)
-                {
-                    Logs.LogWarn($"Clearing int grid values since the layer isn\'t of type IntGrid");
-                    layerInstance.IntGrid = Array.Empty<int>();
-                }
-
-                for (var j = layerInstance.EntityInstances.Count - 1; j >= 0; j--)
-                {
-                    var entity = layerInstance.EntityInstances[j];
-                    if (!GetEntityDef(entity.EntityDefId, out var entityDef))
-                    {
-                        Logs.LogWarn($"Removing entity instance since there\'s no entity definition with id \"{entity.EntityDefId}\"");
-                        layerInstance.EntityInstances.RemoveAt(j);
-                        continue;
-                    }
-
-                    for (var i1 = entity.FieldInstances.Count - 1; i1 >= 0; i1--)
-                    {
-                        var fieldInstance = entity.FieldInstances[i1];
-                        if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
-                        {
-                            Logs.LogWarn($"Removing field instance there\'s no field definition with id \"{fieldInstance.FieldDefId}\"");
-                            entity.FieldInstances.RemoveAt(i1);
-                            continue;
-                        }
-                    }
-                }
-            }
         }
     }
 
@@ -719,17 +893,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (WorldsWindow.SelectedWorldIndex <= _editor.RootJson.Worlds.Count - 1)
         {
             var world = _editor.RootJson.Worlds[WorldsWindow.SelectedWorldIndex];
-            foreach (var level in world.Levels)
+            for (var i = 0; i < world.Levels.Count; i++)
             {
+                var level = world.Levels[i];
                 var transform = Matrix3x2.CreateScale(level.Width, level.Height) *
                                 Matrix3x2.CreateTranslation(level.WorldPos.X, level.WorldPos.Y);
                 renderer.DrawSprite(renderer.BlankSprite, transform.ToMatrix4x4(), level.BackgroundColor);
 
                 DrawLayerInstances(renderer, level);
+
+                var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
+                renderer.DrawRectOutline(level.WorldPos, level.WorldPos + (Point)level.Size, color, 4f);
             }
         }
 
-        DrawMouse(renderer);
+        if (_mouseIsInLevelBounds && MyEditorMain.ActiveInput == ActiveInput.EditorWindow)
+            DrawMouse(renderer);
 
         DrawGrid(renderer, Color.Black * 0.1f, 1.0f / _camera.Zoom);
 
@@ -823,7 +1002,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             var sprite = renderer.BlankSprite;
             Matrix4x4 entityTransform;
-            Color color;
+            Color tint;
+            Color outline;
 
             if (tileSetDef != null)
             {
@@ -842,7 +1022,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         level.WorldPos.X + entityInstance.Position.X,
                         level.WorldPos.Y + entityInstance.Position.Y
                     )).ToMatrix4x4();
-                color = Color.White;
+                tint = Color.White;
+                outline = entityDef.Color;
             }
             else
             {
@@ -852,10 +1033,19 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         level.WorldPos.X + entityInstance.Position.X,
                         level.WorldPos.Y + entityInstance.Position.Y
                     )).ToMatrix4x4();
-                color = entityDef.Color;
+                tint = entityDef.Color;
+                outline = entityDef.Color;
             }
 
-            renderer.DrawSprite(sprite, entityTransform, isSelected ? color : color * 0.5f);
+            renderer.DrawSprite(sprite, entityTransform, isSelected ? tint : tint * _deselectedLayerAlpha);
+            var entityInstancePosition = level.WorldPos + entityInstance.Position -
+                                         entityInstance.Size * entityDef.Pivot +
+                                         entityDef.Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize);
+            renderer.DrawRectOutline(
+                entityInstancePosition,
+                entityInstancePosition + (Point)entityInstance.Size,
+                outline * (isSelected ? 1.0f : _deselectedLayerAlpha)
+            );
 
             // Draw blinking rect if there are field instances without matching field definitions
             for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
@@ -1009,12 +1199,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (GetSelectedLevel(out var level))
         {
             mouseInLevel = mouseInWorld - level.WorldPos;
-
-
             var gridSize = _editor.RootJson.DefaultGridSize;
-            mouseInWorld -= level.WorldPos;
-            var col = MathF.FloorToInt(mouseInWorld.X / gridSize);
-            var row = MathF.FloorToInt(mouseInWorld.Y / gridSize);
+            var col = MathF.FloorToInt(mouseInLevel.X / gridSize);
+            var row = MathF.FloorToInt(mouseInLevel.Y / gridSize);
             mouseInGrid = new Point(col, row);
         }
 

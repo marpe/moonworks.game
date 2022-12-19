@@ -94,11 +94,6 @@ public unsafe class GameWindow : ImGuiEditorWindow
         ImGui.SetNextWindowClass(&imGuiWindowClass);
         if (ImGui.Begin(GameWindowTitle, default, flags))
         {
-            if (ImGui.IsWindowFocused())
-            {
-                MyEditorMain.ActiveInput = ActiveInput.GameWindow;
-            }
-            
             ImGui.PopStyleVar();
 
             var contentMin = ImGui.GetWindowContentRegionMin();
@@ -149,6 +144,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var isActive = ImGui.IsItemActive();
             var isHovered = ImGui.IsItemHovered();
 
+            if (isHovered)
+            {
+                MyEditorMain.ActiveInput = ActiveInput.GameWindow;
+            }
+            
             // draw border
             /*var isFocused = ImGui.IsItemFocused();
             var borderColor = (isActive, isFocused, isHovered) switch

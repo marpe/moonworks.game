@@ -200,7 +200,6 @@ public class World
                         continue;
                     }
 
-
                     if (fieldInfo.FieldType == typeof(Color) && fieldValue is string colorStr)
                     {
                         fieldInfo.SetValue(entity, ColorExt.FromHex(colorStr.AsSpan(1)));

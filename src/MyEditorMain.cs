@@ -434,8 +434,6 @@ public unsafe class MyEditorMain : MyGameMain
         _renderGameStopwatch.Stop();
         _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
-        EditorWindow.Draw(Renderer, _editorRenderTarget, alpha);
-
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {
             _imguiRenderStopwatch.Restart();
@@ -452,6 +450,8 @@ public unsafe class MyEditorMain : MyGameMain
             _imguiRenderStopwatch.Stop();
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
         }
+        
+        EditorWindow.Draw(Renderer, _editorRenderTarget, alpha);
 
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 

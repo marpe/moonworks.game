@@ -47,7 +47,7 @@ public class LevelsWindow : SplitWindow
                 var level = world.Levels[i];
 
                 var isSelected = SelectedLevelIndex == i;
-                var color = ImGuiExt.Colors[1];
+                var color = level.BackgroundColor;
                 if (GiantButton("##Selectable", isSelected, color, _rowMinHeight))
                 {
                     SelectedLevelIndex = i;
@@ -117,6 +117,8 @@ public class LevelsWindow : SplitWindow
             }
         };
 
+        ImGuiExt.SeparatorText("Custom Level Field Definitions");
+
         FieldDefEditor.DrawFieldEditor(RootJson.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex, fieldDefRemoved);
     }
 
@@ -148,14 +150,15 @@ public class LevelsWindow : SplitWindow
 
         SimpleTypeInspector.InspectString("Identifier", ref level.Identifier);
         var rangeSettings = new RangeSettings(16, 16000, 1f, true);
+        var oldSize = level.Size;
         if (SimpleTypeInspector.InspectUInt("Width", ref level.Width, rangeSettings))
         {
-            ResizeLayers(level, RootJson.LayerDefinitions);
+            ResizeLayers(level, oldSize, RootJson.LayerDefinitions);
         }
 
         if (SimpleTypeInspector.InspectUInt("Height", ref level.Height, rangeSettings))
         {
-            ResizeLayers(level, RootJson.LayerDefinitions);
+            ResizeLayers(level, oldSize, RootJson.LayerDefinitions);
         }
 
         var layerDef = RootJson.LayerDefinitions.FirstOrDefault();
@@ -168,18 +171,22 @@ public class LevelsWindow : SplitWindow
             {
                 level.Width = Math.Clamp(gridSize.X * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
                 level.Height = Math.Clamp(gridSize.Y * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
+
+                ResizeLayers(level, oldSize, RootJson.LayerDefinitions);
             }
         }
 
         SimpleTypeInspector.InspectPoint("WorldPos", ref level.WorldPos);
         SimpleTypeInspector.InspectColor("BackgroundColor", ref level.BackgroundColor);
 
-        DrawFieldInstances(level.FieldInstances, RootJson.LevelFieldDefinitions);
+        ImGuiExt.SeparatorText("Custom Level Fields");
+
+        FieldInstanceInspector.DrawFieldInstances(level.FieldInstances, RootJson.LevelFieldDefinitions);
 
         ImGui.PopItemWidth();
     }
 
-    private static void ResizeLayers(Level level, List<LayerDef> layerDefs)
+    private static void ResizeLayers(Level level, UPoint oldSize, List<LayerDef> layerDefs)
     {
         for (var i = 0; i < level.LayerInstances.Count; i++)
         {
@@ -193,135 +200,29 @@ public class LevelsWindow : SplitWindow
 
             if (layerDef.LayerType == LayerType.IntGrid)
             {
-                var cols = level.Width / layerDef.GridSize;
-                var rows = level.Height / layerDef.GridSize;
-                Array.Resize(ref layer.IntGrid, (int)(cols * rows));
+                var old = new int[layer.IntGrid.Length];
+                Array.Copy(layer.IntGrid, old, layer.IntGrid.Length);
+
+                var oldCols = oldSize.X / layerDef.GridSize;
+                var oldRows = oldSize.Y / layerDef.GridSize;
+
+                var newCols = level.Width / layerDef.GridSize;
+                var newRows = level.Height / layerDef.GridSize;
+                layer.IntGrid = new int[newCols * newRows];
+
+                for (var y = 0; y < oldRows; y++)
+                {
+                    for (var x = 0; x < oldCols; x++)
+                    {
+                        if (y * newCols + x < layer.IntGrid.Length)
+                            layer.IntGrid[y * newCols + x] = old[y * oldCols + x];
+                    }
+                }
             }
             else
             {
                 Array.Resize(ref layer.IntGrid, 0);
             }
         }
-    }
-
-    private static void DrawFieldInstances(List<FieldInstance> fieldInstances, List<FieldDef> fieldDefs)
-    {
-        ImGuiExt.SeparatorText("Fields");
-
-        if (fieldDefs.Count == 0)
-        {
-            ImGui.TextDisabled("No fields have been defined");
-            return;
-        }
-
-        for (var i = 0; i < fieldDefs.Count; i++)
-        {
-            if (fieldInstances.Any(x => x.FieldDefId == fieldDefs[i].Uid))
-                continue;
-
-            fieldInstances.Add(CreateFieldInstance(fieldDefs[i]));
-        }
-
-        for (var i = 0; i < fieldInstances.Count; i++)
-        {
-            ImGui.PushID(i);
-            var fieldInstance = fieldInstances[i];
-            var fieldDef = fieldDefs.FirstOrDefault(x => x.Uid == fieldInstance.FieldDefId);
-            if (fieldDef == null)
-            {
-                ImGui.Text($"Could not find a level field definition with uid \"{fieldInstance.FieldDefId}\"");
-                ImGui.PopID();
-                continue;
-            }
-
-            if (fieldInstance.Value == null || fieldInstance.Value.GetType() != FieldDef.GetActualType(fieldDef.FieldType, fieldDef.IsArray))
-            {
-                if (fieldDef.IsArray)
-                {
-                    fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray);
-                }
-                else
-                {
-                    fieldInstance.Value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray);
-                }
-            }
-
-            if (fieldDef.IsArray)
-            {
-                var list = (IList)fieldInstance.Value;
-
-                ImGuiExt.LabelPrefix(fieldDef.Identifier);
-                ImGui.NewLine();
-
-                if (list.Count == 0)
-                {
-                    ImGui.TextDisabled("There are no elements in the array");
-                }
-                else
-                {
-                    var indexToRemove = -1;
-                    if (ImGui.BeginTable("Value", 2, ImGuiTableFlags.BordersH | ImGuiTableFlags.PreciseWidths | ImGuiTableFlags.SizingFixedFit,
-                            new Vector2(0, 0)))
-                    {
-                        ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.WidthStretch);
-                        ImGui.TableSetupColumn("Action", ImGuiTableColumnFlags.NoResize);
-
-                        for (var j = 0; j < list.Count; j++)
-                        {
-                            ImGui.PushID(j);
-                            var value = list[j];
-                            if (value == null)
-                            {
-                                value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.FieldType, false);
-                            }
-
-                            ImGui.TableNextRow();
-                            ImGui.TableNextColumn();
-                            ImGui.SetNextItemWidth(-1);
-                            if (SimpleTypeInspector.DrawSimpleInspector(value.GetType(), "##Value", ref value))
-                            {
-                                list[j] = value;
-                            }
-
-                            ImGui.TableNextColumn();
-
-                            if (ImGuiExt.ColoredButton(FontAwesome6.Trash, ImGuiExt.Colors[2], "Remove"))
-                            {
-                                indexToRemove = j;
-                            }
-
-                            ImGui.PopID();
-                        }
-
-                        ImGui.EndTable();
-                    }
-
-                    if (indexToRemove != -1)
-                    {
-                        list.RemoveAt(indexToRemove);
-                    }
-                }
-
-                if (ImGuiExt.ColoredButton("+", new Num.Vector2(-1, 0)))
-                {
-                    list.Add(FieldDef.GetDefaultValue(fieldDef.FieldType, false));
-                }
-            }
-            else
-            {
-                SimpleTypeInspector.DrawSimpleInspector(fieldInstance.Value.GetType(), fieldDef.Identifier, ref fieldInstance.Value);
-            }
-
-            ImGui.PopID();
-        }
-    }
-
-    private static FieldInstance CreateFieldInstance(FieldDef fieldDef)
-    {
-        return new FieldInstance
-        {
-            Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray),
-            FieldDefId = fieldDef.Uid
-        };
     }
 }

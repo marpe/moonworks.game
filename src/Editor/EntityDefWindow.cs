@@ -51,8 +51,6 @@ public unsafe class EntityDefWindow : SplitWindow
         }
 
         DrawEntityDefTable(RootJson.EntityDefinitions, ref _selectedEntityDefinitionIndex, RootJson.TileSetDefinitions, RootJson.DefaultGridSize);
-
-        SimpleTypeInspector.InspectInt("MinHeight", ref _rowMinHeight, new RangeSettings(ImGui.GetFrameHeightWithSpacing(), 100, 1, false));
     }
 
     private int GetNextId(List<EntityDefinition> entityDefs)

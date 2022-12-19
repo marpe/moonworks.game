@@ -218,6 +218,8 @@ public class EntityDefinition
     public uint TileId;
     public double PivotX;
     public double PivotY;
+    [JsonIgnore]
+    public Vector2 Pivot => new Vector2(PivotX, PivotY);
     public List<string> Tags = new();
 
     public EntityDefinition()

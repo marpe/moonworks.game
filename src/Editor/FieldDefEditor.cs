@@ -26,7 +26,6 @@ public static unsafe class FieldDefEditor
     public static void DrawFieldEditor(List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex, Action<FieldDef>? defRemovedCallback = null)
     {
         ImGui.PushID("FieldEditor");
-        ImGuiExt.SeparatorText("Fields");
 
         DrawAddButtons(200, fieldDefs, ref selectedFieldDefinitionIndex);
 
@@ -97,6 +96,25 @@ public static unsafe class FieldDefEditor
                 SimpleTypeInspector.InspectInputInt("Uid", ref fieldDef.Uid);
                 SimpleTypeInspector.InspectString("Identifier", ref fieldDef.Identifier);
                 EnumInspector.InspectEnum("Type", ref fieldDef.FieldType);
+                var actualType = FieldDef.GetActualType(fieldDef.FieldType, false);
+
+                if (fieldDef.DefaultValue == null)
+                    fieldDef.DefaultValue = FieldDef.GetDefaultValue(fieldDef.FieldType, false);
+
+                // TODO (marpe): Fix colors being deserialized as string
+                if (actualType != fieldDef.DefaultValue.GetType())
+                {
+                    if (actualType == typeof(Color) && fieldDef.DefaultValue is string colorStr)
+                    {
+                        fieldDef.DefaultValue = ColorExt.FromHex(colorStr.AsSpan(1));
+                    }
+                    else
+                    {
+                        fieldDef.DefaultValue = Convert.ChangeType(fieldDef.DefaultValue, actualType);
+                    }
+                }
+
+                SimpleTypeInspector.DrawSimpleInspector(actualType, "DefaultValue", ref fieldDef.DefaultValue, false, null);
             }
         }
 
