@@ -34,7 +34,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private bool _levelChanged;
     private int _selectedEntityInstanceIndex = -1;
     private int _prevSelectedEntityInstanceIndex;
-    private float _deselectedLayerAlpha;
+
+    [CVar("editor.deselected_layer_alpha", "")]
+    public static float DeselectedLayerAlpha = 0.1f;
+
+    public struct AutoRuleTile
+    {
+        public UPoint Cell;
+        public int TileId;
+        public int TileSetDefId;
+        public Point LevelWorldPos;
+        public uint LayerGridSize;
+    }
+
+    Dictionary<(int groupUid, int ruleUid), Dictionary<(int x, int y), AutoRuleTile>> _autoTileCache = new();
+
+    [CVar("editor.int_grid_alpha", "")] public static float IntGridAlpha = 0.1f;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -127,21 +142,25 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (_levelChanged)
             return;
 
-        if (!leftMouseDown && !rightMouseDown && !middleMouseDown)
-            return;
-
         switch (layerDef.LayerType)
         {
             case LayerType.IntGrid:
 
-                var cellIndex = (int)mouseGrid.Y * cols + (int)mouseGrid.X;
-                if (cellIndex > layerInstance.IntGrid.Length - 1)
-                    break;
-                if (_selectedIntGridValueIndex > layerDef.IntGridValues.Count - 1)
-                    break;
+                if (leftMouseDown || rightMouseDown)
+                {
+                    var cellIndex = (int)mouseGrid.Y * cols + (int)mouseGrid.X;
+                    if (cellIndex > layerInstance.IntGrid.Length - 1)
+                        break;
+                    if (_selectedIntGridValueIndex > layerDef.IntGridValues.Count - 1)
+                        break;
 
-                var value = leftMouseDown ? layerDef.IntGridValues[_selectedIntGridValueIndex].Value : 0;
-                layerInstance.IntGrid[cellIndex] = value;
+                    var value = leftMouseDown ? layerDef.IntGridValues[_selectedIntGridValueIndex].Value : 0;
+                    layerInstance.IntGrid[cellIndex] = value;
+                }
+
+                if (_editor.InputHandler.IsMouseButtonReleased(MouseButtonCode.Left) ||
+                    _editor.InputHandler.IsMouseButtonReleased(MouseButtonCode.Right))
+                    ApplyIntGridAutoRules();
 
                 break;
             case LayerType.Entities:
@@ -162,6 +181,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 if (middleMousePressed && selectedEntityInstanceIndex != -1)
                 {
                     _selectedEntityInstanceIndex = selectedEntityInstanceIndex;
+                    break;
                 }
 
                 var leftMousePressed = _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left);
@@ -347,10 +367,141 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             DrawCleanButton();
 
-            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref _deselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
+            DrawAutoRuleButton();
+
+            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
+            SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
         }
 
         ImGui.End();
+    }
+
+    private bool RuleMatches(AutoRule rule, LayerInstance layerInstance, LayerDef layerDef, Level level, int x, int y)
+    {
+        if (rule.TileIds.Count == 0)
+            return false;
+
+        if (rule.Chance <= 0 || rule.Chance < 1 && Random.Shared.NextSingle() >= rule.Chance)
+            return false;
+
+        var cols = level.Width / layerDef.GridSize;
+        var radius = rule.Size / 2;
+        for (var py = 0; py < rule.Size; py++)
+        {
+            for (var px = 0; px < rule.Size; px++)
+            {
+                var patternId = py * rule.Size + px;
+                var patternValue = rule.Pattern[patternId];
+                if (patternValue == 0)
+                    continue;
+
+                var gridId = (y + py - radius) * cols + (x + px - radius);
+                if (gridId < 0 || gridId > layerInstance.IntGrid.Length - 1)
+                    return false; // out of bounds
+
+                var value = layerInstance.IntGrid[gridId];
+
+                switch (patternValue)
+                {
+                    case LayerDefWindow.ANYTHING_TILE_ID when value == 0:
+                    case LayerDefWindow.NOTHING_TILE_ID when value != 0:
+                    case > 0 when patternValue != value:
+                    case < 0 when patternValue == -value:
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void AddRuleTilesAt(int groupUid, AutoRule rule, LayerInstance layerInstance, LayerDef layerDef, TileSetDef tileSetDef, Level level, int x, int y)
+    {
+        if (!_autoTileCache.TryGetValue((groupUid, rule.Uid), out var ruleCache))
+        {
+            ruleCache = new Dictionary<(int x, int y), AutoRuleTile>();
+            _autoTileCache.Add((groupUid, rule.Uid), ruleCache);
+        }
+
+        ruleCache.Add(
+            (x, y),
+            new AutoRuleTile()
+            {
+                Cell = new UPoint((uint)x, (uint)y),
+                TileId = rule.TileIds[0],
+                TileSetDefId = tileSetDef.Uid,
+                LevelWorldPos = level.WorldPos,
+                LayerGridSize = layerDef.GridSize
+            }
+        );
+    }
+
+    private void DrawAutoRuleButton()
+    {
+        if (ImGuiExt.ColoredButton("Apply Rules"))
+        {
+            ApplyIntGridAutoRules();
+        }
+    }
+
+    private void ApplyIntGridAutoRules()
+    {
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+            return;
+
+        if (!GetTileSetDef(layerDef.TileSetDefId, out var tileSetDef))
+            return;
+
+        _autoTileCache.Clear();
+
+        var left = 0;
+        var top = 0;
+        var right = level.Width / layerDef.GridSize;
+        var bottom = level.Height / layerDef.GridSize;
+
+        var matchedCells = new HashSet<(int x, int y)>();
+
+        for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
+        {
+            var group = layerDef.AutoRuleGroups[i];
+            if (!group.IsActive)
+                continue;
+            for (var j = 0; j < group.Rules.Count; j++)
+            {
+                var rule = group.Rules[j];
+                if (!rule.IsActive)
+                    continue;
+                for (var y = top; y < bottom; y++)
+                {
+                    for (var x = left; x < right; x++)
+                    {
+                        if (matchedCells.Contains((x, y)))
+                            continue;
+
+                        if (RuleMatches(rule, layerInstance, layerDef, level, x, y))
+                        {
+                            AddRuleTilesAt(group.Uid, rule, layerInstance, layerDef, tileSetDef, level, x, y);
+                            matchedCells.Add((x, y));
+                        }
+                    }
+                }
+            }
+        }
+
+        layerInstance.AutoLayerTiles.Clear();
+        foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
+        {
+            foreach (var ((x, y), tile) in ruleCache)
+            {
+                layerInstance.AutoLayerTiles.Add(
+                    new AutoLayerTile()
+                    {
+                        TileId = (uint)tile.TileId,
+                        Cell = new UPoint((uint)x, (uint)y)
+                    }
+                );
+            }
+        }
     }
 
     private void DrawCleanButton()
@@ -372,7 +523,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         Logs.LogWarn($"Snapping level world position to grid");
                         level.WorldPos = new Point(levelSnappedX, levelSnappedY);
                     }
-                    
+
                     var levelSnappedWidth = (int)(level.Width / (float)World.DefaultGridSize) * World.DefaultGridSize;
                     var levelSnappedHeight = (int)(level.Height / (float)World.DefaultGridSize) * World.DefaultGridSize;
 
@@ -382,7 +533,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         level.Width = (uint)levelSnappedWidth;
                         level.Height = (uint)levelSnappedHeight;
                     }
-                    
+
                     for (var k = level.LayerInstances.Count - 1; k >= 0; k--)
                     {
                         var layerInstance = level.LayerInstances[k];
@@ -440,14 +591,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 Logs.LogWarn("Snapping entity instance x-position to grid");
                                 entity.Position.X = (int)snappedX;
                             }
-                            
+
                             var snappedY = (int)(entity.Position.Y / (float)layerDef.GridSize) * layerDef.GridSize;
                             if (snappedY != entity.Position.Y)
                             {
                                 Logs.LogWarn("Snapping entity instance y-position to grid");
                                 entity.Position.Y = (int)snappedY;
                             }
-                            
+
                             for (var m = entity.FieldInstances.Count - 1; m >= 0; m--)
                             {
                                 var fieldInstance = entity.FieldInstances[m];
@@ -495,6 +646,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         DrawLayerInstances(level.LayerInstances, _editor.RootJson.LayerDefinitions);
+
+        if (ImGuiExt.ColoredButton("Sort Instances", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
+        {
+            level.LayerInstances.Sort((a, b) =>
+            {
+                var indexA = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == a.LayerDefId);
+                var indexB = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == b.LayerDefId);
+                return indexA.CompareTo(indexB);
+            });
+        }
     }
 
     private static LayerInstance CreateLayerInstance(LayerDef layerDef, Level level)
@@ -523,7 +684,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 Logs.LogInfo($"EditorRenderTarget resized {previousSize.ToString()} -> {targetSize.ToString()}");
             }*/
-            
+
             GameWindow.EnsureTextureIsBound(ref _editorRenderTextureId, _editor._editorRenderTarget, _editor.ImGuiRenderer);
             var cursorScreenPosition = ImGui.GetCursorScreenPos();
 
@@ -905,6 +1066,25 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
                 renderer.DrawRectOutline(level.WorldPos, level.WorldPos + (Point)level.Size, color, 4f);
             }
+
+            /*foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
+            {
+                foreach (var ((x, y), tile) in ruleCache)
+                {
+                    if (!GetTileSetDef((uint)tile.TileSetDefId, out var tileSetDef))
+                        continue;
+                    var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+                    var sprite = GetTileSprite(texture, (uint)tile.TileId);
+                    var transform = (
+                        Matrix3x2.CreateScale(1f, 1f) *
+                        Matrix3x2.CreateTranslation(
+                            tile.LevelWorldPos.X + x * tile.LayerGridSize,
+                            tile.LevelWorldPos.Y + y * tile.LayerGridSize
+                        )
+                    ).ToMatrix4x4();
+                    renderer.DrawSprite(sprite, transform, Color.White);
+                }
+            }*/
         }
 
         if (_mouseIsInLevelBounds && MyEditorMain.ActiveInput == ActiveInput.EditorWindow)
@@ -935,7 +1115,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawLayerInstances(Renderer renderer, Level level)
     {
-        for (var i = 0; i < level.LayerInstances.Count; i++)
+        for (var i = level.LayerInstances.Count - 1; i >= 0; i--)
         {
             var layer = level.LayerInstances[i];
             if (!layer.IsVisible)
@@ -948,11 +1128,32 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (layerDef.LayerType == LayerType.IntGrid)
             {
                 DrawIntGridLayer(renderer, level, layerDef, layer, isSelected);
+
+                DrawAutoLayerTiles(renderer, level, layerDef, layer, isSelected);
             }
             else if (layerDef.LayerType == LayerType.Entities)
             {
                 DrawEntityLayer(renderer, level, layer, layerDef, isSelected);
             }
+        }
+    }
+
+    private void DrawAutoLayerTiles(Renderer renderer, Level level, LayerDef layerDef, LayerInstance layer, bool isSelected)
+    {
+        if (!GetTileSetDef(layerDef.TileSetDefId, out var tileSetDef))
+            return;
+        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+        foreach (var tile in layer.AutoLayerTiles)
+        {
+            var sprite = GetTileSprite(texture, tile.TileId);
+            var transform = (
+                Matrix3x2.CreateScale(1f, 1f) *
+                Matrix3x2.CreateTranslation(
+                    level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
+                    level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
+                )
+            ).ToMatrix4x4();
+            renderer.DrawSprite(sprite, transform, isSelected ? Color.White : Color.White * DeselectedLayerAlpha);
         }
     }
 
@@ -1008,14 +1209,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (tileSetDef != null)
             {
                 var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                var gridSize = _editor.RootJson.DefaultGridSize;
-                var tileSize = new Point(
-                    (int)(texture.Width / gridSize),
-                    (int)(texture.Height / gridSize)
-                );
-                var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
-                var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
-                sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), gridSize, gridSize));
+                sprite = GetTileSprite(texture, entityDef.TileId);
                 entityTransform = (
                     Matrix3x2.CreateScale(1f, 1f) *
                     Matrix3x2.CreateTranslation(
@@ -1037,14 +1231,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 outline = entityDef.Color;
             }
 
-            renderer.DrawSprite(sprite, entityTransform, isSelected ? tint : tint * _deselectedLayerAlpha);
+            renderer.DrawSprite(sprite, entityTransform, isSelected ? tint : tint * DeselectedLayerAlpha);
             var entityInstancePosition = level.WorldPos + entityInstance.Position -
                                          entityInstance.Size * entityDef.Pivot +
                                          entityDef.Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize);
             renderer.DrawRectOutline(
                 entityInstancePosition,
                 entityInstancePosition + (Point)entityInstance.Size,
-                outline * (isSelected ? 1.0f : _deselectedLayerAlpha)
+                outline * (isSelected ? 1.0f : DeselectedLayerAlpha)
             );
 
             // Draw blinking rect if there are field instances without matching field definitions
@@ -1056,6 +1250,20 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 }
             }
         }
+    }
+
+    private Sprite GetTileSprite(Texture texture, uint tileId)
+    {
+        Sprite sprite;
+        var gridSize = _editor.RootJson.DefaultGridSize;
+        var tileSize = new Point(
+            (int)(texture.Width / gridSize),
+            (int)(texture.Height / gridSize)
+        );
+        var cellX = tileSize.X > 0 ? tileId % tileSize.X : 0;
+        var cellY = tileSize.X > 0 ? (int)(tileId / tileSize.X) : 0;
+        sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), gridSize, gridSize));
+        return sprite;
     }
 
     private void DrawWarningRect(Renderer renderer, Vector2 worldPos, uint gridSize, Vector2 position)
@@ -1086,7 +1294,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         return false;
     }
 
-
     private static bool GetIntDef(LayerDef layerDef, int value, [NotNullWhen(true)] out IntGridValue? intValue)
     {
         for (var i = 0; i < layerDef.IntGridValues.Count; i++)
@@ -1109,22 +1316,21 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         for (var j = 0; j < layer.IntGrid.Length; j++)
         {
             var cellValue = layer.IntGrid[j];
-            if (cellValue != 0)
-            {
-                var cellTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
-                                    Matrix3x2.CreateTranslation(
-                                        level.WorldPos.X + (j % cols) * layerDef.GridSize,
-                                        level.WorldPos.Y + (j / cols) * layerDef.GridSize
-                                    );
+            if (cellValue == 0)
+                continue;
 
-                var color = Color.Red;
-                if (GetIntDef(layerDef, cellValue, out var intDef))
-                {
-                    color = intDef.Color;
-                }
+            var cellTransform = Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                                Matrix3x2.CreateTranslation(
+                                    level.WorldPos.X + (j % cols) * layerDef.GridSize,
+                                    level.WorldPos.Y + (j / cols) * layerDef.GridSize
+                                );
 
-                renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(), isSelected ? color : color * 0.5f);
-            }
+            GetIntDef(layerDef, cellValue, out var intDef);
+            var color = intDef?.Color ?? Color.Red;
+            if (isSelected)
+                color *= 0.5f;
+            color *= IntGridAlpha;
+            renderer.DrawSprite(renderer.BlankSprite, cellTransform.ToMatrix4x4(), color);
         }
     }
 

@@ -55,11 +55,12 @@ public unsafe class LayerDefWindow : SplitWindow
 
                 var isSelected = _selectedLayerDefIndex == i;
                 var color = GetLayerDefColor(layerDef.LayerType);
+                var cursorPos = ImGui.GetCursorScreenPos();
                 if (GiantButton("##Selectable", isSelected, color, _rowMinHeight))
                 {
                     _selectedLayerDefIndex = i;
                 }
-
+                
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
                 {
                     ImGui.MenuItem("Copy", default);
@@ -77,6 +78,30 @@ public unsafe class LayerDefWindow : SplitWindow
                 Icon(LayerTypeIcon(layerDef.LayerType), color, _rowMinHeight);
                 GiantLabel(layerDef.Identifier, labelColor, _rowMinHeight);
 
+                ImGui.SetCursorScreenPos(cursorPos + new Vector2(2, 0));
+                var buttonSize = new Vector2(30, _rowMinHeight);
+                ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, buttonSize);
+
+                if (ImGui.BeginDragDropSource())
+                {
+                    ImGui.SetDragDropPayload("LayerDefRow", &i, sizeof(int));
+                    ImGui.Text($"Dragging layer {layerDef.Identifier}");
+                    ImGui.EndDragDropSource();
+                }
+
+                if (ImGui.BeginDragDropTarget())
+                {
+                    var payload = ImGui.AcceptDragDropPayload("LayerDefRow");
+                    if (payload != null)
+                    {
+                        var rowIndex = *(int*)payload->Data;
+                        RootJson.LayerDefinitions[i] = RootJson.LayerDefinitions[rowIndex];
+                        RootJson.LayerDefinitions[rowIndex] = layerDef;
+                    }
+
+                    ImGui.EndDragDropTarget();
+                }
+                
                 ImGui.PopID();
             }
 
@@ -102,7 +127,7 @@ public unsafe class LayerDefWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < layerDefs.Count; i++)
-            if (maxId < layerDefs[i].Uid)
+            if (maxId <= layerDefs[i].Uid)
                 maxId = layerDefs[i].Uid + 1;
         return maxId;
     }
@@ -256,7 +281,7 @@ public unsafe class LayerDefWindow : SplitWindow
 
             ImGui.SameLine();
 
-            ImGui.SetNextItemWidth(150);
+            ImGui.SetNextItemWidth(100);
             SimpleTypeInspector.InspectString("##Name", ref group.Name);
 
             ImGui.SameLine();
@@ -271,6 +296,17 @@ public unsafe class LayerDefWindow : SplitWindow
                         Chance = 1.0f,
                     }
                 );
+            }
+            
+            ImGui.SameLine();
+            var (showHideTooltip, showHideIcon) = group.IsActive switch
+            {
+                true => ("Hide", FontAwesome6.Eye),
+                _ => ("Show", FontAwesome6.EyeSlash),
+            };
+            if (ImGuiExt.ColoredButton(showHideIcon, Color.Black, new Vector2(30, ImGui.GetFrameHeight()), showHideTooltip))
+            {
+                group.IsActive = !group.IsActive;
             }
 
             ImGui.SameLine();
@@ -309,7 +345,7 @@ public unsafe class LayerDefWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < groups.Count; i++)
-            if (maxId < groups[i].Uid)
+            if (maxId <= groups[i].Uid)
                 maxId = groups[i].Uid + 1;
         return maxId;
     }
@@ -318,7 +354,7 @@ public unsafe class LayerDefWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < rules.Count; i++)
-            if (maxId < rules[i].Uid)
+            if (maxId <= rules[i].Uid)
                 maxId = rules[i].Uid + 1;
         return maxId;
     }
@@ -491,9 +527,10 @@ public unsafe class LayerDefWindow : SplitWindow
                 var intValue = intGridValues.FirstOrDefault(i => i.Value == patternValue || i.Value == -patternValue);
                 var (buttonColor, textColor, label) = (intValue?.Color, patternValue) switch
                 {
+                    (not null, < 0) => (intValue.Color, Color.Red, FontAwesome6.Xmark),
                     (not null, _) => (intValue.Color, Color.White, "##PatternValue"),
-                    (null, ANYTHING_TILE_ID) => (Color.White, Color.Black, FontAwesome6.CircleQuestion),
-                    (null, NOTHING_TILE_ID) => (Color.Black, ImGuiExt.Colors[2], FontAwesome6.CircleXmark),
+                    (null, ANYTHING_TILE_ID) => (Color.White, Color.Black, FontAwesome6.Question),
+                    (null, NOTHING_TILE_ID) => (Color.Black, ImGuiExt.Colors[2], FontAwesome6.XmarksLines),
                     _ => (new Color(20, 20, 20), Color.White, "##PatternValue"),
                 };
                 var popupName = "RulePopup";

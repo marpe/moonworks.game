@@ -126,7 +126,7 @@ public class LevelsWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < levels.Count; i++)
-            if (maxId < levels[i].Uid)
+            if (maxId <= levels[i].Uid)
                 maxId = levels[i].Uid + 1;
         return maxId;
     }

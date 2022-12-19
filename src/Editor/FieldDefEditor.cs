@@ -174,7 +174,7 @@ public static unsafe class FieldDefEditor
     {
         var maxId = 0;
         for (var i = 0; i < fieldDefs.Count; i++)
-            if (maxId < fieldDefs[i].Uid)
+            if (maxId <= fieldDefs[i].Uid)
                 maxId = fieldDefs[i].Uid + 1;
         return maxId;
     }

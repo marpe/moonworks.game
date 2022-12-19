@@ -80,7 +80,7 @@ public unsafe class TileSetDefWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < tileSetDefs.Count; i++)
-            if (maxId < tileSetDefs[i].Uid)
+            if (maxId <= tileSetDefs[i].Uid)
                 maxId = tileSetDefs[i].Uid + 1;
         return maxId;
     }

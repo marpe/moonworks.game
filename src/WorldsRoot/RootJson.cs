@@ -180,10 +180,17 @@ public class Level
     }
 }
 
+public class AutoLayerTile
+{
+    public uint TileId;
+    public UPoint Cell;
+}
+
 public class LayerInstance
 {
     public int LayerDefId;
     public int[] IntGrid = Array.Empty<int>();
+    public List<AutoLayerTile> AutoLayerTiles = new();
     public List<EntityInstance> EntityInstances = new();
 
     public bool IsVisible = true;

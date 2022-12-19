@@ -57,7 +57,7 @@ public unsafe class EntityDefWindow : SplitWindow
     {
         var maxId = 0;
         for (var i = 0; i < entityDefs.Count; i++)
-            if (maxId < entityDefs[i].Uid)
+            if (maxId <= entityDefs[i].Uid)
                 maxId = entityDefs[i].Uid + 1;
         return maxId;
     }
