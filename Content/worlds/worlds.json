@@ -1039,17 +1039,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "f220f625-26e1-4928-9454-7e8cb42fef33",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 304,
-                    "Y": 208
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "eec9ae23-926f-4cd0-a4a0-ee451e797ff6",
                   "EntityDefId": 9,
                   "FieldInstances": [],
@@ -1151,17 +1140,6 @@
                   "Position": {
                     "X": 992,
                     "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "6fabd6c8-0b5e-4585-9c4a-e1d7d826e0e1",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 976,
-                    "Y": 176
                   },
                   "Width": 16,
                   "Height": 16
@@ -1398,17 +1376,6 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "3237c04a-6405-4c9b-8f61-9c60b8f4950d",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 16
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "a9056050-36d2-4bd7-83f6-32f0e8e9c93a",
                   "EntityDefId": 3,
                   "FieldInstances": [],
@@ -1497,34 +1464,12 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "a4bbf17c-e290-4968-992f-f0dedf8080d5",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 752
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "112b7dfd-c235-4ce0-bf29-5b8857e03b99",
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
                     "X": 704,
                     "Y": 752
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "9062d62b-42db-4f3c-8f83-36b3be7745de",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 768
                   },
                   "Width": 8,
                   "Height": 12
@@ -1563,17 +1508,6 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "a89a7125-4ccd-4626-82d6-88e30f61c30d",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 1184,
-                    "Y": 768
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "c76797ee-e92d-4ece-ad83-1ee5d89be4cc",
                   "EntityDefId": 3,
                   "FieldInstances": [],
@@ -1602,17 +1536,6 @@
                   "Position": {
                     "X": 1184,
                     "Y": 608
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "c76eb350-3b4b-40e2-a28b-05c0ef2b595e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 1184,
-                    "Y": 592
                   },
                   "Width": 8,
                   "Height": 12
@@ -1728,17 +1651,6 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "4a05584d-8a2d-4830-b2b0-f0cd4515d475",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 896,
-                    "Y": 48
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "3b1a3adb-7ac1-4790-a44b-8a1715a2d975",
                   "EntityDefId": 3,
                   "FieldInstances": [],
@@ -1800,17 +1712,6 @@
                   "Position": {
                     "X": 640,
                     "Y": 192
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "d2a25dba-5bdf-4a4e-b322-db78116a56bf",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 576,
-                    "Y": 144
                   },
                   "Width": 8,
                   "Height": 12
@@ -1959,17 +1860,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "ee5213ba-ba62-4881-905f-2d10f56cb18d",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 320
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "18e33120-db6b-4174-b74d-ce7ca537919c",
                   "EntityDefId": 8,
                   "FieldInstances": [],
@@ -1990,28 +1880,6 @@
                   },
                   "Width": 16,
                   "Height": 16
-                },
-                {
-                  "Iid": "01220432-3530-477e-9c01-547c1adf0a4b",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 720,
-                    "Y": 288
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "a1817fb9-98bf-4649-ac0b-ad35a999c9bc",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 720,
-                    "Y": 288
-                  },
-                  "Width": 8,
-                  "Height": 12
                 },
                 {
                   "Iid": "96eeebd8-8e38-4d0a-a8a5-feba8d97e77a",
@@ -2036,45 +1904,12 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "d9c1b85e-a63f-4648-bf13-cde324d9c84c",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 336
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "782fe0bb-0e01-4498-aa36-b48f6738dfa3",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 288
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "64355785-ba49-4425-96cc-e8351e55d62e",
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
                     "X": 704,
                     "Y": 320
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "e47d3381-f520-452b-8f59-6dea9ae24749",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 704,
-                    "Y": 336
                   },
                   "Width": 8,
                   "Height": 12
@@ -2118,17 +1953,6 @@
                   "FieldInstances": [],
                   "Position": {
                     "X": 512,
-                    "Y": 0
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "bb032378-ae73-481b-a18d-be7c8372a650",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
                     "Y": 0
                   },
                   "Width": 8,
@@ -2179,34 +2003,12 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "72c23c81-1975-45d1-8b5b-d28de14d5fd5",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 464,
-                    "Y": 16
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "3dd746e5-2738-445d-ad23-459b05c62359",
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
                     "X": 464,
                     "Y": 16
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "e51ee206-3082-438d-ab7a-4b0cf1c1378e",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 576,
-                    "Y": 192
                   },
                   "Width": 8,
                   "Height": 12
@@ -2228,28 +2030,6 @@
                   "FieldInstances": [],
                   "Position": {
                     "X": 352,
-                    "Y": 48
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "2f3a529b-0e57-4d7e-9a87-e1b6972fecd3",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
-                    "Y": 0
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "2f2e0b6d-510c-46b7-88b5-9aefbf048476",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
                     "Y": 48
                   },
                   "Width": 8,
@@ -2278,34 +2058,12 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "d81f9c87-e1b1-4519-9e0f-63234f742c7f",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
-                    "Y": 16
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "dbe6e785-aebe-4595-8597-89313d2b9d68",
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
                     "X": 336,
                     "Y": 16
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "998c133b-8ac6-4c9c-8192-fe18f673dab0",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
-                    "Y": 32
                   },
                   "Width": 8,
                   "Height": 12
@@ -2971,28 +2729,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "86bc7c66-7ca7-48dd-bc7e-c505d212a432",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 288,
-                    "Y": 704
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "f116bedb-7689-4840-9ad5-e52c549051bf",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 288,
-                    "Y": 704
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "e4085e5c-2b0c-44ce-b348-bec4993e0cf0",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -3191,17 +2927,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "1021939a-0cfd-4714-be75-b1882564f27d",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 288,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "96f543de-8453-4239-9b05-25b54af01294",
                   "EntityDefId": 8,
                   "FieldInstances": [],
@@ -3301,17 +3026,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "ec298bb6-31f1-462c-a530-179f5146609a",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 144,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "1681df1e-3abe-449e-858b-89e5c2e68a07",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -3329,17 +3043,6 @@
                   "Position": {
                     "X": 128,
                     "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "71caf183-d9dd-4de5-9d2b-5d14c1e2199a",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 176,
-                    "Y": 224
                   },
                   "Width": 16,
                   "Height": 16
@@ -3367,138 +3070,6 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "86456b6f-b8c0-49b1-b2a4-551555316214",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "ce70b097-6852-4940-962e-42a60697ed07",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "830e15b0-80dd-4dac-bc11-c08cbc908f33",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "23a0e826-1614-4990-8e05-8f27142ec14b",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "fcc7c342-ea5a-4c32-97e3-96cfa981bc7d",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "97cd1c4a-9e9e-46fe-ad2f-ac3f46a14302",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c567a873-e7ad-4ec5-8d61-8b3fc7ad0904",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c4fb7142-9f0f-47b7-b6ad-56f54f12c321",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1073046d-bc98-4d72-bcfa-29661f1e6cd8",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "d4ed8fb0-69c9-4db6-aa85-5770b58beca4",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "f5763b7e-dfa8-4cfb-9fb0-eed07522e739",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "22d1d309-7c58-44e0-a6b7-e4b63465df55",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 224
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "a9b5d57b-9962-4cec-86cf-83e6ffd2a867",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -3510,7 +3081,7 @@
                   "Height": 16
                 },
                 {
-                  "Iid": "d34cc7e7-f018-44c2-a2dc-05530c365146",
+                  "Iid": "f5edfe83-1284-42b6-809a-2d3b8b04b8b8",
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
@@ -3521,15 +3092,26 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "f5edfe83-1284-42b6-809a-2d3b8b04b8b8",
-                  "EntityDefId": 3,
+                  "Iid": "66751baf-396e-4f4e-8d5f-467c06a32555",
+                  "EntityDefId": 7,
                   "FieldInstances": [],
                   "Position": {
-                    "X": 16,
-                    "Y": 112
+                    "X": 128,
+                    "Y": 256
                   },
-                  "Width": 8,
-                  "Height": 12
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "8bbc55ce-65b1-4cb0-a09c-6a834fdcc2db",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 112,
+                    "Y": 256
+                  },
+                  "Width": 16,
+                  "Height": 16
                 }
               ],
               "IsVisible": true
@@ -7245,6 +6827,550 @@
           ],
           "LayerInstances": [
             {
+              "LayerDefId": 2,
+              "IntGrid": [],
+              "AutoLayerTiles": [],
+              "EntityInstances": [
+                {
+                  "Iid": "c48e3c52-0a76-4826-a4f7-c20360026a04",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 192,
+                    "Y": 512
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "0bd2c0e8-7f47-4359-9ae0-6a93c3867614",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 368,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c961cee8-702c-4b1c-815f-4e2064e21b5c",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 544,
+                    "Y": 240
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "cedb81f6-4a06-4469-93c7-32ef41e68ba0",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 144,
+                    "Y": 192
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "473fb51b-8003-45a1-a97f-0070c74a0b2f",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 688,
+                    "Y": 496
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c4f8d3d1-1862-4807-999c-3c64571a0e05",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 720,
+                    "Y": 208
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "bc11f066-72b3-4bff-b74a-134dff47586d",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 320,
+                    "Y": 176
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "d093e862-06f5-4574-b559-719641ef0f15",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 528,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "26d578cc-f80a-45b7-9179-1752a468291a",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 160,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "edad73f1-6515-4463-9dd9-bb9688ecc092",
+                  "EntityDefId": 9,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 624,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                }
+              ],
+              "IsVisible": true
+            },
+            {
+              "LayerDefId": 1,
+              "IntGrid": [],
+              "AutoLayerTiles": [],
+              "EntityInstances": [
+                {
+                  "Iid": "e0eb18c0-c8fa-40b1-819e-bcdcbd038c45",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 464,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "16f58d39-8d6e-4189-bae5-e2ca5ef4ec49",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 656,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "c857b60b-21b6-4482-96d7-9b4f053599b1",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 560,
+                    "Y": 432
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4b8ff8ca-5a3c-4dec-9191-d491bd484c97",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 480,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4fcbabd3-6bbf-40ca-b30e-d36a5c0932e5",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 336,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "d7c0d5b3-5983-4c7f-a6ac-dae0586f45f5",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 304,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "113fdc0b-fd62-4a0c-a4fa-e0ccc5111bdf",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "462b26d7-0cc7-43f5-be3d-faa936c2055c",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 448,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4ddbec8e-581a-491d-8b21-7d4b4869b6aa",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 688,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "020dcf28-0f34-4b74-b979-93653aea53ca",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 784,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "9e3c7651-7bb3-42d2-b2b4-172bc8165984",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 592,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "4d9b41ac-d950-445a-b031-1861a5714416",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 224,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1ab0fd72-47eb-4cc2-89f2-fc673b82ad81",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 128,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "00cf862b-7383-45a1-bac6-9d6c629510c0",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 336,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "e09b669c-9616-44ce-bac9-c2efc871c2e8",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 272,
+                    "Y": 416
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "10d220ad-6ab1-4603-ac01-7f7b263db516",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 240,
+                    "Y": 400
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "990b59ac-882f-48ed-a273-15baad8007be",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 400,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "f32d96e4-74b2-42be-8ae3-63d2d5aecc67",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 576,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "71b39e47-f606-49fc-bd2e-d934d5b9bbf5",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 624,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "0afab75b-5972-4e41-a556-b41d69fe6d94",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 240,
+                    "Y": 304
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "5cc6bb97-1f6d-4fab-b64c-ae27235681df",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 144,
+                    "Y": 288
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "1f1b7b78-7abc-4e89-aa32-5a9cd50fdd6e",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 448,
+                    "Y": 352
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "fbf0559c-75ba-44be-86d1-04a55b1f3803",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 720,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "7890626c-422e-4132-8a5c-6526c11a82d1",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 672,
+                    "Y": 336
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "2304b4fc-1d81-40da-80f4-60430ccb3ad4",
+                  "EntityDefId": 8,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 352,
+                    "Y": 320
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "a0444a45-b5ea-49c3-b105-cf93e48960c7",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 512,
+                    "Y": 400
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "10726294-4135-4443-9e93-ba4c4c31b418",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 496,
+                    "Y": 432
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "3bdfc743-ccde-4174-8fd3-712fdd6cf090",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 496,
+                    "Y": 416
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "9df7bbde-65be-4e97-aedb-30d4f9387f47",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 496,
+                    "Y": 400
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "54b6831b-5102-4749-8c32-2c8cd677545b",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 272,
+                    "Y": 336
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "f04c62f9-4ed9-4ca9-9abf-324c9a6d42c0",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 272,
+                    "Y": 320
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "83798fb1-f915-4afa-b30a-01462ba9cd74",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 272,
+                    "Y": 288
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "23ca198e-8d13-4683-a964-9bd5e57191e3",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 288,
+                    "Y": 336
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "de30646b-8640-44d5-a2bf-f910a0238697",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 368,
+                    "Y": 384
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "87f43f5a-a0e8-4756-aa80-3bfaade53783",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 528,
+                    "Y": 368
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "e334e26d-3709-4c3a-b0fa-a7c32ba9b6e7",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 544,
+                    "Y": 368
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "038b41d7-dbce-4566-8f47-45a9fe31ec41",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 560,
+                    "Y": 368
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "e1f62e45-90ef-49bf-a59c-8c86e97929ca",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 384,
+                    "Y": 368
+                  },
+                  "Width": 8,
+                  "Height": 12
+                }
+              ],
+              "IsVisible": true
+            },
+            {
               "LayerDefId": 0,
               "IntGrid": [
                 0,
@@ -14462,660 +14588,6 @@
               ],
               "EntityInstances": [],
               "IsVisible": true
-            },
-            {
-              "LayerDefId": 1,
-              "IntGrid": [],
-              "AutoLayerTiles": [],
-              "EntityInstances": [
-                {
-                  "Iid": "e0eb18c0-c8fa-40b1-819e-bcdcbd038c45",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 464,
-                    "Y": 432
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "16f58d39-8d6e-4189-bae5-e2ca5ef4ec49",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 656,
-                    "Y": 432
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c857b60b-21b6-4482-96d7-9b4f053599b1",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 560,
-                    "Y": 432
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "b07ad430-26b8-405b-bf34-522f380fb3c5",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "4b8ff8ca-5a3c-4dec-9191-d491bd484c97",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 480,
-                    "Y": 368
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "4fcbabd3-6bbf-40ca-b30e-d36a5c0932e5",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "d7c0d5b3-5983-4c7f-a6ac-dae0586f45f5",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 304,
-                    "Y": 368
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "113fdc0b-fd62-4a0c-a4fa-e0ccc5111bdf",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 288,
-                    "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "462b26d7-0cc7-43f5-be3d-faa936c2055c",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 448,
-                    "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "4ddbec8e-581a-491d-8b21-7d4b4869b6aa",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 688,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "020dcf28-0f34-4b74-b979-93653aea53ca",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 784,
-                    "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "9e3c7651-7bb3-42d2-b2b4-172bc8165984",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 592,
-                    "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "4d9b41ac-d950-445a-b031-1861a5714416",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 224,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1ab0fd72-47eb-4cc2-89f2-fc673b82ad81",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 128,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "00cf862b-7383-45a1-bac6-9d6c629510c0",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 336,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "e09b669c-9616-44ce-bac9-c2efc871c2e8",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 272,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "10d220ad-6ab1-4603-ac01-7f7b263db516",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 240,
-                    "Y": 400
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "990b59ac-882f-48ed-a273-15baad8007be",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 400,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "f32d96e4-74b2-42be-8ae3-63d2d5aecc67",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 576,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "71b39e47-f606-49fc-bd2e-d934d5b9bbf5",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 624,
-                    "Y": 336
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "0afab75b-5972-4e41-a556-b41d69fe6d94",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 240,
-                    "Y": 304
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "5cc6bb97-1f6d-4fab-b64c-ae27235681df",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 144,
-                    "Y": 288
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "1f1b7b78-7abc-4e89-aa32-5a9cd50fdd6e",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 448,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "fbf0559c-75ba-44be-86d1-04a55b1f3803",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 720,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "7890626c-422e-4132-8a5c-6526c11a82d1",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 672,
-                    "Y": 336
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "2304b4fc-1d81-40da-80f4-60430ccb3ad4",
-                  "EntityDefId": 8,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 352,
-                    "Y": 320
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "a0444a45-b5ea-49c3-b105-cf93e48960c7",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 512,
-                    "Y": 400
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "6cade6da-9cff-458e-bca8-1e2d0df5ba99",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 432
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "85276be7-86f3-48a2-80bf-9e5b79bfb8fe",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 416
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "13f13ca4-7f5c-496b-86fb-67b56731e911",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 400
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "24cd45b6-a258-481d-924b-d8ede037ba27",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 432
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "10726294-4135-4443-9e93-ba4c4c31b418",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 432
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "dbe5c23d-1578-4bb5-8e6b-11c1395e3ebc",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 400
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "3bdfc743-ccde-4174-8fd3-712fdd6cf090",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 416
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "9df7bbde-65be-4e97-aedb-30d4f9387f47",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 496,
-                    "Y": 400
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "54b6831b-5102-4749-8c32-2c8cd677545b",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 272,
-                    "Y": 336
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "f04c62f9-4ed9-4ca9-9abf-324c9a6d42c0",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 272,
-                    "Y": 320
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "83798fb1-f915-4afa-b30a-01462ba9cd74",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 272,
-                    "Y": 288
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "23ca198e-8d13-4683-a964-9bd5e57191e3",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 288,
-                    "Y": 336
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "de30646b-8640-44d5-a2bf-f910a0238697",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 368,
-                    "Y": 384
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "87f43f5a-a0e8-4756-aa80-3bfaade53783",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 528,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "3fa146ab-2f20-49df-828b-b2513d13595b",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 544,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "e334e26d-3709-4c3a-b0fa-a7c32ba9b6e7",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 544,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "f6a2c797-6131-48f3-bd9c-d278ac9d453a",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 560,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "e8262b9a-c245-4fbc-b9fb-2ab40a18f54a",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 560,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "038b41d7-dbce-4566-8f47-45a9fe31ec41",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 560,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "1794f539-2c79-45d9-8503-ea005e37c00b",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 384,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
-                  "Iid": "e1f62e45-90ef-49bf-a59c-8c86e97929ca",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 384,
-                    "Y": 368
-                  },
-                  "Width": 8,
-                  "Height": 12
-                }
-              ],
-              "IsVisible": true
-            },
-            {
-              "LayerDefId": 2,
-              "IntGrid": [],
-              "AutoLayerTiles": [],
-              "EntityInstances": [
-                {
-                  "Iid": "c48e3c52-0a76-4826-a4f7-c20360026a04",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
-                    "Y": 512
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "0bd2c0e8-7f47-4359-9ae0-6a93c3867614",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 368,
-                    "Y": 432
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c961cee8-702c-4b1c-815f-4e2064e21b5c",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 544,
-                    "Y": 240
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "cedb81f6-4a06-4469-93c7-32ef41e68ba0",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 144,
-                    "Y": 192
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "473fb51b-8003-45a1-a97f-0070c74a0b2f",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 688,
-                    "Y": 496
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "c4f8d3d1-1862-4807-999c-3c64571a0e05",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 720,
-                    "Y": 208
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "bc11f066-72b3-4bff-b74a-134dff47586d",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 320,
-                    "Y": 176
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "d093e862-06f5-4574-b559-719641ef0f15",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 528,
-                    "Y": 416
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "26d578cc-f80a-45b7-9179-1752a468291a",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 160,
-                    "Y": 384
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "edad73f1-6515-4463-9dd9-bb9688ecc092",
-                  "EntityDefId": 9,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 624,
-                    "Y": 352
-                  },
-                  "Width": 16,
-                  "Height": 16
-                }
-              ],
-              "IsVisible": true
             }
           ]
         },
@@ -15489,33 +14961,11 @@
                   "Height": 12
                 },
                 {
-                  "Iid": "330d9954-b1b3-464c-a6a3-cd3c9da9688c",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 128,
-                    "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
                   "Iid": "33b45c53-2909-4f2d-a1b0-2b611cd31b72",
                   "EntityDefId": 7,
                   "FieldInstances": [],
                   "Position": {
                     "X": 128,
-                    "Y": 112
-                  },
-                  "Width": 16,
-                  "Height": 16
-                },
-                {
-                  "Iid": "711aa283-f81c-4de9-82ac-fe1315c02ad8",
-                  "EntityDefId": 7,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 192,
                     "Y": 112
                   },
                   "Width": 16,
@@ -16269,6 +15719,20 @@
           ],
           "LayerInstances": [
             {
+              "LayerDefId": 2,
+              "IntGrid": [],
+              "AutoLayerTiles": [],
+              "EntityInstances": [],
+              "IsVisible": true
+            },
+            {
+              "LayerDefId": 1,
+              "IntGrid": [],
+              "AutoLayerTiles": [],
+              "EntityInstances": [],
+              "IsVisible": true
+            },
+            {
               "LayerDefId": 0,
               "IntGrid": [
                 0,
@@ -20896,20 +20360,6 @@
                 0,
                 0
               ],
-              "AutoLayerTiles": [],
-              "EntityInstances": [],
-              "IsVisible": true
-            },
-            {
-              "LayerDefId": 1,
-              "IntGrid": [],
-              "AutoLayerTiles": [],
-              "EntityInstances": [],
-              "IsVisible": true
-            },
-            {
-              "LayerDefId": 2,
-              "IntGrid": [],
               "AutoLayerTiles": [],
               "EntityInstances": [],
               "IsVisible": true

@@ -561,9 +561,21 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                             layerInstance.IntGrid = Array.Empty<int>();
                         }
 
+                        var gridDictionary = new Dictionary<(int x, int y), EntityInstance>();
+
                         for (var l = layerInstance.EntityInstances.Count - 1; l >= 0; l--)
                         {
                             var entity = layerInstance.EntityInstances[l];
+                            var cellX = (int)(entity.Position.X / (float)layerDef.GridSize);
+                            var cellY = (int)(entity.Position.Y / (float)layerDef.GridSize);
+                            
+                            if (gridDictionary.ContainsKey((cellX, cellY)))
+                            {
+                                Logs.LogWarn($"Removing entity instance since another entity occupies the space coordinates");
+                                layerInstance.EntityInstances.RemoveAt(l);
+                                continue;
+                            }
+
                             if (!GetEntityDef(entity.EntityDefId, out var entityDef))
                             {
                                 Logs.LogWarn($"Removing entity instance since there\'s no entity definition with id \"{entity.EntityDefId}\"");
@@ -577,6 +589,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
                             }
+
+                            gridDictionary.Add((cellX, cellY), entity);
 
                             if (entity.Width != entityDef.Width)
                             {
