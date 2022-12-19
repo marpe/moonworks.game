@@ -210,9 +210,9 @@ public class LevelsWindow : SplitWindow
                 var newRows = level.Height / layerDef.GridSize;
                 layer.IntGrid = new int[newCols * newRows];
 
-                for (var y = 0; y < oldRows; y++)
+                for (var y = 0; y < oldRows - 1; y++)
                 {
-                    for (var x = 0; x < oldCols; x++)
+                    for (var x = 0; x < oldCols - 1; x++)
                     {
                         if (y * newCols + x < layer.IntGrid.Length)
                             layer.IntGrid[y * newCols + x] = old[y * oldCols + x];

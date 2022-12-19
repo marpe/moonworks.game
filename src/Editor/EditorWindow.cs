@@ -561,14 +561,34 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                             layerInstance.IntGrid = Array.Empty<int>();
                         }
 
+                        for (var l = layerInstance.AutoLayerTiles.Count - 1; l >= 0; l--)
+                        {
+                            var tile = layerInstance.AutoLayerTiles[l];
+                            if (tile.Cell.X >= level.Width / layerDef.GridSize ||
+                                tile.Cell.Y >= level.Height / layerDef.GridSize)
+                            {
+                                Logs.LogWarn("Removing auto tile since it's outside the level bounds");
+                                layerInstance.AutoLayerTiles.RemoveAt(l);
+                                continue;
+                            }
+                        }
+
                         var gridDictionary = new Dictionary<(int x, int y), EntityInstance>();
 
                         for (var l = layerInstance.EntityInstances.Count - 1; l >= 0; l--)
                         {
                             var entity = layerInstance.EntityInstances[l];
+                            if (entity.Position.X < 0 || entity.Position.X + entity.Size.X > level.Width ||
+                                entity.Position.Y < 0 || entity.Position.Y + entity.Size.Y > level.Height)
+                            {
+                                Logs.LogWarn($"Removing entity instance since it's outside the level bounds");
+                                layerInstance.EntityInstances.RemoveAt(l);
+                                continue;
+                            }
+
                             var cellX = (int)(entity.Position.X / (float)layerDef.GridSize);
                             var cellY = (int)(entity.Position.Y / (float)layerDef.GridSize);
-                            
+
                             if (gridDictionary.ContainsKey((cellX, cellY)))
                             {
                                 Logs.LogWarn($"Removing entity instance since another entity occupies the space coordinates");
