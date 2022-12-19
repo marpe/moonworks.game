@@ -417,10 +417,11 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void Draw(double alpha)
     {
-        ActiveInput = ActiveInput.Game;
+        ActiveInput = ActiveInput.None;
         
         if (IsHidden)
         {
+            ActiveInput = ActiveInput.Game;
             base.Draw(alpha);
             return;
         }

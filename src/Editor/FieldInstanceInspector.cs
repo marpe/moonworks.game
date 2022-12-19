@@ -40,11 +40,11 @@ public static unsafe class FieldInstanceInspector
             {
                 if (fieldDef.IsArray)
                 {
-                    fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray);
+                    fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
                 }
                 else
                 {
-                    fieldInstance.Value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray);
+                    fieldInstance.Value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
                 }
             }
 
@@ -87,7 +87,7 @@ public static unsafe class FieldInstanceInspector
                             var value = list[j];
                             if (value == null)
                             {
-                                value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.FieldType, false);
+                                value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, false);
                             }
 
                             ImGui.TableNextRow();
@@ -117,9 +117,9 @@ public static unsafe class FieldInstanceInspector
                     }
                 }
 
-                if (ImGuiExt.ColoredButton("+", new Num.Vector2(-1, 0)))
+                if (ImGuiExt.ColoredButton("+", new Vector2(-1, 0)))
                 {
-                    list.Add(FieldDef.GetDefaultValue(fieldDef.FieldType, false));
+                    list.Add(FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, false));
                 }
             }
             else
@@ -135,7 +135,7 @@ public static unsafe class FieldInstanceInspector
     {
         return new FieldInstance
         {
-            Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray),
+            Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray),
             FieldDefId = fieldDef.Uid
         };
     }

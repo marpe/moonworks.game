@@ -99,7 +99,7 @@ public static unsafe class FieldDefEditor
                 var actualType = FieldDef.GetActualType(fieldDef.FieldType, false);
 
                 if (fieldDef.DefaultValue == null)
-                    fieldDef.DefaultValue = FieldDef.GetDefaultValue(fieldDef.FieldType, false);
+                    fieldDef.DefaultValue = FieldDef.GetDefaultValue(null, fieldDef.FieldType, false);
 
                 // TODO (marpe): Fix colors being deserialized as string
                 if (actualType != fieldDef.DefaultValue.GetType())

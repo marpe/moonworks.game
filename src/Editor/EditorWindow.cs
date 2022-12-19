@@ -175,51 +175,50 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     break;
                 }
 
-                var middleMousePressed = _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Middle);
-                int selectedEntityInstanceIndex =
-                    GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out var selectedEntityInstance);
-                if (middleMousePressed && selectedEntityInstanceIndex != -1)
-                {
-                    _selectedEntityInstanceIndex = selectedEntityInstanceIndex;
-                    break;
-                }
-
                 var leftMousePressed = _editor.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left);
-                if (!leftMousePressed)
-                    break;
-
-                if (_selectedEntityDefinitionIndex > _editor.RootJson.EntityDefinitions.Count - 1)
-                    break;
-
-                var entityDef = _editor.RootJson.EntityDefinitions[_selectedEntityDefinitionIndex];
-
-                if (IsExcluded(entityDef, layerDef))
-                    break;
-
-                var prevEntityIndex = GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out _);
-                if (prevEntityIndex != -1)
-                    layerInstance.EntityInstances.RemoveAt(prevEntityIndex);
-
-                var instance = new EntityInstance()
+                if (leftMousePressed)
                 {
-                    Position = new Point((int)(mouseGrid.X * layerDef.GridSize), (int)(mouseGrid.Y * layerDef.GridSize)),
-                    Width = entityDef.Width,
-                    Height = entityDef.Height,
-                    EntityDefId = entityDef.Uid,
-                };
+                    var selectedEntityInstanceIndex =
+                        GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out var selectedEntityInstance);
+                    if (selectedEntityInstanceIndex != -1)
+                    {
+                        _selectedEntityInstanceIndex = selectedEntityInstanceIndex;
+                        break;
+                    }
 
-                foreach (var fieldDef in entityDef.FieldDefinitions)
-                {
-                    instance.FieldInstances.Add(
-                        new FieldInstance
-                        {
-                            Value = FieldDef.GetDefaultValue(fieldDef.FieldType, fieldDef.IsArray),
-                            FieldDefId = fieldDef.Uid
-                        }
-                    );
+                    if (_selectedEntityDefinitionIndex > _editor.RootJson.EntityDefinitions.Count - 1)
+                        break;
+
+                    var entityDef = _editor.RootJson.EntityDefinitions[_selectedEntityDefinitionIndex];
+
+                    if (IsExcluded(entityDef, layerDef))
+                        break;
+
+                    var prevEntityIndex = GetEntityAtPosition(mouseLevel, layerDef.GridSize, layerInstance.EntityInstances, out _);
+                    if (prevEntityIndex != -1)
+                        layerInstance.EntityInstances.RemoveAt(prevEntityIndex);
+
+                    var instance = new EntityInstance()
+                    {
+                        Position = new Point((int)(mouseGrid.X * layerDef.GridSize), (int)(mouseGrid.Y * layerDef.GridSize)),
+                        Width = entityDef.Width,
+                        Height = entityDef.Height,
+                        EntityDefId = entityDef.Uid,
+                    };
+
+                    foreach (var fieldDef in entityDef.FieldDefinitions)
+                    {
+                        instance.FieldInstances.Add(
+                            new FieldInstance
+                            {
+                                Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray),
+                                FieldDefId = fieldDef.Uid
+                            }
+                        );
+                    }
+
+                    layerInstance.EntityInstances.Add(instance);
                 }
-
-                layerInstance.EntityInstances.Add(instance);
 
                 break;
             }
@@ -316,11 +315,17 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (_prevSelectedEntityInstanceIndex != _selectedEntityInstanceIndex)
             ImGui.OpenPopup(popupName);
 
-        ImGui.SetNextWindowSize(new Num.Vector2(300, 200), ImGuiCond.Always);
+        ImGui.SetNextWindowSize(new Num.Vector2(300, 0), ImGuiCond.Always);
         if (ImGui.BeginPopup(popupName))
         {
             if (GetEntityDef(selectedInstance.EntityDefId, out var entityDef))
             {
+                ImGui.BeginDisabled();
+                SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
+                ImGui.EndDisabled();
+                
+                SimpleTypeInspector.InspectPoint("Position", ref selectedInstance.Position);
+
                 var tmpPoint = (Point)selectedInstance.Size;
                 if (ImGuiExt.InspectPoint("Size", ref tmpPoint.X, ref tmpPoint.Y, "W", "Width", "H", "Height", 1, 1, 512))
                 {
@@ -675,6 +680,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(ImGuiExt.FLT_MAX, ImGuiExt.FLT_MAX));
         var centralNode = ImGuiInternal.DockBuilderGetCentralNode(_editor.ViewportDockSpaceId);
         ImGui.SetNextWindowDockID(centralNode->ID, ImGuiCond.FirstUseEver);
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Num.Vector2.Zero);
         if (ImGui.Begin(PreviewWindowTitle, default, ImGuiWindowFlags.NoScrollWithMouse))
         {
             // TODO (marpe): Might want to resize the render target to the window
@@ -737,6 +743,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 ImGui.SetNextFrameWantCaptureKeyboard(false);
             }
         }
+        
+        ImGui.PopStyleVar();
 
         ImGui.End();
     }
@@ -1145,7 +1153,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
         foreach (var tile in layer.AutoLayerTiles)
         {
-            var sprite = GetTileSprite(texture, tile.TileId);
+            var sprite = World.GetTileSprite(texture, tile.TileId, layerDef.GridSize);
             var transform = (
                 Matrix3x2.CreateScale(1f, 1f) *
                 Matrix3x2.CreateTranslation(
@@ -1209,7 +1217,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (tileSetDef != null)
             {
                 var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                sprite = GetTileSprite(texture, entityDef.TileId);
+                sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
                 entityTransform = (
                     Matrix3x2.CreateScale(1f, 1f) *
                     Matrix3x2.CreateTranslation(
@@ -1250,20 +1258,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 }
             }
         }
-    }
-
-    private Sprite GetTileSprite(Texture texture, uint tileId)
-    {
-        Sprite sprite;
-        var gridSize = _editor.RootJson.DefaultGridSize;
-        var tileSize = new Point(
-            (int)(texture.Width / gridSize),
-            (int)(texture.Height / gridSize)
-        );
-        var cellX = tileSize.X > 0 ? tileId % tileSize.X : 0;
-        var cellY = tileSize.X > 0 ? (int)(tileId / tileSize.X) : 0;
-        sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), gridSize, gridSize));
-        return sprite;
     }
 
     private void DrawWarningRect(Renderer renderer, Vector2 worldPos, uint gridSize, Vector2 position)

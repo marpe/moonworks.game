@@ -124,17 +124,17 @@ public class FieldDef
         };
     }
 
-    public static object GetDefaultValue(FieldType type, bool isArray)
+    public static object GetDefaultValue(object? fieldDefaultValue, FieldType type, bool isArray)
     {
         return type switch
         {
-            FieldType.Int => isArray ? new List<int>() : default(int),
-            FieldType.Float => isArray ? new List<float>() : default(float),
-            FieldType.String => isArray ? new List<string>() : "",
-            FieldType.Bool => isArray ? new List<bool>() : false,
-            FieldType.Color => isArray ? new List<Color>() : Color.White,
-            FieldType.Point => isArray ? new List<Point>() : Point.Zero,
-            FieldType.Vector2 => isArray ? new List<Vector2>() : Vector2.Zero,
+            FieldType.Int => isArray ? new List<int>() : fieldDefaultValue ?? default(int),
+            FieldType.Float => isArray ? new List<float>() : fieldDefaultValue ?? default(float),
+            FieldType.String => isArray ? new List<string>() : fieldDefaultValue ?? "",
+            FieldType.Bool => isArray ? new List<bool>() : fieldDefaultValue ?? false,
+            FieldType.Color => isArray ? new List<Color>() : fieldDefaultValue ?? Color.White,
+            FieldType.Point => isArray ? new List<Point>() : fieldDefaultValue ?? Point.Zero,
+            FieldType.Vector2 => isArray ? new List<Vector2>() : fieldDefaultValue ?? Vector2.Zero,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }

@@ -438,11 +438,11 @@ public class World
         var boundsMax = cameraBounds
             .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
 
+        var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
+        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+        
         if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
         {
-            var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
-            var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-
             for (var i = 0; i < layer.IntGrid.Length; i++)
             {
                 var value = layer.IntGrid[i];
@@ -466,6 +466,33 @@ public class World
                 renderer.DrawRect(min, max, color * 0.5f, 0);
             }
         }
+
+        for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
+        {
+            var tile = layer.AutoLayerTiles[i];
+            var sprite = GetTileSprite(texture, tile.TileId, layerDef.GridSize);
+            var transform = (
+                Matrix3x2.CreateScale(1f, 1f) *
+                Matrix3x2.CreateTranslation(
+                    level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
+                    level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
+                )
+            ).ToMatrix4x4();
+            renderer.DrawSprite(sprite, transform, Color.White);
+        }
+    }
+    
+    public static Sprite GetTileSprite(Texture texture, uint tileId, uint gridSize)
+    {
+        Sprite sprite;
+        var tileSize = new Point(
+            (int)(texture.Width / gridSize),
+            (int)(texture.Height / gridSize)
+        );
+        var cellX = tileSize.X > 0 ? tileId % tileSize.X : 0;
+        var cellY = tileSize.X > 0 ? (int)(tileId / tileSize.X) : 0;
+        sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), (int)gridSize, (int)gridSize));
+        return sprite;
     }
 
     private static bool GetIntDef(LayerDef layerDef, int value, [NotNullWhen(true)] out IntGridValue? intValue)
@@ -693,7 +720,7 @@ public class World
     {
         for (var i = 0; i < Lights.Count; i++)
         {
-            /*var light = Lights[i];
+            var light = Lights[i];
             if (!light.IsEnabled)
                 continue;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
@@ -706,7 +733,7 @@ public class World
                 Debug = ((DebugLights || light.Debug) ? 1.0f : 0),
                 RimIntensity = RimLightIntensity,
                 Angle = light.Angle,
-                ConeAngle = light.ConeAngle, // TODO (marpe): Not working atm
+                ConeAngle = light.ConeAngle,
 
                 TexelSize = new Vector4(
                     1.0f / renderDestinationSize.X,
@@ -724,7 +751,7 @@ public class World
             var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
             var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
             commandBuffer.BindFragmentSamplers(fragmentBindings);
-            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);*/
+            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
         }
     }
 }
