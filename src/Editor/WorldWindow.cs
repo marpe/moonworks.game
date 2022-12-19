@@ -16,15 +16,12 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     public WorldWindow() : base(WindowTitle)
     {
         KeyboardShortcut = "^W";
-        IsOpen = true;
     }
 
     public override void Draw()
     {
         if (!IsOpen)
-        {
             return;
-        }
 
         ImGui.Begin(Title, ImGuiExt.RefPtr(ref IsOpen));
 

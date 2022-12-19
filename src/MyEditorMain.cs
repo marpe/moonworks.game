@@ -226,7 +226,7 @@ public unsafe class MyEditorMain : MyGameMain
         var windows = new ImGuiEditorWindow[]
         {
             new LoadingScreenDebugWindow(),
-            new WorldWindow(),
+            new WorldWindow() { IsOpen = false },
             _gameWindow,
             _debugWindow,
             _demoWindow,
@@ -294,7 +294,7 @@ public unsafe class MyEditorMain : MyGameMain
         {
             ImGuiInternal.DockBuilderRemoveNodeChildNodes(ViewportDockSpaceId);
 
-            var leftWidth = 0.3f;
+            var leftWidth = 0.2f;
             var rightWidth = 0.2f;
             uint dockLeftId; uint dockCenterId; uint dockRightId;
 

@@ -41,7 +41,7 @@ public class Renderer
         _device = game.GraphicsDevice;
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
         SpriteBatch = new SpriteBatch(_device);
-        
+
         var textBatcherTimer = Stopwatch.StartNew();
         TextBatcher = new TextBatcher();
         textBatcherTimer.StopAndLog("TextBatcher");
@@ -52,7 +52,7 @@ public class Renderer
         var bmFontTimer = Stopwatch.StartNew();
         BMFonts = CreateBMFonts(_device);
         bmFontTimer.StopAndLog("BMFonts");
-        
+
         _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
             DepthStencilClearValue = new DepthStencilValue(0, 0),
@@ -122,7 +122,7 @@ public class Renderer
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
         SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
     }
-    
+
     public void DrawCircleOutline(Vector2 position, float radius, Color color, float thickness, int numSegments = 12)
     {
         var prevPoint = position + new Vector2(radius, 0);
@@ -144,6 +144,12 @@ public class Renderer
         var translation = Matrix3x2.CreateTranslation(from);
         var tAll = origin * scale * rotation * translation;
         SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4(), PointClamp);
+    }
+
+    public void DrawRectWithOutline(Vector2 min, Vector2 max, Color color, Color outlineColor, float thickness = 1.0f)
+    {
+        DrawRect(min, max, color);
+        DrawRectOutline(min, max, outlineColor, thickness);
     }
 
     public void DrawRectWithOutline(Rectangle rectangle, Color color, Color outlineColor)
@@ -242,7 +248,7 @@ public class Renderer
         _colorAttachmentInfo.Texture = renderTarget;
         _colorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
         _colorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
-        
+
         var pipeline = Pipelines[pipelineType];
         if (pipeline.CreateInfo.AttachmentInfo.HasDepthStencilAttachment)
             commandBuffer.BeginRenderPass(_depthStencilAttachmentInfo, _colorAttachmentInfo);
@@ -274,7 +280,8 @@ public class Renderer
 
     public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection)
     {
-        SpriteBatch.DrawIndexed(ref commandBuffer, viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height));
+        SpriteBatch.DrawIndexed(ref commandBuffer,
+            viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height));
     }
 
     public void Submit(ref CommandBuffer commandBuffer)
@@ -304,6 +311,7 @@ public class Renderer
         {
             texture.Dispose();
         }
+
         _depthTextureCache.Clear();
     }
 

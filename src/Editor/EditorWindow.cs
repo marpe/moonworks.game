@@ -316,6 +316,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGui.OpenPopup(popupName);
 
         ImGui.SetNextWindowSize(new Num.Vector2(300, 0), ImGuiCond.Always);
+        
+        
+        var worldInScreen =  Vector2.Transform(level.WorldPos + selectedInstance.Position + new Vector2(0, layerDef.GridSize), _camera.GetView());
+        worldInScreen = Vector2.Transform(worldInScreen, PreviewRenderViewportTransform);
+        var windowPos = ImGui.GetMainViewport()->Pos + worldInScreen.ToNumerics();
+        ImGui.SetNextWindowPos(windowPos, ImGuiCond.Always, Num.Vector2.Zero);
         if (ImGui.BeginPopup(popupName))
         {
             if (GetEntityDef(selectedInstance.EntityDefId, out var entityDef))
@@ -808,6 +814,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGuiExt.PrintVector("World", mouseInWorld);
             ImGuiExt.PrintVector("Level", mouseInLevel);
             ImGuiExt.PrintVector("Grid", mouseCell);
+            ImGui.Text("SelectedEnittyInstance" + _selectedEntityInstanceIndex.ToString());
             ImGui.Dummy(new Num.Vector2(200, 0));
         }
 
@@ -1110,6 +1117,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawWorld(renderer);
 
+        HighlightSelectedEntityInstance(renderer);
+
         if (_mouseIsInLevelBounds && MyEditorMain.ActiveInput == ActiveInput.EditorWindow)
             DrawMouse(renderer);
 
@@ -1298,11 +1307,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var entityInstancePosition = level.WorldPos + entityInstance.Position -
                                          entityInstance.Size * entityDef.Pivot +
                                          entityDef.Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize);
-            renderer.DrawRectOutline(
+            /*renderer.DrawRectOutline(
                 entityInstancePosition,
                 entityInstancePosition + (Point)entityInstance.Size,
                 outline * (isSelected ? 1.0f : DeselectedLayerAlpha)
-            );
+            );*/
 
             // Draw blinking rect if there are field instances without matching field definitions
             for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
@@ -1396,7 +1405,73 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         var (mouseInWorld, mouseInLevel, mouseInGrid) = GetMousePositions();
         var mouseSnappedToGrid = mouseInGrid * _editor.RootJson.DefaultGridSize + level.WorldPos;
-        renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);
+        /*renderer.DrawRectOutline(mouseSnappedToGrid, mouseSnappedToGrid + Vector2.One * _editor.RootJson.DefaultGridSize, Color.Red, 2f);*/
+        
+        if (layerDef.LayerType == LayerType.Entities)
+        {
+            if (_selectedEntityDefinitionIndex > _editor.RootJson.EntityDefinitions.Count - 1)
+                return;
+
+            var entityDef = _editor.RootJson.EntityDefinitions[_selectedEntityDefinitionIndex];
+
+            if (IsExcluded(entityDef, layerDef))
+                return;
+            
+            if (!GetTileSetDef(entityDef.TileSetDefId, out var tileSetDef))
+                return;
+            var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+            var sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
+            var transform = (
+                Matrix3x2.CreateTranslation(mouseSnappedToGrid)
+            ).ToMatrix4x4();
+            renderer.DrawSprite(sprite, transform, Color.White * 0.33f);
+        }
+        else if (layerDef.LayerType == LayerType.IntGrid)
+        {
+            if (_selectedIntGridValueIndex > layerDef.IntGridValues.Count - 1)
+                return;
+
+            var intGridValue = layerDef.IntGridValues[_selectedIntGridValueIndex];
+
+            /*
+            var transform = (
+                Matrix3x2.CreateScale(layerDef.GridSize, layerDef.GridSize) *
+                Matrix3x2.CreateTranslation(
+                    mouseSnappedToGrid.X,
+                    mouseSnappedToGrid.Y
+                )).ToMatrix4x4();
+                */
+
+            renderer.DrawRect(
+                mouseSnappedToGrid,
+                mouseSnappedToGrid + new Vector2(layerDef.GridSize),
+                intGridValue.Color * 0.33f
+            );
+        }
+    }
+
+    private void HighlightSelectedEntityInstance(Renderer renderer)
+    {
+        if (_selectedEntityInstanceIndex == -1)
+            return;
+
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+            return;
+
+        if (_selectedEntityInstanceIndex > layerInstance.EntityInstances.Count - 1)
+            return;
+
+        var selectedInstance = layerInstance.EntityInstances[_selectedEntityInstanceIndex];
+
+        if (!GetEntityDef(selectedInstance.EntityDefId, out var entityDef))
+            return;
+        
+        renderer.DrawRectWithOutline(
+            level.WorldPos + selectedInstance.Position,
+            level.WorldPos + selectedInstance.Position + new Vector2(layerDef.GridSize),
+            entityDef.Color * 0.33f,
+            entityDef.Color
+        );
     }
 
     private bool GetSelectedLevel([NotNullWhen(true)] out Level? level)
