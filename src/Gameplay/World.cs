@@ -176,7 +176,7 @@ public class World
                 entity.Size = entityInstance.Size;
                 entity.Position = new Position(level.WorldPos + entityInstance.Position - entity.Pivot * entity.Size);
                 entity.SmartColor = entityDef.Color;
-                
+
                 foreach (var field in entityInstance.FieldInstances)
                 {
                     var fieldDef = entityDef.FieldDefinitions.First(x => x.Uid == field.FieldDefId);
@@ -279,7 +279,7 @@ public class World
                 Bullets[i].Initialize(this);
 
             Bullets[i].Update(deltaSeconds);
-            
+
             if (Bullets[i].IsDestroyed)
                 Bullets.RemoveAt(i);
         }
@@ -305,7 +305,7 @@ public class World
 
             if (!entity.IsInitialized)
                 entity.Initialize(this);
-            
+
             if (entity.IsDestroyed)
             {
                 Enemies.RemoveAt(i);
@@ -320,14 +320,6 @@ public class World
     {
         DrawLevel(renderer, Level, camera.ZoomedBounds);
         DrawEntities(renderer, alpha);
-
-        if (Debug)
-        {
-            CameraDebug.DrawCameraBounds(renderer, camera);
-            DrawLightBounds(renderer);
-            MouseDebug.DrawMousePosition(renderer);
-            _debugDraw.Render(renderer);
-        }
     }
 
     private void DrawLightBounds(Renderer renderer)
@@ -350,6 +342,33 @@ public class World
         DrawBullets(renderer, alpha);
     }
 
+    public void DrawEntityDebug(Renderer renderer, double alpha)
+    {
+        if (!Debug)
+            return;
+
+        DrawEntityDebug(renderer, Player, true, alpha);
+
+        for (var i = 0; i < Enemies.Count; i++)
+        {
+            var entity = Enemies[i];
+            DrawEntityDebug(renderer, entity, false, alpha);
+        }
+
+        for (var i = 0; i < Bullets.Count; i++)
+        {
+            var bullet = Bullets[i];
+
+            if (bullet.DrawDebug || DebugEntities)
+            {
+                var radius = MathF.Min(bullet.Size.X, bullet.Size.Y) * 0.5f;
+                renderer.DrawCircleOutline(bullet.Bounds.Center, radius, Color.Blue, 1.0f);
+            }
+
+            DrawEntityDebug(renderer, bullet, false, alpha);
+        }
+    }
+
 
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
     {
@@ -362,6 +381,7 @@ public class World
             var layer = level.LayerInstances[layerIndex];
             var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
             DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds);
+            DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
         if (Debug && DebugLevel)
@@ -377,16 +397,6 @@ public class World
             var srcRect = new Rectangle(4 * 16, 0, 16, 16);
             var xform = bullet.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
-            if (Debug)
-            {
-                if (bullet.DrawDebug || DebugEntities)
-                {
-                    var radius = MathF.Min(bullet.Size.X, bullet.Size.Y) * 0.5f;
-                    renderer.DrawCircleOutline(bullet.Bounds.Center, radius, Color.Blue, 1.0f);
-                }
-
-                DrawEntityDebug(renderer, bullet, false, alpha);
-            }
         }
     }
 
@@ -396,8 +406,6 @@ public class World
         var xform = Player.GetTransform(alpha);
         var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
-        if (Debug)
-            DrawEntityDebug(renderer, Player, true, alpha);
     }
 
     private void DrawEnemies(Renderer renderer, double alpha)
@@ -423,53 +431,24 @@ public class World
             var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
             var xform = entity.GetTransform(alpha);
             renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
-            if (Debug)
-                DrawEntityDebug(renderer, entity, false, alpha);
         }
     }
 
     private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
-        var cols = level.Width / layerDef.GridSize;
-        var rows = level.Height / layerDef.GridSize;
-
-        var boundsMin = cameraBounds
-            .MinVec(); // WorldToTilePosition(cameraBounds.MinVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
-        var boundsMax = cameraBounds
-            .MaxVec(); // WorldToTilePosition(cameraBounds.MaxVec() - Position, (int)layer.GridSize, layerWidth, layerHeight);
+        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
+        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
 
         var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
         var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-        
-        if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
-        {
-            for (var i = 0; i < layer.IntGrid.Length; i++)
-            {
-                var value = layer.IntGrid[i];
-                if (value == 0)
-                    continue;
-
-                var enumValue = (LayerDefs.Tiles)value;
-
-                var gridSize = layerDef.GridSize;
-                var gridY = (int)(i / cols);
-                var gridX = (int)(i % cols);
-                var min = level.WorldPos + new Vector2(gridX, gridY) * gridSize;
-                var max = min + new Vector2(gridSize, gridSize);
-
-                var color = LayerDefs.TilesColors[enumValue];
-                if (GetIntDef(layerDef, value, out var intDef))
-                {
-                    color = intDef.Color;
-                }
-
-                renderer.DrawRect(min, max, color * 0.5f, 0);
-            }
-        }
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {
             var tile = layer.AutoLayerTiles[i];
+            if (tile.Cell.X < boundsMin.X || tile.Cell.X >= boundsMax.X ||
+                tile.Cell.Y < boundsMin.Y || tile.Cell.Y >= boundsMax.Y)
+                continue;
+
             var sprite = GetTileSprite(texture, tile.TileId, layerDef.GridSize);
             var transform = (
                 Matrix3x2.CreateScale(1f, 1f) *
@@ -481,7 +460,53 @@ public class World
             renderer.DrawSprite(sprite, transform, Color.White);
         }
     }
-    
+
+    private static void DrawLayerDebug(Renderer renderer, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
+    {
+        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
+        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
+
+        var cols = level.Width / layerDef.GridSize;
+        var rows = level.Height / layerDef.GridSize;
+
+
+        if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
+        {
+            for (var y = boundsMin.Y; y < boundsMax.Y; y++)
+            {
+                if (y < 0 || y >= rows)
+                    continue;
+
+                for (var x = boundsMin.X; x < boundsMax.X; x++)
+                {
+                    if (x < 0 || x >= cols)
+                        continue;
+
+                    var cellId = y * cols + x;
+                    if (cellId < 0 || cellId > layer.IntGrid.Length - 1)
+                        continue;
+
+                    var value = layer.IntGrid[cellId];
+                    if (value == 0)
+                        continue;
+
+                    var enumValue = (LayerDefs.Tiles)value;
+                    var gridSize = layerDef.GridSize;
+                    var min = level.WorldPos + new Vector2(x, y) * gridSize;
+                    var max = min + new Vector2(gridSize, gridSize);
+
+                    var color = LayerDefs.TilesColors[enumValue];
+                    if (GetIntDef(layerDef, value, out var intDef))
+                    {
+                        color = intDef.Color;
+                    }
+
+                    renderer.DrawRect(min, max, color * 0.5f, 0);
+                }
+            }
+        }
+    }
+
     public static Sprite GetTileSprite(Texture texture, uint tileId, uint gridSize)
     {
         Sprite sprite;
@@ -753,5 +778,17 @@ public class World
             commandBuffer.BindFragmentSamplers(fragmentBindings);
             SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
         }
+    }
+
+    public void DrawDebug(Renderer renderer, Camera camera, double alpha)
+    {
+        if (!Debug)
+            return;
+
+        DrawEntityDebug(renderer, alpha);
+        CameraDebug.DrawCameraBounds(renderer, camera);
+        DrawLightBounds(renderer);
+        MouseDebug.DrawMousePosition(renderer);
+        _debugDraw.Render(renderer);
     }
 }

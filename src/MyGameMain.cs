@@ -98,10 +98,10 @@ public class MyGameMain : Game
         UpdateWindowTitle();
 
         InputHandler.BeginFrame(Time.ElapsedTime);
-        
+
         Binds.UpdateButtonStates(InputState.Create(InputHandler));
         Binds.ExecuteTriggeredBinds();
-        
+
         SetInputViewport();
 
         UpdateScreens();
@@ -141,7 +141,7 @@ public class MyGameMain : Game
             Shared.Menus.AddScreen(Shared.Menus.PauseScreen);
             return;
         }
-        
+
         UpdateWorld(Time.ElapsedTime);
     }
 
@@ -315,20 +315,17 @@ public class MyGameMain : Game
             return;
         }
 
-        {
-            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
-            World.Draw(renderer, Camera, alpha);
+        renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
+        World.Draw(renderer, Camera, alpha);
 
-            // draw ambient background color
-            // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
+        World.DrawDebug(renderer, Camera, alpha);
+        // draw ambient background color
+        // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
 
-            var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
-        }
+        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
 
-        {
-            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
-        }
+        World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
 
 
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);
@@ -360,7 +357,7 @@ public class MyGameMain : Game
     {
         if (!World.IsLoaded)
             return;
-        
+
         Logs.LogInfo($"Unloading world from thread: {Thread.CurrentThread.ManagedThreadId}");
         Camera.TrackEntity(null);
         Camera.LevelBounds = Rectangle.Empty;
@@ -413,7 +410,7 @@ public class MyGameMain : Game
         else
             Shared.Game.LoadRoot(rootLoader, World.NextLevel);
     }
-    
+
     [ConsoleHandler("step")]
     public static void Step()
     {

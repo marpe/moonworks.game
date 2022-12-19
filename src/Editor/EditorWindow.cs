@@ -443,7 +443,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawAutoRuleButton()
     {
-        if (ImGuiExt.ColoredButton("Apply Rules"))
+        if (ImGuiExt.ColoredButton("Apply Rules", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
             ApplyIntGridAutoRules();
         }
@@ -618,6 +618,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     }
                 }
             }
+            
+            SortLevelInstances();
 
             Logs.LogInfo("Cleaning done!");
         }
@@ -652,14 +654,27 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawLayerInstances(level.LayerInstances, _editor.RootJson.LayerDefinitions);
 
-        if (ImGuiExt.ColoredButton("Sort Instances", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
+        /*if (ImGuiExt.ColoredButton("Sort Layer Instances", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
-            level.LayerInstances.Sort((a, b) =>
+            SortLevelInstances();
+        }*/
+    }
+
+    private void SortLevelInstances()
+    {
+        for (var i = 0; i < _editor.RootJson.Worlds.Count; i++)
+        {
+            var world = _editor.RootJson.Worlds[i];
+            for (var j = 0; j < world.Levels.Count; j++)
             {
-                var indexA = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == a.LayerDefId);
-                var indexB = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == b.LayerDefId);
-                return indexA.CompareTo(indexB);
-            });
+                var level = world.Levels[j];
+                level.LayerInstances.Sort((a, b) =>
+                {
+                    var indexA = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == a.LayerDefId);
+                    var indexB = _editor.RootJson.LayerDefinitions.FindIndex(def => def.Uid == b.LayerDefId);
+                    return indexA.CompareTo(indexB);
+                });
+            }
         }
     }
 

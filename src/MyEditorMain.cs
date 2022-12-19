@@ -142,6 +142,10 @@ public unsafe class MyEditorMain : MyGameMain
                     var levelIdentifier = World.Level.Identifier;
                     onComplete = () => { World.StartLevel(levelIdentifier); };
                 }
+                else
+                {
+                    onComplete = () => { World.NextLevel(); };
+                }
 
                 QueueSetRoot(rootJson, onComplete);
             });
