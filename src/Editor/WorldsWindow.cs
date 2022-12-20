@@ -26,10 +26,9 @@ public class WorldsWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
-
                 ImGui.PushID(i);
-                var world = RootJson.Worlds[i];
 
+                var world = RootJson.Worlds[i];
 
                 var color = ImGuiExt.Colors[1];
                 var isSelected = SelectedWorldIndex == i;

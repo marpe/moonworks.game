@@ -262,8 +262,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void SetGameRenderViewportTransform(Vector2 gameRenderMin, Matrix4x4 viewportTransform)
     {
-        var windowViewportPosition = ImGui.GetWindowViewport()->Pos;
-        var gameRenderOffset = gameRenderMin - windowViewportPosition;
+        var gameRenderOffset = gameRenderMin - ImGui.GetWindowViewport()->Pos;
 
         viewportTransform.Decompose(out var viewportScale, out _, out _);
 

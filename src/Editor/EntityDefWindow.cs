@@ -73,6 +73,7 @@ public unsafe class EntityDefWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
+                
                 var entityDef = entityDefs[i];
                 ImGui.PushID(i);
                 var isSelected = selectedEntityDefinitionIndex == i;
@@ -82,7 +83,7 @@ public unsafe class EntityDefWindow : SplitWindow
                     selectedEntityDefinitionIndex = i;
                 }
 
-                if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
+                if (ImGui.BeginPopupContextItem("Popup"))
                 {
                     ImGui.MenuItem("Copy", default);
                     ImGui.MenuItem("Cut", default);
@@ -107,6 +108,8 @@ public unsafe class EntityDefWindow : SplitWindow
 
                 ImGui.SetCursorScreenPos(cursorPos);
                 ImGui.SetCursorPosX(100);
+                ImGui.Dummy(new Vector2(0, 0));
+                ImGui.SameLine();
                 GiantLabel(entityDef.Identifier, entityDef.Color, _rowMinHeight);
 
                 ImGui.PopID();

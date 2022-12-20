@@ -27,7 +27,6 @@ public unsafe class MyEditorMain : MyGameMain
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private bool _firstTime = true;
     private Texture _imGuiRenderTarget;
-    public Texture _editorRenderTarget;
 
     private bool _screenshot;
 
@@ -65,10 +64,6 @@ public unsafe class MyEditorMain : MyGameMain
         var sw = Stopwatch.StartNew();
         var windowSize = MainWindow.Size;
         _imGuiRenderTarget = Texture.CreateTexture2D(
-            GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
-            TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
-        );
-        _editorRenderTarget = Texture.CreateTexture2D(
             GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
@@ -394,7 +389,6 @@ public unsafe class MyEditorMain : MyGameMain
         UpdateScreens();
 
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow; 
-        EditorWindow.Update(Time.ElapsedTime);
 
         Shared.AudioManager.Update((float)dt.TotalSeconds);
 
@@ -456,8 +450,6 @@ public unsafe class MyEditorMain : MyGameMain
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
         }
         
-        EditorWindow.Draw(Renderer, _editorRenderTarget, alpha);
-
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 
         if (swapTexture == null)

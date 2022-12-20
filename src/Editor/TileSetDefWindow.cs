@@ -27,8 +27,8 @@ public unsafe class TileSetDefWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
-
                 ImGui.PushID(i);
+                
                 var tilesetDef = RootJson.TileSetDefinitions[i];
 
                 var isSelected = _selectedTileSetDefinitionIndex == i;

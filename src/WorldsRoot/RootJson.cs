@@ -39,7 +39,7 @@ public class LayerDef
     public uint TileSetDefId;
 
     public List<AutoRuleGroup> AutoRuleGroups = new();
-    
+
     public LayerDef()
     {
     }
@@ -165,13 +165,12 @@ public class Level
     public string Identifier = "Level";
     public uint Width;
     public uint Height;
-    [JsonIgnore]
-    public UPoint Size => new(Width, Height);
+    [JsonIgnore] public UPoint Size => new(Width, Height);
 
     [JsonIgnore] public Rectangle Bounds => new(WorldPos.X, WorldPos.Y, (int)Width, (int)Height);
-    
+
     public Color BackgroundColor = Color.White;
-    
+
     public List<FieldInstance> FieldInstances = new();
     public List<LayerInstance> LayerInstances = new();
 
@@ -225,11 +224,19 @@ public class EntityDefinition
     public uint TileId;
     public double PivotX;
     public double PivotY;
-    [JsonIgnore]
-    public Vector2 Pivot => new Vector2(PivotX, PivotY);
+    [JsonIgnore] public Vector2 Pivot => new Vector2(PivotX, PivotY);
     public List<string> Tags = new();
 
     public EntityDefinition()
     {
     }
+}
+
+public struct AutoRuleTile
+{
+    public UPoint Cell;
+    public int TileId;
+    public int TileSetDefId;
+    public Point LevelWorldPos;
+    public uint LayerGridSize;
 }

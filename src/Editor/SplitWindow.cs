@@ -92,6 +92,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         var windowFlags = ImGuiWindowFlags.NoCollapse |
                           ImGuiWindowFlags.NoTitleBar |
                           ImGuiWindowFlags.NoDecoration;
+        ImGui.SetNextWindowSize(new Vector2(400, 600), ImGuiCond.FirstUseEver);
         if (ImGui.Begin(title, default, windowFlags))
         {
             drawContent();
@@ -238,10 +239,10 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         ImGui.SetCursorPosY(cursorPosY + lineHeight * 0.5f - textSize.Y * 0.5f);
 
         var cursorScreenPos = ImGui.GetCursorScreenPos();
-        ImGui.Dummy(new Vector2(0, 0));
+        var avail = ImGui.GetContentRegionAvail();
+        ImGui.Dummy(new Vector2(avail.X, 0));
         ImGui.SameLine();
 
-        var avail = ImGui.GetContentRegionAvail();
         var clipRectMin = new Vector2(cursorScreenPos.X, cursorStart.Y - ImGui.GetStyle()->CellPadding.Y);
         var clipRectMax = clipRectMin + new Vector2(avail.X, lineHeight + ImGui.GetStyle()->CellPadding.Y * 2f);
 

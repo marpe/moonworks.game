@@ -632,22 +632,22 @@ public static unsafe class ImGuiExt
         var (h, s, v) = ColorExt.RgbToHsv(headerColor);
         var color = ColorExt.HsvToRgb(h, s * 0.8f, v * 0.6f);
         var borderColor = ImGui.GetStyle()->Colors[(int)ImGuiCol.Border];
-        dl->AddRectFilledOutlined(min, max, color, borderColor.ToColor());
+        AddRectFilledOutlined(dl, min, max, color, borderColor.ToColor());
         var padding = new Vector2(35, 4).ToNumerics();
         var textColor = ImGui.GetStyle()->Colors[(int)ImGuiCol.Text];
         dl->AddText(c + padding, textColor.ToColor().PackedValue, header);
     }
 
-    public static void AddRectFilledOutlined(this ImDrawList self, Num.Vector2 min, Num.Vector2 max, Color fill,
+    public static void AddRectFilledOutlined(ImDrawList* self, Num.Vector2 min, Num.Vector2 max, Color fill,
         Color outline, float thickness = 1.0f)
     {
-        self.AddRectFilled(min, max, fill.PackedValue);
-        self.AddRect(min, max, outline.PackedValue, thickness);
+        self->AddRectFilled(min, max, fill.PackedValue);
+        self->AddRect(min, max, outline.PackedValue, thickness);
     }
 
-    public static void AddRect(this ImDrawList self, Vector2 min, Vector2 max, Color color, float thickness = 1.0f)
+    public static void AddRect(ImDrawList* self, Vector2 min, Vector2 max, Color color, float thickness = 1.0f)
     {
-        self.AddRect(
+        self->AddRect(
             min.ToNumerics(),
             max.ToNumerics(),
             color.PackedValue,
@@ -657,9 +657,9 @@ public static unsafe class ImGuiExt
         );
     }
 
-    public static void AddRectFilled(this ImDrawList self, Vector2 min, Vector2 max, Color color)
+    public static void AddRectFilled(ImDrawList* self, Vector2 min, Vector2 max, Color color)
     {
-        self.AddRectFilled(
+        self->AddRectFilled(
             min.ToNumerics(),
             max.ToNumerics(),
             color.PackedValue

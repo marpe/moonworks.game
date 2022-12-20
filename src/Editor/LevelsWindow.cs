@@ -42,8 +42,8 @@ public class LevelsWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
-
                 ImGui.PushID(i);
+                
                 var level = world.Levels[i];
 
                 var isSelected = SelectedLevelIndex == i;

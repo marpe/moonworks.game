@@ -49,8 +49,8 @@ public unsafe class LayerDefWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
-
                 ImGui.PushID(i);
+
                 var layerDef = RootJson.LayerDefinitions[i];
 
                 var isSelected = _selectedLayerDefIndex == i;
