@@ -33,6 +33,32 @@ public unsafe class ResizeTool : Tool
     private static RectHandlePos[] _handlePositions = Enum.GetValues<RectHandlePos>();
     public Vector2 _dragOrigin;
 
+    private SDL.SDL_SystemCursor[] _sdlCursors =
+    {
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENS,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZEWE,
+
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENWSE,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENESW,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENWSE,
+        SDL.SDL_SystemCursor.SDL_SYSTEM_CURSOR_SIZENESW
+    };
+
+    private ImGuiMouseCursor[] _imGuiCursors =
+    {
+        ImGuiMouseCursor.ResizeNS,
+        ImGuiMouseCursor.ResizeNS,
+        ImGuiMouseCursor.ResizeEW,
+        ImGuiMouseCursor.ResizeEW,
+
+        ImGuiMouseCursor.ResizeNWSE,
+        ImGuiMouseCursor.ResizeNESW,
+        ImGuiMouseCursor.ResizeNESW,
+        ImGuiMouseCursor.ResizeNWSE,
+    };
+
     public void Draw(Num.Vector2 min, Num.Vector2 max, float handleRadius)
     {
         var size = max - min;
@@ -41,6 +67,7 @@ public unsafe class ResizeTool : Tool
 
         for (var i = 0; i < _handlePositions.Length; i++)
         {
+            ImGui.PushID(i);
             var x = i % _handlePositions.Length;
             var y = i / _handlePositions.Length;
 
@@ -48,27 +75,45 @@ public unsafe class ResizeTool : Tool
 
             var origin = _handlePositions[i] switch
             {
-                RectHandlePos.Top => new Vector2(0.5f, 0),
-                RectHandlePos.Bottom => new Vector2(0.5f, 1),
-                RectHandlePos.Left => new Vector2(0, 0.5f),
-                RectHandlePos.Right => new Vector2(1, 0.5f),
+                RectHandlePos.Top => new Vector2(0.5f, 0) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.Bottom => new Vector2(0.5f, 1) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.Left => new Vector2(0, 0.5f) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.Right => new Vector2(1, 0.5f) - new Vector2(0.5f, 0.5f),
 
-                RectHandlePos.TopLeft => new Vector2(0, 0),
-                RectHandlePos.TopRight => new Vector2(1, 0),
-                RectHandlePos.BottomLeft => new Vector2(0, 1),
-                RectHandlePos.BottomRight => new Vector2(1, 1),
+                RectHandlePos.TopLeft => new Vector2(0, 0) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.TopRight => new Vector2(1, 0) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.BottomLeft => new Vector2(0, 1) - new Vector2(0.5f, 0.5f),
+                RectHandlePos.BottomRight => new Vector2(1, 1) - new Vector2(0.5f, 0.5f),
                 _ => throw new ArgumentOutOfRangeException(),
             };
 
-            var handlePos = (Bounds.Min + Bounds.Size * origin).ToNumerics();
-            dl->AddCircleFilled(handlePos, handleRadius, Color.White.PackedValue);
-            dl->AddCircle(handlePos, handleRadius, Color.Black.PackedValue);
+            var padding = new Vector2(20, 20);
+            var handlePos = (Bounds.Center + (Bounds.Size + padding) * origin).ToNumerics();
+
+            var wasHovered = ImGui.GetCurrentContext()->HoveredIdPreviousFrame == ImGui.GetID("ResizeHandle");
+
+            var (fill, outline) = wasHovered switch
+            {
+                true => (Color.White, Color.Black),
+                _ => (Color.White.MultiplyAlpha(0.33f), Color.Black.MultiplyAlpha(0.33f)),
+            };
+
+            dl->AddCircleFilled(handlePos, handleRadius, fill.PackedValue);
+            dl->AddCircle(handlePos, handleRadius, outline.PackedValue);
             var handleRadiusSize = new Num.Vector2(handleRadius, handleRadius);
             ImGui.SetCursorScreenPos(handlePos - handleRadiusSize);
-            if (ImGui.InvisibleButton("##ResizeHandle" + i, handleRadiusSize * 2.0f))
+
+            if (ImGui.InvisibleButton("ResizeHandle", handleRadiusSize * 2.0f))
             {
                 Logs.LogInfo($"{_handlePositions[i]} clicked");
             }
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetMouseCursor(_imGuiCursors[i]);
+            }
+
+            ImGui.PopID();
         }
     }
 }
@@ -1240,27 +1285,32 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             dl->AddRectFilled(levelMin, levelMax, level.BackgroundColor.PackedValue);
 
             var isSelected = i == LevelsWindow.SelectedLevelIndex;
-            
+
             // draw grid
             {
                 var gridMin = GetWorldInScreen(level.WorldPos);
                 var gridMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
                 DrawGrid(dl, gridMin, gridMax, _editor.RootJson.DefaultGridSize * _gameRenderScale, GridColor, _gameRenderScale * GridThickness);
             }
-            
-            // draw outer level border
-            {
-                var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
 
-                var rectMin = GetWorldInScreen(level.WorldPos);
-                var rectMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
-                dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, 4f * _gameRenderScale);
+            // draw outer level border
+            if (isSelected)
+            {
+                var color = isSelected ? Color.CornflowerBlue : Color.Red;
+
+                var thickness = 2f * _gameRenderScale;
+                var padding = new Vector2(thickness * 0.5f / _gameRenderScale);
+                var rectMin = GetWorldInScreen(level.WorldPos - padding);
+                var rectMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2() + padding);
+                dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, thickness);
             }
-            
+
+            var levelSize = levelMax - levelMin;
             if (!isSelected)
             {
-                ImGui.SetCursorScreenPos(levelMin);
-                if (ImGui.InvisibleButton("LevelButton", levelMax - levelMin))
+                var deselectedLevelPadding = new Num.Vector2(30, 30) * _gameRenderScale;
+                ImGui.SetCursorScreenPos(levelMin + deselectedLevelPadding * 0.5f);
+                if (ImGui.InvisibleButton("LevelButton", levelSize - deselectedLevelPadding))
                 {
                     LevelsWindow.SelectedLevelIndex = i;
                 }
@@ -1268,13 +1318,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             else
             {
                 ImGui.SetCursorScreenPos(levelMin);
-                if (ImGui.InvisibleButton("SelectedLevelButton", levelMax - levelMin))
+                if (ImGui.InvisibleButton("SelectedLevelButton", levelSize))
                 {
                 }
 
                 var min = ImGui.GetItemRectMin();
                 var max = ImGui.GetItemRectMax();
-                _resize.Draw(min, max, _gameRenderScale * 10f);
+                _resize.Draw(min, max, _gameRenderScale * 5f);
 
                 btnState = new ButtonState(
                     ImGui.IsItemActive(),
