@@ -312,7 +312,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                           ImGuiWindowFlags.NoSavedSettings |
                           ImGuiWindowFlags.NoNav;
 
-        ImGui.SetNextWindowBgAlpha(0.5f);
+        ImGui.SetNextWindowBgAlpha(0.8f);
 
         var contentMin = ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowContentRegionMax();

@@ -173,15 +173,14 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
     public static void Icon(string iconPath, Color color, int rowHeight)
     {
         var buttonSize = 0.6f * rowHeight;
-        ImGui.SameLine();
         ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing,
             new Vector2(ImGui.GetStyle()->ItemInnerSpacing.X * 4f, ImGui.GetStyle()->ItemInnerSpacing.Y));
         var cursorPosX = ImGui.GetCursorPosX();
         var cursorPosY = ImGui.GetCursorPosY();
         var contentAvail = ImGui.GetContentRegionAvail();
-        var buttonX = contentAvail.X * 0.5f - buttonSize - ImGui.GetStyle()->ItemInnerSpacing.X;
-        if (buttonX >= cursorPosX)
-        {
+        var buttonX = Math.Max(contentAvail.X * 0.5f - buttonSize - ImGui.GetStyle()->ItemInnerSpacing.X, cursorPosX);
+        /*if (buttonX - 20 >= cursorPosX)
+        {*/
             ImGui.SetCursorPosX(buttonX);
             ImGui.SetCursorPosY(cursorPosY + (rowHeight - buttonSize) / 2);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
@@ -193,8 +192,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
                 color.ToNumerics()
             );
             ImGui.PopStyleVar();
-            ImGui.SameLine(0, ImGui.GetStyle()->ItemInnerSpacing.X);
-        }
+        // }
 
         ImGui.PopStyleVar();
     }

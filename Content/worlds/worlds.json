@@ -15296,6 +15296,102 @@
                   },
                   "Width": 16,
                   "Height": 16
+                },
+                {
+                  "Iid": "d86c40ab-104d-4796-9a86-7d0bab0b3d9f",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 29,
+                      "Value": 1.0
+                    },
+                    {
+                      "FieldDefId": 31,
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 33,
+                      "Value": "#FF9E31"
+                    },
+                    {
+                      "FieldDefId": 35,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 37,
+                      "Value": 0.0
+                    }
+                  ],
+                  "Position": {
+                    "X": 544,
+                    "Y": 560
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "77c4cf9c-1f0f-4f17-b8f0-b1ca386b85e2",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 29,
+                      "Value": 1.0
+                    },
+                    {
+                      "FieldDefId": 31,
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 33,
+                      "Value": "#FF9E31"
+                    },
+                    {
+                      "FieldDefId": 35,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 37,
+                      "Value": 0.0
+                    }
+                  ],
+                  "Position": {
+                    "X": 912,
+                    "Y": 368
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "7c33de5f-b7f2-492d-8cf0-3c8a339ba479",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 29,
+                      "Value": 1.0
+                    },
+                    {
+                      "FieldDefId": 31,
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 33,
+                      "Value": "#FF9E31"
+                    },
+                    {
+                      "FieldDefId": 35,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 37,
+                      "Value": 0.0
+                    }
+                  ],
+                  "Position": {
+                    "X": 896,
+                    "Y": 304
+                  },
+                  "Width": 16,
+                  "Height": 16
                 }
               ],
               "IsVisible": true
@@ -15722,6 +15818,61 @@
                   },
                   "Width": 8,
                   "Height": 12
+                },
+                {
+                  "Iid": "4316538a-20a0-40c5-baf3-331d30ae0473",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 480,
+                    "Y": 144
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "d61300c8-569d-4288-8776-999cf9df7a46",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 528,
+                    "Y": 96
+                  },
+                  "Width": 8,
+                  "Height": 12
+                },
+                {
+                  "Iid": "ac4ac362-7a4e-4e59-9fa5-69e283fcb1da",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 512,
+                    "Y": 112
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "b073be6f-9653-485a-be74-bd9eaec5f8e0",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 496,
+                    "Y": 112
+                  },
+                  "Width": 16,
+                  "Height": 16
+                },
+                {
+                  "Iid": "fe3269d0-065e-49f3-8067-0ff3a10f0468",
+                  "EntityDefId": 7,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 480,
+                    "Y": 112
+                  },
+                  "Width": 16,
+                  "Height": 16
                 }
               ],
               "IsVisible": true

@@ -74,14 +74,9 @@ public unsafe class LayerDefWindow : SplitWindow
                     ImGui.EndPopup();
                 }
 
-                var labelColor = isSelected ? Color.White : color;
-                Icon(LayerTypeIcon(layerDef.LayerType), color, _rowMinHeight);
-                GiantLabel(layerDef.Identifier, labelColor, _rowMinHeight);
-
-                ImGui.SetCursorScreenPos(cursorPos + new Vector2(2, 0));
+                ImGui.SameLine(0, 0);
                 var buttonSize = new Vector2(30, _rowMinHeight);
                 ImGuiExt.TextButton(FontAwesome6.EllipsisVertical, "Drag to move", Color.White.PackedValue, buttonSize);
-
                 if (ImGui.BeginDragDropSource())
                 {
                     ImGui.SetDragDropPayload("LayerDefRow", &i, sizeof(int));
@@ -101,6 +96,13 @@ public unsafe class LayerDefWindow : SplitWindow
 
                     ImGui.EndDragDropTarget();
                 }
+                ImGui.SameLine();
+                
+                var labelColor = isSelected ? Color.White : color;
+                Icon(LayerTypeIcon(layerDef.LayerType), color, _rowMinHeight);
+
+                ImGui.SameLine();
+                GiantLabel(layerDef.Identifier, labelColor, _rowMinHeight);
                 
                 ImGui.PopID();
             }
