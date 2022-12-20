@@ -6,8 +6,76 @@ using MyGame.WorldsRoot;
 
 namespace MyGame.Editor;
 
+public enum RectHandlePos
+{
+    Top,
+    Bottom,
+    Left,
+    Right,
+
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+}
+
+public class Tool
+{
+}
+
+public class SelectTool : Tool
+{
+}
+
+public unsafe class ResizeTool : Tool
+{
+    public Bounds Bounds = new();
+    private static RectHandlePos[] _handlePositions = Enum.GetValues<RectHandlePos>();
+    public Vector2 _dragOrigin;
+
+    public void Draw(Num.Vector2 min, Num.Vector2 max, float handleRadius)
+    {
+        var size = max - min;
+        Bounds.Min = min.ToXNA();
+        Bounds.Size = size.ToXNA();
+
+        for (var i = 0; i < _handlePositions.Length; i++)
+        {
+            var x = i % _handlePositions.Length;
+            var y = i / _handlePositions.Length;
+
+            var dl = ImGui.GetWindowDrawList();
+
+            var origin = _handlePositions[i] switch
+            {
+                RectHandlePos.Top => new Vector2(0.5f, 0),
+                RectHandlePos.Bottom => new Vector2(0.5f, 1),
+                RectHandlePos.Left => new Vector2(0, 0.5f),
+                RectHandlePos.Right => new Vector2(1, 0.5f),
+
+                RectHandlePos.TopLeft => new Vector2(0, 0),
+                RectHandlePos.TopRight => new Vector2(1, 0),
+                RectHandlePos.BottomLeft => new Vector2(0, 1),
+                RectHandlePos.BottomRight => new Vector2(1, 1),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
+
+            var handlePos = (Bounds.Min + Bounds.Size * origin).ToNumerics();
+            dl->AddCircleFilled(handlePos, handleRadius, Color.White.PackedValue);
+            dl->AddCircle(handlePos, handleRadius, Color.Black.PackedValue);
+            var handleRadiusSize = new Num.Vector2(handleRadius, handleRadius);
+            ImGui.SetCursorScreenPos(handlePos - handleRadiusSize);
+            if (ImGui.InvisibleButton("##ResizeHandle" + i, handleRadiusSize * 2.0f))
+            {
+                Logs.LogInfo($"{_handlePositions[i]} clicked");
+            }
+        }
+    }
+}
+
 public unsafe class EditorWindow : ImGuiEditorWindow
 {
+    private ResizeTool _resize = new();
     const string SelectedEntityPopupName = "SelectedEntityInstance";
     public const string WindowTitle = "EditorTabs";
     private const string PreviewWindowTitle = "Editor";
@@ -33,7 +101,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private static Num.Vector2 _gameRenderPosition = Num.Vector2.Zero;
 
     /// <summary>User zoom</summary>
-    private static float _gameRenderScale = 1f;
+    public static float _gameRenderScale = 1f;
 
     private int _selectedEntityDefinitionIndex;
     private int _selectedEntityInstanceIndex = -1;
@@ -860,6 +928,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     {
                         ClearLayerInstance(layerInstance);
                     }
+
                     ImGui.MenuItem("Copy", default);
                     ImGui.MenuItem("Cut", default);
                     ImGui.MenuItem("Duplicate", default);
@@ -1171,6 +1240,23 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             dl->AddRectFilled(levelMin, levelMax, level.BackgroundColor.PackedValue);
 
             var isSelected = i == LevelsWindow.SelectedLevelIndex;
+            
+            // draw grid
+            {
+                var gridMin = GetWorldInScreen(level.WorldPos);
+                var gridMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
+                DrawGrid(dl, gridMin, gridMax, _editor.RootJson.DefaultGridSize * _gameRenderScale, GridColor, _gameRenderScale * GridThickness);
+            }
+            
+            // draw outer level border
+            {
+                var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
+
+                var rectMin = GetWorldInScreen(level.WorldPos);
+                var rectMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
+                dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, 4f * _gameRenderScale);
+            }
+            
             if (!isSelected)
             {
                 ImGui.SetCursorScreenPos(levelMin);
@@ -1186,6 +1272,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                 }
 
+                var min = ImGui.GetItemRectMin();
+                var max = ImGui.GetItemRectMax();
+                _resize.Draw(min, max, _gameRenderScale * 10f);
+
                 btnState = new ButtonState(
                     ImGui.IsItemActive(),
                     ImGui.IsItemActivated(),
@@ -1196,23 +1286,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
 
             DrawLayerInstances(dl, level, i == LevelsWindow.SelectedLevelIndex);
-
-            // draw outer level border
-            {
-                var color = i == LevelsWindow.SelectedLevelIndex ? Color.Green : Color.Red;
-
-                var rectMin = GetWorldInScreen(level.WorldPos);
-                var rectMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
-                dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, 4f * _gameRenderScale);
-            }
-
-            // draw grid
-            {
-                var gridMin = GetWorldInScreen(level.WorldPos);
-                var gridMax = GetWorldInScreen(level.WorldPos + level.Size.ToVec2());
-                DrawGrid(dl, gridMin, gridMax, _editor.RootJson.DefaultGridSize * _gameRenderScale, GridColor, _gameRenderScale * GridThickness);
-            }
-
 
             ImGui.PopID();
         }
