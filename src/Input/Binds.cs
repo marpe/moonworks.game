@@ -4,7 +4,27 @@ namespace MyGame.Input;
 
 public static class Binds
 {
-    public class ButtonBind
+    public enum InputAction
+    {
+        Jump,
+        Fire1,
+        Respawn,
+        MoveToMouse,
+        ZoomIn,
+        ZoomOut,
+        Up,
+        Down,
+        Forward,
+        Back,
+        Left,
+        Right,
+        Reset,
+        Pan,
+        CameraLeft,
+        CameraRight
+    }
+
+    public class ActionState
     {
         public string[] Sources = { "", "" }; // The id of the button which triggered this bind
         public bool Active;
@@ -12,54 +32,42 @@ public static class Binds
         public ulong GameUpdateCount;
         public ulong WorldUpdateCount;
     }
-
-    public static class Camera
-    {
-        public static ButtonBind ZoomIn = new();
-        public static ButtonBind ZoomOut = new();
-        public static ButtonBind Up = new();
-        public static ButtonBind Down = new();
-        public static ButtonBind Forward = new();
-        public static ButtonBind Back = new();
-        public static ButtonBind Right = new();
-        public static ButtonBind Left = new();
-        public static ButtonBind Pan = new();
-        public static ButtonBind Reset = new();
-    }
-
+    
     public static class Player
     {
-        public static ButtonBind Right = new();
-        public static ButtonBind Left = new();
-        public static ButtonBind Jump = new();
-        public static ButtonBind Fire1 = new();
-        public static ButtonBind Respawn = new();
-        public static ButtonBind MoveToMouse = new();
-
         public static PlayerCommand ToPlayerCommand()
         {
             var cmd = new PlayerCommand();
 
-            if (Right.Active)
+            var right = _actions[InputAction.Right];
+            var left = _actions[InputAction.Left];
+            var fire1 = _actions[InputAction.Fire1];
+            var respawn = _actions[InputAction.Respawn];
+            var jump = _actions[InputAction.Jump];
+            var moveToMouse = _actions[InputAction.MoveToMouse];
+            
+            if (right.Active)
                 cmd.MovementX += 1;
 
-            if (Left.Active)
+            if (left.Active)
                 cmd.MovementX += -1;
 
-            cmd.IsFiring = (!Fire1.WasActive && Fire1.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Fire1.Active;
-            cmd.Respawn = (!Respawn.WasActive && Respawn.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Respawn.Active;
-            cmd.IsJumpDown = Jump.Active;
-            cmd.IsJumpPressed = (!Jump.WasActive && Jump.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && Jump.Active;
-            cmd.MoveToMouse = MoveToMouse.Active;
+            cmd.IsFiring = (!fire1.WasActive && fire1.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && fire1.Active;
+            cmd.Respawn = (!respawn.WasActive && respawn.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && respawn.Active;
+            cmd.IsJumpDown = jump.Active;
+            cmd.IsJumpPressed = (!jump.WasActive && jump.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && jump.Active;
+            cmd.MoveToMouse = moveToMouse.Active;
 
             return cmd;
         }
     }
-    
+
     public const int MouseWheelUp = 0;
     public const int MouseWheelDown = 1;
 
     private static readonly Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
+
+    public static Dictionary<InputAction, ActionState> _actions = new();
 
     #region Key/Button Names
 
@@ -243,31 +251,33 @@ public static class Binds
             ("mwheeldown", "+cam_zoom_out"),
         };
 
-        // TODO (marpe): Cleanup
         var binds = new[]
         {
-            ("right", "Move right", Player.Right),
-            ("left", "Move left", Player.Left),
-            ("jump", "Jump", Player.Jump),
-            ("fire1", "Fire", Player.Fire1),
-            ("respawn", "Respawn", Player.Respawn),
-            ("mousemove", "Move to mouse", Player.MoveToMouse),
-            ("cam_zoom_in", "Increase camera zoom", Camera.ZoomIn),
-            ("cam_zoom_out", "Decrease camera zoom", Camera.ZoomOut),
-            ("cam_up", "Move camera up", Camera.Up),
-            ("cam_down", "Move camera down", Camera.Down),
-            ("cam_forward", "Move camera forward", Camera.Forward),
-            ("cam_back", "Move camera back", Camera.Back),
-            ("cam_left", "Move camera left", Camera.Left),
-            ("cam_right", "Move camera right", Camera.Right),
-            ("cam_reset", "Reset camera", Camera.Reset),
-            ("cam_pan", "Pan camera", Camera.Pan),
+            // player
+            ("right", "Move right", InputAction.Right),
+            ("left", "Move left", InputAction.Left),
+            ("jump", "Jump", InputAction.Jump),
+            ("fire1", "Fire", InputAction.Fire1),
+            ("respawn", "Respawn", InputAction.Respawn),
+            ("mousemove", "Move to mouse", InputAction.MoveToMouse),
+
+            // camera
+            ("cam_zoom_in", "Increase camera zoom", InputAction.ZoomIn),
+            ("cam_zoom_out", "Decrease camera zoom", InputAction.ZoomOut),
+            ("cam_up", "Move camera up", InputAction.Up),
+            ("cam_down", "Move camera down", InputAction.Down),
+            ("cam_forward", "Move camera forward", InputAction.Forward),
+            ("cam_back", "Move camera back", InputAction.Back),
+            ("cam_left", "Move camera left", InputAction.CameraLeft),
+            ("cam_right", "Move camera right", InputAction.CameraRight),
+            ("cam_reset", "Reset camera", InputAction.Reset),
+            ("cam_pan", "Pan camera", InputAction.Pan),
         };
 
         for (var i = 0; i < binds.Length; i++)
         {
-            var (cmd, description, bind) = binds[i];
-            RegisterConsoleCommandForBind(cmd, description, bind);
+            var (cmd, description, action) = binds[i];
+            RegisterConsoleCommandForAction(cmd, description, action);
         }
 
         for (var i = 0; i < defaultBinds.Length; i++)
@@ -284,8 +294,11 @@ public static class Binds
         };
     }
 
-    private static void RegisterConsoleCommandForBind(ReadOnlySpan<char> cmdName, ReadOnlySpan<char> description, ButtonBind bind)
+    private static void RegisterConsoleCommandForAction(ReadOnlySpan<char> cmdName, ReadOnlySpan<char> description, InputAction inputAction)
     {
+        // TODO (marpe): Cleanup
+        var bind = new ActionState();
+        _actions.Add(inputAction, bind);
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
             bind.WasActive = bind.Active;
@@ -307,11 +320,11 @@ public static class Binds
         Shared.Console.RegisterCommand(downCmd);
         Shared.Console.RegisterCommand(upCmd);
     }
-    
-      private static HashSet<int> _buttonsToClear = new();
 
-    private static Dictionary<int, ButtonBind> _buttons = new();
-    public static IReadOnlyDictionary<int, ButtonBind> Buttons => _buttons;
+    private static HashSet<int> _buttonsToClear = new();
+
+    private static Dictionary<int, ActionState> _buttons = new();
+    public static IReadOnlyDictionary<int, ActionState> Buttons => _buttons;
 
     private const int MOUSE_WHEEL_OFFSET = 200;
     private const int MOUSE_BUTTON_OFFSET = 100;
@@ -333,18 +346,18 @@ public static class Binds
 
     public static void UpdateButtonStates(in InputState inputState)
     {
-        void UpdateButton(ButtonBind button, bool isActive)
+        void UpdateButton(ActionState button, bool isActive)
         {
             button.WasActive = button.Active;
             button.Active = isActive;
             button.GameUpdateCount = Shared.Game.Time.UpdateCount;
         }
-        
+
         foreach (var key in inputState.KeysDown)
         {
             var buttonId = (int)key;
             if (!_buttons.ContainsKey(buttonId))
-                _buttons[buttonId] = new ButtonBind();
+                _buttons[buttonId] = new ActionState();
             UpdateButton(_buttons[buttonId], true);
         }
 
@@ -352,7 +365,7 @@ public static class Binds
         {
             var buttonId = (int)mouseButton + 100;
             if (!_buttons.ContainsKey(buttonId))
-                _buttons[buttonId] = new ButtonBind();
+                _buttons[buttonId] = new ActionState();
             UpdateButton(_buttons[buttonId], true);
         }
 
@@ -371,7 +384,7 @@ public static class Binds
             if (!isActive)
                 return;
 
-            _buttons[wheelId] = new ButtonBind();
+            _buttons[wheelId] = new ActionState();
             UpdateButton(_buttons[wheelId], true);
         }
 
@@ -550,5 +563,10 @@ public static class Binds
         }
 
         return sb;
+    }
+
+    public static ActionState GetAction(InputAction action)
+    {
+        return _actions[action];
     }
 }

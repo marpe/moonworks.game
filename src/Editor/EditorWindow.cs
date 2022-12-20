@@ -346,8 +346,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             DrawAutoRuleButton();
 
-            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
-            SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false));
+            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
+            SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
             SimpleTypeInspector.InspectColor("BackgroundColor", ref BackgroundColor);
             SimpleTypeInspector.InspectColor("StripeColor", ref StripeColor);
             SimpleTypeInspector.InspectColor("GridColor", ref GridColor);
@@ -856,6 +856,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
                 {
+                    if (ImGui.MenuItem("Clear", default))
+                    {
+                        ClearLayerInstance(layerInstance);
+                    }
                     ImGui.MenuItem("Copy", default);
                     ImGui.MenuItem("Cut", default);
                     ImGui.MenuItem("Duplicate", default);
@@ -926,6 +930,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             ImGui.TextDisabled("No layer selected");
         }
+    }
+
+    private static void ClearLayerInstance(LayerInstance layerInstance)
+    {
+        layerInstance.AutoLayerTiles.Clear();
+        layerInstance.EntityInstances.Clear();
+        layerInstance.IntGrid.AsSpan().Fill(0);
     }
 
     private void SelectFirstEntityDefinition()

@@ -38,7 +38,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
             var i = 0;
-            void DrawBind(string label, Binds.ButtonBind bind)
+            void DrawBind(string label, Binds.ActionState bind)
             {
                 ImGui.PushID(i);
                 i++;
@@ -98,16 +98,16 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
                 ImGui.TableHeadersRow();
 
-                DrawBind("ZoomIn", Binds.Camera.ZoomIn);
-                DrawBind("ZoomOut", Binds.Camera.ZoomOut);
-                DrawBind("Up", Binds.Camera.Up);
-                DrawBind("Down", Binds.Camera.Down);
-                DrawBind("Forward", Binds.Camera.Forward);
-                DrawBind("Back", Binds.Camera.Back);
-                DrawBind("Right", Binds.Camera.Right);
-                DrawBind("Left", Binds.Camera.Left);
-                DrawBind("Pan", Binds.Camera.Pan);
-                DrawBind("Reset", Binds.Camera.Reset);
+                DrawBind("ZoomIn", Binds.GetAction(Binds.InputAction.ZoomIn));
+                DrawBind("ZoomOut", Binds.GetAction(Binds.InputAction.ZoomOut));
+                DrawBind("Up", Binds.GetAction(Binds.InputAction.Up));
+                DrawBind("Down", Binds.GetAction(Binds.InputAction.Down));
+                DrawBind("Forward", Binds.GetAction(Binds.InputAction.Forward));
+                DrawBind("Back", Binds.GetAction(Binds.InputAction.Back));
+                DrawBind("Right", Binds.GetAction(Binds.InputAction.Right));
+                DrawBind("Left", Binds.GetAction(Binds.InputAction.Left));
+                DrawBind("Pan", Binds.GetAction(Binds.InputAction.Pan));
+                DrawBind("Reset", Binds.GetAction(Binds.InputAction.Reset));
 
                 ImGui.EndTable();
             }
@@ -118,12 +118,12 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
                 ImGui.TableHeadersRow();
 
-                DrawBind("Right", Binds.Player.Right);
-                DrawBind("Left", Binds.Player.Left);
-                DrawBind("Jump", Binds.Player.Jump);
-                DrawBind("Fire1", Binds.Player.Fire1);
-                DrawBind("Respawn", Binds.Player.Respawn);
-                DrawBind("MoveToMouse", Binds.Player.MoveToMouse);
+                DrawBind("Right", Binds.GetAction(Binds.InputAction.Right));
+                DrawBind("Left", Binds.GetAction(Binds.InputAction.Left));
+                DrawBind("Jump", Binds.GetAction(Binds.InputAction.Jump));
+                DrawBind("Fire1", Binds.GetAction(Binds.InputAction.Fire1));
+                DrawBind("Respawn", Binds.GetAction(Binds.InputAction.Respawn));
+                DrawBind("MoveToMouse", Binds.GetAction(Binds.InputAction.MoveToMouse));
 
                 ImGui.EndTable();
             }
