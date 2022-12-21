@@ -1708,7 +1708,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             GetIntDef(layerDef, cellValue, out var intDef);
             var color = intDef?.Color ?? Color.Red;
-            if (isSelected)
+            if (!isSelected)
                 color *= 0.5f;
 
             color *= IntGridAlpha;
