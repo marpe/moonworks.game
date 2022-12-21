@@ -56,13 +56,13 @@ public class InputHandler
 
     public Point MouseDelta => new(_inputs.Mouse.DeltaX, _inputs.Mouse.DeltaY);
 
-    public Point MousePosition
+    public Vector2 MousePosition
     {
         get
         {
             var mousePosition = new Vector2(_inputs.Mouse.X, _inputs.Mouse.Y);
             Vector2.Transform(ref mousePosition, ref _viewportInvert, out var mouseInViewport);
-            return mouseInViewport.ToPoint();
+            return mouseInViewport;
         }
     }
 

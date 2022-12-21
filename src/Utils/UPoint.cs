@@ -35,4 +35,5 @@ public record struct UPoint(uint X, uint Y)
     }
 
     public readonly Vector2 ToVec2() => new(X, Y);
+    public readonly Point ToPoint() => new((int)X, (int)Y);
 }

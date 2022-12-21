@@ -61,4 +61,9 @@ public static class NumericsExt
     {
         return new((int)self.X, (int)self.Y);
     }
+    
+    public static Num.Vector2 Round(this Num.Vector2 self)
+    {
+        return new(MathF.Round(self.X), MathF.Round(self.Y));
+    }
 }

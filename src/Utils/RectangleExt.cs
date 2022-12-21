@@ -2,6 +2,14 @@
 
 public static class RectangleExt
 {
+    public static bool Contains(this Rectangle rect, Vector2 value)
+    {
+        return rect.X <= value.X &&
+               value.X < rect.X + rect.Width &&
+               rect.Y <= value.Y &&
+               value.Y < rect.Y + rect.Height;
+    }
+
     public static Point Min(this Rectangle rect)
     {
         return new Point(rect.X, rect.Y);
@@ -26,7 +34,7 @@ public static class RectangleExt
     {
         return new Point(rect.X + rect.Width, rect.Y);
     }
-    
+
     public static Vector2 TopRightVec(this Rectangle rect)
     {
         return new Vector2(rect.X + rect.Width, rect.Y);
