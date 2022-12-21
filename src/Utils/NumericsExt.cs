@@ -56,4 +56,9 @@ public static class NumericsExt
     {
         return new(self.X, self.Y);
     }
+    
+    public static Point ToPoint(this Num.Vector2 self)
+    {
+        return new((int)self.X, (int)self.Y);
+    }
 }

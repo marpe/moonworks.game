@@ -1235,9 +1235,9 @@ public static unsafe class ImGuiExt
     {
         var avail = ImGui.GetContentRegionAvail();
         ImGui.Text(label);
-        ImGui.SameLine(0.33f * avail.X);
+        ImGui.SameLine(0.6f * avail.X);
         ImGui.Text($"{v.X:0.##}");
-        ImGui.SameLine(0.66f * avail.X);
+        ImGui.SameLine(0.875f * avail.X);
         ImGui.Text($"{v.Y:0.##}");
     }
 

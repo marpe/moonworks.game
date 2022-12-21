@@ -7,6 +7,12 @@ public static class Vector2Ext
     {
         return new Point((int)self.X, (int)self.Y);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static UPoint ToUPoint(this Vector2 self)
+    {
+        return new UPoint((uint)self.X, (uint)self.Y);
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 Floor(this Vector2 self)
@@ -18,6 +24,12 @@ public static class Vector2Ext
     public static Vector2 Ceil(this Vector2 self)
     {
         return new Vector2(MathF.Ceil(self.X), MathF.Ceil(self.Y));
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 Round(this Vector2 self)
+    {
+        return new Vector2(MathF.Round(self.X), MathF.Round(self.Y));
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

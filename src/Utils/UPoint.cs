@@ -13,6 +13,11 @@ public record struct UPoint(uint X, uint Y)
     {
         return new UPoint((uint)(p.X / n), (uint)(p.Y / n));
     }
+    
+    public static UPoint operator /(UPoint p, uint n)
+    {
+        return new UPoint(p.X / n, p.Y / n);
+    }
 
     public static implicit operator Point(UPoint p)
     {

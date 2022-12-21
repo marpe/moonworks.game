@@ -62,7 +62,7 @@ public unsafe class EntityDefWindow : SplitWindow
         return maxId;
     }
 
-    private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs, int gridSize)
+    private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs, uint gridSize)
     {
         if (ImGui.BeginTable("EntityDefTable", 1, TableFlags, new Vector2(0, 0)))
         {

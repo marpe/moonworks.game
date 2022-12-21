@@ -3,7 +3,7 @@
 public class RootJson
 {
     public string Version = "0.0.1";
-    public int DefaultGridSize = 16;
+    public uint DefaultGridSize = 16;
     public List<World> Worlds = new();
     public List<EntityDefinition> EntityDefinitions = new();
     public List<FieldDef> LevelFieldDefinitions = new();
@@ -165,7 +165,13 @@ public class Level
     public string Identifier = "Level";
     public uint Width;
     public uint Height;
-    [JsonIgnore] public UPoint Size => new(Width, Height);
+    
+    [JsonIgnore]
+    public UPoint Size
+    {
+        get => new(Width, Height);
+        set { Width = value.X; Height = value.Y; }
+    }
 
     [JsonIgnore] public Rectangle Bounds => new(WorldPos.X, WorldPos.Y, (int)Width, (int)Height);
 

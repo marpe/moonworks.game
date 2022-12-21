@@ -1,6 +1,5 @@
 ﻿using Mochi.DearImGui;
 using MyGame.WorldsRoot;
-using FieldInstance = MyGame.WorldsRoot.FieldInstance;
 using Level = MyGame.WorldsRoot.Level;
 using Vector2 = System.Numerics.Vector2;
 
@@ -43,7 +42,7 @@ public class LevelsWindow : SplitWindow
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
                 ImGui.PushID(i);
-                
+
                 var level = world.Levels[i];
 
                 var isSelected = SelectedLevelIndex == i;
@@ -200,28 +199,74 @@ public class LevelsWindow : SplitWindow
 
             if (layerDef.LayerType == LayerType.IntGrid)
             {
-                var old = new int[layer.IntGrid.Length];
-                Array.Copy(layer.IntGrid, old, layer.IntGrid.Length);
-
-                var oldCols = oldSize.X / layerDef.GridSize;
-                var oldRows = oldSize.Y / layerDef.GridSize;
-
-                var newCols = level.Width / layerDef.GridSize;
-                var newRows = level.Height / layerDef.GridSize;
-                layer.IntGrid = new int[newCols * newRows];
-
-                for (var y = 0; y < oldRows - 1; y++)
-                {
-                    for (var x = 0; x < oldCols - 1; x++)
-                    {
-                        if (y * newCols + x < layer.IntGrid.Length)
-                            layer.IntGrid[y * newCols + x] = old[y * oldCols + x];
-                    }
-                }
+                var oldGrid = oldSize / layerDef.GridSize;
+                var newGrid = level.Size / layerDef.GridSize;
+                ResizeLayer(ref layer.IntGrid, oldGrid, newGrid, Point.Zero);
             }
             else
             {
                 Array.Resize(ref layer.IntGrid, 0);
+            }
+            // TODO (marpe): Cleanup entities outside level etc
+        }
+    }
+
+    private static void ResizeLayer(ref int[] intGrid, UPoint oldGrid, UPoint newGrid, Point moveDelta)
+    {
+        if (oldGrid == newGrid && intGrid.Length == newGrid.X * newGrid.Y)
+            return;
+
+        var old = new int[intGrid.Length];
+        Array.Copy(intGrid, old, intGrid.Length);
+
+        intGrid = new int[newGrid.X * newGrid.Y];
+
+        for (var y = 0; y <= oldGrid.Y - 1; y++)
+        {
+            for (var x = 0; x <= oldGrid.X - 1; x++)
+            {
+                var newCx = x + moveDelta.X;
+                var newCy = y + moveDelta.Y;
+                var newGridId = newCy * newGrid.X + newCx;
+                if (newCx >= 0 && newCx < newGrid.X &&
+                    newCy >= 0 && newCy < newGrid.Y &&
+                    newGridId >= 0 && newGridId < intGrid.Length)
+                    intGrid[newGridId] = old[y * oldGrid.X + x];
+            }
+        }
+    }
+
+    public static void ResizeLevel(Level level, UPoint oldSize, UPoint newSize, Point moveDelta, uint gridSize)
+    {
+        if (oldSize == newSize)
+            return;
+
+        var oldGrid = oldSize / gridSize;
+        var newGrid = newSize / gridSize;
+
+        if (oldGrid == newGrid)
+            return;
+
+        for (var i = 0; i < level.LayerInstances.Count; i++)
+        {
+            var layer = level.LayerInstances[i];
+            if (layer.IntGrid.Length > 0)
+                ResizeLayer(ref layer.IntGrid, oldGrid, newGrid, moveDelta);
+
+            if (moveDelta.X == 0 && moveDelta.Y == 0)
+                continue;
+
+            for (var j = 0; j < layer.AutoLayerTiles.Count; j++)
+            {
+                var tile = layer.AutoLayerTiles[j];
+                tile.Cell = new UPoint((uint)(tile.Cell.X + moveDelta.X), (uint)(tile.Cell.Y + moveDelta.Y));
+                layer.AutoLayerTiles[j] = tile;
+            }
+
+            for (var j = 0; j < layer.EntityInstances.Count; j++)
+            {
+                var entity = layer.EntityInstances[j];
+                entity.Position += moveDelta * gridSize;
             }
         }
     }
