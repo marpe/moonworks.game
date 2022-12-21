@@ -403,6 +403,38 @@
                   },
                   "Width": 467,
                   "Height": 471
+                },
+                {
+                  "Iid": "edb4ddde-d233-4597-aa47-4d7b749e1ea5",
+                  "EntityDefId": 9,
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 29,
+                      "Value": 1.0
+                    },
+                    {
+                      "FieldDefId": 31,
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 33,
+                      "Value": "#FF9E31"
+                    },
+                    {
+                      "FieldDefId": 35,
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 37,
+                      "Value": 0.0
+                    }
+                  ],
+                  "Position": {
+                    "X": 160,
+                    "Y": 384
+                  },
+                  "Width": 16,
+                  "Height": 16
                 }
               ],
               "IsVisible": true
@@ -14233,7 +14265,7 @@
                     },
                     {
                       "FieldDefId": 33,
-                      "Value": "#FFA211"
+                      "Value": "#02FF2A"
                     },
                     {
                       "FieldDefId": 35,
@@ -14245,11 +14277,11 @@
                     }
                   ],
                   "Position": {
-                    "X": 112,
-                    "Y": 32
+                    "X": 96,
+                    "Y": 16
                   },
-                  "Width": 16,
-                  "Height": 16
+                  "Width": 64,
+                  "Height": 32
                 },
                 {
                   "Iid": "7fd8c844-9b3d-48f1-a05a-101b53acde04",
@@ -14516,17 +14548,6 @@
               "AutoLayerTiles": [],
               "EntityInstances": [
                 {
-                  "Iid": "d173648b-5298-44e9-aece-e3bef4b03dfb",
-                  "EntityDefId": 3,
-                  "FieldInstances": [],
-                  "Position": {
-                    "X": 80,
-                    "Y": 96
-                  },
-                  "Width": 8,
-                  "Height": 12
-                },
-                {
                   "Iid": "33b45c53-2909-4f2d-a1b0-2b611cd31b72",
                   "EntityDefId": 7,
                   "FieldInstances": [],
@@ -14602,6 +14623,17 @@
                   },
                   "Width": 16,
                   "Height": 16
+                },
+                {
+                  "Iid": "0b7be180-28d1-4301-96c2-67eebdf0ac57",
+                  "EntityDefId": 3,
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 80,
+                    "Y": 96
+                  },
+                  "Width": 8,
+                  "Height": 12
                 }
               ],
               "IsVisible": true
@@ -14706,9 +14738,9 @@
                 10,
                 0,
                 0,
-                0,
-                0,
-                0,
+                1,
+                1,
+                1,
                 0,
                 0,
                 0,
@@ -14771,8 +14803,8 @@
                 12,
                 0,
                 0,
-                0,
-                7,
+                1,
+                1,
                 12,
                 12,
                 12,
@@ -14992,7 +15024,7 @@
                   "TileId": 19,
                   "Cell": {
                     "X": 1,
-                    "Y": 9
+                    "Y": 8
                   }
                 },
                 {
@@ -15000,13 +15032,6 @@
                   "Cell": {
                     "X": 1,
                     "Y": 7
-                  }
-                },
-                {
-                  "TileId": 16,
-                  "Cell": {
-                    "X": 1,
-                    "Y": 8
                   }
                 },
                 {
@@ -15108,14 +15133,14 @@
                   }
                 },
                 {
-                  "TileId": 23,
+                  "TileId": 25,
                   "Cell": {
                     "X": 4,
                     "Y": 5
                   }
                 },
                 {
-                  "TileId": 23,
+                  "TileId": 25,
                   "Cell": {
                     "X": 4,
                     "Y": 6
@@ -15185,65 +15210,114 @@
                   }
                 },
                 {
-                  "TileId": 15,
-                  "Cell": {
-                    "X": 6,
-                    "Y": 1
-                  }
-                },
-                {
-                  "TileId": 15,
+                  "TileId": 39,
                   "Cell": {
                     "X": 7,
                     "Y": 5
                   }
                 },
                 {
-                  "TileId": 15,
+                  "TileId": 39,
                   "Cell": {
-                    "X": 13,
-                    "Y": 6
+                    "X": 8,
+                    "Y": 5
                   }
                 },
                 {
-                  "TileId": 15,
+                  "TileId": 39,
                   "Cell": {
-                    "X": 16,
-                    "Y": 6
+                    "X": 9,
+                    "Y": 5
                   }
                 },
                 {
-                  "TileId": 15,
+                  "TileId": 39,
                   "Cell": {
-                    "X": 16,
-                    "Y": 7
+                    "X": 0,
+                    "Y": 9
                   }
                 },
                 {
-                  "TileId": 15,
+                  "TileId": 39,
                   "Cell": {
-                    "X": 3,
-                    "Y": 10
+                    "X": 1,
+                    "Y": 9
                   }
                 },
                 {
                   "TileId": 15,
                   "Cell": {
                     "X": 5,
-                    "Y": 10
-                  }
-                },
-                {
-                  "TileId": 15,
-                  "Cell": {
-                    "X": 1,
-                    "Y": 11
+                    "Y": 1
                   }
                 },
                 {
                   "TileId": 15,
                   "Cell": {
                     "X": 3,
+                    "Y": 2
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 7,
+                    "Y": 2
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 8,
+                    "Y": 2
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 12,
+                    "Y": 2
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 3,
+                    "Y": 4
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 8,
+                    "Y": 9
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 12,
+                    "Y": 9
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 14,
+                    "Y": 10
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 3,
+                    "Y": 11
+                  }
+                },
+                {
+                  "TileId": 15,
+                  "Cell": {
+                    "X": 11,
                     "Y": 11
                   }
                 }
@@ -20038,7 +20112,7 @@
       "Width": 16,
       "Height": 16,
       "Identifier": "Light",
-      "FillOpacity": 0.08,
+      "FillOpacity": 0.5,
       "KeepAspectRatio": false,
       "ResizableX": true,
       "ResizableY": true,
