@@ -209,7 +209,17 @@ public class EntityInstance
     public Point Position;
     public uint Width;
     public uint Height;
-    [JsonIgnore] public UPoint Size => new(Width, Height);
+
+    [JsonIgnore]
+    public UPoint Size
+    {
+        get => new(Width, Height);
+        set
+        {
+            Width = value.X;
+            Height = value.Y;
+        }
+    }
 }
 
 public class EntityDefinition

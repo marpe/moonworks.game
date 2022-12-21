@@ -255,6 +255,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private int _entityPopupPos = 1;
     private bool _isInstancePopupOpen;
     private Point _startPos;
+    private Point _resizeEntityStartPos;
+    private UPoint _resizeEntityStartSize;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -1345,7 +1347,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             ImGui.SetCursorScreenPos(levelMin);
             ImGui.SetItemAllowOverlap();
-            if (ImGui.InvisibleButton("LevelButton", levelSize, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
+            if (ImGui.InvisibleButton("LevelButton", levelSize.EnsureNotZero(), (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
             {
                 LevelsWindow.SelectedLevelIndex = levelIndex;
             }
@@ -1551,42 +1553,49 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 fillColor = entityDef.Color;
                 outline = entityDef.Color;
             }
-
-            var iconMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
-            var iconMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + new Vector2(layerDef.GridSize));
-
+            
+            var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
+            var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
+            
+            var iconMin = boundsMin + (boundsMax - boundsMin) * 0.5f - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale;
+            var iconMax = iconMin + new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
+            
             fillColor = isSelected ? fillColor : fillColor * DeselectedLayerAlpha;
             dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, fillColor.PackedValue);
 
             if (isSelected)
             {
-                ImGui.SetCursorScreenPos(iconMin);
+                ImGui.SetCursorScreenPos(boundsMin);
                 ImGui.SetItemAllowOverlap();
-                if (ImGui.InvisibleButton("EntityButton", iconMax - iconMin))
+                var buttonSize = boundsMax - boundsMin;
+                if (ImGui.InvisibleButton("EntityButton", buttonSize.EnsureNotZero()))
                 {
-                    _selectedEntityInstanceIndex = k;
-                    _isInstancePopupOpen = true;
-                    _ignoreMouseInputUntilRelease = true;
                 }
 
                 if (ImGui.IsItemActivated())
                 {
+                    _selectedEntityInstanceIndex = k;
                     _startPos = entityInstance.Position;
+                    
+                    _isInstancePopupOpen = true;
+                    _ignoreMouseInputUntilRelease = true;
                 }
 
                 if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
                 {
-                    entityInstance.Position = _startPos + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint();
+                    var newPos = _startPos + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint() + entityInstance.Size * entityDef.Pivot;
+                    var (snapped, _) = SnapToGrid(newPos, layerDef.GridSize);
+                    entityInstance.Position = snapped.ToPoint();
                 }
 
                 if (_selectedEntityInstanceIndex == k)
                 {
-                    dl->AddRect(iconMin, iconMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
-                    _resizeEntity.Draw(iconMin, iconMax, _gameRenderScale * 2f);
+                    dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
+                    HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance);
                 }
                 else if (ImGui.IsItemHovered())
                 {
-                    dl->AddRect(iconMin, iconMax, Color.CornflowerBlue.MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
+                    dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
                 }
 
                 /*if (ImGui.BeginPopupContextItem("EntityInstanceContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
@@ -1614,6 +1623,47 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (instanceToRemove != -1)
         {
             layer.EntityInstances.RemoveAt(instanceToRemove);
+        }
+    }
+
+    private void HandleEntityResize(uint gridSize, Num.Vector2 min, Num.Vector2 max, EntityInstance entityInstance)
+    {
+        var state = _resizeEntity.Draw(min, max, _gameRenderScale * 2f);
+
+        if (state == ToolState.Started)
+        {
+            _resizeEntityStartPos = entityInstance.Position;
+            _resizeEntityStartSize = entityInstance.Size;
+        }
+
+        if (_resizeEntity.State == ToolState.Started ||
+            _resizeEntity.State == ToolState.Active ||
+            _resizeEntity.State == ToolState.Ended)
+        {
+            var sizeDelta = _resizeEntity.TotSizeDelta.ToVec2() / _gameRenderScale;
+            var gridSizeDelta = (sizeDelta / gridSize).Round();
+            var newSize = (_resizeEntityStartSize + gridSizeDelta * gridSize).ToUPoint();
+
+            if (newSize != entityInstance.Size)
+            {
+                var startPos = _resizeEntityStartPos;
+                var newX = _resizeEntity.ActiveHandle switch
+                {
+                    RectHandlePos.TopLeft or RectHandlePos.Left or RectHandlePos.BottomLeft => (int)(startPos.X - (gridSizeDelta.X * gridSize)),
+                    _ => entityInstance.Position.X,
+                };
+
+                var newY = _resizeEntity.ActiveHandle switch
+                {
+                    RectHandlePos.TopLeft or RectHandlePos.Top or RectHandlePos.TopRight => (int)(startPos.Y - (gridSizeDelta.Y * gridSize)),
+                    _ => entityInstance.Position.Y,
+                };
+
+                var newPos = new Point(newX, newY);
+
+                entityInstance.Position = newPos;
+                entityInstance.Size = newSize;
+            }
         }
     }
 
