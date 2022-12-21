@@ -72,8 +72,11 @@ public unsafe class ResizeTool : Tool
         new(0.5f, 0.5f),
     };
 
-    public ToolState Draw(Num.Vector2 min, Num.Vector2 max, float handleRadius)
+    public ToolState Draw(Num.Vector2 min, Num.Vector2 max, float handleRadius, bool enableX, bool enableY)
     {
+        if (enableX == false && enableY == false)
+            return ToolState.Inactive;
+        
         var size = max - min;
         var center = min + size * 0.5f;
         var padding = new Num.Vector2(20, 20);
@@ -82,13 +85,18 @@ public unsafe class ResizeTool : Tool
 
         for (var i = 0; i < _handlePositions.Length; i++)
         {
+            var handle = _handlePositions[i];
+            if (!enableX && IsXHandle(handle))
+                continue;
+            if (!enableY && IsYHandle(handle))
+                continue;
+            
             ImGui.PushID(i);
             var x = i % _handlePositions.Length;
             var y = i / _handlePositions.Length;
 
             var dl = ImGui.GetWindowDrawList();
 
-            var handle = _handlePositions[i];
             var pivot = _pivots[i];
 
             var handlePos = (center + (size + padding) * pivot);
@@ -1396,7 +1404,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void HandleLevelResize(Level level, Num.Vector2 min, Num.Vector2 max, uint gridSize)
     {
-        var state = _resizeLevel.Draw(min, max, _gameRenderScale * 5f);
+        var state = _resizeLevel.Draw(min, max, _gameRenderScale * 5f, true, true);
 
         if (state == ToolState.Started)
         {
@@ -1591,7 +1599,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 if (_selectedEntityInstanceIndex == k)
                 {
                     dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
-                    HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance);
+                    HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
                 }
                 else if (ImGui.IsItemHovered())
                 {
@@ -1626,9 +1634,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
-    private void HandleEntityResize(uint gridSize, Num.Vector2 min, Num.Vector2 max, EntityInstance entityInstance)
+    private void HandleEntityResize(uint gridSize, Num.Vector2 min, Num.Vector2 max, EntityInstance entityInstance, EntityDefinition entityDef)
     {
-        var state = _resizeEntity.Draw(min, max, _gameRenderScale * 2f);
+        var state = _resizeEntity.Draw(min, max, _gameRenderScale * 2f, entityDef.ResizableX, entityDef.ResizableY);
 
         if (state == ToolState.Started)
         {

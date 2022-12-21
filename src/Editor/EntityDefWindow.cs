@@ -171,6 +171,14 @@ public unsafe class EntityDefWindow : SplitWindow
                 entityDef.Color = entityDef.Color;
             }
 
+            SimpleTypeInspector.InspectFloat("FillOpacity", ref entityDef.FillOpacity, new RangeSettings(0, 1, 0.1f, false));
+            SimpleTypeInspector.InspectBool("ResizableX", ref entityDef.ResizableX);
+            SimpleTypeInspector.InspectBool("ResizableY", ref entityDef.ResizableY);
+            ImGui.BeginDisabled(!entityDef.ResizableX || !entityDef.ResizableY);
+            SimpleTypeInspector.InspectBool("KeepAspectRatio", ref entityDef.KeepAspectRatio);
+            ImGui.EndDisabled();
+            SimpleTypeInspector.InspectBool("ShowName", ref entityDef.ShowName);
+
             var (pivotX, pivotY) = (entityDef.PivotX, entityDef.PivotY);
             if (ImGuiExt.PivotPointEditor("Pivot Point", ref pivotX, ref pivotY, 40, entityDef.Color.PackedValue))
             {
