@@ -1543,12 +1543,15 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var sprite = _editor.Renderer.BlankSprite;
             Matrix4x4 entityTransform;
             Color fillColor;
+            Color iconTint = Color.White;
             Color outline;
             var uvMin = Num.Vector2.Zero;
             var uvMax = Num.Vector2.One;
             if (tileSetDef != null)
             {
-                fillColor = Color.White;
+                var colorField = entityInstance.FieldInstances.FirstOrDefault(x => x.Value is Color);
+                fillColor = colorField != null ? (Color)colorField.Value! : entityDef.Color;
+                iconTint = colorField != null ? (Color)colorField.Value! : Color.White;
                 outline = entityDef.Color;
 
                 var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
@@ -1567,9 +1570,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             
             var iconMin = boundsMin + (boundsMax - boundsMin) * 0.5f - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale;
             var iconMax = iconMin + new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
-            
+
+            fillColor *= entityDef.FillOpacity;
             fillColor = isSelected ? fillColor : fillColor * DeselectedLayerAlpha;
-            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, fillColor.PackedValue);
+            iconTint = isSelected ? iconTint : iconTint * DeselectedLayerAlpha;
+            dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
+            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
 
             if (isSelected)
             {
