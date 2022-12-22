@@ -1134,7 +1134,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         }
 
                         ImGui.SameLine(0, 0);
-                        
+
                         var dl = ImGui.GetWindowDrawList();
                         var rectHeight = _rowMinHeight * 0.6f;
                         var min = cursorPos + new System.Numerics.Vector2(8, (_rowMinHeight - rectHeight) / 2);
@@ -1338,6 +1338,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         // draw grid
         var gridSize = _editor.RootJson.DefaultGridSize;
+
+        if (isSelectedLevel)
         {
             var gridMin = GetWorldPosInScreen(level.WorldPos);
             var gridMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2());
@@ -1393,7 +1395,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 ImGui.IsItemClicked(),
                 ImGui.IsItemFocused()
             );
-            
+
             DrawMoveLevelButton(level, min, max);
         }
 
@@ -1461,7 +1463,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
         }
     }
-    
+
     private static (Vector2 snapped, Point cell) SnapToGrid(Point position, uint gridSize)
     {
         return SnapToGrid(position.X, position.Y, gridSize);
@@ -1606,11 +1608,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         var instance = DuplicateInstance(entityInstance);
                         layer.EntityInstances.Add(instance);
                     }
-               
+
                     {
                         _selectedEntityInstanceIndex = k;
                         _startPos = entityInstance.Position;
-                        _isInstancePopupOpen = true;   
+                        _isInstancePopupOpen = true;
                     }
                 }
 
@@ -1625,7 +1627,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
                     HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
-                    
+
                     // DrawMoveEntityButton(entityInstance, boundsMin, boundsMax);
                 }
                 else if (ImGui.IsItemHovered())
@@ -1672,10 +1674,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     {
         var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
         ImGui.SetCursorScreenPos(
-            boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 2 * moveButtonSize.Y));
-        if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsUpDownLeftRight, Color.White, Color.Black, moveButtonSize, "Move"))
+            boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 3 * moveButtonSize.Y));
+
+        var wasHovered = ImGui.GetCurrentContext()->HoveredIdPreviousFrame == ImGui.GetID("##MoveLevel");
+        if (wasHovered)
+        {
+            ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeAll);
+        }
+        if (ImGuiExt.ColoredButton("##MoveLevel", Color.White, Color.Black.MultiplyAlpha(wasHovered ? 1.0f : 0.66f), moveButtonSize, "Move"))
         {
         }
+
+        var dl = ImGui.GetWindowDrawList();
+        var iconText = FontAwesome6.ArrowsUpDownLeftRight;
+        var iconSize = ImGui.GetFontSize() * _gameRenderScale * 0.33f;
+        var iconPos = ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * 0.5f - new Num.Vector2(iconSize * 0.45f, iconSize * 0.5f);
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.Medium), iconSize, iconPos, Color.White.PackedValue, iconText, 0, default);
 
         if (ImGui.IsItemActivated())
         {
@@ -1689,7 +1703,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             level.WorldPos = newPos.ToPoint();
         }
     }
-    
+
     private static void DrawMoveEntityButton(EntityInstance entity, Num.Vector2 boundsMin, Num.Vector2 boundsMax)
     {
         var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
@@ -2087,7 +2101,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (position.X >= instance.Position.X &&
                 position.X < instance.Position.X + instance.Size.X &&
                 position.Y >= instance.Position.Y &&
-                position.Y < instance.Position.Y + + instance.Size.Y)
+                position.Y < instance.Position.Y + +instance.Size.Y)
             {
                 entity = instance;
                 return i;
