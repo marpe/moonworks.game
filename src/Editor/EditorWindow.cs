@@ -269,6 +269,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private static Point _moveEntityStart;
     private static Point _moveLevelStart;
 
+    private List<EntityInstance> _hoveringEntities = new();
+
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
         KeyboardShortcut = "^E";
@@ -1304,6 +1306,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGui.PopID();
         }
 
+        DrawHoveredEntitiesMenu();
+        
         DrawMouse(btnState);
 
         /*foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
@@ -1324,6 +1328,59 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     renderer.DrawSprite(sprite, transform, Color.White);
                 }
             }*/
+    }
+
+    private void DrawHoveredEntitiesMenu()
+    {
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+            return;
+        
+        if (ImGui.IsKeyPressed(ImGuiKey.Space))
+        {
+            ImGui.OpenPopup("HoveringEntitiesPopup");
+        }
+
+        var dl = ImGui.GetWindowDrawList();
+        if (ImGui.BeginPopup("HoveringEntitiesPopup"))
+        {
+            for (var i = 0; i < _hoveringEntities.Count; i++)
+            {
+                ImGui.PushID(i);
+                var instance = _hoveringEntities[i];
+                string label;
+                if (GetEntityDef(instance.EntityDefId, out var def))
+                {
+                    label = def.Identifier;
+                }
+                else
+                {
+                    label = "Missing Entity Definition";
+                }
+
+                if (ImGui.MenuItem(label, default))
+                {
+                    _selectedEntityInstanceIndex = layerInstance.EntityInstances.IndexOf(instance);
+                    _isInstancePopupOpen = true;
+                }
+
+                if (ImGui.IsItemHovered())
+                {
+                    var boundsMin = GetWorldPosInScreen(level.WorldPos + instance.Position);
+                    var boundsMax = GetWorldPosInScreen(level.WorldPos + instance.Position + instance.Size.ToPoint());
+                    dl->AddRect(boundsMin, boundsMax, Color.Red.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 4f);
+                }
+
+                ImGui.PopID();
+            }
+
+            ImGui.EndPopup();
+        }
+        
+        if (!ImGui.IsPopupOpen("HoveringEntitiesPopup"))
+        {
+            var (mouseSnappedToGrid, mouseCell, mouseInLevel) = GetMouseInLevel(level);
+            GetEntitiesAtPosition(mouseInLevel, layerInstance.EntityInstances, _hoveringEntities);
+        }
     }
 
     private void DrawLevel(Level level, int levelIndex)
@@ -1681,6 +1738,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeAll);
         }
+
         if (ImGuiExt.ColoredButton("##MoveLevel", Color.White, Color.Black.MultiplyAlpha(wasHovered ? 1.0f : 0.66f), moveButtonSize, "Move"))
         {
         }
@@ -1872,8 +1930,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (!GetTileSetDef(entityDef.TileSetDefId, out var tileSetDef))
                 return;
 
-            var hoveringEntityIndex = GetEntityAtPosition(mouseInLevel, layerDef.GridSize, layerInstance.EntityInstances, out var hoveredEntity);
-
             if (_isAdding)
             {
                 if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
@@ -1882,7 +1938,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     return;
                 }
 
-                if (hoveringEntityIndex == -1)
+                if (_hoveringEntities.Count == 0)
                 {
                     layerInstance.EntityInstances.Add(CreateNewEntityInstance(mouseSnappedToGrid.ToPoint(), entityDef));
                     Logs.LogInfo($"Adding..: {Shared.Game.Time.UpdateCount}");
@@ -1891,11 +1947,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 return;
             }
 
-            if (hoveringEntityIndex != -1 && hoveredEntity != null)
+            if (_hoveringEntities.Count > 0)
             {
                 if (!ImGui.IsAnyItemActive() && ImGui.IsMouseDown(ImGuiMouseButton.Right))
                 {
-                    layerInstance.EntityInstances.RemoveAt(hoveringEntityIndex);
+                    for (var i = 0; i < _hoveringEntities.Count; i++)
+                    {
+                        layerInstance.EntityInstances.Remove(_hoveringEntities[i]);
+                    }
+
+                    _hoveringEntities.Clear();
                 }
 
                 return;
@@ -2093,7 +2154,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         return false;
     }
 
-    private static int GetEntityAtPosition(Vector2 position, uint gridSize, List<EntityInstance> entities, out EntityInstance? entity)
+    private static void GetEntitiesAtPosition(Vector2 position, List<EntityInstance> entities, List<EntityInstance> results)
+    {
+        results.Clear();
+
+        for (var i = 0; i < entities.Count; i++)
+        {
+            var instance = entities[i];
+            if (position.X >= instance.Position.X &&
+                position.X < instance.Position.X + instance.Size.X &&
+                position.Y >= instance.Position.Y &&
+                position.Y < instance.Position.Y + +instance.Size.Y)
+            {
+                results.Add(instance);
+            }
+        }
+    }
+
+    private static int GetEntityAtPosition(Vector2 position, List<EntityInstance> entities, out EntityInstance? entity)
     {
         for (var i = 0; i < entities.Count; i++)
         {
