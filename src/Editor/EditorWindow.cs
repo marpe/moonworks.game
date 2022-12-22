@@ -1601,10 +1601,17 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 if (ImGui.IsItemActivated())
                 {
-                    _selectedEntityInstanceIndex = k;
-                    _startPos = entityInstance.Position;
-
-                    _isInstancePopupOpen = true;
+                    if (ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift))
+                    {
+                        var instance = DuplicateInstance(entityInstance);
+                        layer.EntityInstances.Add(instance);
+                    }
+               
+                    {
+                        _selectedEntityInstanceIndex = k;
+                        _startPos = entityInstance.Position;
+                        _isInstancePopupOpen = true;   
+                    }
                 }
 
                 if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
@@ -1652,6 +1659,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             layer.EntityInstances.RemoveAt(instanceToRemove);
         }
+    }
+
+    private static EntityInstance DuplicateInstance(EntityInstance entityInstance)
+    {
+        var serialized = JsonConvert.SerializeObject(entityInstance, ContentManager.JsonSerializerSettings);
+        var copy = JsonConvert.DeserializeObject<EntityInstance>(serialized, ContentManager.JsonSerializerSettings) ?? throw new Exception();
+        return copy;
     }
 
     private static void DrawMoveLevelButton(Level level, Num.Vector2 boundsMin, Num.Vector2 boundsMax)

@@ -101,6 +101,7 @@ public class PlayerBehaviour
         if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
         {
             Player.IsJumping = false;
+            Player.Squash = new Vector2(1.5f, 0.5f);
         }
 
         if (Player.Velocity.X > 0)

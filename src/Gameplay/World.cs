@@ -51,6 +51,7 @@ public class World
     public RootJson Root = new();
     public Level Level = new();
     public bool DrawBackground = true;
+    private static Dictionary<string, string> _cachedPaths = new();
 
     public World()
     {
@@ -174,7 +175,7 @@ public class World
                 entity.Iid = entityInstance.Iid;
                 entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
                 entity.Size = entityInstance.Size;
-                entity.Position = new Position(level.WorldPos + entityInstance.Position - entity.Pivot * entity.Size);
+                entity.Position = new Position(level.WorldPos + entityInstance.Position/* - entity.Pivot * entity.Size*/);
                 entity.SmartColor = entityDef.Color;
 
                 foreach (var field in entityInstance.FieldInstances)
@@ -434,13 +435,41 @@ public class World
         }
     }
 
+    // TODO (marpe): Cleanup and merge with SplitWindow.GetTileSetTexture()
+    private static Texture GetTileSetTexture(string tileSetPath)
+    {
+        if (!_cachedPaths.TryGetValue(tileSetPath, out var path))
+        {
+            var worldFileDir = Path.GetDirectoryName(ContentPaths.worlds.worlds_json);
+            path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
+            _cachedPaths.Add(tileSetPath, path);
+        }
+        
+        Texture texture;
+
+        if (Shared.Content.HasTexture(path))
+        {
+            texture = Shared.Content.GetTexture(path);
+            return texture;
+        }
+
+        if ((path.EndsWith(".png") || path.EndsWith(".aseprite")) && File.Exists(path))
+        {
+            Shared.Content.LoadAndAddTextures(new[] { path });
+            texture = Shared.Content.GetTexture(path);
+            return texture;
+        }
+
+        return Shared.Game.Renderer.BlankSprite.Texture;
+    }
+    
     private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
         var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
         var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
 
         var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
-        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+        var texture = GetTileSetTexture(tileSetDef.Path);
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {

@@ -70,12 +70,16 @@ public partial class Entity
 
         foreach (var layer in World.Level.LayerInstances)
         {
-            var layerDef = World.GetLayerDefinition(_world!.Root, layer.LayerDefId);
+            var layerDef = World.GetLayerDefinition(World.Root, layer.LayerDefId);
             if (layerDef.Identifier != "Tiles" || layerDef.LayerType != LayerType.IntGrid)
                 continue;
 
             var (ix, iy) = (x - levelMin.X, y - levelMin.Y);
-            var value = layer.IntGrid[iy * levelGridSize.X + ix];
+            var gridId = iy * levelGridSize.X + ix;
+            if (gridId < 0 || gridId > layer.IntGrid.Length - 1) // TODO (marpe): Check which scenarios this occurs 
+                continue;
+            
+            var value = layer.IntGrid[gridId];
             if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
                 return true;
         }

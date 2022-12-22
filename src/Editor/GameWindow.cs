@@ -132,7 +132,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             ImGui.InvisibleButton(
                 "GameRender",
                 gameRenderSize.EnsureNotZero(),
-                ImGuiButtonFlags.MouseButtonLeft |
+                // ImGuiButtonFlags.MouseButtonLeft |
                 ImGuiButtonFlags.MouseButtonMiddle |
                 ImGuiButtonFlags.MouseButtonRight
             );

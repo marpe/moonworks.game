@@ -39,6 +39,9 @@ public class MyGameMain : Game
     private bool _hasRenderedConsole;
     public DebugRenderTarget DebugRenderTarget = DebugRenderTarget.None;
 
+    [CVar("lights_enabled", "Toggle lights")]
+    public static bool LightsEnabled = true;
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -325,7 +328,9 @@ public class MyGameMain : Game
         var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
 
-        World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
+
+        if (LightsEnabled)
+            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
 
 
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);
