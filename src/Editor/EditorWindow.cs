@@ -76,7 +76,7 @@ public unsafe class ResizeTool : Tool
     {
         if (enableX == false && enableY == false)
             return ToolState.Inactive;
-        
+
         var size = max - min;
         var center = min + size * 0.5f;
         var padding = new Num.Vector2(20, 20);
@@ -90,7 +90,7 @@ public unsafe class ResizeTool : Tool
                 continue;
             if (!enableY && IsYHandle(handle))
                 continue;
-            
+
             ImGui.PushID(i);
             var x = i % _handlePositions.Length;
             var y = i / _handlePositions.Length;
@@ -214,6 +214,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     const string SelectedEntityPopupName = "SelectedEntityInstance";
     public const string WindowTitle = "EditorTabs";
     private const string PreviewWindowTitle = "Editor";
+    private const string EditorSettingsWindowTitle = "EditorSettings";
+
     private static int _rowMinHeight = 60;
 
     [CVar("editor.deselected_layer_alpha", "")]
@@ -259,12 +261,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private ButtonState btnState = new();
     private Point _resizeStartPos;
     private UPoint _resizeStartSize;
-    private bool _ignoreMouseInputUntilRelease;
     private int _entityPopupPos = 1;
     private bool _isInstancePopupOpen;
     private Point _startPos;
     private Point _resizeEntityStartPos;
     private UPoint _resizeEntityStartSize;
+    private static Point _moveEntityStart;
+    private static Point _moveLevelStart;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -337,6 +340,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, dockSpaceId);
             ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockSpaceId);
             ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockSpaceId);
+            ImGuiInternal.DockBuilderDockWindow(EditorSettingsWindowTitle, dockSpaceId);
             ImGuiInternal.DockBuilderDockWindow("CurrentLevelWindow", dockSpaceId);
         }
 
@@ -353,6 +357,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         DrawEditorWindow();
+
+        DrawEditorSettings();
 
         DrawCurrentLevelData();
     }
@@ -461,29 +467,34 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (ImGui.Begin("CurrentLevelWindow", default, windowFlags))
         {
             DrawLayersInSelectedLevel();
-
-            DrawCleanButton();
-
-            DrawAutoRuleButton();
-
-            SimpleTypeInspector.InspectBool("_isInstancePopupOpen", ref _isInstancePopupOpen);
-            SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
-            SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
-            SimpleTypeInspector.InspectColor("BackgroundColor", ref BackgroundColor);
-            SimpleTypeInspector.InspectColor("StripeColor", ref StripeColor);
-            SimpleTypeInspector.InspectColor("GridColor", ref GridColor);
-            SimpleTypeInspector.InspectFloat("GridThickness", ref GridThickness, new RangeSettings(0, 10, 0.25f, false));
-            SimpleTypeInspector.InspectFloat("CameraScale", ref _gameRenderScale, new RangeSettings(0.001f, 10, 0.25f, false));
-            SimpleTypeInspector.InspectNumVector2("CameraPos", ref _gameRenderPosition);
-
-
-            ImGui.Separator();
-            ImGui.PushTextWrapPos();
-            ImGui.Text($"SelectedInstanceIndex: {_selectedEntityInstanceIndex}");
-            ImGui.Text(btnState.ToString());
-            ImGui.Text(MyEditorMain.ActiveInput.ToString());
-            ImGui.PopTextWrapPos();
         }
+
+        ImGui.End();
+    }
+
+    private void DrawEditorSettings()
+    {
+        var windowFlags = ImGuiWindowFlags.NoCollapse; /*|
+                          ImGuiWindowFlags.NoTitleBar |
+                          ImGuiWindowFlags.NoDecoration;*/
+        ImGui.SetNextWindowSize(new Num.Vector2(200, 200), ImGuiCond.Appearing);
+        var result = ImGui.Begin(EditorSettingsWindowTitle, default, windowFlags);
+        if (!result)
+        {
+            ImGui.End();
+            return;
+        }
+
+        DrawCleanButton();
+
+        SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
+        SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
+        SimpleTypeInspector.InspectColor("BackgroundColor", ref BackgroundColor);
+        SimpleTypeInspector.InspectColor("StripeColor", ref StripeColor);
+        SimpleTypeInspector.InspectColor("GridColor", ref GridColor);
+        SimpleTypeInspector.InspectFloat("GridThickness", ref GridThickness, new RangeSettings(0, 10, 0.25f, false));
+        SimpleTypeInspector.InspectFloat("CameraScale", ref _gameRenderScale, new RangeSettings(0.001f, 10, 0.25f, false));
+        SimpleTypeInspector.InspectNumVector2("CameraPos", ref _gameRenderPosition);
 
         ImGui.End();
     }
@@ -555,14 +566,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 LayerGridSize = layerDef.GridSize,
             }
         );
-    }
-
-    private void DrawAutoRuleButton()
-    {
-        if (ImGuiExt.ColoredButton("Apply Rules", new System.Numerics.Vector2(-ImGuiExt.FLT_MIN, 0)))
-        {
-            ApplyIntGridAutoRules();
-        }
     }
 
     private void ApplyIntGridAutoRules()
@@ -639,7 +642,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawCleanButton()
     {
-        if (ImGuiExt.ColoredButton("Cleanup!", new System.Numerics.Vector2(-ImGuiExt.FLT_MIN, 0)))
+        if (ImGuiExt.ColoredButton("Cleanup", new System.Numerics.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
             for (var i = 0; i < _editor.RootJson.Worlds.Count; i++)
             {
@@ -705,13 +708,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                         for (var l = layerInstance.EntityInstances.Count - 1; l >= 0; l--)
                         {
                             var entity = layerInstance.EntityInstances[l];
-                            if (entity.Position.X < 0 || entity.Position.X + entity.Size.X > level.Width ||
+                            /*if (entity.Position.X < 0 || entity.Position.X + entity.Size.X > level.Width ||
                                 entity.Position.Y < 0 || entity.Position.Y + entity.Size.Y > level.Height)
                             {
                                 Logs.LogWarn("Removing entity instance since it's outside the level bounds");
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
-                            }
+                            }*/
 
                             var cellX = (int)(entity.Position.X / (float)layerDef.GridSize);
                             var cellY = (int)(entity.Position.Y / (float)layerDef.GridSize);
@@ -739,13 +742,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                             gridDictionary.Add((cellX, cellY), entity);
 
-                            if (entity.Width != entityDef.Width)
+                            if (entity.Width != entityDef.Width && !entityDef.ResizableX)
                             {
                                 Logs.LogWarn("Resetting entity instance width to entity definition");
                                 entity.Width = entityDef.Width;
                             }
 
-                            if (entity.Height != entityDef.Height)
+                            if (entity.Height != entityDef.Height && !entityDef.ResizableY)
                             {
                                 Logs.LogWarn("Resetting entity instance height to entity definition");
                                 entity.Height = entityDef.Height;
@@ -1093,6 +1096,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (IsExcluded(entityDef, layerDef))
                 continue;
             _selectedEntityDefinitionIndex = i;
+            _selectedEntityInstanceIndex = -1;
             return;
         }
     }
@@ -1129,6 +1133,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                             selectedIntGridValueIndex = i;
                         }
 
+                        ImGui.SameLine(0, 0);
+                        
                         var dl = ImGui.GetWindowDrawList();
                         var rectHeight = _rowMinHeight * 0.6f;
                         var min = cursorPos + new System.Numerics.Vector2(8, (_rowMinHeight - rectHeight) / 2);
@@ -1328,7 +1334,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         dl->AddRectFilled(levelMin, levelMax, level.BackgroundColor.PackedValue);
 
-        var isSelected = levelIndex == LevelsWindow.SelectedLevelIndex;
+        var isSelectedLevel = levelIndex == LevelsWindow.SelectedLevelIndex;
 
         // draw grid
         var gridSize = _editor.RootJson.DefaultGridSize;
@@ -1339,9 +1345,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         // draw outer level border
-        if (isSelected)
+        if (isSelectedLevel)
         {
-            var color = isSelected ? Color.CornflowerBlue : Color.Red;
+            var color = isSelectedLevel ? Color.CornflowerBlue : Color.Red;
 
             var thickness = 2f * _gameRenderScale;
             var padding = new Vector2(thickness * 0.5f / _gameRenderScale);
@@ -1351,7 +1357,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         var levelSize = levelMax - levelMin;
-        if (!isSelected)
+        if (!isSelectedLevel)
         {
             ImGui.SetCursorScreenPos(levelMin);
             ImGui.SetItemAllowOverlap();
@@ -1387,9 +1393,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 ImGui.IsItemClicked(),
                 ImGui.IsItemFocused()
             );
+            
+            DrawMoveLevelButton(level, min, max);
         }
 
-        DrawLayerInstances(dl, level, isSelected);
+        DrawLayerInstances(dl, level, isSelectedLevel);
     }
 
     private void DrawLevelSizeLabel(Level level, ImDrawList* dl, System.Numerics.Vector2 xLabelPos)
@@ -1453,13 +1461,18 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
         }
     }
-
-    private (Vector2 snapped, Point cell) SnapToGrid(Vector2 position, uint gridSize)
+    
+    private static (Vector2 snapped, Point cell) SnapToGrid(Point position, uint gridSize)
     {
         return SnapToGrid(position.X, position.Y, gridSize);
     }
 
-    private (Vector2 snapped, Point cell) SnapToGrid(Num.Vector2 position, uint gridSize)
+    private static (Vector2 snapped, Point cell) SnapToGrid(Vector2 position, uint gridSize)
+    {
+        return SnapToGrid(position.X, position.Y, gridSize);
+    }
+
+    private static (Vector2 snapped, Point cell) SnapToGrid(Num.Vector2 position, uint gridSize)
     {
         return SnapToGrid(position.X, position.Y, gridSize);
     }
@@ -1481,24 +1494,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (!layer.IsVisible)
                 continue;
 
-            var isSelected = _selectedLayerInstanceIndex == i;
+            var isSelectedLayer = _selectedLayerInstanceIndex == i;
             if (!GetLayerDefinition(layer.LayerDefId, out var layerDef))
                 continue;
 
             if (layerDef.LayerType == LayerType.IntGrid)
             {
-                DrawIntGridLayer(dl, level, layerDef, layer, isSelected);
+                DrawIntGridLayer(dl, level, layerDef, layer, isSelectedLayer);
 
                 if (isSelectedLevel)
                 {
-                    DrawAutoLayerTiles(dl, level, layerDef, layer, isSelected);
+                    DrawAutoLayerTiles(dl, level, layerDef, layer, isSelectedLayer);
                 }
             }
             else if (layerDef.LayerType == LayerType.Entities)
             {
                 if (isSelectedLevel)
                 {
-                    DrawEntityLayer(dl, level, layer, layerDef, isSelected);
+                    DrawEntityLayer(dl, level, layer, layerDef, isSelectedLayer);
                 }
             }
         }
@@ -1522,7 +1535,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     }
 
 
-    private void DrawEntityLayer(ImDrawList* dl, Level level, LayerInstance layer, LayerDef layerDef, bool isSelected)
+    private void DrawEntityLayer(ImDrawList* dl, Level level, LayerInstance layer, LayerDef layerDef, bool isSelectedLayer)
     {
         var instanceToRemove = -1;
         for (var k = 0; k < layer.EntityInstances.Count; k++)
@@ -1564,20 +1577,20 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 fillColor = entityDef.Color;
                 outline = entityDef.Color;
             }
-            
+
             var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
             var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
-            
+
             var iconMin = boundsMin + (boundsMax - boundsMin) * 0.5f - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale;
             var iconMax = iconMin + new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
 
             fillColor *= entityDef.FillOpacity;
-            fillColor = isSelected ? fillColor : fillColor * DeselectedLayerAlpha;
-            iconTint = isSelected ? iconTint : iconTint * DeselectedLayerAlpha;
+            fillColor = isSelectedLayer ? fillColor : fillColor * DeselectedLayerAlpha;
+            iconTint = isSelectedLayer ? iconTint : iconTint * DeselectedLayerAlpha;
             dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
             dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
 
-            if (isSelected)
+            if (isSelectedLayer)
             {
                 ImGui.SetCursorScreenPos(boundsMin);
                 ImGui.SetItemAllowOverlap();
@@ -1590,14 +1603,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     _selectedEntityInstanceIndex = k;
                     _startPos = entityInstance.Position;
-                    
+
                     _isInstancePopupOpen = true;
-                    _ignoreMouseInputUntilRelease = true;
                 }
 
                 if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
                 {
-                    var newPos = _startPos + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint() + entityInstance.Size * entityDef.Pivot;
+                    var newPos = _startPos + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint();
                     var (snapped, _) = SnapToGrid(newPos, layerDef.GridSize);
                     entityInstance.Position = snapped.ToPoint();
                 }
@@ -1606,6 +1618,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
                     HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
+                    
+                    // DrawMoveEntityButton(entityInstance, boundsMin, boundsMax);
                 }
                 else if (ImGui.IsItemHovered())
                 {
@@ -1640,9 +1654,53 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
+    private static void DrawMoveLevelButton(Level level, Num.Vector2 boundsMin, Num.Vector2 boundsMax)
+    {
+        var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
+        ImGui.SetCursorScreenPos(
+            boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 2 * moveButtonSize.Y));
+        if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsUpDownLeftRight, Color.White, Color.Black, moveButtonSize, "Move"))
+        {
+        }
+
+        if (ImGui.IsItemActivated())
+        {
+            _moveLevelStart = level.WorldPos;
+        }
+
+        if (ImGui.IsItemActive())
+        {
+            var gridSize = ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize;
+            var (newPos, _) = SnapToGrid(_moveLevelStart + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint(), gridSize);
+            level.WorldPos = newPos.ToPoint();
+        }
+    }
+    
+    private static void DrawMoveEntityButton(EntityInstance entity, Num.Vector2 boundsMin, Num.Vector2 boundsMax)
+    {
+        var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
+        ImGui.SetCursorScreenPos(
+            boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 2 * moveButtonSize.Y));
+        if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsUpDownLeftRight, Color.White, Color.Black, moveButtonSize, "Move"))
+        {
+        }
+
+        if (ImGui.IsItemActivated())
+        {
+            _moveEntityStart = entity.Position;
+        }
+
+        if (ImGui.IsItemActive())
+        {
+            var gridSize = ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize;
+            var (newPos, _) = SnapToGrid(_moveEntityStart + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint(), gridSize);
+            entity.Position = newPos.ToPoint();
+        }
+    }
+
     private void HandleEntityResize(uint gridSize, Num.Vector2 min, Num.Vector2 max, EntityInstance entityInstance, EntityDefinition entityDef)
     {
-        var state = _resizeEntity.Draw(min, max, _gameRenderScale * 2f, entityDef.ResizableX, entityDef.ResizableY);
+        var state = _resizeEntity.Draw(min, max, 5f, entityDef.ResizableX, entityDef.ResizableY);
 
         if (state == ToolState.Started)
         {
@@ -1760,19 +1818,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return;
         }
 
-        if (_ignoreMouseInputUntilRelease)
-        {
-            if (ImGui.IsMouseReleased(ImGuiMouseButton.Left) ||
-                ImGui.IsMouseReleased(ImGuiMouseButton.Middle) ||
-                ImGui.IsMouseReleased(ImGuiMouseButton.Right))
-            {
-                _ignoreMouseInputUntilRelease = false;
-                return;
-            }
-
-            return;
-        }
-
         var dl = ImGui.GetWindowDrawList();
 
         var (mouseSnappedToGrid, mouseCell, mouseInLevel) = GetMouseInLevel(level);
@@ -1829,19 +1874,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
 
             {
-                // draw preview of entity being added
-                var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                var sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
-                var uvMin = sprite.UV.TopLeft.ToNumerics();
-                var uvMax = sprite.UV.BottomRight.ToNumerics();
-                var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
-                var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
-                dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, (Color.White * 0.33f).PackedValue);
-
-                if (!ImGui.IsAnyItemActive() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                if (!ImGui.IsAnyItemHovered())
                 {
-                    _isAdding = true;
-                    Logs.LogInfo($"Started Adding: {Shared.Game.Time.UpdateCount}");
+                    // draw preview of entity being added
+                    var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+                    var sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
+                    var uvMin = sprite.UV.TopLeft.ToNumerics();
+                    var uvMax = sprite.UV.BottomRight.ToNumerics();
+                    var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
+                    var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
+                    dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, (Color.White * 0.33f).PackedValue);
+
+                    if (!ImGui.IsAnyItemActive() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
+                    {
+                        _isAdding = true;
+                        Logs.LogInfo($"Started Adding: {Shared.Game.Time.UpdateCount}");
+                    }
                 }
             }
 
@@ -2023,9 +2071,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             var instance = entities[i];
             if (position.X >= instance.Position.X &&
-                position.X < instance.Position.X + gridSize &&
+                position.X < instance.Position.X + instance.Size.X &&
                 position.Y >= instance.Position.Y &&
-                position.Y < instance.Position.Y + gridSize)
+                position.Y < instance.Position.Y + + instance.Size.Y)
             {
                 entity = instance;
                 return i;

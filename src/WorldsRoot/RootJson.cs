@@ -126,13 +126,23 @@ public class FieldDef
 
     public static object GetDefaultValue(object? fieldDefaultValue, FieldType type, bool isArray)
     {
+        Color GetColor(object? defaultColor)
+        {
+            if (defaultColor != null && defaultColor is string colorStr)
+            {
+                return ColorExt.FromHex(colorStr.AsSpan().Slice(1));
+            }
+
+            return Color.White;
+        }
+
         return type switch
         {
             FieldType.Int => isArray ? new List<int>() : fieldDefaultValue ?? default(int),
             FieldType.Float => isArray ? new List<float>() : fieldDefaultValue ?? default(float),
             FieldType.String => isArray ? new List<string>() : fieldDefaultValue ?? "",
             FieldType.Bool => isArray ? new List<bool>() : fieldDefaultValue ?? false,
-            FieldType.Color => isArray ? new List<Color>() : fieldDefaultValue ?? Color.White,
+            FieldType.Color => isArray ? new List<Color>() : GetColor(fieldDefaultValue),
             FieldType.Point => isArray ? new List<Point>() : fieldDefaultValue ?? Point.Zero,
             FieldType.Vector2 => isArray ? new List<Vector2>() : fieldDefaultValue ?? Vector2.Zero,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
@@ -165,12 +175,16 @@ public class Level
     public string Identifier = "Level";
     public uint Width;
     public uint Height;
-    
+
     [JsonIgnore]
     public UPoint Size
     {
         get => new(Width, Height);
-        set { Width = value.X; Height = value.Y; }
+        set
+        {
+            Width = value.X;
+            Height = value.Y;
+        }
     }
 
     [JsonIgnore] public Rectangle Bounds => new(WorldPos.X, WorldPos.Y, (int)Width, (int)Height);

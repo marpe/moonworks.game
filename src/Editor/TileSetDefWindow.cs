@@ -18,6 +18,8 @@ public unsafe class TileSetDefWindow : SplitWindow
 
     private void DrawTileSetDefinitions()
     {
+        var avail = ImGui.GetContentRegionAvail();
+        
         if (ImGui.BeginTable("TileSetDefinitions", 1, TableFlags, new Vector2(0, 0)))
         {
             ImGui.TableSetupColumn("Name");
@@ -38,6 +40,8 @@ public unsafe class TileSetDefWindow : SplitWindow
                     _selectedTileSetDefinitionIndex = i;
                 }
 
+                ImGui.SameLine(0, 0);
+                
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
                 {
                     ImGui.MenuItem("Copy", default);
@@ -70,7 +74,7 @@ public unsafe class TileSetDefWindow : SplitWindow
     protected override void DrawLeft()
     {
         DrawTileSetDefinitions();
-        if (ImGuiExt.ColoredButton("+ Add TileSet Definition", new Vector2(-1, 0)))
+        if (ImGuiExt.ColoredButton("+ Add TileSet Definition", new Vector2(-1, 40)))
         {
             RootJson.TileSetDefinitions.Add(new TileSetDef() { Uid = GetNextId(RootJson.TileSetDefinitions) });
         }

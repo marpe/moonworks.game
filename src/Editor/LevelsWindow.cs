@@ -51,6 +51,8 @@ public class LevelsWindow : SplitWindow
                 {
                     SelectedLevelIndex = i;
                 }
+                
+                // ImGui.SameLine(0, 0);
 
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
                 {

@@ -695,7 +695,7 @@ public unsafe class LayerDefWindow : SplitWindow
             result = true;
             selectedValue = currValue;
         }
-
+        
         if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
         {
             result = true;
