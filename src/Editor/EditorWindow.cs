@@ -1404,9 +1404,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         // draw outer level border
-        if (isSelectedLevel)
+        // if (isSelectedLevel)
         {
-            var color = isSelectedLevel ? Color.CornflowerBlue : Color.Red;
+            var color = isSelectedLevel ? Color.CornflowerBlue : Color.Purple.MultiplyAlpha(0.5f);
 
             var thickness = 2f * _gameRenderScale;
             var padding = new Vector2(thickness * 0.5f / _gameRenderScale);
