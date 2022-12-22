@@ -133,8 +133,8 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 "GameRender",
                 gameRenderSize.EnsureNotZero(),
                 // ImGuiButtonFlags.MouseButtonLeft |
-                ImGuiButtonFlags.MouseButtonMiddle |
-                ImGuiButtonFlags.MouseButtonRight
+                // ImGuiButtonFlags.MouseButtonRight |
+                ImGuiButtonFlags.MouseButtonMiddle
             );
 
             // reset cursor position, otherwise imgui will complain since v1.89

@@ -6740,7 +6740,7 @@
                   "Height": 192
                 }
               ],
-              "IsVisible": true
+              "IsVisible": false
             },
             {
               "LayerDefId": 1,
@@ -6818,8 +6818,8 @@
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
-                    "X": 112,
-                    "Y": 336
+                    "X": 144,
+                    "Y": 368
                   },
                   "Width": 8,
                   "Height": 12

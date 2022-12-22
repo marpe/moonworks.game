@@ -252,7 +252,7 @@ public class MyGameMain : Game
         }
     }
 
-    public void LoadRoot(Func<RootJson> rootLoader, Action? onCompleteCallback)
+    private void LoadRoot(Func<RootJson> rootLoader, string filepath, Action? onCompleteCallback)
     {
         if (Shared.LoadingScreen.IsLoading)
         {
@@ -271,7 +271,7 @@ public class MyGameMain : Game
         Shared.LoadingScreen.LoadAsync(() =>
         {
             var root = rootLoader();
-            QueueSetRoot(root, onCompleteCallback);
+            QueueSetRoot(root, filepath, onCompleteCallback);
         });
     }
 
@@ -369,12 +369,12 @@ public class MyGameMain : Game
         World.Unload();
     }
 
-    public void QueueAction(Action callback)
+    protected void QueueAction(Action callback)
     {
         _queuedActions.Enqueue(callback);
     }
 
-    public void QueueSetRoot(RootJson root, Action? onCompleteCallback)
+    protected void QueueSetRoot(RootJson root, string filepath, Action? onCompleteCallback)
     {
         QueueAction(() =>
         {
@@ -383,7 +383,7 @@ public class MyGameMain : Game
             Shared.Game.ConsoleScreen.IsHidden = true;
             Shared.Menus.RemoveAll();
             UnloadWorld();
-            World.SetRoot(root);
+            World.SetRoot(root, filepath);
             onCompleteCallback?.Invoke();
         });
     }
@@ -409,11 +409,14 @@ public class MyGameMain : Game
     public static void Restart(bool immediate = true)
     {
         Logs.LogInfo($"[U:{Shared.Game.Time.UpdateCount}, D:{Shared.Game.Time.DrawCount}] Starting load");
-        var rootLoader = () => Shared.Content.LoadRoot(ContentPaths.worlds.worlds_json, true);
+        var filepath = Shared.Game.World.Filepath;
+        if (filepath == "")
+            filepath = ContentPaths.worlds.worlds_json;
+        var rootLoader = () => Shared.Content.LoadRoot(filepath, true);
         if (immediate)
-            Shared.Game.QueueSetRoot(rootLoader(), World.NextLevel);
+            Shared.Game.QueueSetRoot(rootLoader(), filepath, World.NextLevel);
         else
-            Shared.Game.LoadRoot(rootLoader, World.NextLevel);
+            Shared.Game.LoadRoot(rootLoader, filepath, World.NextLevel);
     }
 
     [ConsoleHandler("step")]

@@ -921,7 +921,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
-    private void DrawMouseInfoOverlay()
+    private static void DrawMouseInfoOverlay()
     {
         var showOverlay = true;
         ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);

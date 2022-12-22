@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using MyGame.Cameras;
-using MyGame.Editor;
 using MyGame.WorldsRoot;
 
 namespace MyGame;
@@ -51,23 +50,27 @@ public class World
     public RootJson Root = new();
     public Level Level = new();
     public bool DrawBackground = true;
-    private static Dictionary<string, string> _cachedPaths = new();
+    
+    // TODO (marpe): Probably better to store paths and retrieve texture from ContentManager
+    private Dictionary<int, Texture> _tileSetTextures = new();
+    public string Filepath = "";
 
     public World()
     {
         _debugDraw = new DebugDrawItems();
-        // StartLevel("World_Level_1");
     }
 
-    public static Level FindLevel(string identifier, RootJson root)
+    private static Level FindLevel(string identifier, RootJson root)
     {
         for (var i = 0; i < root.Worlds.Count; i++)
         {
-            for (var j = 0; j < root.Worlds[i].Levels.Count; j++)
+            var world = root.Worlds[i];
+            for (var j = 0; j < world.Levels.Count; j++)
             {
-                if (root.Worlds[i].Levels[j].Identifier == identifier)
+                var level = world.Levels[j];
+                if (level.Identifier == identifier)
                 {
-                    return root.Worlds[i].Levels[j];
+                    return level;
                 }
             }
         }
@@ -77,10 +80,40 @@ public class World
         return root.Worlds.FirstOrDefault()?.Levels.FirstOrDefault() ?? throw new InvalidOperationException();
     }
 
-    public void SetRoot(RootJson root)
+    public void SetRoot(RootJson root, string filepath)
     {
+        Filepath = filepath;
         Root = root;
+        LoadTileSetTextures(filepath);
         IsLoaded = true;
+    }
+
+    private void LoadTileSetTextures(string filepath)
+    {
+        var sw = Stopwatch.StartNew();
+        for (var i = 0; i < Root.TileSetDefinitions.Count; i++)
+        {
+            var tileSet = Root.TileSetDefinitions[i];
+            var worldFileDir = Path.GetDirectoryName(filepath);
+            var path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSet.Path));
+
+            if (Shared.Content.HasTexture(path))
+            {
+                _tileSetTextures.Add(tileSet.Uid, Shared.Content.GetTexture(path));
+                continue;
+            }
+
+            if ((path.EndsWith(".png") || path.EndsWith(".aseprite")) && File.Exists(path))
+            {
+                Shared.Content.LoadAndAddTextures(new[] { path });
+                var texture = Shared.Content.GetTexture(path);
+                _tileSetTextures.Add(tileSet.Uid, texture);
+                continue;
+            }
+
+            _tileSetTextures.Add(tileSet.Uid, Shared.Game.Renderer.BlankSprite.Texture);
+        }
+        sw.StopAndLog("LoadTileSetTextures");
     }
 
     [MemberNotNull(nameof(Level), nameof(Player))]
@@ -336,14 +369,14 @@ public class World
         }
     }
 
-    public void DrawEntities(Renderer renderer, double alpha)
+    private void DrawEntities(Renderer renderer, double alpha)
     {
         DrawEnemies(renderer, alpha);
         DrawPlayer(renderer, alpha);
         DrawBullets(renderer, alpha);
     }
 
-    public void DrawEntityDebug(Renderer renderer, double alpha)
+    private void DrawEntityDebug(Renderer renderer, double alpha)
     {
         if (!Debug)
             return;
@@ -435,41 +468,13 @@ public class World
         }
     }
 
-    // TODO (marpe): Cleanup and merge with SplitWindow.GetTileSetTexture()
-    private static Texture GetTileSetTexture(string tileSetPath)
-    {
-        if (!_cachedPaths.TryGetValue(tileSetPath, out var path))
-        {
-            var worldFileDir = Path.GetDirectoryName(ContentPaths.worlds.worlds_json);
-            path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
-            _cachedPaths.Add(tileSetPath, path);
-        }
-        
-        Texture texture;
-
-        if (Shared.Content.HasTexture(path))
-        {
-            texture = Shared.Content.GetTexture(path);
-            return texture;
-        }
-
-        if ((path.EndsWith(".png") || path.EndsWith(".aseprite")) && File.Exists(path))
-        {
-            Shared.Content.LoadAndAddTextures(new[] { path });
-            texture = Shared.Content.GetTexture(path);
-            return texture;
-        }
-
-        return Shared.Game.Renderer.BlankSprite.Texture;
-    }
-    
     private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
         var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
         var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
 
-        var tileSetDef = GetTilesetDef(Root, layerDef.TileSetDefId);
-        var texture = GetTileSetTexture(tileSetDef.Path);
+        var tileSetDef = GetTileSetDef(Root, layerDef.TileSetDefId);
+        var texture = _tileSetTextures[tileSetDef.Uid];
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {
@@ -564,33 +569,34 @@ public class World
     }
 
 
-    private static TileSetDef GetTilesetDef(RootJson root, long tilesetUid)
+    private static TileSetDef GetTileSetDef(RootJson root, long tileSetUid)
     {
         for (var i = 0; i < root.TileSetDefinitions.Count; i++)
         {
-            if (root.TileSetDefinitions[i].Uid == tilesetUid)
+            if (root.TileSetDefinitions[i].Uid == tileSetUid)
             {
                 return root.TileSetDefinitions[i];
             }
         }
 
-        throw new Exception($"Could not find a TileSetDefinition with id \"{tilesetUid}\"");
+        throw new Exception($"Could not find a TileSetDefinition with id \"{tileSetUid}\"");
     }
 
     public void Unload()
     {
-        if (IsLoaded)
+        if (!IsLoaded)
             return;
 
         Player = new();
         Enemies.Clear();
         Bullets.Clear();
         Lights.Clear();
+        _tileSetTextures.Clear();
 
         IsLoaded = false;
     }
 
-    public void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
+    private static void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
     {
         if (!e.DrawDebug && !DebugEntities)
             return;

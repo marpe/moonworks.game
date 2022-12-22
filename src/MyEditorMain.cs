@@ -142,7 +142,7 @@ public unsafe class MyEditorMain : MyGameMain
                     onComplete = () => { World.NextLevel(); };
                 }
 
-                QueueSetRoot(rootJson, onComplete);
+                QueueSetRoot(rootJson, relativePath, onComplete);
             });
         }
         else if (extension == ".aseprite")
