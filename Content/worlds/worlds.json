@@ -174,8 +174,8 @@
                     }
                   ],
                   "Position": {
-                    "X": 656,
-                    "Y": 416
+                    "X": 640,
+                    "Y": 432
                   },
                   "Width": 64,
                   "Height": 80
@@ -302,8 +302,8 @@
                     }
                   ],
                   "Position": {
-                    "X": 544,
-                    "Y": 336
+                    "X": 496,
+                    "Y": 352
                   },
                   "Width": 240,
                   "Height": 224
@@ -14299,7 +14299,7 @@
           "Identifier": "Level 3",
           "Width": 1200,
           "Height": 816,
-          "BackgroundColor": "#D3FFAF",
+          "BackgroundColor": "#FCDFCD",
           "FieldInstances": [
             {
               "FieldDefId": 18,
@@ -14729,8 +14729,8 @@
                   "EntityDefId": 3,
                   "FieldInstances": [],
                   "Position": {
-                    "X": 608,
-                    "Y": 416
+                    "X": 612,
+                    "Y": 420
                   },
                   "Width": 8,
                   "Height": 12
