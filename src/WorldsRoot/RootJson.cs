@@ -1,4 +1,6 @@
-﻿namespace MyGame.WorldsRoot;
+﻿using System.Runtime.Serialization;
+
+namespace MyGame.WorldsRoot;
 
 public class RootJson
 {
@@ -154,6 +156,15 @@ public class FieldInstance
 {
     public int FieldDefId;
     public object? Value;
+    
+    [OnDeserialized]
+    internal void OnDeserializedMethod(StreamingContext context)
+    {
+        if (Value is string strValue && strValue.Length == 7 && strValue[0] == '#')
+        {
+            Value = ColorExt.FromHex(strValue.AsSpan(1));
+        }
+    }
 }
 
 public class World

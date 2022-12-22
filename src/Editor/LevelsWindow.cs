@@ -51,7 +51,7 @@ public class LevelsWindow : SplitWindow
                 {
                     SelectedLevelIndex = i;
                 }
-                
+
                 // ImGui.SameLine(0, 0);
 
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
@@ -233,7 +233,13 @@ public class LevelsWindow : SplitWindow
                 if (newCx >= 0 && newCx < newGrid.X &&
                     newCy >= 0 && newCy < newGrid.Y &&
                     newGridId >= 0 && newGridId < intGrid.Length)
-                    intGrid[newGridId] = old[y * oldGrid.X + x];
+                {
+                    var oldGridId = y * oldGrid.X + x;
+                    if (oldGridId >= 0 && oldGridId < old.Length)
+                    {
+                        intGrid[newGridId] = old[oldGridId];
+                    }
+                }
             }
         }
     }
