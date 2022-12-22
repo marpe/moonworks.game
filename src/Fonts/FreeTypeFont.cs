@@ -128,18 +128,7 @@ public class FreeTypeFont : IDisposable
         glyphInfo.IsColored = bitmap.pixel_mode == FT_PIXEL_MODE_BGRA;
 
         return bitmap;
-
-        /*
-        fixed (byte* numPtr1 = buffer)
-        {
-            for (var index1 = 0; index1 < outHeight; ++index1)
-            {
-                var num = index1 * outStride + startIndex;
-                var numPtr2 = numPtr1 + num;
-                var numPtr3 = (byte*)((IntPtr)(void*)bitmap.buffer + index1 * bitmap.pitch);
-                for (var index2 = 0; index2 < outWidth; ++index2)
-                    *numPtr2++ = *numPtr3++;
-            }
-        }*/
     }
+    
+    
 }

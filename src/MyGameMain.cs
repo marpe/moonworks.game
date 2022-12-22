@@ -71,8 +71,8 @@ public class MyGameMain : Game
 
         var freeTypeTimer = Stopwatch.StartNew();
         Shared.FreeTypeLibrary = new FreeTypeLibrary();
-        var fontAtlas = new FontAtlas(GraphicsDevice);
-        fontAtlas.AddFont(ContentPaths.fonts.Pixellari_ttf);
+        var fontAtlas = new FreeTypeFontAtlas(GraphicsDevice);
+        fontAtlas.AddFont(ContentPaths.fonts.Roboto_Bold_ttf);
         freeTypeTimer.StopAndLog("FreeType");
 
         World = new World();

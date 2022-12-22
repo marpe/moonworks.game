@@ -101,7 +101,7 @@ public static class TextureUtils
 
     public static Texture CreateColoredTexture(GraphicsDevice device, uint width, uint height, Color color)
     {
-        var texture = Texture.CreateTexture2D(device, 1, 1, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        var texture = Texture.CreateTexture2D(device, width, height, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
         Span<Color> data = new Color[width * height];
         data.Fill(color);
         var command = device.AcquireCommandBuffer();
