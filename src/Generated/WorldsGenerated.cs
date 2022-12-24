@@ -11,6 +11,7 @@ public static class Worlds
         public static readonly Guid WorldIid = Guid.Parse("45f2e882-fe13-4cff-a7f9-1bd7fba551d8");
         public static readonly Guid Level_1 = Guid.Parse("1fc14b02-53f1-45c4-ad40-be22f198ed46");
         public static readonly Guid Level_2 = Guid.Parse("6d66db8e-2a5a-4d9c-b881-8ca33dea14e1");
+        public static readonly Guid Level_3 = Guid.Parse("ea6ff541-e92f-46b4-a98e-43063d9c4a23");
     }
 
     public static class World_2
@@ -35,13 +36,13 @@ public static class LayerDefs
 
     public static Dictionary<Tiles, Color> TilesColors = new()
     {
-        { Tiles.Mushroom, new Color(11f, 117f, 196f, 255f) },
-        { Tiles.Flower, new Color(166f, 29f, 29f, 255f) },
-        { Tiles.Grass, new Color(89f, 237f, 82f, 255f) },
+        { Tiles.Mushroom, new Color(196f, 6f, 6f, 255f) },
+        { Tiles.Flower, new Color(201f, 68f, 68f, 255f) },
+        { Tiles.Grass, new Color(55f, 255f, 124f, 255f) },
         { Tiles.Fence, new Color(149f, 106f, 0f, 255f) },
         { Tiles.Tree, new Color(2f, 127f, 66f, 255f) },
-        { Tiles.Ground, new Color(128f, 128f, 128f, 255f) },
-        { Tiles.Left_Ground, new Color(105f, 197f, 202f, 255f) },
+        { Tiles.Ground, new Color(57f, 68f, 214f, 255f) },
+        { Tiles.Left_Ground, new Color(188f, 38f, 200f, 255f) },
     };
 
 }
@@ -93,9 +94,6 @@ public partial class Entity
 
 public partial class Player
 {
-    public float Test;
-    public bool Field;
-    public Color ColorField;
 }
 
 public partial class Slug
@@ -108,10 +106,13 @@ public partial class BlueBee
 
 public partial class Light
 {
+    [Range(0, 2)]
     public float Intensity;
     public bool IsEnabled;
     public Color Color;
+    [Range(0, 360)]
     public float Angle;
+    [Range(0, 360)]
     public float ConeAngle;
 }
 

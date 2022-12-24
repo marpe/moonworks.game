@@ -104,7 +104,7 @@ public static unsafe class FieldDefEditor
                 // TODO (marpe): Fix colors being deserialized as string
                 if (actualType != fieldDef.DefaultValue.GetType())
                 {
-                    if (actualType == typeof(Color) && fieldDef.DefaultValue is string colorStr)
+                    if (actualType == typeof(Color) && fieldDef.DefaultValue is string colorStr && colorStr.StartsWith('#'))
                     {
                         fieldDef.DefaultValue = ColorExt.FromHex(colorStr.AsSpan(1));
                     }
@@ -115,6 +115,13 @@ public static unsafe class FieldDefEditor
                 }
 
                 SimpleTypeInspector.DrawSimpleInspector(actualType, "DefaultValue", ref fieldDef.DefaultValue, false, null);
+
+                EnumInspector.InspectEnum("EditorDisplayMode", ref fieldDef.EditorDisplayMode);
+                if (fieldDef.FieldType is FieldType.Int or FieldType.Float)
+                {
+                    SimpleTypeInspector.InspectFloat("MinValue", ref fieldDef.MinValue, SimpleTypeInspector.DefaultRangeSettings);
+                    SimpleTypeInspector.InspectFloat("MaxValue", ref fieldDef.MaxValue, SimpleTypeInspector.DefaultRangeSettings);
+                }
             }
         }
 

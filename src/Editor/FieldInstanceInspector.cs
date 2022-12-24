@@ -1,4 +1,5 @@
-﻿using Mochi.DearImGui;
+﻿using System.Diagnostics.CodeAnalysis;
+using Mochi.DearImGui;
 using MyGame.WorldsRoot;
 
 namespace MyGame.Editor;
@@ -7,6 +8,22 @@ using Vector2 = Num.Vector2;
 
 public static unsafe class FieldInstanceInspector
 {
+    private static bool GetFieldDef(int fieldDefId, [NotNullWhen(true)] out FieldDef? fieldDef, List<FieldDef> fieldDefs)
+    {
+        for (var i = 0; i < fieldDefs.Count; i++)
+        {
+            if (fieldDefs[i].Uid == fieldDefId)
+            {
+                fieldDef = fieldDefs[i];
+                return true;
+            }
+        }
+
+        fieldDef = null;
+        return false;
+    }
+
+
     public static void DrawFieldInstances(List<FieldInstance> fieldInstances, List<FieldDef> fieldDefs)
     {
         if (fieldDefs.Count == 0)
@@ -27,43 +44,18 @@ public static unsafe class FieldInstanceInspector
         {
             ImGui.PushID(i);
             var fieldInstance = fieldInstances[i];
-            var fieldDef = fieldDefs.FirstOrDefault(x => x.Uid == fieldInstance.FieldDefId);
-            if (fieldDef == null)
+            if (!GetFieldDef(fieldInstance.FieldDefId, out var fieldDef, fieldDefs))
             {
                 ImGui.Text($"Could not find a field definition with uid \"{fieldInstance.FieldDefId}\"");
                 ImGui.PopID();
                 continue;
             }
 
-            var actualType = FieldDef.GetActualType(fieldDef.FieldType, fieldDef.IsArray);
-            if (fieldInstance.Value == null)
-            {
-                if (fieldDef.IsArray)
-                {
-                    fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
-                }
-                else
-                {
-                    fieldInstance.Value = fieldDef.DefaultValue ?? FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
-                }
-            }
-
-            if (fieldInstance.Value.GetType() != actualType)
-            {
-                // TODO (marpe): Fix colors being deserialized as string
-                if (actualType == typeof(Color) && fieldInstance.Value is string colorStr)
-                {
-                    fieldInstance.Value = ColorExt.FromHex(colorStr.AsSpan(1));
-                }
-                else
-                {
-                    fieldInstance.Value = Convert.ChangeType(fieldInstance.Value, actualType);
-                }
-            }
+            EnsureFieldHasDefaultValue(fieldDef, fieldInstance);
 
             if (fieldDef.IsArray)
             {
-                var list = (IList)fieldInstance.Value;
+                var list = (IList)fieldInstance.Value!;
 
                 ImGuiExt.LabelPrefix(fieldDef.Identifier);
                 ImGui.NewLine();
@@ -84,11 +76,7 @@ public static unsafe class FieldInstanceInspector
                         for (var j = 0; j < list.Count; j++)
                         {
                             ImGui.PushID(j);
-                            var value = list[j];
-                            if (value == null)
-                            {
-                                value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, false);
-                            }
+                            var value = list[j] ?? FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, false);
 
                             ImGui.TableNextRow();
                             ImGui.TableNextColumn();
@@ -124,10 +112,53 @@ public static unsafe class FieldInstanceInspector
             }
             else
             {
-                SimpleTypeInspector.DrawSimpleInspector(fieldInstance.Value.GetType(), fieldDef.Identifier, ref fieldInstance.Value);
+                RangeSettings? rangeSettings = null;
+                if (fieldDef.FieldType is FieldType.Int or FieldType.Float && Math.Abs(fieldDef.MinValue - fieldDef.MaxValue) > float.Epsilon)
+                {
+                    rangeSettings = new RangeSettings(
+                        fieldDef.MinValue,
+                        fieldDef.MaxValue,
+                        (fieldDef.MaxValue - fieldDef.MinValue) / 500f,
+                        false
+                    );
+                }
+
+                SimpleTypeInspector.DrawSimpleInspector(fieldInstance.Value!.GetType(), fieldDef.Identifier, ref fieldInstance.Value, false, rangeSettings);
+                if (ImGui.BeginPopupContextItem("FieldContextMenu"))
+                {
+                    if (ImGui.MenuItem("Reset to default value", default))
+                    {
+                        fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
+                    }
+
+                    ImGui.EndPopup();
+                }
             }
 
             ImGui.PopID();
+        }
+    }
+
+    private static void EnsureFieldHasDefaultValue(FieldDef fieldDef, FieldInstance fieldInstance)
+    {
+        if (fieldInstance.Value == null)
+        {
+            fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
+        }
+
+        var actualType = FieldDef.GetActualType(fieldDef.FieldType, fieldDef.IsArray);
+        var instanceType = fieldInstance.Value.GetType();
+        if (instanceType != actualType)
+        {
+            // TODO (marpe): Fix colors being deserialized as string
+            if (actualType == typeof(Color) && fieldInstance.Value is string colorStr)
+            {
+                fieldInstance.Value = ColorExt.FromHex(colorStr.AsSpan(1));
+            }
+            else
+            {
+                fieldInstance.Value = Convert.ChangeType(fieldInstance.Value, actualType);
+            }
         }
     }
 

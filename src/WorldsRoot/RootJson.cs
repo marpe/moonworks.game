@@ -1,4 +1,5 @@
-﻿using System.Runtime.Serialization;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
 
 namespace MyGame.WorldsRoot;
 
@@ -11,6 +12,114 @@ public class RootJson
     public List<FieldDef> LevelFieldDefinitions = new();
     public List<LayerDef> LayerDefinitions = new();
     public List<TileSetDef> TileSetDefinitions = new();
+    
+    [OnDeserialized]
+    public void OnDeserialized(StreamingContext context)
+    {
+        for (var i = 0; i < EntityDefinitions.Count; i++)
+        {
+            var entityDef = EntityDefinitions[i];
+            for (var j = 0; j < entityDef.FieldDefinitions.Count; j++)
+            {
+                var fieldDef = entityDef.FieldDefinitions[j];
+            }
+        }
+
+        bool GetEntityDef(int entityDefUid, [NotNullWhen(true)] out EntityDefinition? entityDef)
+        {
+            for (var i = 0; i < EntityDefinitions.Count; i++)
+            {
+                if (EntityDefinitions[i].Uid == entityDefUid)
+                {
+                    entityDef = EntityDefinitions[i];
+                    return true;
+                }
+            }
+
+            entityDef = null;
+            return false;
+        }
+
+        for (var i = 0; i < Worlds.Count; i++)
+        {
+            var world = Worlds[i];
+            for (var j = 0; j < world.Levels.Count; j++)
+            {
+                var level = world.Levels[j];
+                for (var k = 0; k < level.LayerInstances.Count; k++)
+                {
+                    var layerInstance = level.LayerInstances[k];
+                    for (var l = 0; l < layerInstance.EntityInstances.Count; l++)
+                    {
+                        var entityInstance = layerInstance.EntityInstances[l];
+                        if (!GetEntityDef(entityInstance.EntityDefId, out var entityDef))
+                        {
+                            continue;
+                        }
+
+                        EnsureFieldsAreValid(entityInstance, entityDef);
+                    }
+                }
+            }
+        }
+    }
+
+    private static bool GetFieldDef(int fieldDefId, EntityDefinition entityDef, [NotNullWhen(true)] out FieldDef? fieldDef)
+    {
+        for (var i = 0; i < entityDef.FieldDefinitions.Count; i++)
+        {
+            if (entityDef.FieldDefinitions[i].Uid == fieldDefId)
+            {
+                fieldDef = entityDef.FieldDefinitions[i];
+                return true;
+            }
+        }
+
+        fieldDef = null;
+        return false;
+    }
+    
+    public static void EnsureFieldsAreValid(EntityInstance entityInstance, EntityDefinition entityDef)
+    {
+        for (var m = 0; m < entityInstance.FieldInstances.Count; m++)
+        {
+            var fieldInstance = entityInstance.FieldInstances[m];
+            if (!GetFieldDef(fieldInstance.FieldDefId, entityDef, out var fieldDef))
+            {
+                continue;
+            }
+
+            if (fieldInstance.Value == null)
+            {
+                fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
+                return;
+            }
+
+            var actualType = FieldDef.GetActualType(fieldDef.FieldType, fieldDef.IsArray);
+            var instanceType = fieldInstance.Value.GetType();
+            if (instanceType != actualType)
+            {
+                if (fieldDef.FieldType == FieldType.Color)
+                {
+                    fieldInstance.Value = FieldDef.GetColor(fieldInstance.Value, Color.White);
+                    return;
+                }
+                
+                fieldInstance.Value = Convert.ChangeType(fieldInstance.Value, actualType);
+            }
+
+            // TODO (marpe): Fix arrays
+            /*if (fieldDef.IsArray)
+            {
+                var list = (IList)fieldInstance.Value;
+                for (var i = 0; i < list.Count; i++)
+                {
+                    var value = list[i];
+                    
+                }
+            }*/
+        }
+    }
 }
 
 public class TileSetDef
@@ -84,13 +193,24 @@ public enum FieldType
     Vector2,
 }
 
+public enum EditorDisplayMode
+{
+    Hidden,
+    ValueOnly,
+    NameAndValue,
+}
+
 public class FieldDef
 {
     public int Uid;
     public string Identifier = "Field";
     public FieldType FieldType;
-    public object? DefaultValue = null;
+    public object? DefaultValue;
     public bool IsArray;
+
+    public float MinValue;
+    public float MaxValue;
+    public EditorDisplayMode EditorDisplayMode;
 
     public FieldDef()
     {
@@ -126,29 +246,51 @@ public class FieldDef
         };
     }
 
+    public static Color GetColor(object? value, Color defaultColor)
+    {
+        return value switch
+        {
+            Color color => color,
+            string colorStr when colorStr.StartsWith('#') => ColorExt.FromHex(colorStr.AsSpan().Slice(1)),
+            _ => defaultColor,
+        };
+    }
+
     public static object GetDefaultValue(object? fieldDefaultValue, FieldType type, bool isArray)
     {
-        Color GetColor(object? defaultColor)
-        {
-            if (defaultColor != null && defaultColor is string colorStr)
-            {
-                return ColorExt.FromHex(colorStr.AsSpan().Slice(1));
-            }
-
-            return Color.White;
-        }
-
         return type switch
         {
             FieldType.Int => isArray ? new List<int>() : fieldDefaultValue ?? default(int),
             FieldType.Float => isArray ? new List<float>() : fieldDefaultValue ?? default(float),
             FieldType.String => isArray ? new List<string>() : fieldDefaultValue ?? "",
             FieldType.Bool => isArray ? new List<bool>() : fieldDefaultValue ?? false,
-            FieldType.Color => isArray ? new List<Color>() : GetColor(fieldDefaultValue),
+            FieldType.Color => isArray ? new List<Color>() : GetColor(fieldDefaultValue, Color.White),
             FieldType.Point => isArray ? new List<Point>() : fieldDefaultValue ?? Point.Zero,
             FieldType.Vector2 => isArray ? new List<Vector2>() : fieldDefaultValue ?? Vector2.Zero,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
+    }
+
+    [OnDeserialized]
+    public void OnDeserialized(StreamingContext context)
+    {
+        if (DefaultValue == null)
+        {
+            DefaultValue = GetDefaultValue(DefaultValue, FieldType, IsArray);
+            return;
+        }
+
+        var actualType = GetActualType(FieldType, false);
+        if (DefaultValue.GetType() == actualType)
+            return;
+
+        if (FieldType == FieldType.Color)
+        {
+            DefaultValue = GetColor(DefaultValue, Color.White);
+            return;
+        }
+
+        DefaultValue = Convert.ChangeType(DefaultValue, actualType);
     }
 }
 
@@ -156,11 +298,13 @@ public class FieldInstance
 {
     public int FieldDefId;
     public object? Value;
-    
+
     [OnDeserialized]
-    internal void OnDeserializedMethod(StreamingContext context)
+    internal void OnDeserialized(StreamingContext context)
     {
-        if (Value is string strValue && strValue.Length == 7 && strValue[0] == '#')
+        // TODO (marpe): Actually check the field definition
+        // Assume we're dealing with a color
+        if (Value is string { Length: 7 } strValue && strValue[0] == '#')
         {
             Value = ColorExt.FromHex(strValue.AsSpan(1));
         }

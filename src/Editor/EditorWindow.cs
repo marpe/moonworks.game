@@ -5,212 +5,10 @@ using MyGame.WorldsRoot;
 
 namespace MyGame.Editor;
 
-public enum RectHandlePos
-{
-    Top,
-    Bottom,
-    Left,
-    Right,
-
-    TopLeft,
-    TopRight,
-    BottomLeft,
-    BottomRight,
-}
-
-public class Tool
-{
-}
-
-public class SelectTool : Tool
-{
-}
-
-public enum ToolState
-{
-    Inactive,
-    Started,
-    Active,
-    Ended,
-}
-
-public unsafe class ResizeTool : Tool
-{
-    private static RectHandlePos[] _handlePositions = Enum.GetValues<RectHandlePos>();
-
-    public RectHandlePos ActiveHandle = RectHandlePos.Top;
-
-    private ToolState _state = ToolState.Inactive;
-    public ToolState State => _state;
-
-    public Point SizeDelta;
-    public Point TotSizeDelta;
-
-    private ImGuiMouseCursor[] _imGuiCursors =
-    {
-        ImGuiMouseCursor.ResizeNS,
-        ImGuiMouseCursor.ResizeNS,
-        ImGuiMouseCursor.ResizeEW,
-        ImGuiMouseCursor.ResizeEW,
-
-        ImGuiMouseCursor.ResizeNWSE,
-        ImGuiMouseCursor.ResizeNESW,
-        ImGuiMouseCursor.ResizeNESW,
-        ImGuiMouseCursor.ResizeNWSE,
-    };
-
-    private Num.Vector2[] _pivots =
-    {
-        new(0, -0.5f),
-        new(0, 0.5f),
-        new(-0.5f, 0),
-        new(0.5f, 0),
-
-        new(-0.5f, -0.5f),
-        new(0.5f, -0.5f),
-        new(-0.5f, 0.5f),
-        new(0.5f, 0.5f),
-    };
-
-    public ToolState Draw(Num.Vector2 min, Num.Vector2 max, float handleRadius, bool enableX, bool enableY)
-    {
-        if (enableX == false && enableY == false)
-            return ToolState.Inactive;
-
-        var size = max - min;
-        var center = min + size * 0.5f;
-        var padding = new Num.Vector2(20, 20);
-
-        var activeHandleIndex = -1;
-
-        for (var i = 0; i < _handlePositions.Length; i++)
-        {
-            var handle = _handlePositions[i];
-            if (!enableX && IsXHandle(handle))
-                continue;
-            if (!enableY && IsYHandle(handle))
-                continue;
-
-            ImGui.PushID(i);
-            var x = i % _handlePositions.Length;
-            var y = i / _handlePositions.Length;
-
-            var dl = ImGui.GetWindowDrawList();
-
-            var pivot = _pivots[i];
-
-            var handlePos = (center + (size + padding) * pivot);
-
-            var wasHovered = ImGui.GetCurrentContext()->HoveredIdPreviousFrame == ImGui.GetID("ResizeHandle");
-
-            var (fill, outline) = wasHovered switch
-            {
-                true => (Color.White, Color.Black),
-                _ => (Color.White.MultiplyAlpha(0.33f), Color.Black.MultiplyAlpha(0.33f)),
-            };
-
-            dl->AddCircleFilled(handlePos, handleRadius, fill.PackedValue);
-            dl->AddCircle(handlePos, handleRadius, outline.PackedValue);
-            var handleRadiusSize = new Num.Vector2(handleRadius, handleRadius);
-            ImGui.SetCursorScreenPos(handlePos - handleRadiusSize);
-
-            ImGui.SetItemAllowOverlap();
-            if (ImGui.InvisibleButton("ResizeHandle", handleRadiusSize * 2.0f))
-            {
-            }
-
-            if (ImGui.IsItemHovered() || ImGui.IsItemActive())
-            {
-                ImGui.SetMouseCursor(_imGuiCursors[i]);
-            }
-
-            if (ImGui.IsItemActive())
-            {
-                activeHandleIndex = i;
-            }
-
-            ImGui.PopID();
-        }
-
-        if (activeHandleIndex == -1)
-        {
-            _state = _state switch
-            {
-                ToolState.Ended => ToolState.Inactive,
-                not ToolState.Inactive => ToolState.Ended,
-                _ => ToolState.Inactive,
-            };
-
-            return _state;
-        }
-
-        ActiveHandle = _handlePositions[activeHandleIndex];
-
-        _state = _state switch
-        {
-            ToolState.Started => ToolState.Active,
-            not ToolState.Active => ToolState.Started,
-            _ => ToolState.Active,
-        };
-
-        SizeDelta = Point.Zero;
-
-        if (_state == ToolState.Started)
-        {
-            TotSizeDelta = Point.Zero;
-        }
-
-        var (invertX, invertY) = GetInvert(ActiveHandle);
-
-        if (IsYHandle(ActiveHandle))
-        {
-            SizeDelta.Y = (int)ImGui.GetIO()->MouseDelta.Y * invertY;
-            TotSizeDelta.Y += SizeDelta.Y;
-        }
-
-        if (IsXHandle(ActiveHandle))
-        {
-            SizeDelta.X = (int)ImGui.GetIO()->MouseDelta.X * invertX;
-            TotSizeDelta.X += SizeDelta.X;
-        }
-
-        return _state;
-    }
-
-    private static (int invertX, int invertY) GetInvert(RectHandlePos handle)
-    {
-        var invertX = handle is RectHandlePos.TopLeft or RectHandlePos.Left or RectHandlePos.BottomLeft ? -1 : 1;
-        var invertY = handle is RectHandlePos.TopLeft or RectHandlePos.Top or RectHandlePos.TopRight ? -1 : 1;
-        return (invertX, invertY);
-    }
-
-    private static bool IsYHandle(RectHandlePos handle)
-    {
-        return handle is
-            RectHandlePos.TopLeft or
-            RectHandlePos.Top or
-            RectHandlePos.TopRight or
-            RectHandlePos.Bottom or
-            RectHandlePos.BottomRight or
-            RectHandlePos.BottomLeft;
-    }
-
-    private static bool IsXHandle(RectHandlePos handle)
-    {
-        return handle is
-            RectHandlePos.TopLeft or
-            RectHandlePos.Left or
-            RectHandlePos.BottomLeft or
-            RectHandlePos.Right or
-            RectHandlePos.TopRight or
-            RectHandlePos.BottomRight;
-    }
-}
-
 public unsafe class EditorWindow : ImGuiEditorWindow
 {
-    private ResizeTool _resizeLevel = new();
-    private ResizeTool _resizeEntity = new();
+    private ResizeEditorTool _resizeEditorLevel = new();
+    private ResizeEditorTool _resizeEditorEntity = new();
     const string SelectedEntityPopupName = "SelectedEntityInstance";
     public const string WindowTitle = "EditorTabs";
     private const string PreviewWindowTitle = "Editor";
@@ -309,15 +107,20 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return false;
         }
 
-        var instance = level.LayerInstances[_selectedLayerInstanceIndex];
-        var def = _editor.RootJson.LayerDefinitions.FirstOrDefault(x => x.Uid == instance.LayerDefId);
-        if (def == null)
+        layerInstance = level.LayerInstances[_selectedLayerInstanceIndex];
+        for (var i = 0; i < _editor.RootJson.LayerDefinitions.Count; i++)
         {
-            return false;
+            var def = _editor.RootJson.LayerDefinitions[i];
+            if (def.Uid == layerInstance.LayerDefId)
+            {
+                layerDef = def;
+                break;
+            }
         }
 
-        layerInstance = instance;
-        layerDef = def;
+        if (layerDef == null)
+            return false;
+
         return true;
     }
 
@@ -379,16 +182,29 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return;
         }
 
-        var popupPos = Num.Vector2.Zero;
+        if (!GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef))
+        {
+            _isInstancePopupOpen = false;
+            return;
+        }
+
+        if (!GetSelectedEntityInstance(out var instance))
+        {
+            _isInstancePopupOpen = false;
+            return;
+        }
+
+        if (_selectedEntityInstanceIndex == -1)
+        {
+            _isInstancePopupOpen = false;
+            return;
+        }
 
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(300, 0), ImGuiCond.Always);
+
+        var popupPos = GetWorldPosInScreen(level.WorldPos + instance.Position + new Vector2(0, layerDef.GridSize));
         if (_entityPopupPos == 0)
         {
-            if (GetSelectedLayerInstance(out var world, out var level, out var layerInstance, out var layerDef) && GetSelectedEntityInstance(out var e))
-            {
-                popupPos = GetWorldPosInScreen(level.WorldPos + e.Position + new Vector2(0, layerDef.GridSize));
-            }
-
             ImGui.SetNextWindowPos(popupPos, ImGuiCond.Appearing, System.Numerics.Vector2.Zero);
         }
         else
@@ -420,19 +236,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var result = ImGui.Begin(SelectedEntityPopupName, ImGuiExt.RefPtr(ref _isInstancePopupOpen), windowFlags);
         if (!result)
         {
-            ImGui.End();
-            return;
-        }
-
-        if (_selectedEntityInstanceIndex == -1)
-        {
-            _isInstancePopupOpen = false;
-            ImGui.End();
-            return;
-        }
-
-        if (!GetSelectedEntityInstance(out var instance))
-        {
             _isInstancePopupOpen = false;
             ImGui.End();
             return;
@@ -441,6 +244,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (GetEntityDef(instance.EntityDefId, out var entityDef))
         {
             ImGui.BeginDisabled();
+            var guidStr = instance.Iid.ToString();
+            SimpleTypeInspector.InspectString("Guid", ref guidStr);
             SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
             ImGui.EndDisabled();
 
@@ -453,11 +258,26 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 instance.Height = (uint)tmpPoint.Y;
             }
 
+            ImGuiExt.SeparatorText("Custom Fields");
+
             FieldInstanceInspector.DrawFieldInstances(instance.FieldInstances, entityDef.FieldDefinitions);
+
+            ImGui.Separator();
+
+            if (ImGuiExt.ColoredButton(FontAwesome6.Trash, Color.White, ImGuiExt.Colors[2], new Num.Vector2(-ImGuiExt.FLT_MIN, 0), "Remove"))
+            {
+                layerInstance.EntityInstances.RemoveAt(_selectedEntityInstanceIndex);
+                _selectedEntityInstanceIndex = -1;
+            }
+
+            if (ImGuiExt.ColoredButton(FontAwesome6.Magnet, Color.White, ImGuiExt.Colors[0], new Num.Vector2(-ImGuiExt.FLT_MIN, 0), "Snap To Grid"))
+            {
+                instance.Position = SnapToGrid(instance, entityDef, layerDef.GridSize);
+            }
         }
         else
         {
-            ImGui.TextDisabled($"Could not find a entity definition with id \"{instance.EntityDefId}\"");
+            ImGui.TextDisabled($"Could not find an entity definition with id \"{instance.EntityDefId}\"");
         }
 
         ImGui.End();
@@ -981,7 +801,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 var avail = ImGui.GetContentRegionAvail();
                 var layerInstance = layerInstances[i];
-                var layerDef = layerDefs.FirstOrDefault(x => x.Uid == layerInstance.LayerDefId);
+                GetLayerDefinition(layerInstance.LayerDefId, out var layerDef);
 
                 var isSelected = _selectedLayerInstanceIndex == i;
 
@@ -997,16 +817,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 ImGui.SameLine(0, 0);
 
-                if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
+                if (ImGui.BeginPopupContextItem("Popup"))
                 {
                     if (ImGui.MenuItem("Clear", default))
                     {
                         ClearLayerInstance(layerInstance);
                     }
 
-                    ImGui.MenuItem("Copy", default);
-                    ImGui.MenuItem("Cut", default);
-                    ImGui.MenuItem("Duplicate", default);
                     if (ImGui.MenuItem("Delete", default))
                     {
                         layerToDelete = i;
@@ -1057,17 +874,17 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         ImGuiExt.SeparatorText("Selected Layer");
 
-        if (_selectedLayerInstanceIndex <= layerInstances.Count - 1)
+        GetSelectedLayerInstance(out var world, out var level, out var selectedLayerInstance, out var selectedLayerDef);
+
+        if (selectedLayerInstance != null)
         {
-            var layerInstance = layerInstances[_selectedLayerInstanceIndex];
-            var layerDef = layerDefs.FirstOrDefault(x => x.Uid == layerInstance.LayerDefId);
-            if (layerDef != null)
+            if (selectedLayerDef != null)
             {
-                DrawSelectedLayerBrushes(layerDef, _editor.RootJson, ref _selectedIntGridValueIndex, ref _selectedEntityDefinitionIndex);
+                DrawSelectedLayerBrushes(selectedLayerDef, _editor.RootJson, ref _selectedIntGridValueIndex, ref _selectedEntityDefinitionIndex);
             }
             else
             {
-                ImGui.TextColored(Color.Red.ToNumerics(), $"Could not find a layer definition with Uid \"{layerInstance.LayerDefId}\"");
+                ImGui.TextColored(Color.Red.ToNumerics(), $"Could not find a layer definition with Uid \"{selectedLayerInstance.LayerDefId}\"");
             }
         }
         else
@@ -1471,7 +1288,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void HandleLevelResize(Level level, Num.Vector2 min, Num.Vector2 max, uint gridSize)
     {
-        var state = _resizeLevel.Draw(min, max, _gameRenderScale * 5f, true, true);
+        var state = _resizeEditorLevel.Draw(min, max, _gameRenderScale * 5f, true, true);
 
         if (state == ToolState.Started)
         {
@@ -1484,7 +1301,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
              state == ToolState.Ended) &&
             ImGui.GetMouseDragDelta().LengthSquared() >= 4 * 4)
         {
-            var sizeDelta = _resizeLevel.TotSizeDelta.ToVec2() / _gameRenderScale;
+            var sizeDelta = _resizeEditorLevel.TotSizeDelta.ToVec2() / _gameRenderScale;
             var gridSizeDelta = (sizeDelta / gridSize).Round();
 
             var newSize = (_resizeStartSize + gridSizeDelta * gridSize).ToUPoint();
@@ -1495,13 +1312,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 var prevSize = level.Size;
 
                 var startPos = _resizeStartPos;
-                var newX = _resizeLevel.ActiveHandle switch
+                var newX = _resizeEditorLevel.ActiveHandle switch
                 {
                     RectHandlePos.TopLeft or RectHandlePos.Left or RectHandlePos.BottomLeft => (int)(startPos.X - (gridSizeDelta.X * gridSize)),
                     _ => level.WorldPos.X,
                 };
 
-                var newY = _resizeLevel.ActiveHandle switch
+                var newY = _resizeEditorLevel.ActiveHandle switch
                 {
                     RectHandlePos.TopLeft or RectHandlePos.Top or RectHandlePos.TopRight => (int)(startPos.Y - (gridSizeDelta.Y * gridSize)),
                     _ => level.WorldPos.Y,
@@ -1519,6 +1336,21 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 LevelsWindow.ResizeLevel(level, prevSize, level.Size, moveDelta, gridSize);
             }
         }
+    }
+
+    private static Point SnapToGrid(EntityInstance instance, EntityDefinition entityDef, uint gridSize)
+    {
+        var offset = Vector2.Zero;
+        // if (instance.Size.X <= gridSize && instance.Size.Y <= gridSize)
+        {
+            var numCells = new Vector2(
+                MathF.Ceil(instance.Size.X / (float)gridSize) * gridSize,
+                MathF.Ceil(instance.Size.Y / (float)gridSize) * gridSize
+            );
+            offset = (numCells - instance.Size) * entityDef.Pivot;
+        }
+        var (snapped, _) = SnapToGrid(instance.Position + offset, gridSize);
+        return (snapped + offset).ToPoint();
     }
 
     private static (Vector2 snapped, Point cell) SnapToGrid(Point position, uint gridSize)
@@ -1576,7 +1408,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
     }
 
-    private void DrawAutoLayerTiles(ImDrawList* dl, Level level, LayerDef layerDef, LayerInstance layer, bool isSelected)
+    private void DrawAutoLayerTiles(ImDrawList* dl, Level level, LayerDef layerDef, LayerInstance layer, bool isSelectedLayer)
     {
         if (!GetTileSetDef(layerDef.TileSetDefId, out var tileSetDef))
             return;
@@ -1589,7 +1421,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var uvMax = sprite.UV.BottomRight.ToNumerics();
             var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
             var iconMax = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize + new Vector2(layerDef.GridSize));
-            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax);
+            var tint = isSelectedLayer ? Color.White : Color.White.MultiplyAlpha(DeselectedLayerAlpha);
+            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, tint.PackedValue);
         }
     }
 
@@ -1646,7 +1479,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var iconMin = boundsMin - ((gridSize - entitySize) * entityDef.Pivot).ToNumerics();
             var iconMax = iconMin + iconSize.ToNumerics();
 
-            fillColor *= entityDef.FillOpacity;
+            fillColor = fillColor.MultiplyAlpha(entityDef.FillOpacity);
             fillColor = isSelectedLayer ? fillColor : fillColor.MultiplyAlpha(DeselectedLayerAlpha);
             iconTint = isSelectedLayer ? iconTint : iconTint.MultiplyAlpha(DeselectedLayerAlpha);
             dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
@@ -1661,32 +1494,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                 }
 
-                /*
-                var numGridCells = new Vector2(
-                    MathF.Ceil(entityInstance.Size.X / (float)layerDef.GridSize),
-                    MathF.Ceil(entityInstance.Size.Y / (float)layerDef.GridSize)
-                );
-                */
-
-                // Logs.LogInfo(numGridCells.ToString());
-                var originOffset = (Vector2.One * layerDef.GridSize - entityInstance.Size) * entityDef.Pivot;
-
                 if (ImGui.IsItemActivated())
                 {
                     if (ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift))
                     {
                         var instance = DuplicateInstance(entityInstance);
                         layer.EntityInstances.Add(instance);
+
+                        // swap duplicate with this
+                        (layer.EntityInstances[k], layer.EntityInstances[^1]) = (layer.EntityInstances[^1], layer.EntityInstances[k]);
                     }
 
                     {
                         _selectedEntityInstanceIndex = k;
-                        // var clickedPos = ImGui.GetIO()->MouseClickedPos;
-                        // _clickOffset = (new Num.Vector2(clickedPos[0].X, clickedPos[0].Y) - boundsMin) / _gameRenderScale;
 
-                        var (snapped, _) = SnapToGrid(entityInstance.Position, layerDef.GridSize);
-                        entityInstance.Position = (snapped + originOffset).ToPoint();
-                        _startPos = entityInstance.Position; // (entityInstance.Position - originOffset).ToPoint();
+                        entityInstance.Position = SnapToGrid(entityInstance, entityDef, layerDef.GridSize);
+                        _startPos = entityInstance.Position;
                         _isInstancePopupOpen = true;
                     }
                 }
@@ -1695,8 +1518,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     var gridDelta = ImGui.GetMouseDragDelta() / _gameRenderScale / layerDef.GridSize;
                     var snapped = new Point(
-                        (int)((int)(Math.Round(gridDelta.X)) * layerDef.GridSize),
-                        (int)((int)(Math.Round(gridDelta.Y)) * layerDef.GridSize)
+                        (int)(Math.Round(gridDelta.X) * layerDef.GridSize),
+                        (int)(Math.Round(gridDelta.Y) * layerDef.GridSize)
                     );
                     entityInstance.Position = _startPos + snapped;
                 }
@@ -1722,13 +1545,29 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 }*/
             }
 
-            // Draw blinking rect if there are field instances without matching field definitions
+            var fieldYOffset = 1;
             for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
             {
                 var fieldInstance = entityInstance.FieldInstances[j];
+
+                // Draw blinking rect if there are field instances without matching field definitions
                 if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
                 {
                     DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
+                }
+                else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden)
+                {
+                    if (fieldDef.DefaultValue!.Equals(fieldInstance.Value))
+                        continue;
+                    var valueStr = fieldInstance.Value?.ToString() ?? "NULL";
+                    var fieldStr = fieldDef.Identifier + " = " + valueStr;
+                    var fieldPadding = new Num.Vector2(4, 2);
+                    var fieldSize = ImGui.CalcTextSize(fieldStr) + fieldPadding;
+                    var fieldPos = boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) -
+                                   new Num.Vector2(fieldSize.X * 0.5f, fieldSize.Y * fieldYOffset);
+                    dl->AddRectFilled(fieldPos, fieldPos + fieldSize, Color.Black.MultiplyAlpha(0.5f).PackedValue, 0, ImDrawFlags.None);
+                    dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), fieldPos + fieldPadding * 0.5f, Color.White.PackedValue, fieldStr);
+                    fieldYOffset++;
                 }
             }
 
@@ -1745,6 +1584,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     {
         var serialized = JsonConvert.SerializeObject(entityInstance, ContentManager.JsonSerializerSettings);
         var copy = JsonConvert.DeserializeObject<EntityInstance>(serialized, ContentManager.JsonSerializerSettings) ?? throw new Exception();
+        copy.Iid = Guid.NewGuid();
         return copy;
     }
 
@@ -1807,7 +1647,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void HandleEntityResize(uint gridSize, Num.Vector2 min, Num.Vector2 max, EntityInstance entityInstance, EntityDefinition entityDef)
     {
-        var state = _resizeEntity.Draw(min, max, 5f, entityDef.ResizableX, entityDef.ResizableY);
+        var state = _resizeEditorEntity.Draw(min, max, 5f, entityDef.ResizableX, entityDef.ResizableY);
 
         if (state == ToolState.Started)
         {
@@ -1815,24 +1655,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             _resizeEntityStartSize = entityInstance.Size;
         }
 
-        if (_resizeEntity.State == ToolState.Started ||
-            _resizeEntity.State == ToolState.Active ||
-            _resizeEntity.State == ToolState.Ended)
+        if (_resizeEditorEntity.State == ToolState.Started ||
+            _resizeEditorEntity.State == ToolState.Active ||
+            _resizeEditorEntity.State == ToolState.Ended)
         {
-            var sizeDelta = _resizeEntity.TotSizeDelta.ToVec2() / _gameRenderScale;
+            var sizeDelta = _resizeEditorEntity.TotSizeDelta.ToVec2() / _gameRenderScale;
             var gridSizeDelta = (sizeDelta / gridSize).Round();
             var newSize = (_resizeEntityStartSize + gridSizeDelta * gridSize).ToUPoint();
 
             if (newSize != entityInstance.Size)
             {
                 var startPos = _resizeEntityStartPos;
-                var newX = _resizeEntity.ActiveHandle switch
+                var newX = _resizeEditorEntity.ActiveHandle switch
                 {
                     RectHandlePos.TopLeft or RectHandlePos.Left or RectHandlePos.BottomLeft => (int)(startPos.X - (gridSizeDelta.X * gridSize)),
                     _ => entityInstance.Position.X,
                 };
 
-                var newY = _resizeEntity.ActiveHandle switch
+                var newY = _resizeEditorEntity.ActiveHandle switch
                 {
                     RectHandlePos.TopLeft or RectHandlePos.Top or RectHandlePos.TopRight => (int)(startPos.Y - (gridSizeDelta.Y * gridSize)),
                     _ => entityInstance.Position.Y,
@@ -1874,7 +1714,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             GetIntDef(layerDef, cellValue, out var intDef);
             var color = intDef?.Color ?? Color.Red;
             if (!isSelected)
-                color *= 0.5f;
+                color = color.MultiplyAlpha(DeselectedLayerAlpha);
 
             color = color.MultiplyAlpha(IntGridAlpha);
 
@@ -1993,7 +1833,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var uvMax = sprite.UV.BottomRight.ToNumerics();
                     var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
                     var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
-                    dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, (Color.White * 0.33f).PackedValue);
+                    var color = Color.White.MultiplyAlpha(0.33f);
+                    dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, color.PackedValue);
 
                     if (!ImGui.IsAnyItemActive() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
                     {
@@ -2018,7 +1859,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
             var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
 
-            dl->AddRectFilled(iconMin, iconMax, (intGridValue.Color * 0.33f).PackedValue);
+            var color = intGridValue.Color.MultiplyAlpha(0.33f);
+            dl->AddRectFilled(iconMin, iconMax, color.PackedValue);
 
             var cols = (int)(level.Width / layerDef.GridSize);
             // var rows = (int)(level.Height / layerDef.GridSize);
