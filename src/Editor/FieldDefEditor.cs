@@ -8,9 +8,9 @@ public static unsafe class FieldDefEditor
 {
     private static bool _isArray;
 
-    private static string GetFieldLabel(FieldType type)
+    private static string GetFieldLabel(FieldType type, bool isArray)
     {
-        return type switch
+        var typeStr = type switch
         {
             FieldType.Int => "0, 1, 2",
             FieldType.Float => "1.0",
@@ -21,6 +21,7 @@ public static unsafe class FieldDefEditor
             FieldType.Vector2 => "X, Y",
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
+        return isArray ? $"Array<{typeStr}>" : typeStr;
     }
 
     public static void DrawFieldEditor(List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex, Action<FieldDef>? defRemovedCallback = null)
@@ -95,7 +96,10 @@ public static unsafe class FieldDefEditor
                 var fieldDef = fieldDefs[selectedFieldDefinitionIndex];
                 SimpleTypeInspector.InspectInputInt("Uid", ref fieldDef.Uid);
                 SimpleTypeInspector.InspectString("Identifier", ref fieldDef.Identifier);
+                
                 EnumInspector.InspectEnum("Type", ref fieldDef.FieldType);
+                SimpleTypeInspector.InspectBool("IsArray", ref fieldDef.IsArray);
+                
                 var actualType = FieldDef.GetActualType(fieldDef.FieldType, false);
 
                 if (fieldDef.DefaultValue == null)
@@ -117,6 +121,7 @@ public static unsafe class FieldDefEditor
                 SimpleTypeInspector.DrawSimpleInspector(actualType, "DefaultValue", ref fieldDef.DefaultValue, false, null);
 
                 EnumInspector.InspectEnum("EditorDisplayMode", ref fieldDef.EditorDisplayMode);
+                
                 if (fieldDef.FieldType is FieldType.Int or FieldType.Float)
                 {
                     SimpleTypeInspector.InspectFloat("MinValue", ref fieldDef.MinValue, SimpleTypeInspector.DefaultRangeSettings);
@@ -133,7 +138,7 @@ public static unsafe class FieldDefEditor
         var dl = ImGui.GetWindowDrawList();
         var cursorPos = ImGui.GetCursorScreenPos();
         var lineHeight = Math.Max(ImGui.GetTextLineHeight(), rowMinHeight);
-        var labelStr = GetFieldLabel(fieldDef.FieldType);
+        var labelStr = GetFieldLabel(fieldDef.FieldType, fieldDef.IsArray);
         var labelSize = ImGui.CalcTextSize(labelStr);
         var labelPos = cursorPos + new Vector2(
             ImGui.GetContentRegionAvail().X - labelSize.X - ImGui.GetStyle()->FramePadding.X - ImGui.GetStyle()->ItemSpacing.X,

@@ -18,12 +18,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     [CVar("editor.deselected_layer_alpha", "")]
     public static float DeselectedLayerAlpha = 0.1f;
-    
+
     [CVar("editor.deselected_auto_layer_alpha", "")]
     private static float DeselectedAutoLayerAlpha = 1.0f;
-    
-    [CVar("editor.int_grid_alpha", "")]
-    public static float IntGridAlpha = 0.1f;
+
+    [CVar("editor.int_grid_alpha", "")] public static float IntGridAlpha = 0.1f;
 
     private readonly EntityDefWindow _entityDefWindow;
     private readonly LayerDefWindow _layerDefWindow;
@@ -183,6 +182,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 Logs.LogInfo("Stopped inspecting entity instance");
             }
 
+            return;
+        }
+        
+        if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+        {
+            _isInstancePopupOpen = false;
             return;
         }
 
@@ -581,13 +586,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 entity.Height = entityDef.Height;
                             }
 
+                            if (entityDef.KeepAspectRatio)
+                            {
+                                var entityDefAr = entityDef.Width / (float)entityDef.Height;
+                                var instanceAr = entity.Width / (float)entity.Height;
+                                if (MathF.NotApprox(entityDefAr, instanceAr))
+                                {
+                                    entity.Height = (uint)(entity.Width * entityDefAr);
+                                    Logs.LogWarn("Resetting entity instance height to match definition aspect ratio");
+                                }
+                            }
+
                             var snapped = SnapToGrid(entity, entityDef, layerDef.GridSize);
                             if (snapped != entity.Position)
                             {
                                 Logs.LogWarn("Snapping entity instance to grid");
                                 entity.Position = snapped;
                             }
-                            
+
                             for (var m = entity.FieldInstances.Count - 1; m >= 0; m--)
                             {
                                 var fieldInstance = entity.FieldInstances[m];
@@ -1234,11 +1250,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (!isSelectedLevel)
         {
             ImGui.SetCursorScreenPos(levelMin);
-            ImGui.SetItemAllowOverlap();
             if (ImGui.InvisibleButton("LevelButton", levelSize.EnsureNotZero(), (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
             {
                 LevelsWindow.SelectedLevelIndex = levelIndex;
             }
+
+            ImGui.SetItemAllowOverlap();
         }
         else
         {
@@ -1427,155 +1444,215 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private void DrawEntityLayer(ImDrawList* dl, Level level, LayerInstance layer, LayerDef layerDef, bool isSelectedLayer)
     {
-        var instanceToRemove = -1;
-        for (var k = 0; k < layer.EntityInstances.Count; k++)
+        for (var i = 0; i < layer.EntityInstances.Count; i++)
         {
-            ImGui.PushID(k);
-            var entityInstance = layer.EntityInstances[k];
-            var entityDefId = entityInstance.EntityDefId;
-            if (!GetEntityDef(entityDefId, out var entityDef))
+            ImGui.PushID(i);
+            // draw selected last so mouse clicks etc doesn't get hijacked by another entity in front
+            if (_selectedEntityInstanceIndex == i)
             {
-                DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
                 ImGui.PopID();
                 continue;
             }
 
-            GetTileSetDef(entityDef.TileSetDefId, out var tileSetDef);
+            DrawEntityInstance(dl, level, layer, layerDef, isSelectedLayer, i);
+            ImGui.PopID();
+        }
 
-            // var sprite = renderer.BlankSprite;
-            var sprite = _editor.Renderer.BlankSprite;
-            Matrix4x4 entityTransform;
-            Color fillColor;
-            Color iconTint = Color.White;
-            Color outline;
-            var uvMin = Num.Vector2.Zero;
-            var uvMax = Num.Vector2.One;
-            if (tileSetDef != null)
-            {
-                var colorField = entityInstance.FieldInstances.FirstOrDefault(x => x.Value is Color);
-                fillColor = colorField != null ? (Color)colorField.Value! : entityDef.Color;
-                iconTint = colorField != null ? (Color)colorField.Value! : Color.White;
-                outline = entityDef.Color;
+        if (_selectedEntityInstanceIndex != -1 && _selectedEntityInstanceIndex <= layer.EntityInstances.Count - 1)
+        {
+            ImGui.PushID(_selectedEntityInstanceIndex);
+            DrawEntityInstance(dl, level, layer, layerDef, isSelectedLayer, _selectedEntityInstanceIndex);
+            ImGui.PopID();
+        }
+    }
 
-                var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
-                uvMin = sprite.UV.TopLeft.ToNumerics();
-                uvMax = sprite.UV.BottomRight.ToNumerics();
-            }
-            else
-            {
-                fillColor = entityDef.Color;
-                outline = entityDef.Color;
-            }
+    private void DrawEntityInstance(ImDrawList* dl, Level level, LayerInstance layer, LayerDef layerDef, bool isSelectedLayer, int index)
+    {
+        var entityInstance = layer.EntityInstances[index];
+        var entityDefId = entityInstance.EntityDefId;
+        if (!GetEntityDef(entityDefId, out var entityDef))
+        {
+            DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
+            ImGui.PopID();
+            return;
+        }
 
-            var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
-            var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
-            // - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale
-            var entitySize = entityInstance.Size.ToVec2() * _gameRenderScale;
-            var gridSize = new Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
-            var iconSize = gridSize;
-            var iconMin = boundsMin - ((gridSize - entitySize) * entityDef.Pivot).ToNumerics();
-            var iconMax = iconMin + iconSize.ToNumerics();
+        GetTileSetDef(entityDef.TileSetDefId, out var tileSetDef);
 
-            fillColor = fillColor.MultiplyAlpha(entityDef.FillOpacity);
-            fillColor = isSelectedLayer ? fillColor : fillColor.MultiplyAlpha(DeselectedLayerAlpha);
-            iconTint = isSelectedLayer ? iconTint : iconTint.MultiplyAlpha(DeselectedLayerAlpha);
+        // var sprite = renderer.BlankSprite;
+        var sprite = _editor.Renderer.BlankSprite;
+        Matrix4x4 entityTransform;
+        Color fillColor;
+        Color iconTint = Color.White;
+        Color outline;
+        var uvMin = Num.Vector2.Zero;
+        var uvMax = Num.Vector2.One;
+        if (tileSetDef != null)
+        {
+            var colorField = entityInstance.FieldInstances.FirstOrDefault(x => x.Value is Color);
+            fillColor = colorField != null ? (Color)colorField.Value! : entityDef.Color;
+            iconTint = colorField != null ? (Color)colorField.Value! : Color.White;
+            outline = entityDef.Color;
+
+            var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+            sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
+            uvMin = sprite.UV.TopLeft.ToNumerics();
+            uvMax = sprite.UV.BottomRight.ToNumerics();
+        }
+        else
+        {
+            fillColor = entityDef.Color;
+            outline = entityDef.Color;
+        }
+
+        var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
+        var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
+        // - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale
+        var entitySize = entityInstance.Size.ToVec2() * _gameRenderScale;
+        var gridSize = new Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
+        var iconSize = gridSize;
+        var iconMin = boundsMin - ((gridSize - entitySize) * entityDef.Pivot).ToNumerics();
+        var iconMax = iconMin + iconSize.ToNumerics();
+
+        fillColor = fillColor.MultiplyAlpha(entityDef.FillOpacity);
+        fillColor = isSelectedLayer ? fillColor : fillColor.MultiplyAlpha(DeselectedLayerAlpha);
+        iconTint = isSelectedLayer ? iconTint : iconTint.MultiplyAlpha(DeselectedLayerAlpha);
+        if (entityDef.Identifier != "Light")
             dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
-            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
+        dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
 
-            if (isSelectedLayer)
+        if (isSelectedLayer)
+        {
+            ImGui.SetCursorScreenPos(boundsMin);
+            var idStr = "EntityButton";
+            var id = ImGui.GetID(idStr);
+            var buttonSize = boundsMax - boundsMin;
+            if (ImGui.InvisibleButton(idStr, buttonSize.EnsureNotZero(), (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
             {
-                ImGui.SetCursorScreenPos(boundsMin);
-                ImGui.SetItemAllowOverlap();
-                var buttonSize = boundsMax - boundsMin;
-                if (ImGui.InvisibleButton("EntityButton", buttonSize.EnsureNotZero()))
+            }
+
+            // if (ImGui.GetCurrentContext()->ActiveId != id)
+            ImGui.SetItemAllowOverlap();
+
+            if (ImGui.IsItemActivated())
+            {
+                if (ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift))
                 {
+                    var instance = DuplicateInstance(entityInstance);
+                    layer.EntityInstances.Add(instance);
+
+                    // swap duplicate with this
+                    (layer.EntityInstances[index], layer.EntityInstances[^1]) = (layer.EntityInstances[^1], layer.EntityInstances[index]);
                 }
 
-                if (ImGui.IsItemActivated())
                 {
-                    if (ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift))
-                    {
-                        var instance = DuplicateInstance(entityInstance);
-                        layer.EntityInstances.Add(instance);
+                    _selectedEntityInstanceIndex = index;
 
-                        // swap duplicate with this
-                        (layer.EntityInstances[k], layer.EntityInstances[^1]) = (layer.EntityInstances[^1], layer.EntityInstances[k]);
-                    }
-
-                    {
-                        _selectedEntityInstanceIndex = k;
-
-                        entityInstance.Position = SnapToGrid(entityInstance, entityDef, layerDef.GridSize);
-                        _startPos = entityInstance.Position;
-                        _isInstancePopupOpen = true;
-                    }
+                    entityInstance.Position = SnapToGrid(entityInstance, entityDef, layerDef.GridSize);
+                    _startPos = entityInstance.Position;
+                    _isInstancePopupOpen = true;
                 }
+            }
 
-                if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
-                {
-                    var gridDelta = ImGui.GetMouseDragDelta() / _gameRenderScale / layerDef.GridSize;
-                    var snapped = new Point(
-                        (int)(Math.Round(gridDelta.X) * layerDef.GridSize),
-                        (int)(Math.Round(gridDelta.Y) * layerDef.GridSize)
-                    );
-                    entityInstance.Position = _startPos + snapped;
-                }
+            if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
+            {
+                var gridDelta = ImGui.GetMouseDragDelta() / _gameRenderScale / layerDef.GridSize;
+                var snapped = new Point(
+                    (int)(Math.Round(gridDelta.X) * layerDef.GridSize),
+                    (int)(Math.Round(gridDelta.Y) * layerDef.GridSize)
+                );
+                entityInstance.Position = _startPos + snapped;
+            }
 
-                if (_selectedEntityInstanceIndex == k)
-                {
-                    dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
-                    HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
+            if (_selectedEntityInstanceIndex == index)
+            {
+                dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
+                HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
 
-                    // DrawMoveEntityButton(entityInstance, boundsMin, boundsMax);
-                }
-                else if (ImGui.IsItemHovered())
-                {
-                    dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
-                }
+                // DrawMoveEntityButton(entityInstance, boundsMin, boundsMax);
+            }
+            else if (ImGui.IsItemHovered())
+            {
+                dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
+            }
 
-                /*if (ImGui.BeginPopupContextItem("EntityInstanceContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
+            /*if (ImGui.BeginPopupContextItem("EntityInstanceContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
                 {
                     if (ImGui.MenuItem("Remove", default))
                         instanceToRemove = k;
 
                     ImGui.EndPopup();
                 }*/
-            }
-
-            var fieldYOffset = 1;
-            for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
-            {
-                var fieldInstance = entityInstance.FieldInstances[j];
-
-                // Draw blinking rect if there are field instances without matching field definitions
-                if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
-                {
-                    DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
-                }
-                else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden && isSelectedLayer)
-                {
-                    if (fieldDef.DefaultValue!.Equals(fieldInstance.Value))
-                        continue;
-                    var valueStr = fieldInstance.Value?.ToString() ?? "NULL";
-                    var fieldStr = fieldDef.Identifier + " = " + valueStr;
-                    var fieldPadding = new Num.Vector2(4, 2);
-                    var fieldSize = ImGui.CalcTextSize(fieldStr) + fieldPadding;
-                    var fieldPos = boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) -
-                                   new Num.Vector2(fieldSize.X * 0.5f, fieldSize.Y * fieldYOffset);
-                    dl->AddRectFilled(fieldPos, fieldPos + fieldSize, Color.Black.MultiplyAlpha(0.5f).PackedValue, 0, ImDrawFlags.None);
-                    dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), fieldPos + fieldPadding * 0.5f, Color.White.PackedValue, fieldStr);
-                    fieldYOffset++;
-                }
-            }
-
-            ImGui.PopID();
         }
 
-        if (instanceToRemove != -1)
+        var fieldYOffset = 1;
+        for (var j = 0; j < entityInstance.FieldInstances.Count; j++)
         {
-            layer.EntityInstances.RemoveAt(instanceToRemove);
+            var fieldInstance = entityInstance.FieldInstances[j];
+
+            // Draw blinking rect if there are field instances without matching field definitions
+            if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
+            {
+                DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
+            }
+            else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden && isSelectedLayer)
+            {
+                if (fieldDef.DefaultValue!.Equals(fieldInstance.Value))
+                    continue;
+                var valueStr = fieldInstance.Value?.ToString() ?? "NULL";
+                var fieldStr = fieldDef.Identifier + " = " + valueStr;
+                var fieldPadding = new Num.Vector2(4, 2);
+                var fieldSize = ImGui.CalcTextSize(fieldStr) + fieldPadding;
+                var fieldPos = boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) -
+                               new Num.Vector2(fieldSize.X * 0.5f, fieldSize.Y * fieldYOffset);
+                dl->AddRectFilled(fieldPos, fieldPos + fieldSize, Color.Black.MultiplyAlpha(0.5f).PackedValue, 0, ImDrawFlags.None);
+                dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), fieldPos + fieldPadding * 0.5f, Color.White.PackedValue, fieldStr);
+                fieldYOffset++;
+            }
         }
+
+        if (entityDef.Identifier == "Light")
+        {
+            var angleDef = entityDef.FieldDefinitions.FirstOrDefault(x => x.Identifier == "Angle");
+            var coneAngleDef = entityDef.FieldDefinitions.FirstOrDefault(x => x.Identifier == "ConeAngle");
+            var intensityDef = entityDef.FieldDefinitions.FirstOrDefault(x => x.Identifier == "Intensity");
+            if (angleDef != null && coneAngleDef != null && intensityDef != null)
+            {
+                var angleInstance = entityInstance.FieldInstances.FirstOrDefault(x => x.FieldDefId == angleDef.Uid);
+                var coneAngleInstance = entityInstance.FieldInstances.FirstOrDefault(x => x.FieldDefId == coneAngleDef.Uid);
+                var intensityInstance = entityInstance.FieldInstances.FirstOrDefault(x => x.FieldDefId == intensityDef.Uid);
+
+                if (angleInstance != null && coneAngleInstance != null && intensityInstance != null)
+                {
+                    var angle = (float)angleInstance.Value! * MathF.Deg2Rad;
+                    var coneAngle = (float)coneAngleInstance.Value! * MathF.Deg2Rad;
+                    var intensity = (float)intensityInstance.Value!;
+
+                    var center = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToVec2() * 0.5f);
+                    var radius = entityInstance.Size.X * 0.5f * _gameRenderScale;
+
+                    DrawCone(dl, center, coneAngle, angle, radius, fillColor.MultiplyAlpha(intensity));
+                }
+            }
+        }
+    }
+
+    private static void DrawCone(ImDrawList* dl, Num.Vector2 center, float coneAngle, float angle, float radius, Color fillColor, int numSegments = 64)
+    {
+        var numPoints = Math.Max(1, coneAngle / MathHelper.TwoPi * numSegments);
+        var aStart = angle - coneAngle * 0.5f;
+        var aEnd = angle + coneAngle * 0.5f;
+        var deltaA = Math.Max(MathHelper.TwoPi / numSegments, (aEnd - aStart) / numPoints);
+        dl->PathLineTo(center);
+        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aStart), MathF.Sin(aStart)) * radius);
+        for (var i = aStart + deltaA; i <= aEnd - deltaA; i += deltaA)
+        {
+            dl->PathLineTo(center + new Num.Vector2(MathF.Cos(i), MathF.Sin(i)) * radius);
+        }
+
+        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aEnd), MathF.Sin(aEnd)) * radius);
+
+        dl->PathFillConvex(fillColor.PackedValue);
     }
 
     private static EntityInstance DuplicateInstance(EntityInstance entityInstance)
@@ -1650,6 +1727,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (state == ToolState.Started)
         {
             _resizeEntityStartPos = entityInstance.Position;
+            if (entityDef.KeepAspectRatio)
+            {
+                var instanceAr = entityInstance.Width / (float)entityInstance.Height;
+                var defAr = entityDef.Width / (float)entityDef.Height;
+                if (MathF.NotApprox(instanceAr, defAr))
+                {
+                    entityInstance.Height = (uint)(defAr * entityInstance.Width);
+                }
+            }
+
             _resizeEntityStartSize = entityInstance.Size;
         }
 
@@ -1657,11 +1744,18 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             _resizeEditorEntity.State == ToolState.Active ||
             _resizeEditorEntity.State == ToolState.Ended)
         {
-            var sizeDelta = _resizeEditorEntity.TotSizeDelta.ToVec2() / _gameRenderScale;
-            var gridSizeDelta = (sizeDelta / gridSize).Round();
-            var newSize = (_resizeEntityStartSize + gridSizeDelta * gridSize).ToUPoint();
+            var totSizeDelta = _resizeEditorEntity.TotSizeDelta.ToVec2();
+            if (entityDef.KeepAspectRatio)
+            {
+                var ar = entityDef.Width / (float)entityDef.Height;
+                totSizeDelta.Y = totSizeDelta.X * ar;
+            }
 
-            if (newSize != entityInstance.Size)
+            var sizeDelta = totSizeDelta / _gameRenderScale;
+            var gridSizeDelta = (sizeDelta / gridSize).Round();
+            var newSize = _resizeEntityStartSize + gridSizeDelta * gridSize;
+
+            if (newSize != entityInstance.Size && newSize.X > 0 && newSize.Y > 0)
             {
                 var startPos = _resizeEntityStartPos;
                 var newX = _resizeEditorEntity.ActiveHandle switch
@@ -1676,10 +1770,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     _ => entityInstance.Position.Y,
                 };
 
+                if (ImGui.IsKeyDown(ImGuiKey.LeftAlt) || ImGui.IsKeyDown(ImGuiKey.RightAlt))
+                {
+                    newX = (int)(startPos.X - (gridSizeDelta.X * gridSize) * 0.5f);
+                    newY = (int)(startPos.Y - (gridSizeDelta.Y * gridSize) * 0.5f);
+                }
+
                 var newPos = new Point(newX, newY);
 
                 entityInstance.Position = newPos;
-                entityInstance.Size = newSize;
+                entityInstance.Size = newSize.ToUPoint();
             }
         }
     }
@@ -1754,14 +1854,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return;
 
         if (_isInstancePopupOpen)
-        {
-            if (ImGui.IsKeyPressed(ImGuiKey.Escape))
-            {
-                _isInstancePopupOpen = false;
-            }
-
             return;
-        }
 
         var dl = ImGui.GetWindowDrawList();
 
