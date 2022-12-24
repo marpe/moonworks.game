@@ -1,4 +1,7 @@
-﻿namespace MyGame.Graphics;
+﻿using FreeTypeSharp;
+using MyGame.Fonts;
+
+namespace MyGame.Graphics;
 
 public struct GfxPipeline
 {
@@ -34,6 +37,8 @@ public class Renderer
 
     public Dictionary<PipelineType, GfxPipeline> Pipelines;
 
+    public FreeTypeFontAtlas FreeTypeFontAtlas;
+
     public Renderer(MyGameMain game)
     {
         var createRendererTimer = Stopwatch.StartNew();
@@ -53,6 +58,12 @@ public class Renderer
         BMFonts = CreateBMFonts(_device);
         bmFontTimer.StopAndLog("BMFonts");
 
+        var freeTypeTimer = Stopwatch.StartNew();
+        Shared.FreeTypeLibrary = new FreeTypeLibrary();
+        FreeTypeFontAtlas = new FreeTypeFontAtlas(game.GraphicsDevice, 512, 512);
+        FreeTypeFontAtlas.AddFont(ContentPaths.fonts.consola_ttf, 18u, true);
+        freeTypeTimer.StopAndLog("FreeType");
+        
         _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
             DepthStencilClearValue = new DepthStencilValue(0, 0),
@@ -199,7 +210,12 @@ public class Renderer
     {
         SpriteBatch.Draw(sprite, colors, depth, transform, PointClamp, flip);
     }
-
+    
+    public void DrawFTText(ReadOnlySpan<char> text, Vector2 position, Color color)
+    {
+        FreeTypeFontAtlas.DrawText(this, text, position, color);
+    }
+    
     public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 position, float depth, Color color,
         HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
     {

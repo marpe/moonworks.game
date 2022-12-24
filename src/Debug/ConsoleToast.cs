@@ -80,7 +80,8 @@ public static class ConsoleToast
                 var charColor = ConsoleSettings.Colors[color] * lineAlpha;
                 var position = new Vector2(lineRect.X + j * charSize.X, lineRect.Y);
                 _tmp[0] = c;
-                renderer.DrawText(FontType.ConsolasMonoMedium, _tmp, position, 0, charColor);
+                // renderer.DrawText(FontType.ConsolasMonoMedium, _tmp, position, 0, charColor);
+                renderer.DrawFTText(_tmp, position, charColor);
             }
         }
 

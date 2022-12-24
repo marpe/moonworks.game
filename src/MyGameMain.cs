@@ -68,13 +68,7 @@ public class MyGameMain : Game
         ConsoleScreen = new ConsoleScreen(this);
         Shared.AudioManager = new AudioManager();
         Shared.Menus = new MenuHandler(this);
-
-        var freeTypeTimer = Stopwatch.StartNew();
-        Shared.FreeTypeLibrary = new FreeTypeLibrary();
-        var fontAtlas = new FreeTypeFontAtlas(GraphicsDevice, 512, 512);
-        fontAtlas.AddFont(ContentPaths.fonts.Roboto_Bold_ttf);
-        freeTypeTimer.StopAndLog("FreeType");
-
+        
         World = new World();
 
         Camera = new Camera(RenderTargets.GameRenderSize.X, RenderTargets.GameRenderSize.Y)
@@ -157,7 +151,7 @@ public class MyGameMain : Game
         {
             RenderGame(alpha, RenderTargets.CompositeRender);
         }
-
+        
         {
             var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 
@@ -201,7 +195,7 @@ public class MyGameMain : Game
         DrawWorld(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
 
         Shared.Menus.Draw(Renderer, ref commandBuffer, RenderTargets.MenuRender, alpha);
-
+        
         if (RenderTargets.RenderScale != 1)
         {
             var camera = Camera;

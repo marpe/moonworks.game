@@ -40,7 +40,7 @@ public struct FancyTextPart
 
 public class FancyTextComponent
 {
-    private static Color[] _rainbowGradient = new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Pink };
+    private static Color[] _rainbowGradient = new Color[] { Color.Red, Color.Yellow, Color.Green, Color.Cyan, Color.Blue, Color.Purple };
     private static Color[] _tempColors = new Color[4];
     private static Vector2[] _tempPoints = { new(0, 0), new(0, 1), new(1, 0), new(1, 1), };
     public static float ShakeSpeed = 100f;

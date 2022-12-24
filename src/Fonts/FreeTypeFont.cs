@@ -27,12 +27,13 @@ public class FreeTypeFont : IDisposable
         if (_faceHandle != IntPtr.Zero)
         {
             var err = FT.FT_Done_Face(_faceHandle);
+            if (err != FT_Error.FT_Err_Ok)
+                throw new FreeTypeException(err);
             _faceHandle = IntPtr.Zero;
         }
 
-        if (!_ttfDataHandle.IsAllocated)
-            return;
-        _ttfDataHandle.Free();
+        if (_ttfDataHandle.IsAllocated)
+            _ttfDataHandle.Free();
     }
 
     public void Dispose()
@@ -41,19 +42,18 @@ public class FreeTypeFont : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public uint GetCharIndex(uint codepoint)
+    public uint GetCharIndex(uint charcode)
     {
-        return FT.FT_Get_Char_Index(_faceHandle, codepoint);
+        return FT.FT_Get_Char_Index(_faceHandle, charcode);
     }
 
-    public unsafe int GetGlyphKernAdvance(int previousGlyphId, int glyphId, float fontSize)
+    public int GetGlyphKernAdvance(int previousGlyphIndex, int glyphIndex)
     {
-        var err = FT.FT_Get_Kerning(_faceHandle, (uint)previousGlyphId, (uint)glyphId, 0U, out var ftVector);
+        var err = FT.FT_Get_Kerning(_faceHandle, (uint)previousGlyphIndex, (uint)glyphIndex, 0U, out var ftVector);
         if (err != FT_Error.FT_Err_Ok)
             throw new FreeTypeException(err);
 
-        var pointer = (int*)ftVector.x.ToPointer();
-        return *pointer;
+        return (int)ftVector.x >> 6;
     }
 
     private void SetPixelSizes(uint width, uint height)
@@ -63,19 +63,22 @@ public class FreeTypeFont : IDisposable
             throw new FreeTypeException(err);
     }
 
-    private void LoadGlyph(uint glyphId)
+    private void LoadGlyph(uint glyphIndex)
     {
-        var err = FT.FT_Load_Glyph(_faceHandle, glyphId, 0);
+        var err = FT.FT_Load_Glyph(_faceHandle, glyphIndex, 0);
         if (err != FT_Error.FT_Err_Ok)
             throw new FreeTypeException(err);
     }
 
-    private unsafe void GetCurrentGlyph(out FT_GlyphSlotRec glyph) => glyph = PInvokeHelper.PtrToStructure<FT_GlyphSlotRec>((IntPtr)_faceRec.glyph);
+    private unsafe void GetCurrentGlyph(out FT_GlyphSlotRec glyph)
+    {
+        glyph = PInvokeHelper.PtrToStructure<FT_GlyphSlotRec>((IntPtr)_faceRec.glyph);
+    }
 
-    public void GetGlyphMetrics(uint glyphId, uint fontSize, out FT_Glyph_Metrics metrics)
+    public void GetGlyphMetrics(uint glyphIndex, uint fontSize, out FT_Glyph_Metrics metrics)
     {
         SetPixelSizes(0u, fontSize);
-        LoadGlyph(glyphId);
+        LoadGlyph(glyphIndex);
         GetCurrentGlyph(out var glyph);
         metrics = glyph.metrics;
     }
@@ -129,6 +132,4 @@ public class FreeTypeFont : IDisposable
 
         return bitmap;
     }
-    
-    
 }
