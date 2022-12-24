@@ -116,6 +116,15 @@ public unsafe class TileSetDefWindow : SplitWindow
                     Color.White.ToNumerics(),
                     Color.Black.ToNumerics()
                 );
+                ImGui.SetCursorScreenPos(ImGui.GetItemRectMin());
+                if (ImGui.InvisibleButton("OpenTileSetPopup", ImGui.GetItemRectSize()))
+                {
+                    ImGui.OpenPopup("TileIdPopup");
+                }
+
+                if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
+                {
+                }
             }
         }
     }

@@ -18,8 +18,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     [CVar("editor.deselected_layer_alpha", "")]
     public static float DeselectedLayerAlpha = 0.1f;
-
-    [CVar("editor.int_grid_alpha", "")] public static float IntGridAlpha = 0.1f;
+    
+    [CVar("editor.deselected_auto_layer_alpha", "")]
+    private static float DeselectedAutoLayerAlpha = 1.0f;
+    
+    [CVar("editor.int_grid_alpha", "")]
+    public static float IntGridAlpha = 0.1f;
 
     private readonly EntityDefWindow _entityDefWindow;
     private readonly LayerDefWindow _layerDefWindow;
@@ -309,8 +313,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawCleanButton();
 
-        SimpleTypeInspector.InspectFloat("Deselected Layer Alpha", ref DeselectedLayerAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
-        SimpleTypeInspector.InspectFloat("IntGrid Alpha", ref IntGridAlpha, new RangeSettings(0, 1.0f, 0.1f, false), "%.2f%%");
+        SimpleTypeInspector.InspectPercentage("Deselected Auto Layer Alpha", ref DeselectedAutoLayerAlpha);
+        SimpleTypeInspector.InspectPercentage("Deselected Layer Alpha", ref DeselectedLayerAlpha);
+        SimpleTypeInspector.InspectPercentage("IntGrid Alpha", ref IntGridAlpha);
         SimpleTypeInspector.InspectColor("BackgroundColor", ref BackgroundColor);
         SimpleTypeInspector.InspectColor("StripeColor", ref StripeColor);
         SimpleTypeInspector.InspectColor("GridColor", ref GridColor);
@@ -576,20 +581,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 entity.Height = entityDef.Height;
                             }
 
-                            var snappedX = (int)(entity.Position.X / (float)layerDef.GridSize) * layerDef.GridSize;
-                            if (snappedX != entity.Position.X)
+                            var snapped = SnapToGrid(entity, entityDef, layerDef.GridSize);
+                            if (snapped != entity.Position)
                             {
-                                Logs.LogWarn("Snapping entity instance x-position to grid");
-                                entity.Position.X = (int)snappedX;
+                                Logs.LogWarn("Snapping entity instance to grid");
+                                entity.Position = snapped;
                             }
-
-                            var snappedY = (int)(entity.Position.Y / (float)layerDef.GridSize) * layerDef.GridSize;
-                            if (snappedY != entity.Position.Y)
-                            {
-                                Logs.LogWarn("Snapping entity instance y-position to grid");
-                                entity.Position.Y = (int)snappedY;
-                            }
-
+                            
                             for (var m = entity.FieldInstances.Count - 1; m >= 0; m--)
                             {
                                 var fieldInstance = entity.FieldInstances[m];
@@ -1421,7 +1419,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var uvMax = sprite.UV.BottomRight.ToNumerics();
             var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
             var iconMax = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize + new Vector2(layerDef.GridSize));
-            var tint = isSelectedLayer ? Color.White : Color.White.MultiplyAlpha(DeselectedLayerAlpha);
+            var tint = isSelectedLayer ? Color.White : Color.White.MultiplyAlpha(DeselectedAutoLayerAlpha);
             dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, tint.PackedValue);
         }
     }
@@ -1555,7 +1553,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     DrawWarningRect(dl, level.WorldPos, layerDef.GridSize, entityInstance.Position);
                 }
-                else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden)
+                else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden && isSelectedLayer)
                 {
                     if (fieldDef.DefaultValue!.Equals(fieldInstance.Value))
                         continue;

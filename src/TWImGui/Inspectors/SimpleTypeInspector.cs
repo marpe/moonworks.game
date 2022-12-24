@@ -304,6 +304,27 @@ public unsafe class SimpleTypeInspector : Inspector
     }
 
 
+    public static bool InspectPercentage(string name, ref float value)
+    {
+        var tmpValue = value * 100f;
+        
+        var result = ImGui.SliderFloat(
+            ImGuiExt.LabelPrefix(name),
+            ImGuiExt.RefPtr(ref tmpValue),
+            0,
+            100,
+            "%.1f%%",
+            ImGuiSliderFlags.AlwaysClamp
+        );
+        
+        if (result)
+        {
+            value = tmpValue / 100f;
+        }
+
+        return result;
+    }
+
     public static bool InspectFloat(string name, ref float value, RangeSettings rangeSettings, string format = "%.4g",
         ImGuiSliderFlags flags = ImGuiSliderFlags.None)
     {

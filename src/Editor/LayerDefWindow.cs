@@ -430,7 +430,7 @@ public unsafe class LayerDefWindow : SplitWindow
             ImGui.OpenPopup("TileIdPopup");
         }
 
-        if (TileSetIdPopup.DrawTileSetIdPopup(tileSetDef, out var tileId))
+        if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
         {
             if (!rule.TileIds.Contains(tileId))
                 rule.TileIds.Add(tileId);

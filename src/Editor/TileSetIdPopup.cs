@@ -11,7 +11,7 @@ public static unsafe class TileSetIdPopup
     public static float Scale = 4f;
     public static Vector2 Offset = Vector2.Zero;
 
-    public static bool DrawTileSetIdPopup(TileSetDef tileSetDef, out int selectedTileId)
+    public static bool DrawTileSetIdPopup(string id, TileSetDef tileSetDef, out int selectedTileId)
     {
         selectedTileId = -1;
         var result = false;
@@ -21,7 +21,7 @@ public static unsafe class TileSetIdPopup
         ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
         ImGui.SetNextWindowPos(ImGui.GetMainViewport()->WorkPos + ImGui.GetMainViewport()->WorkSize * 0.5f, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
         ImGui.SetNextWindowBgAlpha(1.0f);
-        if (ImGui.BeginPopup("TileIdPopup", ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+        if (ImGui.BeginPopup(id, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
         {
             if (ImGui.IsWindowAppearing())
             {
@@ -34,7 +34,9 @@ public static unsafe class TileSetIdPopup
             var texturePosition = cursorPos + ImGui.GetWindowSize() * 0.5f - textureSize * 0.5f + Offset * Scale;
             var dl = ImGui.GetWindowDrawList();
 
-
+            ImGuiExt.FillWithStripes(dl, new ImRect(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize()), Color.White.MultiplyAlpha(0.025f).PackedValue);
+            ImGuiExt.FillWithStripes(dl, new ImRect(texturePosition, texturePosition + textureSize), Color.White.MultiplyAlpha(0.1f).PackedValue);
+            
             ImGui.SetCursorScreenPos(texturePosition);
             ImGui.Image(
                 (void*)texture.Handle,
@@ -44,10 +46,7 @@ public static unsafe class TileSetIdPopup
                 Color.White.ToNumerics(),
                 Color.Black.ToNumerics()
             );
-            ImGuiExt.FillWithStripes(dl, new ImRect(ImGui.GetWindowPos(), ImGui.GetWindowPos() + ImGui.GetWindowSize()),
-                Color.White.MultiplyAlpha(0.025f).PackedValue);
-            ImGuiExt.FillWithStripes(dl, new ImRect(texturePosition, texturePosition + textureSize), Color.White.MultiplyAlpha(0.1f).PackedValue);
-
+            
             var textureWidth = texture.Width;
             var textureHeight = texture.Height;
             var cols = textureWidth / tileSetDef.TileGridSize;

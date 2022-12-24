@@ -743,6 +743,8 @@ public class World
         {
             var layer = Level.LayerInstances[layerIndex];
             var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
+            if (layerDef.Identifier == "Background")
+                continue;
             DrawLayer(renderer, Root, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds);
         }
 

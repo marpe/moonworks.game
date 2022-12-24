@@ -146,7 +146,7 @@ public unsafe class EntityDefWindow : SplitWindow
             var tileSetDef = RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
             if (tileSetDef != null)
             {
-                if (TileSetIdPopup.DrawTileSetIdPopup(tileSetDef, out var tileId))
+                if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
                 {
                     entityDef.TileId = (uint)tileId;
                 }
