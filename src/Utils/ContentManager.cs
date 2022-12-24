@@ -20,6 +20,7 @@ public class ContentManager
     private readonly MyGameMain _game;
     private static StringBuilder _sb = new();
 
+    private Dictionary<string, AsepriteFile> _loadedAseprites = new();
     private Dictionary<string, Texture> _loadedTextures = new();
     private Dictionary<string, BMFont> _loadedBMFonts = new();
     private Dictionary<string, StaticSound> _loadedSound = new();
@@ -91,6 +92,11 @@ public class ContentManager
     {
         return _loadedTextures[path];
     }
+    
+    public (Texture, AsepriteFile) GetAseprite(string path)
+    {
+        return (_loadedTextures[path], _loadedAseprites[path]);
+    }
 
     public void LoadAndAddTTFFonts((string, int[])[] fontPaths)
     {
@@ -143,8 +149,9 @@ public class ContentManager
             var extension = Path.GetExtension(texturePath);
             if (extension == ".aseprite")
             {
-                var asepriteTexture = TextureUtils.LoadAseprite(_game.GraphicsDevice, ref commandBuffer, texturePath);
-                texturesPendingSubmit.Add(texturePath, asepriteTexture);
+                var (texture, aseprite) = TextureUtils.LoadAseprite(_game.GraphicsDevice, ref commandBuffer, texturePath);
+                texturesPendingSubmit.Add(texturePath, texture);
+                _loadedAseprites.Add(texturePath, aseprite);
             }
             else if (extension == ".png")
             {

@@ -45,12 +45,22 @@ public static class LayerDefs
         { Tiles.Left_Ground, new Color(188f, 38f, 200f, 255f) },
     };
 
+    public enum Background : long
+    {
+        Background = 1,
+    }
+
+    public static Dictionary<Background, Color> BackgroundColors = new()
+    {
+        { Background.Background, new Color(11f, 117f, 196f, 255f) },
+    };
+
 }
 
 public class LevelFields
 {
     public string Field;
-    public Point FieldArr;
+    public List<Point> FieldArr;
 }
 
 public enum EntityType

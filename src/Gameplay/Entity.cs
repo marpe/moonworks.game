@@ -37,6 +37,8 @@ public partial class Entity
 
     public bool DrawDebug;
 
+    public DrawComponent Draw = new();
+
     /*public Point Cell;
     /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
     public Vector2 CellPos;*/
@@ -45,6 +47,7 @@ public partial class Entity
     {
         _world = world;
         Position.Initialize();
+        Draw.Initialize(this);
         IsInitialized = true;
     }
 
@@ -52,6 +55,7 @@ public partial class Entity
     {
         CoroutineManager.Update(deltaSeconds);
         TotalTimeActive += deltaSeconds;
+        Draw.Update(deltaSeconds);
     }
 
     public override string ToString()

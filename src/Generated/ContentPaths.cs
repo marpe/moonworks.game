@@ -4,6 +4,15 @@ namespace MyGame;
 
 public static class ContentPaths
 {
+    public static class animations
+    {
+        public const string bee_aseprite = @"Content\animations\bee.aseprite";
+        public const string bluebee_aseprite = @"Content\animations\bluebee.aseprite";
+        public const string bullet_aseprite = @"Content\animations\bullet.aseprite";
+        public const string gun_aseprite = @"Content\animations\gun.aseprite";
+        public const string player_aseprite = @"Content\animations\player.aseprite";
+        public const string slug_aseprite = @"Content\animations\slug.aseprite";
+    }
     public static class bmfonts
     {
         public const string config_bmfc = @"Content\bmfonts\config.bmfc";
@@ -107,6 +116,7 @@ public static class ContentPaths
     public static class worlds
     {
         public const string Characters_png = @"Content\worlds\Characters.png";
+        public const string finalbossblues_icons_full_16_aseprite = @"Content\worlds\finalbossblues-icons_full_16.aseprite";
         public const string finalbossblues_icons_full_16_png = @"Content\worlds\finalbossblues-icons_full_16.png";
         public const string Tilemap_png = @"Content\worlds\Tilemap.png";
         public const string worlds_json = @"Content\worlds\worlds.json";

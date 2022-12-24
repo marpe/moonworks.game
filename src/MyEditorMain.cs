@@ -150,7 +150,9 @@ public unsafe class MyEditorMain : MyGameMain
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
-                var texture = TextureUtils.LoadAseprite(GraphicsDevice, e.FullPath);
+                var cb = GraphicsDevice.AcquireCommandBuffer();
+                var (texture, aseprite) = TextureUtils.LoadAseprite(GraphicsDevice, ref cb, e.FullPath);
+                GraphicsDevice.Submit(cb);
                 QueueAction(() =>
                 {
                     Shared.Content.ReplaceTexture(relativePath, texture);

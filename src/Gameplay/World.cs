@@ -200,55 +200,75 @@ public class World
             foreach (var entityInstance in layer.EntityInstances)
             {
                 var entityDef = GetEntityDefinition(root, entityInstance.EntityDefId);
-                var parsedType = Enum.Parse<EntityType>(entityDef.Identifier);
-                var type = Entity.TypeMap[parsedType];
-                var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
-
-                entity.EntityType = parsedType;
-                entity.Iid = entityInstance.Iid;
-                entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
-                entity.Size = entityInstance.Size;
-                entity.Position = new Position(level.WorldPos + entityInstance.Position/* - entity.Pivot * entity.Size*/);
-                entity.SmartColor = entityDef.Color;
-
-                foreach (var field in entityInstance.FieldInstances)
-                {
-                    var fieldDef = entityDef.FieldDefinitions.First(x => x.Uid == field.FieldDefId);
-                    var fieldValue = field.Value;
-                    var fieldInfo = entity.GetType().GetField(fieldDef.Identifier);
-                    if (fieldInfo == null)
-                    {
-                        Logs.LogError($"Entity is missing field: {fieldDef.Identifier}");
-                        continue;
-                    }
-
-                    if (fieldValue == null)
-                    {
-                        Logs.LogError($"Field \"{fieldInfo.Name}\" is null");
-                        continue;
-                    }
-
-                    if (fieldValue.GetType() == fieldInfo.FieldType)
-                    {
-                        fieldInfo.SetValue(entity, fieldValue);
-                        continue;
-                    }
-
-                    if (fieldInfo.FieldType == typeof(Color) && fieldValue is string colorStr)
-                    {
-                        fieldInfo.SetValue(entity, ColorExt.FromHex(colorStr.AsSpan(1)));
-                    }
-                    else
-                    {
-                        fieldInfo.SetValue(entity, Convert.ChangeType(fieldValue, fieldInfo.FieldType));
-                    }
-                }
-
+                var entity = CreateEntity(entityDef, entityInstance);
+                entity.Position.SetPrevAndCurrent(level.WorldPos + entityInstance.Position);
                 entities.Add(entity);
             }
         }
 
         return entities;
+    }
+
+    private static FieldDef GetFieldDef(int fieldDefUid, List<FieldDef> fieldDefs)
+    {
+        for (var i = 0; i < fieldDefs.Count; i++)
+        {
+            var fieldDef = fieldDefs[i];
+            if (fieldDef.Uid == fieldDefUid)
+            {
+                return fieldDef;
+            }
+        }
+
+        throw new Exception();
+    }
+    
+    private static Entity CreateEntity(EntityDefinition entityDef, EntityInstance entityInstance)
+    {
+        var parsedType = Enum.Parse<EntityType>(entityDef.Identifier);
+        var type = Entity.TypeMap[parsedType];
+        var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
+
+        entity.EntityType = parsedType;
+        entity.Iid = entityInstance.Iid;
+        entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
+        entity.Size = entityInstance.Size;
+        entity.SmartColor = entityDef.Color;
+
+        foreach (var field in entityInstance.FieldInstances)
+        {
+            var fieldDef = GetFieldDef(field.FieldDefId, entityDef.FieldDefinitions);
+            var fieldValue = field.Value;
+            var fieldInfo = entity.GetType().GetField(fieldDef.Identifier);
+            if (fieldInfo == null)
+            {
+                Logs.LogError($"Entity is missing field: {fieldDef.Identifier}");
+                continue;
+            }
+
+            if (fieldValue == null)
+            {
+                Logs.LogError($"Field \"{fieldInfo.Name}\" is null");
+                continue;
+            }
+
+            if (fieldValue.GetType() == fieldInfo.FieldType)
+            {
+                fieldInfo.SetValue(entity, fieldValue);
+                continue;
+            }
+
+            if (fieldInfo.FieldType == typeof(Color) && fieldValue is string colorStr)
+            {
+                fieldInfo.SetValue(entity, ColorExt.FromHex(colorStr.AsSpan(1)));
+            }
+            else
+            {
+                fieldInfo.SetValue(entity, Convert.ChangeType(fieldValue, fieldInfo.FieldType));
+            }
+        }
+
+        return entity;
     }
 
     [ConsoleHandler("kill_all")]
@@ -424,47 +444,24 @@ public class World
 
     private void DrawBullets(Renderer renderer, double alpha)
     {
-        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         for (var i = 0; i < Bullets.Count; i++)
         {
             var bullet = Bullets[i];
-            var srcRect = new Rectangle(4 * 16, 0, 16, 16);
-            var xform = bullet.GetTransform(alpha);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);
+            bullet.Draw.Draw(renderer, alpha);
         }
     }
 
     private void DrawPlayer(Renderer renderer, double alpha)
     {
-        var srcRect = new Rectangle((int)(Player.FrameIndex * 16), 0, 16, 16);
-        var xform = Player.GetTransform(alpha);
-        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, Player.Flip);
+        Player.Draw.Draw(renderer, alpha);
     }
-
+    
     private void DrawEnemies(Renderer renderer, double alpha)
     {
-        if (!Shared.Content.HasTexture(ContentPaths.ldtk.Example.Characters_png))
-        {
-            Shared.Content.LoadAndAddTextures(new[] { ContentPaths.ldtk.Example.Characters_png });
-        }
-
-        var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
         for (var i = 0; i < Enemies.Count; i++)
         {
             var entity = Enemies[i];
-
-            var offset = entity.EntityType switch
-            {
-                EntityType.Slug => 5,
-                EntityType.BlueBee => 3,
-                _ => 1,
-            };
-
-            var frameIndex = (int)(entity.TotalTimeActive * 10) % 2;
-            var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-            var xform = entity.GetTransform(alpha);
-            renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);
+            entity.Draw.Draw(renderer, alpha);
         }
     }
 
@@ -624,18 +621,25 @@ public class World
         }
     }
 
+    private Entity CreateEntity(EntityType entityType)
+    {
+        var def = GetEntityDefinition(Root, entityType);
+        var instance = EntityDefinition.CreateEntityInstance(def);
+        var entity = CreateEntity(def, instance);
+        return entity;
+    }
+
+    private T CreateEntity<T>() where T : Entity
+    {
+        var entityType = Enum.Parse<EntityType>(typeof(T).Name);
+        return (T)CreateEntity(entityType);
+    }
+
     public void SpawnBullet(Vector2 position, int direction)
     {
-        var bullet = new Bullet();
-        var def = GetEntityDefinition(Root, EntityType.Bullet);
+        var bullet = CreateEntity<Bullet>();
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
-        bullet.Pivot = new Vector2(def.PivotX, def.PivotY);
-        bullet.Size = def.Size;
-        bullet.SmartColor = def.Color;
-        bullet.Iid = Guid.NewGuid();
-        bullet.EntityType = EntityType.Bullet;
-
         bullet.Initialize(this);
         if (bullet.HasCollision(bullet.Position.Current, bullet.Size))
         {

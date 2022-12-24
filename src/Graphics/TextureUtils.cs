@@ -124,19 +124,11 @@ public static class TextureUtils
         device.Wait();
         return texture;
     }
-
-    public static Texture LoadAseprite(GraphicsDevice device, string path)
-    {
-        var commandBuffer = device.AcquireCommandBuffer();
-        var texture = LoadAseprite(device, ref commandBuffer, path);
-        device.Submit(commandBuffer);
-        return texture;
-    }
-
-    public static Texture LoadAseprite(GraphicsDevice device, ref CommandBuffer commandBuffer, string path)
+    
+    public static (Texture, AsepriteFile) LoadAseprite(GraphicsDevice device, ref CommandBuffer commandBuffer, string path)
     {
         var aseprite = AsepriteFile.LoadAsepriteFile(path);
-        var (data, rects) = AsepriteToTextureAtlasConverter.GetTextureData(aseprite);
+        var data = AsepriteToTextureAtlasConverter.GetTextureData(aseprite);
         var texture = Texture.CreateTexture2D(
             device,
             aseprite.Header.Width * (uint)aseprite.Frames.Count,
@@ -144,7 +136,7 @@ public static class TextureUtils
             TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler
         );
         commandBuffer.SetTextureData(texture, data);
-        return texture;
+        return (texture, aseprite);
     }
     
     public static Texture CreateTexture(GraphicsDevice device, Texture toCopy)

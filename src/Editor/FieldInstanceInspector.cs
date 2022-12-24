@@ -37,7 +37,7 @@ public static unsafe class FieldInstanceInspector
             if (fieldInstances.Any(x => x.FieldDefId == fieldDefs[i].Uid))
                 continue;
 
-            fieldInstances.Add(CreateFieldInstance(fieldDefs[i]));
+            fieldInstances.Add(FieldDef.CreateFieldInstance(fieldDefs[i]));
         }
 
         for (var i = 0; i < fieldInstances.Count; i++)
@@ -160,14 +160,5 @@ public static unsafe class FieldInstanceInspector
                 fieldInstance.Value = Convert.ChangeType(fieldInstance.Value, actualType);
             }
         }
-    }
-
-    private static FieldInstance CreateFieldInstance(FieldDef fieldDef)
-    {
-        return new FieldInstance
-        {
-            Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray),
-            FieldDefId = fieldDef.Uid
-        };
     }
 }

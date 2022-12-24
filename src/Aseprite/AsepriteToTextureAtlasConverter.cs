@@ -28,7 +28,7 @@ public static class AsepriteToTextureAtlasConverter
         return null;
     }
 
-    private static void GetTextureFromCel(Span<uint> result, int frameIndex, AsepriteFile asepriteFile, AsepriteFile.Cel cel,
+    private static void GetTextureFromCel(Span<uint> destination, int frameIndex, AsepriteFile asepriteFile, AsepriteFile.Cel cel,
         AsepriteFile.LayerBlendMode blendMode, byte opacity)
     {
         var canvasWidth = asepriteFile.Header.Width;
@@ -55,17 +55,17 @@ public static class AsepriteToTextureAtlasConverter
                 var celPixel = cel.Pixels[pixelIndex];
                 var colorIndex = startIndexInColorArr + atlasWidth * ys + xs;
 
-                result[colorIndex] = blendMode switch
+                destination[colorIndex] = blendMode switch
                 {
-                    AsepriteFile.LayerBlendMode.Normal => Texture2DBlender.BlendNormal(result[colorIndex], celPixel, opacity),
-                    AsepriteFile.LayerBlendMode.Multiply => Texture2DBlender.BlendMultiply(result[colorIndex], celPixel, opacity),
+                    AsepriteFile.LayerBlendMode.Normal => Texture2DBlender.BlendNormal(destination[colorIndex], celPixel, opacity),
+                    AsepriteFile.LayerBlendMode.Multiply => Texture2DBlender.BlendMultiply(destination[colorIndex], celPixel, opacity),
                     _ => throw new NotImplementedException(),
                 };
             }
         }
     }
 
-    private static void GetFrame(AsepriteFile aseprite, int frameIndex, Span<uint> result)
+    private static void GetFrame(AsepriteFile aseprite, int frameIndex, Span<uint> destination)
     {
         var frame = aseprite.Frames[frameIndex];
         var layers = aseprite.Frames[0].Layers;
@@ -103,31 +103,19 @@ public static class AsepriteToTextureAtlasConverter
                 continue;
             }
 
-            GetTextureFromCel(result, frameIndex, aseprite, cels[i], blendMode, opacity);
+            GetTextureFromCel(destination, frameIndex, aseprite, cels[i], blendMode, opacity);
         }
     }
 
-    public static (uint[] data, List<Rectangle> rects) GetTextureData(AsepriteFile aseprite)
+    public static uint[] GetTextureData(AsepriteFile aseprite)
     {
         var atlasWidth = aseprite.Header.Width * aseprite.Frames.Count;
         var atlasHeight = aseprite.Header.Height;
-
         var atlas = new uint[atlasWidth * atlasHeight];
-        List<Rectangle> spriteRects = new();
-
         for (var i = 0; i < aseprite.Frames.Count; i++)
         {
-            var spriteRect = new Rectangle(
-                i * aseprite.Header.Width,
-                0,
-                aseprite.Header.Width,
-                atlasHeight
-            );
-
             GetFrame(aseprite, i, atlas);
-            spriteRects.Add(spriteRect);
         }
-
-        return (atlas, spriteRects);
+        return atlas;
     }
 }

@@ -30,7 +30,7 @@ public class PlayerBehaviour
 
         if (command.IsFiring)
         {
-            var direction = Player.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
+            var direction = Player.Draw.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
             Player.World.SpawnBullet(Player.Position.Current, direction);
         }
 
@@ -60,14 +60,16 @@ public class PlayerBehaviour
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
 
-        Player.FrameIndex = MathF.IsNearZero(Player.Velocity.X, 0.01f) ? 0 : (uint)(Player.TotalTimeActive * 10) % 2;
+        Player.Draw.IsAnimating = !MathF.IsNearZero(Player.Velocity.X, 0.01f);
+        if (!Player.Draw.IsAnimating)
+            Player.Draw.FrameIndex = 0;
 
         if (!Player.IsJumping && command.IsJumpPressed)
         {
             var timeSinceOnGround = Player.TotalTimeActive - Player.LastOnGroundTime;
             if (timeSinceOnGround < 0.1f)
             {
-                Player.Squash = new Vector2(0.6f, 1.4f);
+                Player.Draw.Squash = new Vector2(0.6f, 1.4f);
                 Player.LastOnGroundTime = 0;
                 Player.Velocity.Y = Player.JumpSpeed;
                 Player.LastJumpStartTime = Player.TotalTimeActive;
@@ -95,22 +97,22 @@ public class PlayerBehaviour
 
         if (Mover.HasCollisionInDirection(CollisionDir.Down, Player.Mover.MoveCollisions))
         {
-            Player.Squash = new Vector2(1.5f, 0.5f);
+            Player.Draw.Squash = new Vector2(1.5f, 0.5f);
         }
 
         if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
         {
             Player.IsJumping = false;
-            Player.Squash = new Vector2(1.5f, 0.5f);
+            Player.Draw.Squash = new Vector2(1.5f, 0.5f);
         }
 
         if (Player.Velocity.X > 0)
         {
-            Player.Flip = SpriteFlip.None;
+            Player.Draw.Flip = SpriteFlip.None;
         }
         else if (Player.Velocity.X < 0)
         {
-            Player.Flip = SpriteFlip.FlipHorizontally;
+            Player.Draw.Flip = SpriteFlip.FlipHorizontally;
         }
 
         if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping && !command.MoveToMouse)
@@ -118,6 +120,6 @@ public class PlayerBehaviour
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
         }
 
-        Player.Squash = Vector2.SmoothStep(Player.Squash, Vector2.One, deltaSeconds * 20f);
+        Player.Draw.Squash = Vector2.SmoothStep(Player.Draw.Squash, Vector2.One, deltaSeconds * 20f);
     }
 }

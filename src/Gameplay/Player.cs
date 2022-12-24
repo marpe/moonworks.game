@@ -3,21 +3,13 @@ namespace MyGame;
 [CustomInspector<GroupInspector>]
 public partial class Player : Entity
 {
-    public bool EnableSquash = true;
-    
     [HideInInspector]
-    public SpriteFlip Flip = SpriteFlip.None;
-
-    [HideInInspector]
-    public uint FrameIndex;
     public bool IsJumping;
     public float JumpHoldTime = 0.3f;
     public float JumpSpeed = -300f;
     public float LastJumpStartTime;
     public float LastOnGroundTime;
     public float Speed = 20f;
-    public Vector2 Squash = Vector2.One;
-
 
     public Velocity Velocity = new()
     {
@@ -28,10 +20,9 @@ public partial class Player : Entity
     public PlayerBehaviour Behaviour = new();
     public Mover Mover = new();
 
-    public Matrix4x4 LastTransform = Matrix4x4.Identity;
-
     public override void Initialize(World world)
     {
+        Draw.TexturePath = ContentPaths.animations.player_aseprite;
         Behaviour.Initialize(this);
         Mover.Initialize(this);
         base.Initialize(world);
@@ -41,18 +32,5 @@ public partial class Player : Entity
     {
         Behaviour.Update(deltaSeconds, command);
         base.Update(deltaSeconds);
-    }
-
-    public Matrix4x4 GetTransform(double alpha)
-    {
-        var squash = Matrix3x2.CreateTranslation(-Size * Pivot) *
-                     Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
-                     Matrix3x2.CreateTranslation(Size * Pivot);
-
-        var xform = Matrix3x2.CreateTranslation(Pivot * (Size - World.DefaultGridSize)) *
-                    squash *
-                    Matrix3x2.CreateTranslation(Vector2.Lerp(Position.LastUpdatePosition, Position.Current, (float)alpha));
-        LastTransform = xform.ToMatrix4x4();
-        return LastTransform;
     }
 }

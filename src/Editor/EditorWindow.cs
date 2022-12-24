@@ -1538,7 +1538,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 if (ImGui.IsKeyDown(ImGuiKey.LeftShift) || ImGui.IsKeyDown(ImGuiKey.RightShift))
                 {
-                    var instance = DuplicateInstance(entityInstance);
+                    var instance = DuplicateInstance(entityInstance, entityDef);
                     layer.EntityInstances.Add(instance);
 
                     // swap duplicate with this
@@ -1655,11 +1655,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         dl->PathFillConvex(fillColor.PackedValue);
     }
 
-    private static EntityInstance DuplicateInstance(EntityInstance entityInstance)
+    private static EntityInstance DuplicateInstance(EntityInstance entityInstance, EntityDefinition entityDefinition)
     {
         var serialized = JsonConvert.SerializeObject(entityInstance, ContentManager.JsonSerializerSettings);
         var copy = JsonConvert.DeserializeObject<EntityInstance>(serialized, ContentManager.JsonSerializerSettings) ?? throw new Exception();
         copy.Iid = Guid.NewGuid();
+        RootJson.EnsureFieldsAreValid(copy, entityDefinition);
         return copy;
     }
 
@@ -1892,7 +1893,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 if (_hoveringEntities.Count == 0)
                 {
-                    layerInstance.EntityInstances.Add(CreateNewEntityInstance(mouseSnappedToGrid.ToPoint(), entityDef));
+                    var entityInstance = EntityDefinition.CreateEntityInstance(entityDef);
+                    entityInstance.Position = mouseSnappedToGrid.ToPoint();
+                    layerInstance.EntityInstances.Add(entityInstance);
                     Logs.LogInfo($"Adding..: {Shared.Game.Time.UpdateCount}");
                 }
 
@@ -1968,30 +1971,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (ImGui.IsMouseReleased(ImGuiMouseButton.Left) || ImGui.IsMouseReleased(ImGuiMouseButton.Right))
                 ApplyIntGridAutoRules();
         }
-    }
-
-    private EntityInstance CreateNewEntityInstance(Point position, EntityDefinition entityDef)
-    {
-        var instance = new EntityInstance()
-        {
-            Position = position,
-            Width = entityDef.Width,
-            Height = entityDef.Height,
-            EntityDefId = entityDef.Uid,
-        };
-
-        foreach (var fieldDef in entityDef.FieldDefinitions)
-        {
-            instance.FieldInstances.Add(
-                new FieldInstance
-                {
-                    Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray),
-                    FieldDefId = fieldDef.Uid,
-                }
-            );
-        }
-
-        return instance;
     }
 
     private static void DrawGrid(ImDrawList* dl, Num.Vector2 min, Num.Vector2 max, float gridSize, Color lineColor, float thickness)

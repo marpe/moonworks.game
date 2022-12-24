@@ -15,21 +15,13 @@ public partial class Bullet : Entity
         Friction = new Vector2(1f, 1f),
     };
 
-    public SpriteFlip Flip = SpriteFlip.None;
-
     public override void Initialize(World world)
     {
+        Draw.TexturePath = ContentPaths.animations.bullet_aseprite;
         base.Initialize(world);
         Mover.Initialize(this);
         if (Velocity.Delta.X < 0)
-            Flip = SpriteFlip.FlipHorizontally;
-    }
-
-    public Matrix4x4 GetTransform(double alpha)
-    {
-        var xform = Matrix3x2.CreateTranslation(Size * Pivot - Pivot * new Vector2(World.DefaultGridSize, World.DefaultGridSize)) *
-                    Matrix3x2.CreateTranslation(Vector2.Lerp(Position.LastUpdatePosition, Position.Current, (float)alpha));
-        return xform.ToMatrix4x4();
+            Draw.Flip = SpriteFlip.FlipHorizontally;
     }
 
     public override void Update(float deltaSeconds)

@@ -78,46 +78,53 @@ public class RootJson
         fieldDef = null;
         return false;
     }
+
+    public static void EnsureValueIsValid(ref object? value, FieldDef fieldDef, bool isArray)
+    {
+        if (value == null)
+        {
+            value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, isArray);
+            return;
+        }
+
+        var actualType = FieldDef.GetActualType(fieldDef.FieldType, isArray);
+        
+        var instanceType = value.GetType();
+        
+        if (instanceType != actualType)
+        {
+            if (fieldDef.FieldType == FieldType.Color)
+            {
+                value = FieldDef.GetColor(value, Color.White);
+                return;
+            }
+                
+            value = Convert.ChangeType(value, actualType);
+        }
+    }
     
     public static void EnsureFieldsAreValid(EntityInstance entityInstance, EntityDefinition entityDef)
     {
-        for (var m = 0; m < entityInstance.FieldInstances.Count; m++)
+        for (var i = 0; i < entityInstance.FieldInstances.Count; i++)
         {
-            var fieldInstance = entityInstance.FieldInstances[m];
+            var fieldInstance = entityInstance.FieldInstances[i];
             if (!GetFieldDef(fieldInstance.FieldDefId, entityDef, out var fieldDef))
             {
                 continue;
             }
 
-            if (fieldInstance.Value == null)
-            {
-                fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
-                return;
-            }
+            EnsureValueIsValid(ref fieldInstance.Value, fieldDef, fieldDef.IsArray);
 
-            var actualType = FieldDef.GetActualType(fieldDef.FieldType, fieldDef.IsArray);
-            var instanceType = fieldInstance.Value.GetType();
-            if (instanceType != actualType)
+            if (fieldDef.IsArray)
             {
-                if (fieldDef.FieldType == FieldType.Color)
+                var list = (IList)fieldInstance.Value!;
+                for (var j = 0; j < list.Count; j++)
                 {
-                    fieldInstance.Value = FieldDef.GetColor(fieldInstance.Value, Color.White);
-                    return;
+                    var value = list[j];
+                    EnsureValueIsValid(ref value, fieldDef, false);
+                    list[j] = value;
                 }
-                
-                fieldInstance.Value = Convert.ChangeType(fieldInstance.Value, actualType);
             }
-
-            // TODO (marpe): Fix arrays
-            /*if (fieldDef.IsArray)
-            {
-                var list = (IList)fieldInstance.Value;
-                for (var i = 0; i < list.Count; i++)
-                {
-                    var value = list[i];
-                    
-                }
-            }*/
         }
     }
 }
@@ -274,23 +281,16 @@ public class FieldDef
     [OnDeserialized]
     public void OnDeserialized(StreamingContext context)
     {
-        if (DefaultValue == null)
+        RootJson.EnsureValueIsValid(ref DefaultValue, this, false);
+    }
+    
+    public static FieldInstance CreateFieldInstance(FieldDef fieldDef)
+    {
+        return new FieldInstance
         {
-            DefaultValue = GetDefaultValue(DefaultValue, FieldType, IsArray);
-            return;
-        }
-
-        var actualType = GetActualType(FieldType, false);
-        if (DefaultValue.GetType() == actualType)
-            return;
-
-        if (FieldType == FieldType.Color)
-        {
-            DefaultValue = GetColor(DefaultValue, Color.White);
-            return;
-        }
-
-        DefaultValue = Convert.ChangeType(DefaultValue, actualType);
+            Value = GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray),
+            FieldDefId = fieldDef.Uid
+        };
     }
 }
 
@@ -298,17 +298,6 @@ public class FieldInstance
 {
     public int FieldDefId;
     public object? Value;
-
-    [OnDeserialized]
-    internal void OnDeserialized(StreamingContext context)
-    {
-        // TODO (marpe): Actually check the field definition
-        // Assume we're dealing with a color
-        if (Value is string { Length: 7 } strValue && strValue[0] == '#')
-        {
-            Value = ColorExt.FromHex(strValue.AsSpan(1));
-        }
-    }
 }
 
 public class World
@@ -414,6 +403,23 @@ public class EntityDefinition
 
     public EntityDefinition()
     {
+    }
+    
+    public static EntityInstance CreateEntityInstance(EntityDefinition entityDef)
+    {
+        var instance = new EntityInstance
+        {
+            Width = entityDef.Width,
+            Height = entityDef.Height,
+            EntityDefId = entityDef.Uid,
+        };
+
+        foreach (var fieldDef in entityDef.FieldDefinitions)
+        {
+            instance.FieldInstances.Add(FieldDef.CreateFieldInstance(fieldDef));
+        }
+
+        return instance;
     }
 }
 
