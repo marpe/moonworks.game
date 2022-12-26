@@ -91,7 +91,7 @@ public class Entity
         return false;
     }
 
-    public bool HasCollision(Vector2 position, Vector2 size)
+    public static (Point min, Point max) GetMinMaxCell(Vector2 position, Vector2 size)
     {
         var minCell = ToCell(position);
         // if the size is exactly a multiple of the grid, e.g (32, 16)
@@ -102,6 +102,12 @@ public class Entity
             MathF.Ceil(position.Y + size.Y - 1)
         );
         var maxCell = ToCell(max);
+        return (minCell, maxCell);
+    }
+
+    public bool HasCollision(Vector2 position, Vector2 size)
+    {
+        var (minCell, maxCell) = GetMinMaxCell(position, size);
 
         for (var x = minCell.X; x <= maxCell.X; x++)
         {

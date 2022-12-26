@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using MyGame.WorldsRoot;
 
 namespace MyGame.Editor;
 
@@ -7,7 +8,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     public const string WindowTitle = "World";
     private IInspector? _cameraInspector;
     private IInspector? _worldInspector;
-    private World? _prevWorld;
+    private RootJson? _prevRoot;
 
     private ColorAttachmentBlendState _rimBlendState = ColorAttachmentBlendState.Additive;
     private ColorAttachmentBlendState _lightBlendState = ColorAttachmentBlendState.Additive;
@@ -69,12 +70,12 @@ public unsafe class WorldWindow : ImGuiEditorWindow
             if (ImGui.BeginTabItem("World"))
             {
                 // var refreshInspector = ImGuiExt.ColoredButton("Refresh");
-                if (_prevWorld != world || _worldInspector == null) /* || refreshInspector)*/
+                if (_prevRoot != Shared.Game.World.Root || _worldInspector == null) /* || refreshInspector)*/
                 {
                     _worldInspector = InspectorExt.GetGroupInspectorForTarget(world);
                 }
 
-                _prevWorld = world;
+                _prevRoot = Shared.Game.World.Root;
                 _worldInspector.Draw();
 
                 ImGui.EndTabItem();

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using MyGame.Entities;
 using MyGame.WorldsRoot;
 
 namespace MyGame.Editor;
@@ -75,8 +76,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private static UPoint _resizeEntityStartSize;
     private static Point _moveEntityStart;
     private static Point _moveLevelStart;
+    private static List<EntityInstance> _tempEntityList = new();
 
     private static List<EntityInstance> _hoveringEntities = new();
+    private static Point _lastAddedCell;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -194,7 +197,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             return;
         }
 
-        if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+        if (ImGui.IsKeyPressed(ImGuiKey.Escape) /*||
+            ImGui.IsMouseReleased(ImGuiMouseButton.Right)*/)
         {
             _isInstancePopupOpen = false;
             return;
@@ -1604,7 +1608,17 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (_selectedEntityInstanceIndex == index)
             {
                 // dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
-                ImGuiExt.AddRectDashed(dl, boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, _gameRenderScale * 2f, (int)(_gameRenderScale * 10f), 0.5f, true);
+                var t = 0; //((MathF.Sin(Shared.Game.Time.TotalElapsedTime) + 1.0f) * 0.5f);
+                var rectOffset = new Num.Vector2(t * _gameRenderScale * 2f);
+                ImGuiExt.AddRectDashed(
+                    dl,
+                    boundsMin - rectOffset, boundsMax + rectOffset,
+                    ImGuiExt.Colors[0].PackedValue,
+                    _gameRenderScale * 1f, 
+                    (int)(_gameRenderScale * 10f),
+                    0.5f,
+                    true
+                );
                 HandleEntityResize(layerDef.GridSize, boundsMin, boundsMax, entityInstance, entityDef);
 
                 // DrawMoveEntityButton(entityInstance, boundsMin, boundsMax);
@@ -1927,15 +1941,32 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 if (ImGui.IsMouseReleased(ImGuiMouseButton.Left))
                 {
                     _isAdding = false;
+                    _lastAddedCell = new Point(-1, -1);
                     return;
                 }
 
                 if (_hoveringEntities.Count == 0)
                 {
+                    var mouseGridPoint = mouseSnappedToGrid.ToPoint();
+                    if (mouseGridPoint == _lastAddedCell)
+                        return;
+
                     var entityInstance = EntityDef.CreateEntityInstance(entityDef);
-                    entityInstance.Position = mouseSnappedToGrid.ToPoint();
+                    entityInstance.Position = mouseGridPoint;
+                    entityInstance.Position = SnapToGrid(entityInstance, entityDef, layerDef.GridSize);
+
+                    var entityInstanceCell = Entity.ToCell(entityInstance.Position);
+
+                    GetEntitiesInCell(entityInstanceCell, layerInstance.EntityInstances, _tempEntityList);
+                    foreach (var entity in _tempEntityList)
+                    {
+                        layerInstance.EntityInstances.Remove(entity);
+                    }
+
                     layerInstance.EntityInstances.Add(entityInstance);
-                    Logs.LogInfo($"Adding..: {Shared.Game.Time.UpdateCount}");
+                    _lastAddedCell = mouseGridPoint;
+
+                    Logs.LogInfo($"Added {entityDef.Identifier} at: {_lastAddedCell.ToString()} ({entityInstanceCell})");
                 }
 
                 return;
@@ -2142,6 +2173,27 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 position.Y < instance.Position.Y + +instance.Size.Y)
             {
                 results.Add(instance);
+            }
+        }
+    }
+
+    private static void GetEntitiesInCell(Point cell, List<EntityInstance> entities, List<EntityInstance> results)
+    {
+        results.Clear();
+
+        for (var i = 0; i < entities.Count; i++)
+        {
+            var instance = entities[i];
+            var (minCell, maxCell) = Entity.GetMinMaxCell(instance.Position, instance.Size);
+            for (var y = minCell.Y; y <= maxCell.Y; y++)
+            {
+                for (var x = minCell.X; x <= maxCell.X; x++)
+                {
+                    if (x == cell.X && y == cell.Y)
+                    {
+                        results.Add(instance);
+                    }
+                }
             }
         }
     }

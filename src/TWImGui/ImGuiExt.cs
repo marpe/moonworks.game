@@ -940,7 +940,10 @@ public static unsafe class ImGuiExt
     {
         var offset = (end - start);
         var length = offset.Length();
-        var numSegments = (int)(length / segmentLength);
+        if (MathF.IsNearZero(length))
+            return;
+
+        var numSegments = MathF.Max(1, (int)(length / segmentLength));
         var newSegmentLength = (int)(length / numSegments);
         var dir = offset / length;
         var lineLength = newSegmentLength * lengthOfOnSegments;
@@ -1206,7 +1209,7 @@ public static unsafe class ImGuiExt
     }
 
     public static bool BeginWorkspaceWindow(string windowTitle, string dockspaceId, Action<uint> initializeLayoutCallback, bool* isOpen,
-        ref ImGuiWindowClass windowClass, ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags.None)
+        ref ImGuiWindowClass windowClass, ImGuiDockNodeFlags dockSpaceFlags = ImGuiDockNodeFlags.None, bool forceRebuild = false)
     {
         ImGui.SetNextWindowSize(new Num.Vector2(1024, 768), ImGuiCond.FirstUseEver);
         ImGui.SetNextWindowSizeConstraints(new Num.Vector2(128, 128), new Num.Vector2(FLT_MAX, FLT_MAX));
@@ -1220,7 +1223,7 @@ public static unsafe class ImGuiExt
         windowClass.ClassId = dockspaceID;
         windowClass.DockingAllowUnclassed = true;
 
-        if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null)
+        if (ImGuiInternal.DockBuilderGetNode(dockspaceID) == null || forceRebuild)
         {
             var dockFlags = ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_DockSpace |
                             ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton |

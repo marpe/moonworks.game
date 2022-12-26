@@ -115,6 +115,14 @@
                     {
                       "FieldDefId": 4,
                       "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "Value": 0.25
                     }
                   ],
                   "Position": {

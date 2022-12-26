@@ -17,11 +17,14 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     public static ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
-                                               ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.NoPadOuterX;
+                                               ImGuiTableFlags.SizingStretchSame | ImGuiTableFlags.NoPadOuterX;
 
     private readonly Action<uint> _initializeDockSpace;
 
     protected WorldsRoot.RootJson RootJson => Editor.RootJson;
+    private static Dictionary<string, string> _cachedPaths = new();
+    private uint _rightDockID;
+    private uint _leftDockID;
 
     protected virtual void PushStyles()
     {
@@ -71,28 +74,30 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
         if (result)
         {
-            DrawSplit(_leftTitle, _drawLeft, windowClass);
-            DrawSplit(_rightTitle, _drawRight, windowClass);
+            DrawSplit(_leftTitle, _leftDockID, _drawLeft, windowClass);
+            DrawSplit(_rightTitle, _rightDockID, _drawRight, windowClass);
         }
     }
 
     private void InitializeDockSpace(uint dockSpaceID)
     {
-        var rightDockID = 0u;
-        var leftDockID = 0u;
-        ImGuiInternal.DockBuilderSplitNode(dockSpaceID, ImGuiDir.Left, 0.5f, &leftDockID, &rightDockID);
+        _rightDockID = 0u;
+        _leftDockID = 0u;
+        ImGuiInternal.DockBuilderSplitNode(dockSpaceID, ImGuiDir.Left, 0.5f, ImGuiExt.RefPtr(ref _leftDockID), ImGuiExt.RefPtr(ref _rightDockID));
 
-        ImGuiInternal.DockBuilderDockWindow(_leftTitle, leftDockID);
-        ImGuiInternal.DockBuilderDockWindow(_rightTitle, rightDockID);
+        ImGuiInternal.DockBuilderDockWindow(_leftTitle, _leftDockID);
+        ImGuiInternal.DockBuilderDockWindow(_rightTitle, _rightDockID);
     }
 
-    private static void DrawSplit(string title, Action drawContent, ImGuiWindowClass windowClass)
+    private static void DrawSplit(string title, uint dockId, Action drawContent, ImGuiWindowClass windowClass)
     {
         ImGui.SetNextWindowClass(&windowClass);
         var windowFlags = ImGuiWindowFlags.NoCollapse |
                           ImGuiWindowFlags.NoTitleBar |
-                          ImGuiWindowFlags.NoDecoration;
+                          ImGuiWindowFlags.NoDecoration |
+                          ImGuiWindowFlags.NoSavedSettings;
         ImGui.SetNextWindowSize(new Vector2(400, 600), ImGuiCond.FirstUseEver);
+        ImGui.SetNextWindowDockID(dockId, ImGuiCond.Always);
         if (ImGui.Begin(title, default, windowFlags))
         {
             drawContent();
@@ -116,9 +121,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     protected abstract void DrawLeft();
     protected abstract void DrawRight();
-    
-    private static Dictionary<string, string> _cachedPaths = new();
-    
+
     public static Texture GetTileSetTexture(string tileSetPath)
     {
         if (!_cachedPaths.TryGetValue(tileSetPath, out var path))
@@ -127,7 +130,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
             _cachedPaths.Add(tileSetPath, path);
         }
-        
+
         Texture texture;
 
         var editor = (MyEditorMain)Shared.Game;
@@ -181,17 +184,17 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         var buttonX = Math.Max(contentAvail.X * 0.5f - buttonSize - ImGui.GetStyle()->ItemInnerSpacing.X, cursorPosX);
         /*if (buttonX - 20 >= cursorPosX)
         {*/
-            ImGui.SetCursorPosX(buttonX);
-            ImGui.SetCursorPosY(cursorPosY + (rowHeight - buttonSize) / 2);
-            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
-            ImGui.Image(
-                (void*)Shared.Content.GetTexture(iconPath).Handle,
-                new Vector2(buttonSize, buttonSize),
-                Vector2.Zero, Vector2.One,
-                Color.White.ToNumerics(),
-                color.ToNumerics()
-            );
-            ImGui.PopStyleVar();
+        ImGui.SetCursorPosX(buttonX);
+        ImGui.SetCursorPosY(cursorPosY + (rowHeight - buttonSize) / 2);
+        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
+        ImGui.Image(
+            (void*)Shared.Content.GetTexture(iconPath).Handle,
+            new Vector2(buttonSize, buttonSize),
+            Vector2.Zero, Vector2.One,
+            Color.White.ToNumerics(),
+            color.ToNumerics()
+        );
+        ImGui.PopStyleVar();
         // }
 
         ImGui.PopStyleVar();
@@ -222,8 +225,8 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     public static void GiantLabel(string label, Color color, int rowHeight)
     {
-        if (!ImGui.IsItemVisible())
-            return;
+        /*if (!ImGui.IsItemVisible())
+            return;*/
 
         ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, new Vector2(ImGui.GetStyle()->ItemInnerSpacing.X * 4f, ImGui.GetStyle()->ItemInnerSpacing.Y));
 
