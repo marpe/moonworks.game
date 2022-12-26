@@ -22,7 +22,7 @@ vec4 test1()
     vec2 uv = pixel / txSize;
 
     // output
-    return texture(uniformTexture, uv);   
+    return texture(uniformTexture, uv) * color;
 }
 
 vec4 test2()
@@ -45,12 +45,12 @@ vec4 test2()
 
     uv = (mix(uv_pixel_src - 1.0, uv_pixel_src, uv_factor) + 0.5) / texSize;
 
-    return texture(uniformTexture, uv);
+    return texture(uniformTexture, uv) * color;
 }
 
 vec4 test3()
 {
-    return texture(uniformTexture, texCoord);
+    return texture(uniformTexture, texCoord) * color;
 }
 
 void main()

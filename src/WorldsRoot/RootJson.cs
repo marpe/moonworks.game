@@ -8,30 +8,20 @@ public class RootJson
     public string Version = "0.0.1";
     public uint DefaultGridSize = 16;
     public List<World> Worlds = new();
-    public List<EntityDefinition> EntityDefinitions = new();
     public List<FieldDef> LevelFieldDefinitions = new();
     public List<LayerDef> LayerDefinitions = new();
     public List<TileSetDef> TileSetDefinitions = new();
-    
+
     [OnDeserialized]
     public void OnDeserialized(StreamingContext context)
     {
-        for (var i = 0; i < EntityDefinitions.Count; i++)
-        {
-            var entityDef = EntityDefinitions[i];
-            for (var j = 0; j < entityDef.FieldDefinitions.Count; j++)
-            {
-                var fieldDef = entityDef.FieldDefinitions[j];
-            }
-        }
-
-        bool GetEntityDef(int entityDefUid, [NotNullWhen(true)] out EntityDefinition? entityDef)
+        bool GetEntityDef(int entityDefUid, [NotNullWhen(true)] out EntityDef? entityDef)
         {
             for (var i = 0; i < EntityDefinitions.Count; i++)
             {
-                if (EntityDefinitions[i].Uid == entityDefUid)
+                if (EntityDefinitions.ByIndex(i).Uid == entityDefUid)
                 {
-                    entityDef = EntityDefinitions[i];
+                    entityDef = EntityDefinitions.ByIndex(i);
                     return true;
                 }
             }
@@ -54,6 +44,7 @@ public class RootJson
                         var entityInstance = layerInstance.EntityInstances[l];
                         if (!GetEntityDef(entityInstance.EntityDefId, out var entityDef))
                         {
+                            Logs.LogError($"Couldn't find an entity definition with id \"{entityInstance.EntityDefId}\"");
                             continue;
                         }
 
@@ -64,7 +55,7 @@ public class RootJson
         }
     }
 
-    private static bool GetFieldDef(int fieldDefId, EntityDefinition entityDef, [NotNullWhen(true)] out FieldDef? fieldDef)
+    private static bool GetFieldDef(int fieldDefId, EntityDef entityDef, [NotNullWhen(true)] out FieldDef? fieldDef)
     {
         for (var i = 0; i < entityDef.FieldDefinitions.Count; i++)
         {
@@ -88,9 +79,9 @@ public class RootJson
         }
 
         var actualType = FieldDef.GetActualType(fieldDef.FieldType, isArray);
-        
+
         var instanceType = value.GetType();
-        
+
         if (instanceType != actualType)
         {
             if (fieldDef.FieldType == FieldType.Color)
@@ -98,12 +89,12 @@ public class RootJson
                 value = FieldDef.GetColor(value, Color.White);
                 return;
             }
-                
+
             value = Convert.ChangeType(value, actualType);
         }
     }
-    
-    public static void EnsureFieldsAreValid(EntityInstance entityInstance, EntityDefinition entityDef)
+
+    public static void EnsureFieldsAreValid(EntityInstance entityInstance, EntityDef entityDef)
     {
         for (var i = 0; i < entityInstance.FieldInstances.Count; i++)
         {
@@ -283,7 +274,7 @@ public class FieldDef
     {
         RootJson.EnsureValueIsValid(ref DefaultValue, this, false);
     }
-    
+
     public static FieldInstance CreateFieldInstance(FieldDef fieldDef)
     {
         return new FieldInstance
@@ -311,6 +302,7 @@ public class World
     }
 }
 
+[CustomInspector<GroupInspector>]
 public class Level
 {
     public Guid Iid = Guid.NewGuid();
@@ -380,7 +372,7 @@ public class EntityInstance
     }
 }
 
-public class EntityDefinition
+public class EntityDef
 {
     public int Uid;
     public List<FieldDef> FieldDefinitions = new();
@@ -388,7 +380,7 @@ public class EntityDefinition
     public uint Width;
     public uint Height;
     [JsonIgnore] public UPoint Size => new(Width, Height);
-    public string Identifier = "";
+    public string Identifier = "EntityDef";
     public float FillOpacity;
     public bool KeepAspectRatio;
     public bool ResizableX;
@@ -401,11 +393,11 @@ public class EntityDefinition
     [JsonIgnore] public Vector2 Pivot => new Vector2(PivotX, PivotY);
     public List<string> Tags = new();
 
-    public EntityDefinition()
+    public EntityDef()
     {
     }
-    
-    public static EntityInstance CreateEntityInstance(EntityDefinition entityDef)
+
+    public static EntityInstance CreateEntityInstance(EntityDef entityDef)
     {
         var instance = new EntityInstance
         {

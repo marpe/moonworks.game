@@ -1,5 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using MyGame.Cameras;
+using MyGame.Debug;
+using MyGame.Entities;
 using MyGame.WorldsRoot;
 
 namespace MyGame;
@@ -143,10 +145,9 @@ public class World
         Level = level;
 
         var entities = LoadEntitiesInLevel(Root, level);
-        Player = (Player)entities.First(t => t.EntityType == EntityType.Player);
-        var enemyTypes = new[] { EntityType.BlueBee, EntityType.Slug };
-        Enemies.AddRange(entities.Where(x => enemyTypes.Contains(x.EntityType)).Cast<Enemy>());
-        Lights.AddRange(entities.Where(x => x.EntityType == EntityType.Light).Cast<Light>());
+        Player = (Player)entities.First(x => x is Player);
+        Enemies.AddRange(entities.Where(x => x is Enemy).Cast<Enemy>());
+        Lights.AddRange(entities.Where(x => x is Light).Cast<Light>());
     }
 
     [ConsoleHandler("next_level")]
@@ -220,13 +221,11 @@ public class World
         throw new Exception();
     }
 
-    private static Entity CreateEntity(EntityDefinition entityDef, EntityInstance entityInstance)
+    private static Entity CreateEntity(EntityDef entityDef, EntityInstance entityInstance)
     {
-        var parsedType = Enum.Parse<EntityType>(entityDef.Identifier);
-        var type = Entity.TypeMap[parsedType];
+        var type = EntityDefinitions.TypeMap[entityDef.Identifier];
         var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
 
-        entity.EntityType = parsedType;
         entity.Iid = entityInstance.Iid;
         entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
         entity.Size = entityInstance.Size;
@@ -629,18 +628,12 @@ public class World
         }
     }
 
-    private Entity CreateEntity(EntityType entityType)
-    {
-        var def = GetEntityDefinition(Root, entityType);
-        var instance = EntityDefinition.CreateEntityInstance(def);
-        var entity = CreateEntity(def, instance);
-        return entity;
-    }
-
     private T CreateEntity<T>() where T : Entity
     {
-        var entityType = Enum.Parse<EntityType>(typeof(T).Name);
-        return (T)CreateEntity(entityType);
+        var def = GetEntityDefinition(Root, typeof(T).Name);
+        var instance = EntityDef.CreateEntityInstance(def);
+        var entity = CreateEntity(def, instance);
+        return (T)entity;
     }
 
     public void SpawnBullet(Vector2 position, int direction)
@@ -658,23 +651,23 @@ public class World
         Bullets.Add(bullet);
     }
 
-    private static EntityDefinition GetEntityDefinition(RootJson root, int entityDefId)
+    private static EntityDef GetEntityDefinition(RootJson root, int entityDefId)
     {
-        for (var i = 0; i < root.EntityDefinitions.Count; i++)
+        for (var i = 0; i < EntityDefinitions.Count; i++)
         {
-            if (root.EntityDefinitions[i].Uid == entityDefId)
-                return root.EntityDefinitions[i];
+            if (EntityDefinitions.ByIndex(i).Uid == entityDefId)
+                return EntityDefinitions.ByIndex(i);
         }
 
         throw new InvalidOperationException();
     }
 
-    private static EntityDefinition GetEntityDefinition(RootJson root, EntityType entityType)
+    private static EntityDef GetEntityDefinition(RootJson root, string identifier)
     {
-        for (var i = 0; i < root.EntityDefinitions.Count; i++)
+        for (var i = 0; i < EntityDefinitions.Count; i++)
         {
-            if (root.EntityDefinitions[i].Identifier == Entity.Identifiers[(int)entityType])
-                return root.EntityDefinitions[i];
+            if (EntityDefinitions.ByIndex(i).Identifier == identifier)
+                return EntityDefinitions.ByIndex(i);
         }
 
         throw new InvalidOperationException();

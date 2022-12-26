@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using MyGame.Entities;
+
+namespace MyGame.Debug;
 
 public static class MouseDebug
 {

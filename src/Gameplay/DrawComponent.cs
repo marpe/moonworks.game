@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using MyGame.Entities;
+
+namespace MyGame;
 
 public enum LoopType
 {

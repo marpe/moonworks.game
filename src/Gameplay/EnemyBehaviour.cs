@@ -1,3 +1,5 @@
+using MyGame.Entities;
+
 namespace MyGame;
 
 public abstract class EnemyBehaviour

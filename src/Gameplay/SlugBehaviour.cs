@@ -1,4 +1,6 @@
-﻿namespace MyGame;
+﻿using MyGame.Entities;
+
+namespace MyGame;
 
 public record struct DelayedCallback(float Delay, Action Callback, bool Fired = false);
 

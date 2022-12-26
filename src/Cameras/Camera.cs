@@ -1,4 +1,6 @@
-﻿namespace MyGame.Cameras;
+﻿using MyGame.Entities;
+
+namespace MyGame.Cameras;
 
 public class Camera
 {

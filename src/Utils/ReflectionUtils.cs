@@ -35,25 +35,10 @@ public static class ReflectionUtils
         );
     }
 
-    public static List<Type> GetAllSubclassesOfType<T>()
+    public static IEnumerable<Type> GetAllSubclassesOfType<T>()
     {
         var assembly = Assembly.GetEntryAssembly();
-        var sceneTypes = new List<Type>();
         var types = assembly?.GetTypes();
-
-        if (types == null)
-        {
-            return sceneTypes;
-        }
-
-        foreach (var type in types)
-        {
-            if (type.IsSubclassOf(typeof(T)))
-            {
-                sceneTypes.Add(type);
-            }
-        }
-
-        return sceneTypes;
+        return types == null ? new List<Type>() : types.Where(t => t.IsSubclassOf(typeof(T)));
     }
 }

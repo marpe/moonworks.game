@@ -1,9 +1,8 @@
 ﻿using MoonWorks.Collision.Float;
-using Point = MoonWorks.Math.Float.Point;
 
-namespace MyGame;
+namespace MyGame.Entities;
 
-public partial class Bullet : Entity
+public class Bullet : Entity
 {
     public float Timer;
     public float Lifetime = 3f;

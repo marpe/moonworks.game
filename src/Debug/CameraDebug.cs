@@ -1,6 +1,6 @@
 ﻿using MyGame.Cameras;
 
-namespace MyGame;
+namespace MyGame.Debug;
 
 public static class CameraDebug
 {

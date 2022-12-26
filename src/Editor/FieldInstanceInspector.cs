@@ -8,6 +8,8 @@ using Vector2 = Num.Vector2;
 
 public static unsafe class FieldInstanceInspector
 {
+    private static int _newFieldDefId;
+
     private static bool GetFieldDef(int fieldDefId, [NotNullWhen(true)] out FieldDef? fieldDef, List<FieldDef> fieldDefs)
     {
         for (var i = 0; i < fieldDefs.Count; i++)
@@ -21,6 +23,42 @@ public static unsafe class FieldInstanceInspector
 
         fieldDef = null;
         return false;
+    }
+
+    private static void RemapEntityInstanceFieldDefIds(int oldFieldDefId, FieldDef newFieldDef)
+    {
+        var editor = (MyEditorMain)Shared.Game;
+        for (var worldIdx = 0; worldIdx < editor.RootJson.Worlds.Count; worldIdx++)
+        {
+            var world = editor.RootJson.Worlds[worldIdx];
+            for (var levelIdx = 0; levelIdx < world.Levels.Count; levelIdx++)
+            {
+                var level = world.Levels[levelIdx];
+                for (var layerIdx = 0; layerIdx < level.LayerInstances.Count; layerIdx++)
+                {
+                    var layer = level.LayerInstances[layerIdx];
+                    for (var entityIdx = 0; entityIdx < layer.EntityInstances.Count; entityIdx++)
+                    {
+                        var entityInstance = layer.EntityInstances[entityIdx];
+                        for (var fieldIdx = entityInstance.FieldInstances.Count - 1; fieldIdx >= 0; fieldIdx--)
+                        {
+                            var fieldInstance = entityInstance.FieldInstances[fieldIdx];
+                            // fix old field instance
+                            if (fieldInstance.FieldDefId == oldFieldDefId)
+                            {
+                                fieldInstance.FieldDefId = newFieldDef.Uid;
+                                RootJson.EnsureValueIsValid(ref fieldInstance.Value, newFieldDef, newFieldDef.IsArray);
+                            }
+                            // remove any new ones
+                            else if (fieldInstance.FieldDefId == newFieldDef.Uid)
+                            {
+                                entityInstance.FieldInstances.RemoveAt(fieldIdx);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
 
@@ -46,7 +84,41 @@ public static unsafe class FieldInstanceInspector
             var fieldInstance = fieldInstances[i];
             if (!GetFieldDef(fieldInstance.FieldDefId, out var fieldDef, fieldDefs))
             {
+                ImGui.PushTextWrapPos();
                 ImGui.Text($"Could not find a field definition with uid \"{fieldInstance.FieldDefId}\"");
+                ImGui.Text($"Value: \"{fieldInstance.Value?.ToString()}\"");
+                ImGui.PopTextWrapPos();
+                if (ImGuiExt.ColoredButton("Remap"))
+                {
+                    ImGui.OpenPopup("RemapFieldDefIdPopup");
+                }
+
+                ImGui.SetNextWindowSize(new Vector2(200, 0), ImGuiCond.Always);
+                if (ImGui.BeginPopupModal("RemapFieldDefIdPopup", default, ImGuiWindowFlags.AlwaysAutoResize))
+                {
+                    SimpleTypeInspector.InspectInputInt("New FieldDefId", ref _newFieldDefId);
+
+                    ImGui.SetNextItemWidth(ImGui.GetFontSize() * 8);
+
+                    var canRemap = GetFieldDef(_newFieldDefId, out var newFieldDef, fieldDefs);
+
+                    ImGui.BeginDisabled(!canRemap);
+                    if (ImGuiExt.ColoredButton("Ok"))
+                    {
+                        RemapEntityInstanceFieldDefIds(fieldInstance.FieldDefId, newFieldDef!);
+                        ImGui.CloseCurrentPopup();
+                    }
+                    ImGui.EndDisabled();
+
+                    ImGui.SameLine();
+                    if (ImGuiExt.ColoredButton("Cancel"))
+                    {
+                        ImGui.CloseCurrentPopup();
+                    }
+
+                    ImGui.EndPopup();
+                }
+
                 ImGui.PopID();
                 continue;
             }
@@ -124,9 +196,12 @@ public static unsafe class FieldInstanceInspector
                 }
 
                 SimpleTypeInspector.DrawSimpleInspector(fieldInstance.Value!.GetType(), fieldDef.Identifier, ref fieldInstance.Value, false, rangeSettings);
+                
+                ImGuiExt.ItemTooltip($"FieldDefId: {fieldDef.Uid}");
+                
                 if (ImGui.BeginPopupContextItem("FieldContextMenu"))
                 {
-                    if (ImGui.MenuItem("Reset to default value", default))
+                    if (ImGui.MenuItem($"Reset to default value: {fieldDef.DefaultValue?.ToString()}", default))
                     {
                         fieldInstance.Value = FieldDef.GetDefaultValue(fieldDef.DefaultValue, fieldDef.FieldType, fieldDef.IsArray);
                     }

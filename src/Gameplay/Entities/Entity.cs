@@ -1,10 +1,15 @@
 ﻿using MyGame.WorldsRoot;
 
-namespace MyGame;
+namespace MyGame.Entities;
 
 [CustomInspector<GroupInspector>]
-public partial class Entity
+public class Entity
 {
+    public Guid Iid;
+    public Point Size;
+    public Vector2 Pivot;
+    public Color SmartColor;
+    
     [HideInInspector] public bool IsInitialized;
 
     [HideInInspector] public bool IsDestroyed;
@@ -56,11 +61,6 @@ public partial class Entity
         CoroutineManager.Update(deltaSeconds);
         TotalTimeActive += deltaSeconds;
         Draw.Update(deltaSeconds);
-    }
-
-    public override string ToString()
-    {
-        return $"Type: {EntityType}";
     }
 
     public bool HasCollision(int x, int y)
@@ -121,10 +121,10 @@ public partial class Entity
     }
 }
 
-public partial class Gun_Pickup : Entity
+public class Gun_Pickup : Entity
 {
 }
 
-public partial class RefTest : Entity
+public class RefTest : Entity
 {
 }

@@ -1,13 +1,11 @@
 ﻿using Mochi.DearImGui;
 using MyGame.WorldsRoot;
-using EntityDefinition = MyGame.WorldsRoot.EntityDefinition;
 using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
 
 public unsafe class EntityDefWindow : SplitWindow
 {
-    private Color _refColor;
     private int _selectedEntityDefinitionIndex;
     private static int _rowMinHeight = 60;
     private int _selectedFieldDefinitionIndex;
@@ -19,10 +17,10 @@ public unsafe class EntityDefWindow : SplitWindow
 
     protected override void DrawLeft()
     {
-        var btnResult = ButtonGroup($"{FontAwesome6.Plus}", "Presets", 200);
+        /*var btnResult = ButtonGroup($"{FontAwesome6.Plus}", "Presets", 200);
         if (btnResult == 0)
         {
-            var def = new EntityDefinition
+            var def = new EntityDef
             {
                 Uid = GetNextId(RootJson.EntityDefinitions),
                 Color = Color.Green,
@@ -49,11 +47,12 @@ public unsafe class EntityDefWindow : SplitWindow
         else if (btnResult == 1)
         {
         }
+        */
 
-        DrawEntityDefTable(RootJson.EntityDefinitions, ref _selectedEntityDefinitionIndex, RootJson.TileSetDefinitions, RootJson.DefaultGridSize);
+        DrawEntityDefTable(EntityDefinitions.All, ref _selectedEntityDefinitionIndex, RootJson.TileSetDefinitions, RootJson.DefaultGridSize);
     }
 
-    private int GetNextId(List<EntityDefinition> entityDefs)
+    private int GetNextId(List<EntityDef> entityDefs)
     {
         var maxId = 0;
         for (var i = 0; i < entityDefs.Count; i++)
@@ -62,7 +61,7 @@ public unsafe class EntityDefWindow : SplitWindow
         return maxId;
     }
 
-    private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs,
+    private static void DrawEntityDefTable(List<EntityDef> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs,
         uint gridSize)
     {
         if (ImGui.BeginTable("EntityDefTable", 1, TableFlags, new Vector2(0, 0)))
@@ -128,7 +127,7 @@ public unsafe class EntityDefWindow : SplitWindow
 
     protected override void DrawRight()
     {
-        var entities = RootJson.EntityDefinitions;
+        var entities = EntityDefinitions.All;
         if (_selectedEntityDefinitionIndex >= 0 && _selectedEntityDefinitionIndex < entities.Count)
         {
             var entityDef = entities[_selectedEntityDefinitionIndex];
@@ -171,7 +170,7 @@ public unsafe class EntityDefWindow : SplitWindow
 
             DrawTags(entityDef);
 
-            if (SimpleTypeInspector.InspectColor("Smart Color", ref entityDef.Color, _refColor, ImGuiColorEditFlags.NoAlpha))
+            if (SimpleTypeInspector.InspectColor("Smart Color", ref entityDef.Color, null, ImGuiColorEditFlags.NoAlpha))
             {
                 entityDef.Color = entityDef.Color;
             }
@@ -203,7 +202,7 @@ public unsafe class EntityDefWindow : SplitWindow
         }
     }
 
-    private static void ResetInstanceFieldsToDefault(EntityDefinition entityDef, FieldDef fieldDef)
+    private static void ResetInstanceFieldsToDefault(EntityDef entityDef, FieldDef fieldDef)
     {
         var editor = (MyEditorMain)Shared.Game;
         for (var worldIdx = 0; worldIdx < editor.RootJson.Worlds.Count; worldIdx++)
@@ -232,7 +231,7 @@ public unsafe class EntityDefWindow : SplitWindow
         }
     }
 
-    private static void DrawTags(EntityDefinition entityDef)
+    private static void DrawTags(EntityDef entityDef)
     {
         ImGuiExt.LabelPrefix("Tags");
 

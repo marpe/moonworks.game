@@ -1,4 +1,4 @@
-namespace MyGame;
+namespace MyGame.Entities;
 
 public enum FacingDirection
 {
@@ -6,13 +6,13 @@ public enum FacingDirection
     Right
 }
 
-public partial class Enemy : Entity
+public abstract class Enemy : Entity
 {
     public Velocity Velocity = new();
 
     [HideInInspector] public float TimeOffset;
 
-    private EnemyBehaviour? _behaviour;
+    protected EnemyBehaviour? _behaviour;
     public EnemyBehaviour Behaviour => _behaviour ?? throw new InvalidOperationException();
 
     [HideInInspector] public float FreezeMovementUntil;
@@ -28,29 +28,7 @@ public partial class Enemy : Entity
         base.Initialize(world);
 
         Mover.Initialize(this);
-
         TimeOffset = Position.Current.X;
-
-        if (EntityType == EntityType.Slug)
-        {
-            var randomDirection = Random.Shared.Next() % 2 == 0 ? -1 : 1;
-            Velocity.Delta = new Vector2(randomDirection * 50f, 0);
-            Velocity.Friction = new Vector2(0.99f, 0.99f);
-
-            _behaviour = new SlugBehaviour();
-            _behaviour.Initialize(this);
-
-            if (HasCollision(Position, Size))
-            {
-                Logs.LogWarn("Colliding on spawn, destroying immediately");
-                IsDestroyed = true;
-            }
-        }
-        else if (EntityType == EntityType.BlueBee) // || EntityType == EntityType.YellowBee)
-        {
-            _behaviour = new BeeBehaviour();
-            _behaviour.Initialize(this);
-        }
     }
 
     public void FreezeMovement(float freezeTime)

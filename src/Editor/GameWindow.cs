@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using MyGame.Debug;
+using MyGame.Entities;
 using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;

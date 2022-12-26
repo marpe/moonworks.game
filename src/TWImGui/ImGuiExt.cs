@@ -927,27 +927,48 @@ public static unsafe class ImGuiExt
     }
 
     public static void AddRectDashed(ImDrawList* drawList, Num.Vector2 min, Num.Vector2 max, uint color, float thickness, int segmentLength,
-        float lengthOfOnSegments = 0.5f)
+        float lengthOfOnSegments = 0.5f, bool animate = true)
     {
-        AddLineDashed(drawList, min, new Num.Vector2(max.X, min.Y), color, thickness, segmentLength, lengthOfOnSegments);
-        AddLineDashed(drawList, new Num.Vector2(max.X, min.Y), max, color, thickness, segmentLength, lengthOfOnSegments);
-        AddLineDashed(drawList, max, new Num.Vector2(min.X, max.Y), color, thickness, segmentLength, lengthOfOnSegments);
-        AddLineDashed(drawList, new Num.Vector2(min.X, max.Y), min, color, thickness, segmentLength, lengthOfOnSegments);
+        AddLineDashed(drawList, min, new Num.Vector2(max.X, min.Y), color, thickness, segmentLength, lengthOfOnSegments, animate);
+        AddLineDashed(drawList, new Num.Vector2(max.X, min.Y), max, color, thickness, segmentLength, lengthOfOnSegments, animate);
+        AddLineDashed(drawList, max, new Num.Vector2(min.X, max.Y), color, thickness, segmentLength, lengthOfOnSegments, animate);
+        AddLineDashed(drawList, new Num.Vector2(min.X, max.Y), min, color, thickness, segmentLength, lengthOfOnSegments, animate);
     }
 
     public static void AddLineDashed(ImDrawList* drawList, Num.Vector2 start, Num.Vector2 end, uint color, float thickness, int segmentLength,
-        float lengthOfOnSegments = 0.5f)
+        float lengthOfOnSegments = 0.5f, bool animate = true, float animationSpeed = 2.0f)
     {
         var offset = (end - start);
         var length = offset.Length();
         var numSegments = (int)(length / segmentLength);
+        var newSegmentLength = (int)(length / numSegments);
         var dir = offset / length;
-        int i;
-        var p = start;
-        for (i = 0; i < numSegments; i++)
+        var lineLength = newSegmentLength * lengthOfOnSegments;
+        var t = animate ? Shared.Game.Time.TotalElapsedTime * animationSpeed : 0; // (float)ImGui.GetTime();
+        var tt = (t - MathF.Floor(t)) - 1f;
+        var initialOffset = newSegmentLength * tt;
+        var p = start + dir * initialOffset;
+        var traversedLength = initialOffset;
+
+        if (initialOffset < 0)
         {
-            drawList->AddLine(p, p + dir * segmentLength * lengthOfOnSegments, color, thickness);
-            p += dir * segmentLength;
+            var initialLength = lineLength + initialOffset;
+            if (initialLength > 0)
+                drawList->AddLine(start, start + initialLength * dir, color, thickness);
+            p += dir * newSegmentLength;
+            traversedLength += newSegmentLength;
+        }
+
+        for (; traversedLength + lineLength < length; traversedLength += newSegmentLength)
+        {
+            drawList->AddLine(p, p + lineLength * dir, color, thickness);
+            p += dir * newSegmentLength;
+        }
+
+        var lengthLeft = length - traversedLength;
+        if (lengthLeft > 0)
+        {
+            drawList->AddLine(p, p + lengthLeft * dir, color, thickness);
         }
     }
 

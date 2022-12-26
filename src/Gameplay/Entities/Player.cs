@@ -1,7 +1,7 @@
-namespace MyGame;
+namespace MyGame.Entities;
 
 [CustomInspector<GroupInspector>]
-public partial class Player : Entity
+public class Player : Entity
 {
     [HideInInspector]
     public bool IsJumping;
