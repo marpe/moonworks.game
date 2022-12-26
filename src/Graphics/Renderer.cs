@@ -16,6 +16,7 @@ public class Renderer
     public BMFont[] BMFonts { get; }
 
     public static Sampler PointClamp = null!;
+    public static Sampler LinearClamp = null!;
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
     public Sprite BlankSprite => _blankSprite;
@@ -45,6 +46,7 @@ public class Renderer
         _game = game;
         _device = game.GraphicsDevice;
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
+        LinearClamp = new Sampler(_device, SamplerCreateInfo.LinearClamp);
         SpriteBatch = new SpriteBatch(_device);
 
         var textBatcherTimer = Stopwatch.StartNew();
@@ -201,14 +203,14 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None, bool usePointFiltering = true)
     {
-        SpriteBatch.Draw(sprite, color, depth, transform, PointClamp, flip);
+        SpriteBatch.Draw(sprite, color, depth, transform, usePointFiltering ? PointClamp : LinearClamp, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None, bool usePointFiltering = true)
     {
-        SpriteBatch.Draw(sprite, colors, depth, transform, PointClamp, flip);
+        SpriteBatch.Draw(sprite, colors, depth, transform, usePointFiltering ? PointClamp : LinearClamp, flip);
     }
     
     public void DrawFTText(ReadOnlySpan<char> text, Vector2 position, Color color)
@@ -322,6 +324,7 @@ public class Renderer
         TextBatcher.Unload();
         SpriteBatch.Unload();
         PointClamp.Dispose();
+        LinearClamp.Dispose();
 
         foreach (var (_, texture) in _depthTextureCache)
         {

@@ -17,7 +17,8 @@ public enum PipelineType
     RimLight,
     CircleCropTransition,
     PixelizeTransition,
-    DiamondTransition
+    DiamondTransition,
+    PixelArt
 }
 
 public class Pipelines
@@ -107,6 +108,7 @@ public class Pipelines
             { PipelineType.CircleCropTransition, () => CreateCircleCropTransition(device) },
             { PipelineType.PixelizeTransition, () =>  CreatePixelize(device) },
             { PipelineType.DiamondTransition, () => CreateDiamondTransition(device) },
+            { PipelineType.PixelArt, () => CreatePixelArt(device) },
         };
 
         var pipelines = new Dictionary<PipelineType, GfxPipeline>();
@@ -206,6 +208,38 @@ public class Pipelines
             CreateInfo = createInfo,
             VertexShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_spv,
             FragmentShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_spv
+        };
+    }
+    
+    public static GfxPipeline CreatePixelArt(GraphicsDevice device)
+
+    {
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_vert_spv);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_frag_spv);
+
+        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
+        var fragmentShaderInfo = GraphicsShaderInfo.Create(fragmentShader, "main", 1);
+
+        var createInfo = new GraphicsPipelineCreateInfo
+        {
+            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
+            ),
+            DepthStencilState = DepthStencilState.Disable,
+            VertexShaderInfo = vertexShaderInfo,
+            FragmentShaderInfo = fragmentShaderInfo,
+            MultisampleState = MultisampleState.None,
+            RasterizerState = RasterizerState.CCW_CullNone,
+            PrimitiveType = PrimitiveType.TriangleList,
+            VertexInputState = GetVertexInputState(),
+        };
+
+        return new GfxPipeline
+        {
+            Pipeline = new GraphicsPipeline(device, createInfo),
+            CreateInfo = createInfo,
+            VertexShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_vert_spv,
+            FragmentShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_frag_spv
         };
     }
 

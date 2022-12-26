@@ -42,6 +42,9 @@ public class MyGameMain : Game
     [CVar("lights_enabled", "Toggle lights")]
     public static bool LightsEnabled = true;
 
+    [CVar("use_point_filtering", "")]
+    public static bool UsePointFiltering = true;
+
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
         FrameLimiterSettings frameLimiterSettings,
@@ -313,18 +316,18 @@ public class MyGameMain : Game
         }
 
         renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
-        World.Draw(renderer, Camera, alpha);
+        World.Draw(renderer, Camera, alpha, UsePointFiltering);
 
         World.DrawDebug(renderer, Camera, alpha);
         // draw ambient background color
         // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
 
         var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.PixelArt);
 
 
         if (LightsEnabled)
-            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha);
+            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha, UsePointFiltering);
 
 
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);

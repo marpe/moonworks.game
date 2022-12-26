@@ -75,12 +75,12 @@ public class DrawComponent
         }
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, double alpha, bool usePointFiltering)
     {
         if (CurrentAnimation == null)
             return;
         var xform = GetTransform(alpha);
-        renderer.DrawSprite(CurrentAnimation.Frames[FrameIndex], xform, Color.White, 0, Flip);
+        renderer.DrawSprite(CurrentAnimation.Frames[FrameIndex], xform, Color.White, 0, Flip, usePointFiltering);
 
         // bullet
         /*var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);

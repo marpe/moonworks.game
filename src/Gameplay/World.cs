@@ -368,10 +368,10 @@ public class World
         }
     }
 
-    public void Draw(Renderer renderer, Camera camera, double alpha)
+    public void Draw(Renderer renderer, Camera camera, double alpha, bool usePointFiltering)
     {
-        DrawLevel(renderer, Level, camera.ZoomedBounds);
-        DrawEntities(renderer, alpha);
+        DrawLevel(renderer, Level, camera.ZoomedBounds, usePointFiltering);
+        DrawEntities(renderer, alpha, usePointFiltering);
     }
 
     private void DrawLightBounds(Renderer renderer)
@@ -387,11 +387,11 @@ public class World
         }
     }
 
-    private void DrawEntities(Renderer renderer, double alpha)
+    private void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
-        DrawEnemies(renderer, alpha);
-        DrawPlayer(renderer, alpha);
-        DrawBullets(renderer, alpha);
+        DrawEnemies(renderer, alpha, usePointFiltering);
+        DrawPlayer(renderer, alpha, usePointFiltering);
+        DrawBullets(renderer, alpha, usePointFiltering);
     }
 
     private void DrawEntityDebug(Renderer renderer, double alpha)
@@ -422,7 +422,7 @@ public class World
     }
 
 
-    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds)
+    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds, bool usePointFiltering)
     {
         var color = level.BackgroundColor;
         if (DrawBackground)
@@ -432,7 +432,7 @@ public class World
         {
             var layer = level.LayerInstances[layerIndex];
             var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
-            DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds);
+            DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds, usePointFiltering);
             DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
@@ -440,30 +440,30 @@ public class World
             renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
 
-    private void DrawBullets(Renderer renderer, double alpha)
+    private void DrawBullets(Renderer renderer, double alpha, bool usePointFiltering)
     {
         for (var i = 0; i < Bullets.Count; i++)
         {
             var bullet = Bullets[i];
-            bullet.Draw.Draw(renderer, alpha);
+            bullet.Draw.Draw(renderer, alpha, usePointFiltering);
         }
     }
 
-    private void DrawPlayer(Renderer renderer, double alpha)
+    private void DrawPlayer(Renderer renderer, double alpha, bool usePointFiltering)
     {
-        Player.Draw.Draw(renderer, alpha);
+        Player.Draw.Draw(renderer, alpha, usePointFiltering);
     }
 
-    private void DrawEnemies(Renderer renderer, double alpha)
+    private void DrawEnemies(Renderer renderer, double alpha, bool usePointFiltering)
     {
         for (var i = 0; i < Enemies.Count; i++)
         {
             var entity = Enemies[i];
-            entity.Draw.Draw(renderer, alpha);
+            entity.Draw.Draw(renderer, alpha, usePointFiltering);
         }
     }
 
-    private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
+    private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds, bool usePointFiltering)
     {
         var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
         var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
@@ -486,7 +486,7 @@ public class World
                     level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
                 )
             ).ToMatrix4x4();
-            renderer.DrawSprite(sprite, transform, Color.White);
+            renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None, usePointFiltering);
         }
     }
 
@@ -716,7 +716,7 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    public void DrawLightBaseLayer(Renderer renderer, ref CommandBuffer commandBuffer, RenderTarget lightSource, Camera camera, double alpha)
+    public void DrawLightBaseLayer(Renderer renderer, ref CommandBuffer commandBuffer, RenderTarget lightSource, Camera camera, double alpha, bool usePointFiltering)
     {
         // draw ground for use with rim light
         for (var layerIndex = Level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
@@ -725,19 +725,19 @@ public class World
             var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
             if (layerDef.Identifier == "Background")
                 continue;
-            DrawLayer(renderer, Root, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds);
+            DrawLayer(renderer, Root, Level, layer, layerDef, (Rectangle)camera.ZoomedBounds, usePointFiltering);
         }
 
         // render entities for use with rim light
-        DrawEntities(renderer, alpha);
+        DrawEntities(renderer, alpha, usePointFiltering);
         var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
-        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection); // lightSource contains only entities
+        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection, PipelineType.PixelArt); // lightSource contains only entities
     }
 
     public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
-        RenderTarget lightSource, RenderTarget lightTarget, double alpha)
+        RenderTarget lightSource, RenderTarget lightTarget, double alpha, bool usePointFiltering)
     {
-        DrawLightBaseLayer(renderer, ref commandBuffer, lightSource, camera, alpha);
+        DrawLightBaseLayer(renderer, ref commandBuffer, lightSource, camera, alpha, usePointFiltering);
     
         // render lights
         renderer.DrawSprite(lightSource.Target, Matrix4x4.Identity, Color.White);

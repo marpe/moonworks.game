@@ -90,6 +90,8 @@ public static class ContentPaths
         public static class PixelArtShader
         {
             public const string from_godot_txt = @"Content\Shaders\PixelArtShader\from_godot.txt";
+            public const string pixel_art_frag_spv = @"Content\Shaders\PixelArtShader\pixel_art.frag.spv";
+            public const string pixel_art_vert_spv = @"Content\Shaders\PixelArtShader\pixel_art.vert.spv";
             public const string shadertoy_txt = @"Content\Shaders\PixelArtShader\shadertoy.txt";
         }
         public static class Pixelize
