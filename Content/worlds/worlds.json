@@ -19,10 +19,12 @@
           "FieldInstances": [
             {
               "FieldDefId": 18,
+              "FieldDefIdentifier": null,
               "Value": "fdsdfsdf"
             },
             {
               "FieldDefId": 15,
+              "FieldDefIdentifier": null,
               "Value": {
                 "$type": "System.Collections.Generic.List`1[[MoonWorks.Math.Float.Point, MoonWorks]], System.Private.CoreLib",
                 "$values": [
@@ -55,33 +57,41 @@
                 {
                   "Iid": "e6f602a7-3ecd-4934-8dba-bc1c5d36b101",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -95,33 +105,41 @@
                 {
                   "Iid": "0e90c7a2-206b-45af-b8a7-06d11c097340",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 360.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -135,25 +153,31 @@
                 {
                   "Iid": "9bdba90e-fa06-454a-986c-d2d21b322173",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -167,25 +191,31 @@
                 {
                   "Iid": "05104a8d-91a6-46fb-ba0e-158300cc550a",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -199,25 +229,31 @@
                 {
                   "Iid": "17ab53a7-c38b-4cf8-a754-c81aeb462a1a",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -231,25 +267,31 @@
                 {
                   "Iid": "a30b08e2-dc46-4c6b-a7cb-c6a306434ee7",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -263,33 +305,41 @@
                 {
                   "Iid": "92633b7f-6927-4e5e-abd4-397d6c766174",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -303,25 +353,31 @@
                 {
                   "Iid": "3625f2f9-6006-4fc8-aaad-2cb57f678e05",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -335,25 +391,31 @@
                 {
                   "Iid": "46da78c2-c4ac-441f-a92f-982fb30752d5",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -367,25 +429,31 @@
                 {
                   "Iid": "f2846a43-0243-4eb6-9886-2b8508fb7d4e",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -399,25 +467,31 @@
                 {
                   "Iid": "7df70822-a036-4ab7-88de-719d59f8dd5a",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -431,25 +505,31 @@
                 {
                   "Iid": "edb4ddde-d233-4597-aa47-4d7b749e1ea5",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -463,25 +543,31 @@
                 {
                   "Iid": "59a8c1d6-2c9f-4adf-bc63-2cbd0ddeede2",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FF9E31"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 0.0
                     }
                   ],
@@ -503,6 +589,7 @@
                 {
                   "Iid": "e6935a38-0900-40b5-b49d-9a987b6b7584",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 210,
@@ -514,6 +601,7 @@
                 {
                   "Iid": "aabb6708-f953-406e-8d7b-eef1e4ebf544",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 226,
@@ -525,6 +613,7 @@
                 {
                   "Iid": "a1d6e3e5-6fc5-497e-a2e7-45b2716bb774",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 242,
@@ -536,6 +625,7 @@
                 {
                   "Iid": "bee960ca-1630-4014-84f5-acf587138677",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 258,
@@ -547,6 +637,7 @@
                 {
                   "Iid": "f2a76a4f-69ce-44b8-b91f-eb8dda2316df",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 274,
@@ -558,6 +649,7 @@
                 {
                   "Iid": "8f668e7f-a5f4-4570-b223-09498aa1e14f",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 290,
@@ -569,6 +661,7 @@
                 {
                   "Iid": "80501d72-7c6b-41a0-a004-713c56f4035f",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 306,
@@ -580,6 +673,7 @@
                 {
                   "Iid": "22c30153-b579-43aa-8e0c-134840f1422b",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 322,
@@ -591,6 +685,7 @@
                 {
                   "Iid": "fb26abbe-485e-47d8-8a7e-d5b0199d329c",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 338,
@@ -602,6 +697,7 @@
                 {
                   "Iid": "b76d3229-a5c6-4bee-8db5-8e4aec8affe1",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 354,
@@ -613,6 +709,7 @@
                 {
                   "Iid": "be5b04f7-6e42-49a9-b8de-e2b874d72000",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 370,
@@ -624,6 +721,7 @@
                 {
                   "Iid": "04f0bbbc-8a22-4695-97fc-83f7cb62f45c",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 386,
@@ -635,6 +733,7 @@
                 {
                   "Iid": "b190f6b4-64d9-474f-9a4e-d76bf33a4299",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 402,
@@ -646,6 +745,7 @@
                 {
                   "Iid": "4c38406a-b276-4e10-9e34-ddecad11e42e",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 418,
@@ -657,6 +757,7 @@
                 {
                   "Iid": "f29f3433-cd44-42e1-854c-4220a992c5d2",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 450,
@@ -668,6 +769,7 @@
                 {
                   "Iid": "e19a241b-e42d-44d9-8ea4-68103ff3e618",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 466,
@@ -679,6 +781,7 @@
                 {
                   "Iid": "9b841345-b195-4cf4-b5a1-cf2ca0dfc05a",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 482,
@@ -690,6 +793,7 @@
                 {
                   "Iid": "04f32721-e21d-484a-bd53-cc78af9a3fe3",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 498,
@@ -701,6 +805,7 @@
                 {
                   "Iid": "bebba1ba-8e45-4df9-a60e-c6398ab4a7e9",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 514,
@@ -712,6 +817,7 @@
                 {
                   "Iid": "13f5c025-73ce-4c70-9645-fc086325f138",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 530,
@@ -723,6 +829,7 @@
                 {
                   "Iid": "1b68d66b-9ac0-4757-801e-83ed6dd7efb3",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 546,
@@ -734,6 +841,7 @@
                 {
                   "Iid": "0bc5eeeb-2ccc-49eb-bfaa-f29ba53c421a",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 562,
@@ -745,6 +853,7 @@
                 {
                   "Iid": "fccc40f1-fc5a-477e-873d-a92ca0c4433c",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 594,
@@ -756,6 +865,7 @@
                 {
                   "Iid": "c6c76a68-a313-45f7-9562-ec729a05018a",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 610,
@@ -767,6 +877,7 @@
                 {
                   "Iid": "d2ed92fb-33ff-4cff-8a0c-8ea392b769c9",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 626,
@@ -778,6 +889,7 @@
                 {
                   "Iid": "742cc236-0d17-4fdb-9a0d-64e0143ad8da",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 642,
@@ -789,6 +901,7 @@
                 {
                   "Iid": "6d9cd0dc-f570-4f67-8871-75622a809f97",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 658,
@@ -800,6 +913,7 @@
                 {
                   "Iid": "3b74267f-ce3a-4530-87e0-2de9361e682c",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 674,
@@ -811,6 +925,7 @@
                 {
                   "Iid": "18204cea-1cfa-47a8-b520-4b07aa77e7b3",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 690,
@@ -822,6 +937,7 @@
                 {
                   "Iid": "8db1b978-8ea0-49c1-8610-7a492240ba15",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 706,
@@ -833,6 +949,7 @@
                 {
                   "Iid": "732b3eca-eb47-4b86-b062-459593d6cfad",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 722,
@@ -844,6 +961,7 @@
                 {
                   "Iid": "70ef045a-5b29-4312-818e-79dadbf41dd0",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 738,
@@ -855,6 +973,7 @@
                 {
                   "Iid": "5ba5e14a-09c7-4771-926a-faf01247943d",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 754,
@@ -866,6 +985,7 @@
                 {
                   "Iid": "fe02a7d0-2d2a-49ca-b0ca-707f3f95c12f",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 770,
@@ -877,6 +997,7 @@
                 {
                   "Iid": "37bc5dac-d9b0-490d-b6f1-45f12d66f188",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 786,
@@ -888,6 +1009,7 @@
                 {
                   "Iid": "41910ac4-7420-4429-9cf1-1e0c4ccaa8bf",
                   "EntityDefId": 3,
+                  "EntityDefIdentifier": "Player",
                   "FieldInstances": [],
                   "Position": {
                     "X": 436,
@@ -12378,10 +12500,12 @@
           "FieldInstances": [
             {
               "FieldDefId": 18,
+              "FieldDefIdentifier": null,
               "Value": ""
             },
             {
               "FieldDefId": 15,
+              "FieldDefIdentifier": null,
               "Value": {
                 "$type": "System.Collections.Generic.List`1[[MoonWorks.Math.Float.Point, MoonWorks]], System.Private.CoreLib",
                 "$values": []
@@ -12397,33 +12521,41 @@
                 {
                   "Iid": "9e447489-2f1c-4a43-9018-3f0ea2631998",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FFDFD0"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 360.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.5
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.6
                     }
                   ],
@@ -12437,33 +12569,41 @@
                 {
                   "Iid": "1579efc1-848e-404e-83dd-9e7ce56f70c1",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FFDFD0"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 360.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.5
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.6
                     }
                   ],
@@ -12485,6 +12625,7 @@
                 {
                   "Iid": "f32d96e4-74b2-42be-8ae3-63d2d5aecc67",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 852,
@@ -12496,6 +12637,7 @@
                 {
                   "Iid": "71b39e47-f606-49fc-bd2e-d934d5b9bbf5",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 900,
@@ -12507,6 +12649,7 @@
                 {
                   "Iid": "0afab75b-5972-4e41-a556-b41d69fe6d94",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 516,
@@ -12518,6 +12661,7 @@
                 {
                   "Iid": "5cc6bb97-1f6d-4fab-b64c-ae27235681df",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 420,
@@ -12529,6 +12673,7 @@
                 {
                   "Iid": "1f1b7b78-7abc-4e89-aa32-5a9cd50fdd6e",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 724,
@@ -12540,6 +12685,7 @@
                 {
                   "Iid": "2304b4fc-1d81-40da-80f4-60430ccb3ad4",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 628,
@@ -12551,6 +12697,7 @@
                 {
                   "Iid": "508da315-28ca-4e45-b470-a7849b2bb4a0",
                   "EntityDefId": 3,
+                  "EntityDefIdentifier": "Player",
                   "FieldInstances": [],
                   "Position": {
                     "X": 420,
@@ -12562,6 +12709,7 @@
                 {
                   "Iid": "32a76901-9332-41df-8757-51ee65a3f59e",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 482,
@@ -12573,6 +12721,7 @@
                 {
                   "Iid": "ad1ecbeb-b71f-48a8-9238-9a2be9caab75",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 562,
@@ -12584,6 +12733,7 @@
                 {
                   "Iid": "b08bc55e-7183-449b-8f3f-fcf41a072765",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 722,
@@ -12595,6 +12745,7 @@
                 {
                   "Iid": "59bce3cd-0de1-4f17-8c92-9fa539cf9518",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 850,
@@ -24563,10 +24714,12 @@
           "FieldInstances": [
             {
               "FieldDefId": 18,
+              "FieldDefIdentifier": null,
               "Value": ""
             },
             {
               "FieldDefId": 15,
+              "FieldDefIdentifier": null,
               "Value": {
                 "$type": "System.Collections.Generic.List`1[[MoonWorks.Math.Float.Point, MoonWorks]], System.Private.CoreLib",
                 "$values": []
@@ -24582,33 +24735,41 @@
                 {
                   "Iid": "2ba64209-7b2e-40fc-b66b-1baf9dd29950",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#E4FF00"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 0.0
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 360.0
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -24622,33 +24783,41 @@
                 {
                   "Iid": "1c642bfa-03c1-44ac-8d4a-9598c97ceb1f",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#CDFFD4"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 120.6
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 128.4
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -24662,33 +24831,41 @@
                 {
                   "Iid": "3cadb8f4-a12d-44bc-8fe9-481f9bb10a89",
                   "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
                   "FieldInstances": [
                     {
                       "FieldDefId": 0,
+                      "FieldDefIdentifier": "Intensity",
                       "Value": 0.45
                     },
                     {
                       "FieldDefId": 1,
+                      "FieldDefIdentifier": "IsEnabled",
                       "Value": true
                     },
                     {
                       "FieldDefId": 2,
+                      "FieldDefIdentifier": "Color",
                       "Value": "#FFFFFF"
                     },
                     {
                       "FieldDefId": 3,
+                      "FieldDefIdentifier": "Angle",
                       "Value": 50.59
                     },
                     {
                       "FieldDefId": 4,
+                      "FieldDefIdentifier": "ConeAngle",
                       "Value": 130.4
                     },
                     {
                       "FieldDefId": 5,
+                      "FieldDefIdentifier": "RimIntensity",
                       "Value": 0.3
                     },
                     {
                       "FieldDefId": 6,
+                      "FieldDefIdentifier": "VolumetricIntensity",
                       "Value": 0.25
                     }
                   ],
@@ -24710,6 +24887,7 @@
                 {
                   "Iid": "33b45c53-2909-4f2d-a1b0-2b611cd31b72",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 658,
@@ -24721,6 +24899,7 @@
                 {
                   "Iid": "9aac8055-31b5-4c5c-bdaa-be7e5d7b2c8e",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 722,
@@ -24732,6 +24911,7 @@
                 {
                   "Iid": "7c2da2ff-f80e-4101-9819-918aa46e1667",
                   "EntityDefId": 7,
+                  "EntityDefIdentifier": "Slug",
                   "FieldInstances": [],
                   "Position": {
                     "X": 594,
@@ -24743,6 +24923,7 @@
                 {
                   "Iid": "84907ce9-1f05-4e50-9dc6-55c792a0554f",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 628,
@@ -24754,6 +24935,7 @@
                 {
                   "Iid": "f743ceff-3e1b-45fe-9fa3-2891200ac5b6",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 548,
@@ -24765,6 +24947,7 @@
                 {
                   "Iid": "c9b033d2-33a5-4762-96df-d7a18979aecf",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 724,
@@ -24776,6 +24959,7 @@
                 {
                   "Iid": "fb7833c8-ffb6-4857-aa44-351b0f39a017",
                   "EntityDefId": 8,
+                  "EntityDefIdentifier": "BlueBee",
                   "FieldInstances": [],
                   "Position": {
                     "X": 740,
@@ -24787,6 +24971,7 @@
                 {
                   "Iid": "ac746292-9b45-4dc4-91d7-b37e408b2606",
                   "EntityDefId": 3,
+                  "EntityDefIdentifier": "Player",
                   "FieldInstances": [],
                   "Position": {
                     "X": 612,
@@ -35211,10 +35396,12 @@
           "FieldInstances": [
             {
               "FieldDefId": 18,
+              "FieldDefIdentifier": null,
               "Value": ""
             },
             {
               "FieldDefId": 15,
+              "FieldDefIdentifier": null,
               "Value": {
                 "$type": "System.Collections.Generic.List`1[[MoonWorks.Math.Float.Point, MoonWorks]], System.Private.CoreLib",
                 "$values": []

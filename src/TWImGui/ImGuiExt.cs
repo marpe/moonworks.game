@@ -1460,6 +1460,24 @@ public static unsafe class ImGuiExt
 
         return result;
     }
+    
+    public static void DrawCone(ImDrawList* dl, Num.Vector2 center, float coneAngle, float angle, float radius, Color fillColor, int numSegments = 64)
+    {
+        var numPoints = Math.Max(1, coneAngle / MathHelper.TwoPi * numSegments);
+        var aStart = angle - coneAngle * 0.5f;
+        var aEnd = angle + coneAngle * 0.5f;
+        var deltaA = Math.Max(MathHelper.TwoPi / numSegments, (aEnd - aStart) / numPoints);
+        dl->PathLineTo(center);
+        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aStart), MathF.Sin(aStart)) * radius);
+        for (var i = aStart + deltaA; i <= aEnd - deltaA; i += deltaA)
+        {
+            dl->PathLineTo(center + new Num.Vector2(MathF.Cos(i), MathF.Sin(i)) * radius);
+        }
+
+        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aEnd), MathF.Sin(aEnd)) * radius);
+
+        dl->PathFillConvex(fillColor.PackedValue);
+    }
 }
 
 public ref struct ImGuiInputBuffer

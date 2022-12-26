@@ -577,7 +577,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
                             }*/
-
+                            
                             var cellX = (int)(entity.Position.X / (float)layerDef.GridSize);
                             var cellY = (int)(entity.Position.Y / (float)layerDef.GridSize);
 
@@ -594,6 +594,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
                             }
+                            
+                            entity.EntityDefIdentifier = entityDef.Identifier;
 
                             if (IsExcluded(entityDef, layerDef))
                             {
@@ -641,7 +643,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 {
                                     Logs.LogWarn($"Removing field instance there\'s no field definition with id \"{fieldInstance.FieldDefId}\"");
                                     entity.FieldInstances.RemoveAt(m);
+                                    continue;
                                 }
+
+                                fieldInstance.FieldDefIdentifier = fieldDef.Identifier;
                             }
                         }
                     }
@@ -1567,10 +1572,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         // var sprite = renderer.BlankSprite;
         var editor = (MyEditorMain)Shared.Game;
         var sprite = editor.Renderer.BlankSprite;
-        Matrix4x4 entityTransform;
         Color fillColor;
         Color iconTint = Color.White;
-        Color outline;
         var uvMin = Num.Vector2.Zero;
         var uvMax = Num.Vector2.One;
         if (tileSetDef != null)
@@ -1578,7 +1581,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var colorField = entityInstance.FieldInstances.FirstOrDefault(x => x.Value is Color);
             fillColor = colorField != null ? (Color)colorField.Value! : entityDef.Color;
             iconTint = colorField != null ? (Color)colorField.Value! : Color.White;
-            outline = entityDef.Color;
 
             var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
             sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
@@ -1588,7 +1590,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         else
         {
             fillColor = entityDef.Color;
-            outline = entityDef.Color;
         }
 
         var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
@@ -1728,30 +1729,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var center = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToVec2() * 0.5f);
                     var radius = entityInstance.Size.X * 0.5f * _gameRenderScale;
 
-                    DrawCone(dl, center, coneAngle, angle, radius, fillColor.MultiplyAlpha(intensity));
+                    ImGuiExt.DrawCone(dl, center, coneAngle, angle, radius, fillColor.MultiplyAlpha(intensity));
                 }
             }
         }
     }
-
-    private static void DrawCone(ImDrawList* dl, Num.Vector2 center, float coneAngle, float angle, float radius, Color fillColor, int numSegments = 64)
-    {
-        var numPoints = Math.Max(1, coneAngle / MathHelper.TwoPi * numSegments);
-        var aStart = angle - coneAngle * 0.5f;
-        var aEnd = angle + coneAngle * 0.5f;
-        var deltaA = Math.Max(MathHelper.TwoPi / numSegments, (aEnd - aStart) / numPoints);
-        dl->PathLineTo(center);
-        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aStart), MathF.Sin(aStart)) * radius);
-        for (var i = aStart + deltaA; i <= aEnd - deltaA; i += deltaA)
-        {
-            dl->PathLineTo(center + new Num.Vector2(MathF.Cos(i), MathF.Sin(i)) * radius);
-        }
-
-        dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aEnd), MathF.Sin(aEnd)) * radius);
-
-        dl->PathFillConvex(fillColor.PackedValue);
-    }
-
+    
     private static EntityInstance DuplicateInstance(EntityInstance entityInstance, EntityDef entityDef)
     {
         var serialized = JsonConvert.SerializeObject(entityInstance, ContentManager.JsonSerializerSettings);

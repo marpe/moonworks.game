@@ -288,6 +288,7 @@ public class FieldDef
 public class FieldInstance
 {
     public int FieldDefId;
+    public string FieldDefIdentifier = "FieldDefIdentifier";
     public object? Value;
 }
 
@@ -355,6 +356,7 @@ public class EntityInstance
 {
     public Guid Iid = Guid.NewGuid();
     public int EntityDefId;
+    public string EntityDefIdentifier = "EntityDefIdentifier";
     public List<FieldInstance> FieldInstances = new();
     public Point Position;
     public uint Width;
@@ -404,6 +406,7 @@ public class EntityDef
             Width = entityDef.Width,
             Height = entityDef.Height,
             EntityDefId = entityDef.Uid,
+            EntityDefIdentifier = entityDef.Identifier,
         };
 
         foreach (var fieldDef in entityDef.FieldDefinitions)
