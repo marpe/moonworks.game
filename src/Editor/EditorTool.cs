@@ -181,7 +181,7 @@ public unsafe class ResizeEditorTool : EditorTool
         return (invertX, invertY);
     }
 
-    private static bool IsYHandle(RectHandlePos handle)
+    public static bool IsYHandle(RectHandlePos handle)
     {
         return handle is
             RectHandlePos.TopLeft or
@@ -192,7 +192,7 @@ public unsafe class ResizeEditorTool : EditorTool
             RectHandlePos.BottomLeft;
     }
 
-    private static bool IsXHandle(RectHandlePos handle)
+    public static bool IsXHandle(RectHandlePos handle)
     {
         return handle is
             RectHandlePos.TopLeft or

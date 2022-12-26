@@ -25,7 +25,6 @@ public unsafe class MyEditorMain : MyGameMain
     private readonly List<ImGuiMenu> _menuItems = new();
     public int UpdateRate = 1;
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
-    private bool _firstTime = true;
     private Texture _imGuiRenderTarget;
 
     private bool _screenshot;
@@ -101,6 +100,8 @@ public unsafe class MyEditorMain : MyGameMain
 
         sw.StopAndLog("MyEditorMain");
     }
+
+    public static bool ResetDock = true;
 
     private static void LoadIcons(ImGuiRenderer renderer)
     {
@@ -287,7 +288,7 @@ public unsafe class MyEditorMain : MyGameMain
                          
         ViewportDockSpaceId = ImGui.DockSpaceOverViewport(mainViewport, flags);
 
-        if (_firstTime)
+        if (ResetDock)
         {
             ImGuiInternal.DockBuilderRemoveNodeChildNodes(ViewportDockSpaceId);
 
@@ -315,8 +316,8 @@ public unsafe class MyEditorMain : MyGameMain
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
 
             ImGuiInternal.DockBuilderFinish(ViewportDockSpaceId);
-            _firstTime = false;
         }
+        ResetDock = false;
 
         return ViewportDockSpaceId;
     }

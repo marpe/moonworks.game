@@ -26,6 +26,8 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
     private uint _rightDockID;
     private uint _leftDockID;
 
+    private bool _shouldForceDock = false;
+
     protected virtual void PushStyles()
     {
         var origFramePadding = ImGui.GetStyle()->FramePadding;
@@ -70,12 +72,17 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             return;
 
         var windowClass = new ImGuiWindowClass();
-        var result = ImGuiExt.BeginWorkspaceWindow(Title, _dockSpaceId, _initializeDockSpace, null, ref windowClass);
+
+        _shouldForceDock |= _leftDockID == 0 || _rightDockID == 0;
+        var result = ImGuiExt.BeginWorkspaceWindow(Title, _dockSpaceId, _initializeDockSpace, null, ref windowClass, ImGuiDockNodeFlags.None, _shouldForceDock);
+        _shouldForceDock = false;
 
         if (result)
         {
-            DrawSplit(_leftTitle, _leftDockID, _drawLeft, windowClass);
-            DrawSplit(_rightTitle, _rightDockID, _drawRight, windowClass);
+            DrawSplit(_leftTitle, _leftDockID, _drawLeft, windowClass, ref _shouldForceDock);
+            DrawSplit(_rightTitle, _rightDockID, _drawRight, windowClass, ref _shouldForceDock);
+            if (_shouldForceDock)
+                EditorWindow.ResetDock = true;
         }
     }
 
@@ -89,7 +96,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         ImGuiInternal.DockBuilderDockWindow(_rightTitle, _rightDockID);
     }
 
-    private static void DrawSplit(string title, uint dockId, Action drawContent, ImGuiWindowClass windowClass)
+    private static void DrawSplit(string title, uint dockId, Action drawContent, ImGuiWindowClass windowClass, ref bool shouldDock)
     {
         ImGui.SetNextWindowClass(&windowClass);
         var windowFlags = ImGuiWindowFlags.NoCollapse |
@@ -101,6 +108,16 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         if (ImGui.Begin(title, default, windowFlags))
         {
             drawContent();
+
+            if (ImGui.BeginPopupContextWindow("WindowContextMenu"))
+            {
+                if (ImGui.MenuItem("Dock", default))
+                {
+                    shouldDock = true;
+                }
+
+                ImGui.EndPopup();
+            }
         }
 
         SetDockSpaceFlags();

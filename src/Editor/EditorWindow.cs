@@ -8,11 +8,11 @@ namespace MyGame.Editor;
 
 public unsafe class EditorWindow : ImGuiEditorWindow
 {
+    public const string WindowTitle = "EditorTabs";
     private static ResizeEditorTool _resizeEditorLevel = new();
     private static ResizeEditorTool _resizeEditorEntity = new();
-    const string SelectedEntityPopupName = "SelectedEntityInstance";
-    public const string WindowTitle = "EditorTabs";
-    private const string PreviewWindowTitle = "Editor";
+    private const string SelectedEntityPopupName = "SelectedEntityInstance";
+    private const string EditorWindowTitle = "Editor";
     private const string EditorSettingsWindowTitle = "EditorSettings";
 
     private static int _rowMinHeight = 60;
@@ -21,7 +21,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     public static float DeselectedLayerAlpha = 0.1f;
 
     [CVar("editor.deselected_auto_layer_alpha", "")]
-    private static float DeselectedAutoLayerAlpha = 1.0f;
+    public static float DeselectedAutoLayerAlpha = 1.0f;
 
     [CVar("editor.int_grid_alpha", "")]
     public static float IntGridAlpha = 0.1f;
@@ -80,6 +80,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static List<EntityInstance> _hoveringEntities = new();
     private static Point _lastAddedCell;
+    private static List<EntityDef> _tempEntityDefList = new();
+    public static bool ResetDock = true;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -164,9 +166,22 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGuiInternal.DockBuilderDockWindow("CurrentLevelWindow", dockSpaceId);
         }
 
+        void DrawMenu()
+        {
+            if (ImGui.BeginPopupContextWindow("EditorContextMenu"))
+            {
+                if (ImGui.MenuItem("Dock", default))
+                {
+                    MyEditorMain.ResetDock = true;
+                }
+                ImGui.EndPopup();
+            }
+        }
+        
         var shouldDrawContent =
-            ImGuiExt.BeginWorkspaceWindow(WindowTitle, "EditorDockSpace", InitializeLayout, ImGuiExt.RefPtr(ref IsOpen), ref windowClass);
-
+            ImGuiExt.BeginWorkspaceWindow(WindowTitle, "EditorDockSpace", InitializeLayout, ImGuiExt.RefPtr(ref IsOpen), ref windowClass, ImGuiDockNodeFlags.None, ResetDock, DrawMenu);
+        ResetDock = false;
+        
         if (shouldDrawContent)
         {
             _entityDefWindow.Draw();
@@ -712,7 +727,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var centralNode = ImGuiInternal.DockBuilderGetCentralNode(editor.ViewportDockSpaceId);
         ImGui.SetNextWindowDockID(centralNode->ID, ImGuiCond.FirstUseEver);
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, System.Numerics.Vector2.Zero);
-        var result = ImGui.Begin(PreviewWindowTitle, default, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
+        var result = ImGui.Begin(EditorWindowTitle, default, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 
         _renderPos = ImGui.GetCursorScreenPos();
         _renderSize = ImGui.GetContentRegionAvail();
@@ -768,7 +783,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
              ImGui.IsMouseDown(ImGuiMouseButton.Middle) ||
              ImGui.IsMouseDown(ImGuiMouseButton.Right)))
         {
-            ImGui.SetWindowFocus(PreviewWindowTitle);
+            ImGui.SetWindowFocus(EditorWindowTitle);
             ImGui.SetNextFrameWantCaptureKeyboard(false);
         }
 
@@ -974,147 +989,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         switch (layerDef.LayerType)
         {
             case LayerType.IntGrid:
-
-                if (layerDef.IntGridValues.Count == 0)
-                {
-                    ImGui.TextDisabled("No values are defined");
-                    break;
-                }
-
-                if (ImGui.BeginTable("IntGridTable", 1, SplitWindow.TableFlags, new System.Numerics.Vector2(0, 0)))
-                {
-                    ImGui.TableSetupColumn("Name");
-
-                    for (var i = 0; i < layerDef.IntGridValues.Count; i++)
-                    {
-                        ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
-                        ImGui.TableNextColumn();
-                        ImGui.PushID(i);
-
-                        var cursorPos = ImGui.GetCursorScreenPos();
-
-                        var isSelected = selectedIntGridValueIndex == i;
-                        var intGridValue = layerDef.IntGridValues[i];
-                        if (SplitWindow.GiantButton("##Selectable", isSelected, intGridValue.Color, _rowMinHeight))
-                        {
-                            selectedIntGridValueIndex = i;
-                        }
-
-                        ImGui.SameLine(0, 0);
-
-                        var dl = ImGui.GetWindowDrawList();
-                        var rectHeight = _rowMinHeight * 0.6f;
-                        var min = cursorPos + new System.Numerics.Vector2(8, (_rowMinHeight - rectHeight) / 2);
-                        var max = min + new System.Numerics.Vector2(32, rectHeight);
-                        ImGuiExt.RectWithOutline(dl, min, max, intGridValue.Color.MultiplyAlpha(0.33f), intGridValue.Color);
-                        var label = intGridValue.Value.ToString();
-                        var textSize = ImGui.CalcTextSize(label);
-                        var rectSize = max - min;
-                        dl->AddText(min + new System.Numerics.Vector2((rectSize.X - textSize.X) / 2, (rectSize.Y - textSize.Y) / 2),
-                            Color.White.PackedValue,
-                            label);
-
-                        ImGui.SameLine(60);
-
-                        SplitWindow.GiantLabel(intGridValue.Identifier, intGridValue.Color, _rowMinHeight);
-
-                        ImGui.PopID();
-                    }
-
-                    ImGui.EndTable();
-                }
-
+                DrawIntGridBrushes(layerDef, ref selectedIntGridValueIndex);
                 break;
             case LayerType.Entities:
-
-                var entityDefs = EntityDefinitions.All;
-
-                if (entityDefs.Count == 0)
-                {
-                    ImGui.TextDisabled("There are no entities defined");
-                    break;
-                }
-
-                var tileSetDefs = rootJson.TileSetDefinitions;
-                var gridSize = rootJson.DefaultGridSize;
-
-                if (ImGui.BeginTable("EntityDefTable", 1, SplitWindow.TableFlags, new System.Numerics.Vector2(0, 0)))
-                {
-                    ImGui.TableSetupColumn("Value");
-
-                    for (var i = 0; i < entityDefs.Count; i++)
-                    {
-                        var entityDef = entityDefs[i];
-                        if (IsExcluded(entityDef, layerDef))
-                            continue;
-
-                        if (selectedEntityDefinitionIndex > EntityDefinitions.Count - 1)
-                            SelectFirstEntityDefinition();
-
-                        ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
-                        ImGui.TableNextColumn();
-                        ImGui.PushID(i);
-
-                        var isSelected = selectedEntityDefinitionIndex == i;
-                        var cursorPos = ImGui.GetCursorScreenPos();
-                        if (SplitWindow.GiantButton("##Selectable", isSelected, entityDef.Color, _rowMinHeight))
-                        {
-                            selectedEntityDefinitionIndex = i;
-                        }
-
-                        if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
-                        {
-                            ImGui.MenuItem("Copy", default);
-                            ImGui.MenuItem("Cut", default);
-                            ImGui.MenuItem("Duplicate", default);
-                            ImGui.MenuItem("Delete", default);
-                            ImGui.EndPopup();
-                        }
-
-                        var tileSet = tileSetDefs.FirstOrDefault(x => x.Uid == entityDef.TileSetDefId);
-                        if (tileSet != null)
-                        {
-                            var dl = ImGui.GetWindowDrawList();
-                            var texture = SplitWindow.GetTileSetTexture(tileSet.Path);
-
-                            // TODO (marpe): Replace gridSize with whatever grid size is being used for the tileset
-                            var tileSize = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
-                            var cellX = tileSize.X > 0 ? entityDef.TileId % tileSize.X : 0;
-                            var cellY = tileSize.X > 0 ? (int)(entityDef.TileId / tileSize.X) : 0;
-                            var uvMin = new System.Numerics.Vector2(1.0f / texture.Width * cellX * gridSize,
-                                1.0f / texture.Height * cellY * gridSize);
-                            var uvMax = uvMin + new System.Numerics.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
-                            var iconSize = new System.Numerics.Vector2(32, 32);
-                            var iconPos = cursorPos + iconSize / 2;
-                            var rectPadding = new System.Numerics.Vector2(4, 4);
-                            ImGuiExt.RectWithOutline(
-                                dl,
-                                iconPos - rectPadding,
-                                iconPos + iconSize + rectPadding * 2,
-                                entityDef.Color.MultiplyAlpha(0.4f),
-                                entityDef.Color,
-                                2f
-                            );
-                            dl->AddImage(
-                                (void*)texture.Handle,
-                                iconPos,
-                                iconPos + iconSize,
-                                uvMin,
-                                uvMax
-                            );
-                        }
-
-                        ImGui.SameLine(0, 70f);
-
-                        var labelColor = isSelected ? Color.White.MultiplyAlpha(0.8f) : entityDef.Color;
-                        SplitWindow.GiantLabel(entityDef.Identifier, labelColor, _rowMinHeight);
-
-                        ImGui.PopID();
-                    }
-
-                    ImGui.EndTable();
-                }
-
+                DrawEntityDefBrushes(layerDef, ref selectedEntityDefinitionIndex);
                 break;
             case LayerType.Tiles:
                 break;
@@ -1123,6 +1001,173 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             default:
                 throw new ArgumentOutOfRangeException();
         }
+    }
+
+    private static void DrawEntityDefBrushes(LayerDef layerDef, ref int selectedEntityDefinitionIndex)
+    {
+        var entityDefs = EntityDefinitions.All;
+
+        if (entityDefs.Count == 0)
+        {
+            ImGui.TextDisabled("There are no entities defined");
+            return;
+        }
+
+        _tempEntityDefList.Clear();
+
+        var hasSelected = false;
+        for (var i = 0; i < entityDefs.Count; i++)
+        {
+            if (!IsExcluded(entityDefs[i], layerDef))
+            {
+                _tempEntityDefList.Add(entityDefs[i]);
+                if (i == selectedEntityDefinitionIndex)
+                    hasSelected = true;
+            }
+        }
+
+        if (_tempEntityDefList.Count > 0 && !hasSelected)
+        {
+            SelectFirstEntityDefinition();
+        }
+
+        if (_tempEntityDefList.Count == 0)
+        {
+            ImGui.TextDisabled("No entities match the required layer tags");
+            return;
+        }
+
+        if (!ImGui.BeginTable("EntityDefTable", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
+            return;
+
+        ImGui.TableSetupColumn("Value");
+
+        for (var i = 0; i < entityDefs.Count; i++)
+        {
+            var entityDef = entityDefs[i];
+            if (IsExcluded(entityDef, layerDef))
+                continue;
+
+            ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
+            ImGui.TableNextColumn();
+            ImGui.PushID(i);
+
+            var isSelected = selectedEntityDefinitionIndex == i;
+            var cursorPos = ImGui.GetCursorScreenPos();
+            if (SplitWindow.GiantButton("##Selectable", isSelected, entityDef.Color, _rowMinHeight))
+            {
+                selectedEntityDefinitionIndex = i;
+            }
+
+            if (ImGui.BeginPopupContextItem("Popup"))
+            {
+                ImGui.MenuItem("Copy", default);
+                ImGui.MenuItem("Cut", default);
+                ImGui.MenuItem("Duplicate", default);
+                ImGui.MenuItem("Delete", default);
+                ImGui.EndPopup();
+            }
+
+            if (GetTileSetDef(entityDef.TileSetDefId, out var tileSet))
+            {
+                DrawEntityDefIcon(tileSet, entityDef.TileId, entityDef.Color, cursorPos);
+            }
+
+            ImGui.SameLine(0, 70f);
+
+            var labelColor = isSelected ? Color.White.MultiplyAlpha(0.8f) : entityDef.Color;
+            SplitWindow.GiantLabel(entityDef.Identifier, labelColor, _rowMinHeight);
+
+            ImGui.PopID();
+        }
+
+        ImGui.EndTable();
+    }
+
+    private static void DrawEntityDefIcon(TileSetDef tileSet, uint tileId, Color color, Num.Vector2 cursorPos)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        var texture = SplitWindow.GetTileSetTexture(tileSet.Path);
+
+        var gridSize = tileSet.TileGridSize;
+        var textureSizeInGrid = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
+        var cellX = textureSizeInGrid.X > 0 ? tileId % textureSizeInGrid.X : 0;
+        var cellY = textureSizeInGrid.X > 0 ? (int)(tileId / textureSizeInGrid.X) : 0;
+        var uvMin = new Num.Vector2(1.0f / texture.Width * cellX * gridSize, 1.0f / texture.Height * cellY * gridSize);
+        var uvMax = uvMin + new Num.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
+
+        var iconSize = new Num.Vector2(32, 32);
+        var iconPos = cursorPos + iconSize / 2;
+        var rectPadding = new Num.Vector2(4, 4);
+
+        ImGuiExt.RectWithOutline(
+            dl,
+            iconPos - rectPadding,
+            iconPos + iconSize + rectPadding * 2,
+            color.MultiplyAlpha(0.4f),
+            color,
+            2f
+        );
+
+        dl->AddImage(
+            (void*)texture.Handle,
+            iconPos,
+            iconPos + iconSize,
+            uvMin,
+            uvMax
+        );
+    }
+
+    private static void DrawIntGridBrushes(LayerDef layerDef, ref int selectedIntGridValueIndex)
+    {
+        if (layerDef.IntGridValues.Count == 0)
+        {
+            ImGui.TextDisabled("No values are defined");
+            return;
+        }
+
+        if (!ImGui.BeginTable("IntGridTable", 1, SplitWindow.TableFlags, new Num.Vector2(0, 0)))
+            return;
+
+        ImGui.TableSetupColumn("Name");
+
+        for (var i = 0; i < layerDef.IntGridValues.Count; i++)
+        {
+            ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
+            ImGui.TableNextColumn();
+            ImGui.PushID(i);
+
+            var cursorPos = ImGui.GetCursorScreenPos();
+
+            var isSelected = selectedIntGridValueIndex == i;
+            var intGridValue = layerDef.IntGridValues[i];
+            if (SplitWindow.GiantButton("##Selectable", isSelected, intGridValue.Color, _rowMinHeight))
+            {
+                selectedIntGridValueIndex = i;
+            }
+
+            ImGui.SameLine(0, 0);
+
+            var dl = ImGui.GetWindowDrawList();
+            var rectHeight = _rowMinHeight * 0.6f;
+            var min = cursorPos + new Num.Vector2(8, (_rowMinHeight - rectHeight) / 2);
+            var max = min + new Num.Vector2(32, rectHeight);
+            ImGuiExt.RectWithOutline(dl, min, max, intGridValue.Color.MultiplyAlpha(0.33f), intGridValue.Color);
+            var label = intGridValue.Value.ToString();
+            var textSize = ImGui.CalcTextSize(label);
+            var rectSize = max - min;
+            dl->AddText(min + new Num.Vector2((rectSize.X - textSize.X) / 2, (rectSize.Y - textSize.Y) / 2),
+                Color.White.PackedValue,
+                label);
+
+            ImGui.SameLine(60);
+
+            SplitWindow.GiantLabel(intGridValue.Identifier, intGridValue.Color, _rowMinHeight);
+
+            ImGui.PopID();
+        }
+
+        ImGui.EndTable();
     }
 
     private static bool IsExcluded(EntityDef entityDef, LayerDef layerDef)
@@ -1614,7 +1659,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     dl,
                     boundsMin - rectOffset, boundsMax + rectOffset,
                     ImGuiExt.Colors[0].PackedValue,
-                    _gameRenderScale * 1f, 
+                    _gameRenderScale * 1f,
                     (int)(_gameRenderScale * 10f),
                     0.5f,
                     true
@@ -1801,7 +1846,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             if (entityDef.KeepAspectRatio)
             {
                 var ar = entityDef.Width / (float)entityDef.Height;
-                totSizeDelta.Y = totSizeDelta.X * ar;
+                if (ResizeEditorTool.IsXHandle(_resizeEditorEntity.ActiveHandle))
+                    totSizeDelta.Y = totSizeDelta.X * ar;
+                else
+                    totSizeDelta.X = totSizeDelta.Y / ar;
             }
 
             var sizeDelta = totSizeDelta / _gameRenderScale;
@@ -1823,6 +1871,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     _ => entityInstance.Position.Y,
                 };
 
+                // scaling from center
                 if (ImGui.IsKeyDown(ImGuiKey.LeftAlt) || ImGui.IsKeyDown(ImGuiKey.RightAlt))
                 {
                     newX = (int)(startPos.X - (gridSizeDelta.X * gridSize) * 0.5f);

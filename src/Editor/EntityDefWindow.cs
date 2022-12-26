@@ -258,6 +258,8 @@ public unsafe class EntityDefWindow : SplitWindow
                 tagToRemove = i;
             }
 
+            ImGuiExt.ItemTooltip("Click to remove");
+            
             ImGui.SameLine();
             if (ImGui.GetContentRegionAvail().X < 30)
                 ImGui.NewLine();

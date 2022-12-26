@@ -50,7 +50,7 @@ public unsafe class LayerDefWindow : SplitWindow
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
                 ImGui.PushID(i);
-                
+
                 var layerDef = RootJson.LayerDefinitions[i];
 
                 var isSelected = _selectedLayerDefIndex == i;
@@ -60,7 +60,7 @@ public unsafe class LayerDefWindow : SplitWindow
                 {
                     _selectedLayerDefIndex = i;
                 }
-                
+
                 if (ImGui.BeginPopupContextItem("Popup")) //ImGui.OpenPopupOnItemClick("Popup"))
                 {
                     ImGui.MenuItem("Copy", default);
@@ -96,14 +96,15 @@ public unsafe class LayerDefWindow : SplitWindow
 
                     ImGui.EndDragDropTarget();
                 }
+
                 ImGui.SameLine();
-                
+
                 var labelColor = isSelected ? Color.White : color;
                 Icon(LayerTypeIcon(layerDef.LayerType), color, _rowMinHeight);
 
                 ImGui.SameLine();
                 GiantLabel(layerDef.Identifier, labelColor, _rowMinHeight);
-                
+
                 ImGui.PopID();
             }
 
@@ -121,7 +122,7 @@ public unsafe class LayerDefWindow : SplitWindow
         DrawLayerDefinitions();
         if (ImGuiExt.ColoredButton("+ Add Layer Definition", new Vector2(-1, 0)))
         {
-            RootJson.LayerDefinitions.Add(new LayerDef() { Uid = GetNextId(RootJson.LayerDefinitions)});
+            RootJson.LayerDefinitions.Add(new LayerDef() { Uid = GetNextId(RootJson.LayerDefinitions) });
         }
     }
 
@@ -299,7 +300,7 @@ public unsafe class LayerDefWindow : SplitWindow
                     }
                 );
             }
-            
+
             ImGui.SameLine();
             var (showHideTooltip, showHideIcon) = group.IsActive switch
             {
@@ -695,7 +696,7 @@ public unsafe class LayerDefWindow : SplitWindow
             result = true;
             selectedValue = currValue;
         }
-        
+
         if (ImGui.IsItemHovered() && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
         {
             result = true;
@@ -748,6 +749,17 @@ public unsafe class LayerDefWindow : SplitWindow
         dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 18f, textPos, Color.White.PackedValue, label);
     }
 
+    private static bool TagButton(string label)
+    {
+        return ImGuiExt.ColoredButton(
+            label,
+            Color.White, new Color(95, 111, 165),
+            "Click to remove",
+            new Vector2(0, ImGui.GetFrameHeight()),
+            new Vector2(ImGui.GetStyle()->FramePadding.X, 2)
+        );
+    }
+
     private void DrawLayerDefTags(LayerDef layerDef)
     {
         ImGuiExt.SeparatorText("Excluded Tags");
@@ -764,13 +776,19 @@ public unsafe class LayerDefWindow : SplitWindow
 
         ImGui.EndDisabled();
         var exclTagToRemove = -1;
+        ImGui.PushID("ExcludedTags");
         for (var i = 0; i < layerDef.ExcludedTags.Count; i++)
         {
-            if (ImGuiExt.ColoredButton(layerDef.ExcludedTags[i]))
+            ImGui.PushID(i);
+            if (TagButton(layerDef.ExcludedTags[i]))
                 exclTagToRemove = i;
+
             if (i < layerDef.ExcludedTags.Count - 1)
                 ImGui.SameLine();
+            ImGui.PopID();
         }
+
+        ImGui.PopID();
 
         if (exclTagToRemove != -1)
             layerDef.ExcludedTags.RemoveAt(exclTagToRemove);
@@ -790,13 +808,19 @@ public unsafe class LayerDefWindow : SplitWindow
 
         ImGui.EndDisabled();
         var reqTagToRemove = -1;
+        ImGui.PushID("RequiredTags");
         for (var i = 0; i < layerDef.RequiredTags.Count; i++)
         {
-            if (ImGuiExt.ColoredButton(layerDef.RequiredTags[i]))
+            ImGui.PushID(i);
+            if (TagButton(layerDef.RequiredTags[i]))
                 reqTagToRemove = i;
+
             if (i < layerDef.RequiredTags.Count - 1)
                 ImGui.SameLine();
+            ImGui.PopID();
         }
+
+        ImGui.PopID();
 
         if (reqTagToRemove != -1)
             layerDef.RequiredTags.RemoveAt(reqTagToRemove);
