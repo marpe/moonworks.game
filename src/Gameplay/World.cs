@@ -376,14 +376,14 @@ public class World
 
     private void DrawLightBounds(Renderer renderer)
     {
-        if (!Debug && !DebugLights)
+        if (!Debug || !DebugLights)
             return;
         for (var i = 0; i < Lights.Count; i++)
         {
             var light = Lights[i];
             if (!light.DrawDebug)
                 continue;
-            renderer.DrawRectOutline(light.Bounds.Min, light.Bounds.Max, light.Color);
+            renderer.DrawRectWithOutline(light.Bounds.Min, light.Bounds.Max, light.Color.MultiplyAlpha(0.1f), light.Color, 1f);
         }
     }
 

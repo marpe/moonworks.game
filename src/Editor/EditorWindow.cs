@@ -828,7 +828,20 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     SelectFirstEntityDefinition();
                     _selectedIntGridValueIndex = 0;
                 }
-
+                
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(4, 4));
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.BeginTooltip();
+                    ImGui.TextUnformatted($"LayerDefId: {layerInstance.LayerDefId}");
+                    if (layerDef != null && layerDef.LayerType == LayerType.Entities)
+                    {
+                        ImGui.TextUnformatted($"Entities: {layerInstance.EntityInstances.Count}");
+                    }
+                    ImGui.EndTooltip();
+                }
+                ImGui.PopStyleVar();
+                
                 ImGui.SameLine(0, 0);
 
                 if (ImGui.BeginPopupContextItem("Popup"))

@@ -133,6 +133,10 @@ public unsafe class EntityDefWindow : SplitWindow
         {
             var entityDef = entities[_selectedEntityDefinitionIndex];
 
+            ImGui.BeginDisabled();
+            SimpleTypeInspector.InspectInputInt("Uid", ref entityDef.Uid);
+            ImGui.EndDisabled();
+
             SimpleTypeInspector.InspectString("Identifier", ref entityDef.Identifier);
 
             TileSetDefCombo.DrawTileSetDefCombo("TileSetDefId", ref entityDef.TileSetDefId, RootJson.TileSetDefinitions);
