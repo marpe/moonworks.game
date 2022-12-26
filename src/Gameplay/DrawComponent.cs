@@ -32,6 +32,7 @@ public class SpriteAnimation
     }
 }
 
+[CustomInspector<GroupInspector>]
 public class DrawComponent
 {
     private Entity? _parent;
@@ -39,6 +40,7 @@ public class DrawComponent
 
     public Dictionary<string, SpriteAnimation> Animations = new(StringComparer.OrdinalIgnoreCase);
     public SpriteAnimation? CurrentAnimation;
+    private SpriteAnimation? _previousAnimation;
 
     public Vector2 Squash = Vector2.One;
 
@@ -67,6 +69,18 @@ public class DrawComponent
             var frameHeight = texture.Height;
             Animations = CreateAnimations(ase, (int)widthPerFrame, (int)frameHeight, TexturePath);
             CurrentAnimation = Animations.FirstOrDefault().Value;
+        }
+    }
+
+    public void PlayAnimation(string animationName)
+    {
+        var nextAnimation = Animations[animationName];
+        if (CurrentAnimation != nextAnimation)
+        {
+            _previousAnimation = CurrentAnimation;
+            CurrentAnimation = nextAnimation;
+            FrameIndex = 0;
+            _timer = 0;    
         }
     }
 

@@ -7,7 +7,7 @@ public class CoroutineManager : IDisposable
 	private readonly List<Coroutine> _routinesToUpdate = new();
 	public bool IsDisposed { get; private set; }
 
-	public ICoroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds, string name = "")
+	public ICoroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds = 0, string name = "")
 	{
 		if (IsDisposed)
 			throw new ObjectDisposedException(nameof(CoroutineManager));

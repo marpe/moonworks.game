@@ -34,10 +34,13 @@ public class World
     public List<Bullet> Bullets { get; } = new();
 
     public List<Light> Lights { get; } = new();
+    public List<MuzzleFlash> MuzzleFlashes { get; } = new();
 
-    [HideInInspector] public ulong WorldUpdateCount;
+    [HideInInspector]
+    public ulong WorldUpdateCount;
 
-    [HideInInspector] public float WorldTotalElapsedTime;
+    [HideInInspector]
+    public float WorldTotalElapsedTime;
 
     private static Vector2 _savedPos;
 
@@ -140,6 +143,7 @@ public class World
 
         Enemies.Clear();
         Bullets.Clear();
+        MuzzleFlashes.Clear();
         Lights.Clear();
 
         Level = level;
@@ -319,6 +323,7 @@ public class World
         UpdatePlayer(deltaSeconds, input, camera);
         UpdateEnemies(deltaSeconds);
         UpdateBullets(deltaSeconds);
+        UpdateMuzzleFlashes(deltaSeconds);
     }
 
     private void UpdateBullets(float deltaSeconds)
@@ -332,6 +337,20 @@ public class World
 
             if (Bullets[i].IsDestroyed)
                 Bullets.RemoveAt(i);
+        }
+    }
+
+    private void UpdateMuzzleFlashes(float deltaSeconds)
+    {
+        for (var i = MuzzleFlashes.Count - 1; i >= 0; i--)
+        {
+            if (!MuzzleFlashes[i].IsInitialized)
+                MuzzleFlashes[i].Initialize(this);
+
+            MuzzleFlashes[i].Update(deltaSeconds);
+
+            if (MuzzleFlashes[i].IsDestroyed)
+                MuzzleFlashes.RemoveAt(i);
         }
     }
 
@@ -390,6 +409,16 @@ public class World
         DrawEnemies(renderer, alpha, usePointFiltering);
         DrawPlayer(renderer, alpha, usePointFiltering);
         DrawBullets(renderer, alpha, usePointFiltering);
+        DrawMuzzleFlashes(renderer, alpha, usePointFiltering);
+    }
+
+    private void DrawMuzzleFlashes(Renderer renderer, double alpha, bool usePointFiltering)
+    {
+        for (var i = 0; i < MuzzleFlashes.Count; i++)
+        {
+            var flash = MuzzleFlashes[i];
+            flash.Draw.Draw(renderer, alpha, usePointFiltering);
+        }
     }
 
     private void DrawEntityDebug(Renderer renderer, double alpha)
@@ -418,18 +447,19 @@ public class World
             DrawEntityDebug(renderer, bullet, false, alpha);
         }
     }
-    
+
     private void DrawLevelDebug(Renderer renderer, Level level, Bounds cameraBounds)
     {
         if (!Debug || !DebugLevel)
             return;
-        
+
         for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = level.LayerInstances[layerIndex];
             var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
             DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
         }
+
         renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
 
@@ -652,6 +682,15 @@ public class World
         Bullets.Add(bullet);
     }
 
+    public void SpawnMuzzleFlash(Vector2 position, int direction)
+    {
+        var muzzleFlash = CreateEntity<MuzzleFlash>();
+        muzzleFlash.Position.SetPrevAndCurrent(position + new Vector2(1, 0) + new Vector2(14 * direction, 3));
+        muzzleFlash.Initialize(this);
+        muzzleFlash.Draw.Flip = direction < 0 ? SpriteFlip.FlipHorizontally : SpriteFlip.None;
+        MuzzleFlashes.Add(muzzleFlash);
+    }
+
     private static EntityDef GetEntityDefinition(RootJson root, int entityDefId)
     {
         for (var i = 0; i < EntityDefinitions.Count; i++)
@@ -725,7 +764,7 @@ public class World
     {
         DrawLevel(renderer, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: false);
         DrawEntities(renderer, alpha, usePointFiltering);
-        
+
         var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
         renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection, PipelineType.PixelArt);
     }

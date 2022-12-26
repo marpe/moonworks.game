@@ -33,7 +33,9 @@ public class PlayerBehaviour
         if (command.IsFiring)
         {
             var direction = Player.Draw.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
+            Player.Draw.PlayAnimation("Fire");
             Player.World.SpawnBullet(Player.Position.Current, direction);
+            Player.World.SpawnMuzzleFlash(Player.Position.Current, direction);
         }
 
         /*if (Player.Position.Current.Y > 300)
@@ -49,6 +51,7 @@ public class PlayerBehaviour
         if (command.MovementX != 0)
         {
             Player.Velocity.X += command.MovementX * Player.Speed;
+            Player.Draw.PlayAnimation("Run");
         }
 
         if (command.MoveToMouse)

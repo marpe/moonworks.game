@@ -33,7 +33,10 @@ public class Entity
 
     private void DrawPosition()
     {
-        ImGuiExt.InspectVector2("Position", ref Position.Current.X, ref Position.Current.Y);
+        if (ImGuiExt.InspectVector2("Position", ref Position.Current.X, ref Position.Current.Y))
+        {
+            Position.SetLastUpdatePosition();
+        }
     }
 
     public Point Cell => ToCell(Position);

@@ -10,6 +10,7 @@ public static class ContentPaths
         public const string bluebee_aseprite = @"Content\animations\bluebee.aseprite";
         public const string bullet_aseprite = @"Content\animations\bullet.aseprite";
         public const string gun_aseprite = @"Content\animations\gun.aseprite";
+        public const string muzzle_flash_aseprite = @"Content\animations\muzzle_flash.aseprite";
         public const string player_aseprite = @"Content\animations\player.aseprite";
         public const string skull_aseprite = @"Content\animations\skull.aseprite";
         public const string slug_aseprite = @"Content\animations\slug.aseprite";

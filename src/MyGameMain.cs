@@ -207,15 +207,15 @@ public class MyGameMain : Game
             var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
             var gameRenderSprite = new Sprite(RenderTargets.GameRender, srcRect);
             var scale = Matrix3x2.CreateScale((int)RenderTargets.RenderScale, (int)RenderTargets.RenderScale).ToMatrix4x4();
-            Renderer.DrawSprite(gameRenderSprite, scale, Color.White);
+            Renderer.DrawSprite(gameRenderSprite, scale, Color.White, 0, SpriteFlip.None, false);
         }
         else
         {
-            Renderer.DrawSprite(RenderTargets.GameRender.Target, Matrix4x4.Identity, Color.White);
+            Renderer.DrawSprite(RenderTargets.GameRender.Target, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None, true);
         }
 
-        Renderer.DrawSprite(RenderTargets.MenuRender.Target, Matrix4x4.Identity, Color.White);
-        Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null);
+        Renderer.DrawSprite(RenderTargets.MenuRender.Target, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None, false);
+        Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, PipelineType.Sprite);
 
         Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, RenderTargets.GameRender, RenderTargets.MenuRender, alpha);
 
@@ -328,7 +328,6 @@ public class MyGameMain : Game
 
         if (LightsEnabled)
             World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha, UsePointFiltering);
-
 
         DrawViewBounds(renderer, ref commandBuffer, renderDestination);
     }
