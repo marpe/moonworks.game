@@ -43,6 +43,7 @@ public class Bullet : Entity
             {
                 IsDestroyed = true;
                 enemy.IsDead = true;
+                enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
                 World.FreezeFrame(0.1f);
                 return;
             }

@@ -50,7 +50,7 @@ public class World
     public Level Level = new();
 
     // TODO (marpe): Probably better to store paths and retrieve texture from ContentManager
-    private Dictionary<int, Texture> _tileSetTextures = new();
+    private Dictionary<int, string> _tileSetTextures = new();
     public string Filepath = "";
 
     public World()
@@ -97,7 +97,7 @@ public class World
 
             if (Shared.Content.HasTexture(path))
             {
-                _tileSetTextures.Add(tileSet.Uid, Shared.Content.GetTexture(path));
+                _tileSetTextures.Add(tileSet.Uid, path);
                 continue;
             }
 
@@ -105,11 +105,11 @@ public class World
             {
                 Shared.Content.LoadAndAddTextures(new[] { path });
                 var texture = Shared.Content.GetTexture(path);
-                _tileSetTextures.Add(tileSet.Uid, texture);
+                _tileSetTextures.Add(tileSet.Uid, path);
                 continue;
             }
 
-            _tileSetTextures.Add(tileSet.Uid, Shared.Game.Renderer.BlankSprite.Texture);
+            _tileSetTextures.Add(tileSet.Uid, "blank");
         }
 
         sw.StopAndLog("LoadTileSetTextures");
@@ -478,7 +478,8 @@ public class World
         var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
 
         var tileSetDef = GetTileSetDef(Root, layerDef.TileSetDefId);
-        var texture = _tileSetTextures[tileSetDef.Uid];
+        var texturePath = _tileSetTextures[tileSetDef.Uid];
+        var texture = Shared.Content.GetTexture(texturePath);
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {

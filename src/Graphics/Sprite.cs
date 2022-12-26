@@ -6,8 +6,6 @@ public struct Sprite
     public Bounds SrcRect;
     public UV UV;
     
-    public Vector2 Origin;
-
     public Sprite(Texture texture) : this(texture, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height))
     {
     }

@@ -9,14 +9,21 @@ public enum LoopType
     Restart
 }
 
+public struct AnimationFrame
+{
+    public Vector2 Origin;
+    public string TexturePath;
+    public Rectangle SrcRect;
+}
+
 public class SpriteAnimation
 {
-    public readonly Sprite[] Frames;
+    public readonly AnimationFrame[] Frames;
     public readonly float[] FrameDurations;
     public float TotalDuration;
     public LoopType LoopType;
 
-    public SpriteAnimation(Sprite[] frames, float[] frameDurations, LoopType loopType = LoopType.None)
+    public SpriteAnimation(AnimationFrame[] frames, float[] frameDurations, LoopType loopType = LoopType.None)
     {
         Frames = frames;
         FrameDurations = frameDurations;
@@ -56,7 +63,9 @@ public class DrawComponent
         {
             Shared.Content.LoadAndAddTextures(new[] { TexturePath });
             var (texture, ase) = Shared.Content.GetAseprite(TexturePath);
-            Animations = CreateAnimations(ase, texture);
+            var widthPerFrame = texture.Width / ase.Frames.Count;
+            var frameHeight = texture.Height;
+            Animations = CreateAnimations(ase, (int)widthPerFrame, (int)frameHeight, TexturePath);
             CurrentAnimation = Animations.FirstOrDefault().Value;
         }
     }
@@ -65,6 +74,9 @@ public class DrawComponent
     {
         if (CurrentAnimation == null)
             return;
+        
+        Squash = Vector2.SmoothStep(Squash, Vector2.One, deltaSeconds * 20f);
+
         if (!IsAnimating)
             return;
 
@@ -83,12 +95,16 @@ public class DrawComponent
         if (CurrentAnimation == null)
             return;
         var xform = GetTransform(alpha);
-        renderer.DrawSprite(CurrentAnimation.Frames[FrameIndex], xform, Color.White, 0, Flip, usePointFiltering);
+        var currentFrame = CurrentAnimation.Frames[FrameIndex];
+        var texture = Shared.Content.GetTexture(currentFrame.TexturePath);
+        var sprite = new Sprite(texture, currentFrame.SrcRect);
+        renderer.DrawSprite(sprite, xform, Color.White, 0, Flip, usePointFiltering);
     }
 
     private Matrix4x4 GetTransform(double alpha)
     {
-        var spriteOrigin = CurrentAnimation!.Frames[FrameIndex].Origin;
+        var currentFrame = CurrentAnimation!.Frames[FrameIndex];
+        var spriteOrigin = currentFrame.Origin;
         if (spriteOrigin == Vector2.Zero)
             spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
@@ -107,7 +123,7 @@ public class DrawComponent
 
     #region Aseprite Loading
 
-    private static Dictionary<string, SpriteAnimation> CreateAnimations(AsepriteFile ase, Texture texture)
+    private static Dictionary<string, SpriteAnimation> CreateAnimations(AsepriteFile ase, int widthPerFrame, int frameHeight, string texturePath)
     {
         var tags = new List<AsepriteFile.FrameTag>();
         var animations = new Dictionary<string, SpriteAnimation>();
@@ -130,18 +146,21 @@ public class DrawComponent
 
         if (tags.Count == 0)
         {
-            var widthPerFrame = texture.Width / ase.Frames.Count;
-            var sprites = new Sprite[ase.Frames.Count];
+            var frames = new AnimationFrame[ase.Frames.Count];
             var durations = new float[ase.Frames.Count];
             durations.AsSpan().Fill(1f / 12f);
 
             for (var i = 0; i < ase.Frames.Count; i++)
             {
-                var sourceRect = new Rectangle((int)(i * widthPerFrame), 0, (int)widthPerFrame, (int)texture.Height);
-                sprites[i] = new Sprite(texture, sourceRect);
+                var sourceRect = new Rectangle((int)(i * widthPerFrame), 0, (int)widthPerFrame, (int)frameHeight);
+                frames[i] = new AnimationFrame
+                {
+                    TexturePath = texturePath,
+                    SrcRect = sourceRect
+                };
             }
 
-            animations.Add("Default", new SpriteAnimation(sprites, durations));
+            animations.Add("Default", new SpriteAnimation(frames, durations));
             return animations;
         }
 
@@ -149,12 +168,16 @@ public class DrawComponent
         foreach (var tag in tags)
         {
             var numberOfFrames = tag.FrameTo - tag.FrameFrom + 1;
-            var sprites = new Sprite[numberOfFrames];
+            var frames = new AnimationFrame[numberOfFrames];
             var durations = new float[numberOfFrames];
             int j = 0;
             for (int i = tag.FrameFrom; i <= tag.FrameTo; i++, j++)
             {
-                sprites[j] = new Sprite(texture, srcRects[i]);
+                frames[j] = new AnimationFrame()
+                {
+                    TexturePath = texturePath,
+                    SrcRect = srcRects[i],
+                };
                 durations[j] = ase.Frames[i].FrameDuration / 1000f;
             }
 
@@ -176,13 +199,13 @@ public class DrawComponent
 
             if (pivot != null)
             {
-                for (var n = 0; n < sprites.Length; n++)
+                for (var n = 0; n < frames.Length; n++)
                 {
-                    sprites[n].Origin = pivot.Value;
+                    frames[n].Origin = pivot.Value;
                 }
             }
 
-            animations.Add(tag.TagName, new SpriteAnimation(sprites, durations, loopType));
+            animations.Add(tag.TagName, new SpriteAnimation(frames, durations, loopType));
         }
 
         return animations;

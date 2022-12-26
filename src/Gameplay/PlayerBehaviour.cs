@@ -62,7 +62,7 @@ public class PlayerBehaviour
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
 
-        Player.Draw.IsAnimating = !MathF.IsNearZero(Player.Velocity.X, 0.01f);
+        Player.Draw.IsAnimating = !MathF.IsNearZero(Player.Velocity.X, 1f);
         if (!Player.Draw.IsAnimating)
             Player.Draw.FrameIndex = 0;
 
@@ -121,7 +121,5 @@ public class PlayerBehaviour
         {
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
         }
-
-        Player.Draw.Squash = Vector2.SmoothStep(Player.Draw.Squash, Vector2.One, deltaSeconds * 20f);
     }
 }
