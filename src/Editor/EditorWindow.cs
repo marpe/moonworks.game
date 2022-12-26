@@ -1625,7 +1625,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
             else if (ImGui.IsItemHovered())
             {
-                dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
+                dl->AddRect(boundsMin, boundsMax, ImGuiExt.Colors[0].MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 1f);
             }
 
             /*if (ImGui.BeginPopupContextItem("EntityInstanceContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))

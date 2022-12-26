@@ -943,13 +943,11 @@ public static unsafe class ImGuiExt
         if (MathF.IsNearZero(length))
             return;
 
-        var numSegments = MathF.Max(1, (int)(length / segmentLength));
-        var newSegmentLength = (int)(length / numSegments);
         var dir = offset / length;
-        var lineLength = newSegmentLength * lengthOfOnSegments;
+        var lineLength = segmentLength * lengthOfOnSegments;
         var t = animate ? Shared.Game.Time.TotalElapsedTime * animationSpeed : 0; // (float)ImGui.GetTime();
         var tt = (t - MathF.Floor(t)) - 1f;
-        var initialOffset = newSegmentLength * tt;
+        var initialOffset = segmentLength * tt;
         var p = start + dir * initialOffset;
         var traversedLength = initialOffset;
 
@@ -958,14 +956,14 @@ public static unsafe class ImGuiExt
             var initialLength = lineLength + initialOffset;
             if (initialLength > 0)
                 drawList->AddLine(start, start + initialLength * dir, color, thickness);
-            p += dir * newSegmentLength;
-            traversedLength += newSegmentLength;
+            p += dir * segmentLength;
+            traversedLength += segmentLength;
         }
 
-        for (; traversedLength + lineLength < length; traversedLength += newSegmentLength)
+        for (; traversedLength + lineLength < length; traversedLength += segmentLength)
         {
             drawList->AddLine(p, p + lineLength * dir, color, thickness);
-            p += dir * newSegmentLength;
+            p += dir * segmentLength;
         }
 
         var lengthLeft = length - traversedLength;
