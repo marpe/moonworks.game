@@ -180,8 +180,8 @@ public class MyGameMain : Game
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(finalRenderTarget.Target, viewportTransform, Color.White);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
+            Renderer.DrawSprite(finalRenderTarget.Target, viewportTransform, Color.White, 0,  SpriteFlip.None, false);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, PipelineType.Sprite);  // PipelineType.PixelArt);
             Renderer.Submit(ref commandBuffer);
         }
         _fpsDisplay.EndRender();

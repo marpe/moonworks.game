@@ -73,11 +73,11 @@ public class Spring
     /// over a given period of time.
     /// - An angular frequency is given to control how fast the spring oscillates.
     /// - A damping ratio is given to control how fast the motion decays.
-    ///     damping ratio > 1: over damped
+    ///     damping ratio &gt; 1: over damped
     ///     damping ratio = 1: critically damped
-    ///     damping ratio < 1: under damped
+    ///     damping ratio &lt; 1: under damped
     /// 
-    /// https://www.ryanjuckett.com/damped-springs/
+    /// <link>https://www.ryanjuckett.com/damped-springs/</link>
     /// </summary>
     /// <param name="pOutParams">motion parameters result</param>
     /// <param name="deltaTime">time step to advance</param>
@@ -163,8 +163,8 @@ public class Spring
     }
 
     /// <summary>
-    // This function will update the supplied position and velocity values over
-    // according to the motion parameters.
+    /// This function will update the supplied position and velocity values
+    /// according to the motion parameters.
     /// </summary>
     /// <param name="position">position value to update</param>
     /// <param name="velocity">velocity value to update</param>

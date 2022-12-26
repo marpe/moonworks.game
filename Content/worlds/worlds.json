@@ -24979,6 +24979,78 @@
                   },
                   "Width": 8,
                   "Height": 12
+                },
+                {
+                  "Iid": "8fe692a1-ef17-4b9e-9c42-9b3509977b91",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 468,
+                    "Y": 404
+                  },
+                  "Width": 8,
+                  "Height": 8
+                },
+                {
+                  "Iid": "287b9e8f-8e9c-499a-a446-27302a260560",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 756,
+                    "Y": 404
+                  },
+                  "Width": 8,
+                  "Height": 8
+                },
+                {
+                  "Iid": "a4854a3a-1bc8-4902-8fad-6224d72b009c",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 852,
+                    "Y": 356
+                  },
+                  "Width": 8,
+                  "Height": 8
+                },
+                {
+                  "Iid": "39bdc56e-71d2-42ad-b52d-6cf210d18223",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 772,
+                    "Y": 340
+                  },
+                  "Width": 8,
+                  "Height": 8
+                },
+                {
+                  "Iid": "57bec54c-5699-42e0-985f-c890fd46691a",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 660,
+                    "Y": 340
+                  },
+                  "Width": 8,
+                  "Height": 8
+                },
+                {
+                  "Iid": "a439478b-0c51-47be-b34a-fc538ae78d4f",
+                  "EntityDefId": 21,
+                  "EntityDefIdentifier": "YellowBee",
+                  "FieldInstances": [],
+                  "Position": {
+                    "X": 580,
+                    "Y": 324
+                  },
+                  "Width": 8,
+                  "Height": 8
                 }
               ],
               "IsVisible": true

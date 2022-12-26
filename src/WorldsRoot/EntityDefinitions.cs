@@ -95,6 +95,22 @@ public static class EntityDefinitions
                     FillOpacity = 0.6f,
                 }
             },
+            {
+                typeof(YellowBee), new()
+                {
+                    Uid = 21,
+                    Width = 8,
+                    Height = 8,
+                    Color = ColorExt.FromHex("ffdd71"),
+                    ResizableX = false,
+                    ResizableY = false,
+                    TileSetDefId = 6,
+                    TileId = 8,
+                    PivotX = 0.5,
+                    PivotY = 0.5,
+                    FillOpacity = 0.6f,
+                }
+            }
         };
 
         foreach (var (type, entityDef) in entityDefs)

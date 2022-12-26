@@ -35,7 +35,8 @@ public class DrawComponent
 
     public Vector2 Squash = Vector2.One;
 
-    [HideInInspector] public SpriteFlip Flip = SpriteFlip.None;
+    [HideInInspector]
+    public SpriteFlip Flip = SpriteFlip.None;
 
     public bool EnableSquash = true;
 
@@ -83,35 +84,21 @@ public class DrawComponent
             return;
         var xform = GetTransform(alpha);
         renderer.DrawSprite(CurrentAnimation.Frames[FrameIndex], xform, Color.White, 0, Flip, usePointFiltering);
-
-        // bullet
-        /*var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
-        var srcRect = new Rectangle(4 * 16, 0, 16, 16);
-        var xform = bullet.GetTransform(alpha);
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, bullet.Flip);*/
-
-        // Enemy draw
-        /*var texture = Shared.Content.GetTexture(ContentPaths.ldtk.Example.Characters_png);
-        var offset = entity.EntityType switch
-        {
-            EntityType.Slug => 5,
-            EntityType.BlueBee => 3,
-            _ => 1,
-        };
-
-        var frameIndex = (int)(entity.TotalTimeActive * 10) % 2;
-        var srcRect = new Rectangle(offset * 16 + frameIndex * 16, 16, 16, 16);
-        var xform = entity.GetTransform(alpha);
-        renderer.DrawSprite(new Sprite(texture, srcRect), xform, Color.White, 0, entity.Flip);*/
     }
 
     private Matrix4x4 GetTransform(double alpha)
     {
-        var squash = Matrix3x2.CreateTranslation(-Parent.Size * Parent.Pivot) *
-                     Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
-                     Matrix3x2.CreateTranslation(Parent.Size * Parent.Pivot);
+        var spriteOrigin = CurrentAnimation!.Frames[FrameIndex].Origin;
+        if (spriteOrigin == Vector2.Zero)
+            spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
-        var xform = Matrix3x2.CreateTranslation(Parent.Pivot * (Parent.Size - World.DefaultGridSize)) *
+        var origin = Parent.Size * Parent.Pivot;
+
+        var squash = Matrix3x2.CreateTranslation(-origin) *
+                     Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
+                     Matrix3x2.CreateTranslation(origin);
+
+        var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *
                     Matrix3x2.CreateTranslation(Vector2.Lerp(Parent.Position.LastUpdatePosition, Parent.Position.Current, (float)alpha));
 
@@ -140,14 +127,14 @@ public class DrawComponent
             );
             srcRects.Add(spriteRect);
         }
-        
+
         if (tags.Count == 0)
         {
             var widthPerFrame = texture.Width / ase.Frames.Count;
             var sprites = new Sprite[ase.Frames.Count];
             var durations = new float[ase.Frames.Count];
             durations.AsSpan().Fill(1f / 12f);
-            
+
             for (var i = 0; i < ase.Frames.Count; i++)
             {
                 var sourceRect = new Rectangle((int)(i * widthPerFrame), 0, (int)widthPerFrame, (int)texture.Height);
@@ -187,14 +174,13 @@ public class DrawComponent
                 }
             }
 
-            // TODO (marpe): Add somewhere
-            /*if (pivot != null)
+            if (pivot != null)
             {
                 for (var n = 0; n < sprites.Length; n++)
                 {
                     sprites[n].Origin = pivot.Value;
                 }
-            }*/
+            }
 
             animations.Add(tag.TagName, new SpriteAnimation(sprites, durations, loopType));
         }

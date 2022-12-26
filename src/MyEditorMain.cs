@@ -138,12 +138,32 @@ public unsafe class MyEditorMain : MyGameMain
                     var levelIdentifier = World.Level.Identifier;
                     onComplete = () => { World.StartLevel(levelIdentifier); };
                 }
+                else if (EditorWindow.GetSelectedLevel(out var level))
+                {
+                    var levelIdentifier = level.Identifier;
+                    onComplete = () => { World.StartLevel(levelIdentifier); };
+                }
                 else
                 {
                     onComplete = () => { World.NextLevel(); };
                 }
 
                 QueueSetRoot(rootJson, relativePath, onComplete);
+            });
+        }
+        else if (extension == ".png")
+        {
+            Task.Run(() =>
+            {
+                Logs.LogInfo($"Started loading png texture on thread: {Thread.CurrentThread.ManagedThreadId}");
+                var cb = GraphicsDevice.AcquireCommandBuffer();
+                var pngTexture = Texture.LoadPNG(GraphicsDevice, cb, e.FullPath);
+                GraphicsDevice.Submit(cb);
+                QueueAction(() =>
+                {
+                    Shared.Content.ReplaceTexture(relativePath, pngTexture);
+                    Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");
+                });
             });
         }
         else if (extension == ".aseprite")
@@ -217,6 +237,12 @@ public unsafe class MyEditorMain : MyGameMain
             .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless))
             .AddChild(new ImGuiMenu("Show ImGui Demo Window", "^F2", () => _demoWindow.IsOpen = !_demoWindow.IsOpen, null, () => _demoWindow.IsOpen));
         _menuItems.Add(imgui);
+
+        var editor = new ImGuiMenu("Editor")
+            .AddChild(new ImGuiMenu("Maximize", null, () => MainWindow.IsMaximized = true))
+            .AddChild(new ImGuiMenu("Restore", null, () => SDL.SDL_RestoreWindow(MainWindow.Handle)))
+            .AddChild(new ImGuiMenu("Minimize", null, () => MainWindow.IsMinimized = true));
+        _menuItems.Add(editor);
     }
 
     private void AddDefaultWindows()
@@ -285,7 +311,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         var localFlags = (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton);
         localFlags |= (ImGuiDockNodeFlags)(ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoCloseButton);
-                         
+
         ViewportDockSpaceId = ImGui.DockSpaceOverViewport(mainViewport, flags);
 
         if (ResetDock)
@@ -294,7 +320,9 @@ public unsafe class MyEditorMain : MyGameMain
 
             var leftWidth = 0.2f;
             var rightWidth = 0.2f;
-            uint dockLeftId; uint dockCenterId; uint dockRightId;
+            uint dockLeftId;
+            uint dockCenterId;
+            uint dockRightId;
 
             ImGuiInternal.DockBuilderSplitNode(ViewportDockSpaceId, ImGuiDir.Left, leftWidth, &dockLeftId, &dockCenterId);
             ImGuiInternal.DockBuilderSplitNode(dockCenterId, ImGuiDir.Right, rightWidth, &dockRightId, null);
@@ -317,6 +345,7 @@ public unsafe class MyEditorMain : MyGameMain
 
             ImGuiInternal.DockBuilderFinish(ViewportDockSpaceId);
         }
+
         ResetDock = false;
 
         return ViewportDockSpaceId;
@@ -383,15 +412,15 @@ public unsafe class MyEditorMain : MyGameMain
         InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
                                     ActiveInput == ActiveInput.Game; // !ImGui.GetIO()->WantCaptureMouse;
-        
+
         Binds.UpdateButtonStates(InputState.Create(InputHandler));
         Binds.ExecuteTriggeredBinds();
-        
+
         SetInputViewport();
 
         UpdateScreens();
 
-        InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow; 
+        InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow;
 
         Shared.AudioManager.Update((float)dt.TotalSeconds);
 
@@ -419,7 +448,7 @@ public unsafe class MyEditorMain : MyGameMain
     protected override void Draw(double alpha)
     {
         ActiveInput = ActiveInput.None;
-        
+
         if (IsHidden)
         {
             ActiveInput = ActiveInput.Game;
@@ -452,7 +481,7 @@ public unsafe class MyEditorMain : MyGameMain
             _imguiRenderStopwatch.Stop();
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
         }
-        
+
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 
         if (swapTexture == null)

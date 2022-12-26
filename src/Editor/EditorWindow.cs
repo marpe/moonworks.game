@@ -2101,7 +2101,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     #region Getters
 
-    private static bool GetSelectedLevel([NotNullWhen(true)] out Level? level)
+    public static bool GetSelectedLevel([NotNullWhen(true)] out Level? level)
     {
         level = null;
         var editor = (MyEditorMain)Shared.Game;

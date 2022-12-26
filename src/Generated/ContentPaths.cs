@@ -11,6 +11,7 @@ public static class ContentPaths
         public const string bullet_aseprite = @"Content\animations\bullet.aseprite";
         public const string gun_aseprite = @"Content\animations\gun.aseprite";
         public const string player_aseprite = @"Content\animations\player.aseprite";
+        public const string skull_aseprite = @"Content\animations\skull.aseprite";
         public const string slug_aseprite = @"Content\animations\slug.aseprite";
     }
     public static class bmfonts
