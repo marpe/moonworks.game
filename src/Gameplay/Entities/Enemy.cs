@@ -38,7 +38,7 @@ public abstract class Enemy : Entity
 
     public override void Update(float deltaSeconds)
     {
-        base.Update(deltaSeconds);
         Behaviour.Update(deltaSeconds);
+        base.Update(deltaSeconds);
     }
 }

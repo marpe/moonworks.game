@@ -47,10 +47,6 @@ public class Entity
 
     public DrawComponent Draw = new();
 
-    /*public Point Cell;
-    /// Relative position in cell, ranges between 0 - 1; e.g 0, 0 = left, top, 1, 1 = right, bottom 
-    public Vector2 CellPos;*/
-
     public virtual void Initialize(World world)
     {
         _world = world;
@@ -68,16 +64,21 @@ public class Entity
 
     public bool HasCollision(int x, int y)
     {
-        var levelMin = World.Level.WorldPos / World.DefaultGridSize;
-        var levelGridSize = new Point((int)World.Level.Width, (int)World.Level.Height) / World.DefaultGridSize;
+        return HasCollision(x, y, _world ?? throw new Exception());
+    }
+    
+    public static bool HasCollision(int x, int y, World world)
+    {
+        var levelMin = world.Level.WorldPos / World.DefaultGridSize;
+        var levelGridSize = new Point((int)world.Level.Width, (int)world.Level.Height) / World.DefaultGridSize;
         var levelMax = levelMin + levelGridSize;
 
         if (x < levelMin.X || y < levelMin.Y || x >= levelMax.X || y >= levelMax.Y)
             return true;
 
-        foreach (var layer in World.Level.LayerInstances)
+        foreach (var layer in world.Level.LayerInstances)
         {
-            var layerDef = World.GetLayerDefinition(World.Root, layer.LayerDefId);
+            var layerDef = World.GetLayerDefinition(world.Root, layer.LayerDefId);
             if (layerDef.Identifier != "Tiles" || layerDef.LayerType != LayerType.IntGrid)
                 continue;
 
@@ -110,13 +111,18 @@ public class Entity
 
     public bool HasCollision(Vector2 position, Vector2 size)
     {
+        return HasCollision(position, size, _world ?? throw new Exception());
+    }
+
+    public static bool HasCollision(Vector2 position, Vector2 size, World world)
+    {
         var (minCell, maxCell) = GetMinMaxCell(position, size);
 
         for (var x = minCell.X; x <= maxCell.X; x++)
         {
             for (var y = minCell.Y; y <= maxCell.Y; y++)
             {
-                if (HasCollision(x, y))
+                if (HasCollision(x, y, world))
                     return true;
             }
         }

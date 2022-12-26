@@ -2,40 +2,32 @@
 
 namespace MyGame;
 
-public record struct DelayedCallback(float Delay, Action Callback, bool Fired = false);
-
 public class SlugBehaviour : EnemyBehaviour
 {
     private Enemy? _parent;
     public Enemy Parent => _parent ?? throw new InvalidOperationException();
 
     private float _speed = 50f;
-    private DelayedCallback _destroyCall;
 
     public override void Initialize(Enemy parent)
     {
         _parent = parent;
 
-        _destroyCall = new DelayedCallback(0.5f, () => { Parent.IsDestroyed = true; });
+        _parent.CoroutineManager.StartCoroutine(DestroyOnDeath());
     }
 
-    private static void UpdateDelayedCallback(ref DelayedCallback delayed, float deltaSeconds)
+    private IEnumerator DestroyOnDeath()
     {
-        delayed.Delay -= deltaSeconds;
-        if (delayed.Delay < 0)
-        {
-            delayed.Callback();
-            delayed.Fired = true;
-        }
+        while (!Parent.IsDead)
+            yield return null;
+        yield return Coroutine.WaitForSeconds(.5f);
+        Parent.IsDestroyed = true;
     }
 
     public override void Update(float deltaSeconds)
     {
         if (Parent.IsDead)
-        {
-            UpdateDelayedCallback(ref _destroyCall, deltaSeconds);
             return;
-        }
 
         if (Parent.TotalTimeActive < Parent.FreezeMovementUntil)
             return;

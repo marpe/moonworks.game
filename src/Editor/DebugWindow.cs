@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using MyGame.Entities;
 using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
@@ -17,7 +18,7 @@ public static class CollisionDebug
     {
         if (!Shared.Game.World.IsLoaded)
         {
-            var player = Shared.Game.World.Player;
+            var player = (Player)Shared.Game.World.Entities.First(x => x is Player);
 
             if (ImGuiExt.BeginCollapsingHeader("Ground", ImGuiExt.Colors[0]))
             {

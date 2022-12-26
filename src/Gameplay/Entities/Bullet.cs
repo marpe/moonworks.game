@@ -33,9 +33,11 @@ public class Bullet : Entity
         var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
         var circle = new Circle(radius);
 
-        for (var i = World.Enemies.Count - 1; i >= 0; i--)
+        for (var i = World.Entities.Count - 1; i >= 0; i--)
         {
-            var enemy = World.Enemies[i];
+            var entity = World.Entities[i];
+            if (entity is not Enemy enemy)
+                continue;
             if (enemy.IsDead || enemy.IsDestroyed)
                 continue;
             var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
@@ -44,6 +46,7 @@ public class Bullet : Entity
                 IsDestroyed = true;
                 enemy.IsDead = true;
                 enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
+                enemy.Draw.IsAnimating = false;
                 World.FreezeFrame(0.1f);
                 return;
             }

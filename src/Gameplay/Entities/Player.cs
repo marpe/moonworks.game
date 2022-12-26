@@ -28,8 +28,9 @@ public class Player : Entity
         base.Initialize(world);
     }
 
-    public void Update(float deltaSeconds, PlayerCommand command)
+    public override void Update(float deltaSeconds)
     {
+        var command = Binds.Player.ToPlayerCommand();
         Behaviour.Update(deltaSeconds, command);
         base.Update(deltaSeconds);
     }

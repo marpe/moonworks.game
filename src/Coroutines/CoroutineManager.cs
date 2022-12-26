@@ -7,12 +7,12 @@ public class CoroutineManager : IDisposable
 	private readonly List<Coroutine> _routinesToUpdate = new();
 	public bool IsDisposed { get; private set; }
 
-	public ICoroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds = 0, string name = "")
+	public Coroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds = 0, [CallerArgumentExpression(nameof(enumerator))] string name = "")
 	{
 		if (IsDisposed)
 			throw new ObjectDisposedException(nameof(CoroutineManager));
 
-		var coroutine = new Coroutine(enumerator);
+		var coroutine = new Coroutine(enumerator, name);
 		coroutine.Tick(deltaSeconds);
 		if (!coroutine.IsDone)
 			_routinesToAddNextFrame.Add(coroutine);

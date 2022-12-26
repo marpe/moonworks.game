@@ -29,12 +29,7 @@ public class World
 
     public float Gravity = 800f;
 
-    public Player Player = new();
-    public List<Enemy> Enemies { get; } = new();
-    public List<Bullet> Bullets { get; } = new();
-
-    public List<Light> Lights { get; } = new();
-    public List<MuzzleFlash> MuzzleFlashes { get; } = new();
+    public List<Entity> Entities { get; } = new();
 
     [HideInInspector]
     public ulong WorldUpdateCount;
@@ -52,9 +47,9 @@ public class World
     public RootJson Root = new();
     public Level Level = new();
 
-    // TODO (marpe): Probably better to store paths and retrieve texture from ContentManager
     private Dictionary<int, string> _tileSetTextures = new();
     public string Filepath = "";
+    private bool _isTrackingPlayer;
 
     public World()
     {
@@ -118,7 +113,6 @@ public class World
         sw.StopAndLog("LoadTileSetTextures");
     }
 
-    [MemberNotNull(nameof(Level), nameof(Player))]
     public void StartLevel(string levelIdentifier)
     {
         WorldTotalElapsedTime = WorldUpdateCount = 0;
@@ -141,17 +135,11 @@ public class World
             }
         }
 
-        Enemies.Clear();
-        Bullets.Clear();
-        MuzzleFlashes.Clear();
-        Lights.Clear();
-
+        Entities.Clear();
         Level = level;
-
+        _isTrackingPlayer = false;
         var entities = LoadEntitiesInLevel(Root, level);
-        Player = (Player)entities.First(x => x is Player);
-        Enemies.AddRange(entities.Where(x => x is Enemy).Cast<Enemy>());
-        Lights.AddRange(entities.Where(x => x is Light).Cast<Light>());
+        Entities.AddRange(entities);
     }
 
     [ConsoleHandler("next_level")]
@@ -281,9 +269,12 @@ public class World
             return;
         }
 
-        for (var i = world.Enemies.Count - 1; i >= 0; i--)
+        for (var i = world.Entities.Count - 1; i >= 0; i--)
         {
-            world.Enemies.RemoveAt(i);
+            if (world.Entities[i] is Enemy)
+            {
+                world.Entities.RemoveAt(i);
+            }
         }
 
         Shared.Console.Print("Killed all enemies");
@@ -297,11 +288,10 @@ public class World
 
     public void UpdateLastPositions()
     {
-        Player.Position.SetLastUpdatePosition();
-        for (var i = 0; i < Enemies.Count; i++)
-            Enemies[i].Position.SetLastUpdatePosition();
-        for (var i = 0; i < Bullets.Count; i++)
-            Bullets[i].Position.SetLastUpdatePosition();
+        foreach (var entity in Entities)
+        {
+            entity.Position.SetLastUpdatePosition();
+        }
     }
 
     public void Update(float deltaSeconds, InputHandler input, Camera camera)
@@ -312,6 +302,13 @@ public class World
             camera.LevelBounds = Level.Bounds;
         }
 
+        if (!_isTrackingPlayer)
+        {
+            var player = Entities.First(x => x is Player);
+            camera.TrackEntity(player);
+            _isTrackingPlayer = true;
+        }
+
         WorldUpdateCount++;
         WorldTotalElapsedTime += deltaSeconds;
 
@@ -319,69 +316,24 @@ public class World
 
         if (FreezeFrameTimer > 0)
             return;
-
-        UpdatePlayer(deltaSeconds, input, camera);
-        UpdateEnemies(deltaSeconds);
-        UpdateBullets(deltaSeconds);
-        UpdateMuzzleFlashes(deltaSeconds);
+        
+        UpdateEntities(deltaSeconds);
     }
 
-    private void UpdateBullets(float deltaSeconds)
+    private void UpdateEntities(float deltaSeconds)
     {
-        for (var i = Bullets.Count - 1; i >= 0; i--)
+        for (var i = Entities.Count - 1; i >= 0; i--)
         {
-            if (!Bullets[i].IsInitialized)
-                Bullets[i].Initialize(this);
-
-            Bullets[i].Update(deltaSeconds);
-
-            if (Bullets[i].IsDestroyed)
-                Bullets.RemoveAt(i);
-        }
-    }
-
-    private void UpdateMuzzleFlashes(float deltaSeconds)
-    {
-        for (var i = MuzzleFlashes.Count - 1; i >= 0; i--)
-        {
-            if (!MuzzleFlashes[i].IsInitialized)
-                MuzzleFlashes[i].Initialize(this);
-
-            MuzzleFlashes[i].Update(deltaSeconds);
-
-            if (MuzzleFlashes[i].IsDestroyed)
-                MuzzleFlashes.RemoveAt(i);
-        }
-    }
-
-    private void UpdatePlayer(float deltaSeconds, InputHandler input, Camera camera)
-    {
-        if (!Player.IsInitialized)
-        {
-            camera.TrackEntity(Player);
-            Player.Initialize(this);
-        }
-
-        var command = Binds.Player.ToPlayerCommand();
-        Player.Update(deltaSeconds, command);
-    }
-
-    private void UpdateEnemies(float deltaSeconds)
-    {
-        for (var i = Enemies.Count - 1; i >= 0; i--)
-        {
-            var entity = Enemies[i];
-
+            var entity = Entities[i];
             if (!entity.IsInitialized)
-                entity.Initialize(this);
-
-            if (entity.IsDestroyed)
             {
-                Enemies.RemoveAt(i);
-                continue;
+                entity.Initialize(this);
             }
 
             entity.Update(deltaSeconds);
+
+            if (entity.IsDestroyed)
+                Entities.RemoveAt(i);
         }
     }
 
@@ -391,33 +343,12 @@ public class World
         DrawEntities(renderer, alpha, usePointFiltering);
     }
 
-    private void DrawLightBounds(Renderer renderer)
-    {
-        if (!Debug || !DebugLights)
-            return;
-        for (var i = 0; i < Lights.Count; i++)
-        {
-            var light = Lights[i];
-            if (!light.DrawDebug)
-                continue;
-            renderer.DrawRectWithOutline(light.Bounds.Min, light.Bounds.Max, light.Color.MultiplyAlpha(0.1f), light.Color, 1f);
-        }
-    }
-
     private void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
-        DrawEnemies(renderer, alpha, usePointFiltering);
-        DrawPlayer(renderer, alpha, usePointFiltering);
-        DrawBullets(renderer, alpha, usePointFiltering);
-        DrawMuzzleFlashes(renderer, alpha, usePointFiltering);
-    }
-
-    private void DrawMuzzleFlashes(Renderer renderer, double alpha, bool usePointFiltering)
-    {
-        for (var i = 0; i < MuzzleFlashes.Count; i++)
+        for (var i = 0; i < Entities.Count; i++)
         {
-            var flash = MuzzleFlashes[i];
-            flash.Draw.Draw(renderer, alpha, usePointFiltering);
+            var entity = Entities[i];
+            entity.Draw.Draw(renderer, alpha, usePointFiltering);
         }
     }
 
@@ -426,25 +357,10 @@ public class World
         if (!Debug)
             return;
 
-        DrawEntityDebug(renderer, Player, true, alpha);
-
-        for (var i = 0; i < Enemies.Count; i++)
+        for (var i = 0; i < Entities.Count; i++)
         {
-            var entity = Enemies[i];
+            var entity = Entities[i];
             DrawEntityDebug(renderer, entity, false, alpha);
-        }
-
-        for (var i = 0; i < Bullets.Count; i++)
-        {
-            var bullet = Bullets[i];
-
-            if (bullet.DrawDebug || DebugEntities)
-            {
-                var radius = MathF.Min(bullet.Size.X, bullet.Size.Y) * 0.5f;
-                renderer.DrawCircleOutline(bullet.Bounds.Center, radius, Color.Blue, 1.0f);
-            }
-
-            DrawEntityDebug(renderer, bullet, false, alpha);
         }
     }
 
@@ -475,29 +391,6 @@ public class World
             if (!drawBackground && layerDef.Identifier == "Background")
                 continue;
             DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds, usePointFiltering);
-        }
-    }
-
-    private void DrawBullets(Renderer renderer, double alpha, bool usePointFiltering)
-    {
-        for (var i = 0; i < Bullets.Count; i++)
-        {
-            var bullet = Bullets[i];
-            bullet.Draw.Draw(renderer, alpha, usePointFiltering);
-        }
-    }
-
-    private void DrawPlayer(Renderer renderer, double alpha, bool usePointFiltering)
-    {
-        Player.Draw.Draw(renderer, alpha, usePointFiltering);
-    }
-
-    private void DrawEnemies(Renderer renderer, double alpha, bool usePointFiltering)
-    {
-        for (var i = 0; i < Enemies.Count; i++)
-        {
-            var entity = Enemies[i];
-            entity.Draw.Draw(renderer, alpha, usePointFiltering);
         }
     }
 
@@ -622,13 +515,10 @@ public class World
         if (!IsLoaded)
             return;
 
-        Player = new();
-        Enemies.Clear();
-        Bullets.Clear();
-        Lights.Clear();
         _tileSetTextures.Clear();
-
+        Entities.Clear();
         IsLoaded = false;
+        _isTrackingPlayer = false;
     }
 
     private static void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
@@ -672,23 +562,22 @@ public class World
         var bullet = CreateEntity<Bullet>();
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
-        bullet.Initialize(this);
-        if (bullet.HasCollision(bullet.Position.Current, bullet.Size))
+
+        if (Entity.HasCollision(bullet.Position.Current, bullet.Size, this))
         {
-            // Logs.LogInfo("Can't spawn bullet");
-            // return;
+            Logs.LogInfo("Can't spawn bullet");
+            return;
         }
 
-        Bullets.Add(bullet);
+        Entities.Add(bullet);
     }
 
     public void SpawnMuzzleFlash(Vector2 position, int direction)
     {
         var muzzleFlash = CreateEntity<MuzzleFlash>();
         muzzleFlash.Position.SetPrevAndCurrent(position + new Vector2(1, 0) + new Vector2(14 * direction, 3));
-        muzzleFlash.Initialize(this);
         muzzleFlash.Draw.Flip = direction < 0 ? SpriteFlip.FlipHorizontally : SpriteFlip.None;
-        MuzzleFlashes.Add(muzzleFlash);
+        Entities.Add(muzzleFlash);
     }
 
     private static EntityDef GetEntityDefinition(RootJson root, int entityDefId)
@@ -731,7 +620,7 @@ public class World
     {
         if (!Shared.Game.World.IsLoaded)
             return;
-        _savedPos = position ?? Shared.Game.World.Player.Position;
+        _savedPos = position ?? ((Player)Shared.Game.World.Entities.First(x => x is Player)).Position;
         Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
     }
 
@@ -742,7 +631,7 @@ public class World
             return;
 
         var loadPos = position ?? _savedPos;
-        Shared.Game.World.Player.Position.SetPrevAndCurrent(loadPos);
+        ((Player)Shared.Game.World.Entities.First(x => x is Player)).Position.SetPrevAndCurrent(loadPos);
         Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
     }
 
@@ -751,7 +640,7 @@ public class World
     {
         if (!Shared.Game.World.IsLoaded)
             return;
-        Shared.Game.World.Player.Mover.Unstuck();
+        ((Player)Shared.Game.World.Entities.First(x => x is Player)).Mover.Unstuck();
     }
 
     public void FreezeFrame(float duration, bool force = false)
@@ -818,9 +707,10 @@ public class World
 
     private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
-        for (var i = 0; i < Lights.Count; i++)
+        for (var i = 0; i < Entities.Count; i++)
         {
-            var light = Lights[i];
+            if (Entities[i] is not Light light)
+                continue;
             if (!light.IsEnabled)
                 continue;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
@@ -863,7 +753,6 @@ public class World
         DrawLevelDebug(renderer, Level, camera.ZoomedBounds);
         DrawEntityDebug(renderer, alpha);
         CameraDebug.DrawCameraBounds(renderer, camera);
-        DrawLightBounds(renderer);
         MouseDebug.DrawMousePosition(renderer);
         _debugDraw.Render(renderer);
     }

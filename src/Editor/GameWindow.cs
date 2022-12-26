@@ -367,10 +367,11 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var world = editor.World;
             if (world.IsLoaded)
             {
-                var playerCell = world.Player.Cell;
+                var player = (Player)world.Entities.First(x => x is Player);
+                var playerCell = player.Cell;
                 ImGuiExt.SeparatorText("Player", Color.White);
                 ImGuiExt.PrintVector("Cell", playerCell);
-                ImGuiExt.PrintVector("Pos", world.Player.Position.Current);
+                ImGuiExt.PrintVector("Pos", player.Position.Current);
             }
 
             if (ImGui.BeginPopupContextWindow())

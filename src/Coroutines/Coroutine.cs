@@ -1,18 +1,21 @@
 namespace MyGame.Coroutines;
 
-public class Coroutine : ICoroutine
+public class Coroutine
 {
 	private static readonly WaitHelper WaitHelper = new();
 	private readonly IEnumerator _enumerator;
 	private Coroutine? _childRoutine;
 	private Coroutine? _waitForCoroutine;
 	private float _waitTimer;
+	private string Name;
 	public int NumUpdates { get; private set; }
 
 	public bool IsDone { get; set; }
+	public bool IsPaused { get; set; }
 
-	public Coroutine(IEnumerator enumerator)
+	public Coroutine(IEnumerator enumerator, string name = "")
 	{
+		Name = name;
 		_enumerator = enumerator;
 	}
 
@@ -29,6 +32,9 @@ public class Coroutine : ICoroutine
 		if(isUpdate)
 			NumUpdates++;
 
+		if (IsPaused)
+			return;
+		
 		if (_childRoutine != null)
 		{
 			_childRoutine.Tick(deltaSeconds);
@@ -51,7 +57,7 @@ public class Coroutine : ICoroutine
 			_waitTimer -= deltaSeconds;
 			return;
 		}
-
+		
 		if (!_enumerator.MoveNext())
 		{
 			IsDone = true;

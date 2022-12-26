@@ -33,15 +33,9 @@ public class PlayerBehaviour
         if (command.IsFiring)
         {
             var direction = Player.Draw.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
-            Player.Draw.PlayAnimation("Fire");
             Player.World.SpawnBullet(Player.Position.Current, direction);
             Player.World.SpawnMuzzleFlash(Player.Position.Current, direction);
         }
-
-        /*if (Player.Position.Current.Y > 300)
-        {
-            Player.Position.SetPrevAndCurrent(Player.Position.Initial);
-        }*/
 
         if (Player.Mover.IsGrounded(Player.Velocity))
         {
@@ -51,7 +45,6 @@ public class PlayerBehaviour
         if (command.MovementX != 0)
         {
             Player.Velocity.X += command.MovementX * Player.Speed;
-            Player.Draw.PlayAnimation("Run");
         }
 
         if (command.MoveToMouse)
@@ -64,10 +57,6 @@ public class PlayerBehaviour
             var offset = mouseInWorld - Player.Position;
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
-
-        Player.Draw.IsAnimating = !MathF.IsNearZero(Player.Velocity.X, 1f);
-        if (!Player.Draw.IsAnimating)
-            Player.Draw.FrameIndex = 0;
 
         if (!Player.IsJumping && command.IsJumpPressed)
         {
@@ -111,18 +100,47 @@ public class PlayerBehaviour
             Player.Draw.Squash = new Vector2(1.5f, 0.5f);
         }
 
-        if (Player.Velocity.X > 0)
-        {
-            Player.Draw.Flip = SpriteFlip.None;
-        }
-        else if (Player.Velocity.X < 0)
-        {
-            Player.Draw.Flip = SpriteFlip.FlipHorizontally;
-        }
-
         if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping && !command.MoveToMouse)
         {
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
+        }
+        
+        UpdateAnimation(command);
+    }
+
+    private void UpdateAnimation(PlayerCommand command)
+    {
+        Player.Draw.Flip = Player.Velocity.X switch
+        {
+            > 0 => SpriteFlip.None,
+            < 0 => SpriteFlip.FlipHorizontally,
+            _ => Player.Draw.Flip
+        };
+
+        if (command.IsFiring)
+        {
+            Player.Draw.PlayAnimation("Fire");
+            return;
+        }
+
+        if (Player.IsJumping)
+        {
+            Player.Draw.PlayAnimation("Run");
+            Player.Draw.IsAnimating = false;
+            return;
+        }
+
+        if (command.MovementX != 0 && Player.Mover.IsGrounded(Player.Velocity))
+        {
+            Player.Draw.PlayAnimation("Run");
+            Player.Draw.IsAnimating = true;
+            return;
+        }
+
+        if (MathF.IsNearZero(Player.Velocity.X, 1f))
+        {
+            Player.Draw.IsAnimating = false;
+            Player.Draw.FrameIndex = 0;
         }
     }
 }

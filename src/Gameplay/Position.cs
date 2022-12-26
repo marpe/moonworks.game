@@ -3,11 +3,10 @@ namespace MyGame;
 [DebuggerDisplay("{DebugDisplayString,nq}")]
 public class Position
 {
+    [HideInInspector]
     public string DebugDisplayString => string.Concat(Current.X.ToString(), " ", Current.Y.ToString());
 
     public Vector2 Current;
-
-    [HideInInspector] public Vector2 Previous { get; private set; }
 
     [HideInInspector] public Vector2 Initial { get; private set; } = Vector2.Zero;
 
@@ -19,19 +18,14 @@ public class Position
     {
     }
 
-    public Position(Vector2 position)
-    {
-        Current = Previous = position;
-    }
-
     public void Initialize()
     {
-        Initial = LastUpdatePosition = Previous = Current;
+        Initial = LastUpdatePosition = Current;
     }
 
     public void SetPrevAndCurrent(Vector2 position)
     {
-        Current = Previous = position;
+        Current = position;
     }
 
     public static implicit operator Vector2(Position position)

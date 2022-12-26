@@ -80,7 +80,8 @@ public class DrawComponent
             _previousAnimation = CurrentAnimation;
             CurrentAnimation = nextAnimation;
             FrameIndex = 0;
-            _timer = 0;    
+            _timer = 0;
+            IsAnimating = true;
         }
     }
 
