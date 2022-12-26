@@ -124,6 +124,10 @@ public partial class Light
     public float Angle;
     [Range(0, 360)]
     public float ConeAngle;
+    [Range(0, 1)]
+    public float RimIntensity;
+    [Range(0, 1)]
+    public float VolumetricIntensity;
 }
 
 public partial class Bullet

@@ -2,5 +2,4 @@
 
 public partial class Light : Entity
 {
-    public bool Debug;
 }

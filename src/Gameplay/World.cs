@@ -44,13 +44,10 @@ public class World
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
     public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
 
-    [Range(0, 5, 0.1f)] [CVar("light_rim_intensity", "Sets the intensity of the rim lighting")]
-    public static float RimLightIntensity = 1f;
-
     public RootJson Root = new();
     public Level Level = new();
     public bool DrawBackground = true;
-    
+
     // TODO (marpe): Probably better to store paths and retrieve texture from ContentManager
     private Dictionary<int, Texture> _tileSetTextures = new();
     public string Filepath = "";
@@ -113,6 +110,7 @@ public class World
 
             _tileSetTextures.Add(tileSet.Uid, Shared.Game.Renderer.BlankSprite.Texture);
         }
+
         sw.StopAndLog("LoadTileSetTextures");
     }
 
@@ -222,7 +220,7 @@ public class World
 
         throw new Exception();
     }
-    
+
     private static Entity CreateEntity(EntityDefinition entityDef, EntityInstance entityInstance)
     {
         var parsedType = Enum.Parse<EntityType>(entityDef.Identifier);
@@ -455,7 +453,7 @@ public class World
     {
         Player.Draw.Draw(renderer, alpha);
     }
-    
+
     private void DrawEnemies(Renderer renderer, double alpha)
     {
         for (var i = 0; i < Enemies.Count; i++)
@@ -718,30 +716,8 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
-        RenderTarget lightSource, RenderTarget lightTarget, double alpha)
+    public void DrawLightBaseLayer(Renderer renderer, ref CommandBuffer commandBuffer, RenderTarget lightSource, Camera camera, double alpha)
     {
-        // render lights
-        renderer.DrawSprite(renderer.BlankSprite, Matrix3x2.CreateScale(renderDestination.Width, renderDestination.Height).ToMatrix4x4(), Color.White);
-        renderer.UpdateBuffers(ref commandBuffer);
-        renderer.SpriteBatch.Discard();
-        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.Light);
-        DrawAllLights(
-            ref commandBuffer,
-            renderDestination.Size(),
-            camera.ZoomedBounds,
-            new[]
-            {
-                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp),
-            },
-            false
-        );
-        renderer.EndRenderPass(ref commandBuffer);
-
-        // render light to game
-        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
-
         // draw ground for use with rim light
         for (var layerIndex = Level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
@@ -756,6 +732,32 @@ public class World
         DrawEntities(renderer, alpha);
         var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
         renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection); // lightSource contains only entities
+    }
+
+    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
+        RenderTarget lightSource, RenderTarget lightTarget, double alpha)
+    {
+        DrawLightBaseLayer(renderer, ref commandBuffer, lightSource, camera, alpha);
+    
+        // render lights
+        renderer.DrawSprite(lightSource.Target, Matrix4x4.Identity, Color.White);
+        renderer.UpdateBuffers(ref commandBuffer);
+        renderer.SpriteBatch.Discard();
+        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.Light);
+        DrawAllLights(
+            ref commandBuffer,
+            renderDestination.Size(),
+            camera.ZoomedBounds,
+            new[]
+            {
+                new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
+            }
+        );
+        renderer.EndRenderPass(ref commandBuffer);
+
+        // render light to game
+        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
 
         // render rim
         renderer.DrawSprite(renderer.BlankSprite, Matrix3x2.CreateScale(renderDestination.Width, renderDestination.Height).ToMatrix4x4(), Color.White);
@@ -770,8 +772,7 @@ public class World
             {
                 new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp),
                 new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
-            },
-            true
+            }
         );
         renderer.EndRenderPass(ref commandBuffer);
 
@@ -780,8 +781,7 @@ public class World
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, RimLightToDestinationBlend);
     }
 
-    private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings,
-        bool useRimIntensity)
+    private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
         for (var i = 0; i < Lights.Count; i++)
         {
@@ -795,8 +795,8 @@ public class World
                 LightIntensity = light.Intensity,
                 LightRadius = Math.Max(light.Width, light.Height) / MathF.Sqrt(2),
                 LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
-                Debug = ((DebugLights || light.Debug) ? 1.0f : 0),
-                RimIntensity = RimLightIntensity,
+                VolumetricIntensity = light.VolumetricIntensity,
+                RimIntensity = light.RimIntensity,
                 Angle = light.Angle,
                 ConeAngle = light.ConeAngle,
 

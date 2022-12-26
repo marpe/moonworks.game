@@ -56,7 +56,7 @@ public class Pipelines
         public Vector4 TexelSize;
         public Vector4 Bounds;
         public Vector3 LightColor;
-        public float Debug;
+        public float VolumetricIntensity;
         public float RimIntensity;
         public float Angle;
         public float ConeAngle;

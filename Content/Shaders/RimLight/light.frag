@@ -10,8 +10,8 @@ layout (set = 3, binding = 0) uniform UniformBlock
     vec4 texelSize; // 1 / renderTargetWith, 1 / renderTargetHeight, renderTargetWidth, renderTargetHeight
 	vec4 bounds;
 	vec3 lightColor;
-	float debug;
-	float rimLightIntensity;
+	float volumetricIntensity;
+	float rimIntensity;
 	float angle;
 	float coneAngle;
 } Uniforms;
@@ -47,7 +47,11 @@ void main()
 
 	float angularFalloff = max(smoothstep(maxAngle, 0, deltaAngle), int(Uniforms.coneAngle == 360));
 
-	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * radialFalloff * angularFalloff;
-	fragColor.rgba = vec4(light, 1);
+	float finalIntensity = Uniforms.lightIntensity * radialFalloff * angularFalloff;
+	vec3 lightColor = finalIntensity * Uniforms.lightColor;
+	vec4 baseColor = texture(uniformTexture, texCoord);
+	vec3 shadedColor = baseColor.rgb * lightColor;
+	shadedColor += lightColor * Uniforms.volumetricIntensity;
+	fragColor.rgba = vec4(shadedColor, 1);
 }
 

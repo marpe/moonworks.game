@@ -62,7 +62,8 @@ public unsafe class EntityDefWindow : SplitWindow
         return maxId;
     }
 
-    private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs, uint gridSize)
+    private static void DrawEntityDefTable(List<EntityDefinition> entityDefs, ref int selectedEntityDefinitionIndex, List<TileSetDef> tileSetDefs,
+        uint gridSize)
     {
         if (ImGui.BeginTable("EntityDefTable", 1, TableFlags, new Vector2(0, 0)))
         {
@@ -73,7 +74,7 @@ public unsafe class EntityDefWindow : SplitWindow
             {
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, _rowMinHeight);
                 ImGui.TableNextColumn();
-                
+
                 var entityDef = entityDefs[i];
                 ImGui.PushID(i);
                 var isSelected = selectedEntityDefinitionIndex == i;
@@ -186,7 +187,44 @@ public unsafe class EntityDefWindow : SplitWindow
                 entityDef.PivotY = pivotY;
             }
 
-            FieldDefEditor.DrawFieldEditor(entityDef.FieldDefinitions, ref _selectedFieldDefinitionIndex);
+            void DrawPopupMenu(FieldDef fieldDef)
+            {
+                if (ImGui.MenuItem("Reset instances to default", default))
+                {
+                    ResetInstanceFieldsToDefault(entityDef, fieldDef);
+                }
+            }
+            
+            FieldDefEditor.DrawFieldEditor(entityDef.FieldDefinitions, ref _selectedFieldDefinitionIndex, null, DrawPopupMenu);
+        }
+    }
+
+    private static void ResetInstanceFieldsToDefault(EntityDefinition entityDef, FieldDef fieldDef)
+    {
+        var editor = (MyEditorMain)Shared.Game;
+        for (var worldIdx = 0; worldIdx < editor.RootJson.Worlds.Count; worldIdx++)
+        {
+            var world = editor.RootJson.Worlds[worldIdx];
+            for (var levelIdx = 0; levelIdx < world.Levels.Count; levelIdx++)
+            {
+                var level = world.Levels[levelIdx];
+                for (var layerIdx = 0; layerIdx < level.LayerInstances.Count; layerIdx++)
+                {
+                    var layer = level.LayerInstances[layerIdx];
+                    for (var entityIdx = 0; entityIdx < layer.EntityInstances.Count; entityIdx++)
+                    {
+                        var entityInstance = layer.EntityInstances[entityIdx];
+                        for (var fieldIdx = 0; fieldIdx < entityInstance.FieldInstances.Count; fieldIdx++)
+                        {
+                            var fieldInstance = entityInstance.FieldInstances[fieldIdx];
+                            if (fieldInstance.FieldDefId == fieldDef.Uid)
+                            {
+                                fieldInstance.Value = fieldDef.DefaultValue;
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

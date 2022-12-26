@@ -11,7 +11,7 @@ layout (set = 3, binding = 0) uniform UniformBlock
     vec4 texelSize; // 1 / renderTargetWith, 1 / renderTargetHeight, renderTargetWidth, renderTargetHeight
 	vec4 bounds;
 	vec3 lightColor;
-	float debug;
+	float volumetricIntensity;
 	float rimIntensity;
 	float angle;
 	float coneAngle;

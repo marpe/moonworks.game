@@ -58,7 +58,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -90,7 +90,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -122,7 +122,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -154,7 +154,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -186,7 +186,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -218,7 +218,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -250,7 +250,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -282,7 +282,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -314,7 +314,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -346,7 +346,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -378,7 +378,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -410,7 +410,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -442,7 +442,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -11696,7 +11696,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.5
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -11728,7 +11728,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.5
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -11760,7 +11760,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.5
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -11792,7 +11792,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.5
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -11824,7 +11824,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.5
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -18722,7 +18722,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.4162
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -18739,6 +18739,14 @@
                     {
                       "FieldDefId": 37,
                       "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 38,
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 39,
+                      "Value": 0.25
                     }
                   ],
                   "Position": {
@@ -18754,7 +18762,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 0.7568
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -18771,6 +18779,14 @@
                     {
                       "FieldDefId": 37,
                       "Value": 128.4
+                    },
+                    {
+                      "FieldDefId": 38,
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 39,
+                      "Value": 0.25
                     }
                   ],
                   "Position": {
@@ -18786,7 +18802,7 @@
                   "FieldInstances": [
                     {
                       "FieldDefId": 29,
-                      "Value": 1.0
+                      "Value": 0.45
                     },
                     {
                       "FieldDefId": 31,
@@ -18803,6 +18819,14 @@
                     {
                       "FieldDefId": 37,
                       "Value": 130.4
+                    },
+                    {
+                      "FieldDefId": 38,
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 39,
+                      "Value": 0.25
                     }
                   ],
                   "Position": {
@@ -34102,7 +34126,7 @@
           "Uid": 29,
           "Identifier": "Intensity",
           "FieldType": 1,
-          "DefaultValue": 1.0,
+          "DefaultValue": 0.45,
           "IsArray": false,
           "MinValue": 0.0,
           "MaxValue": 2.0,
@@ -34146,6 +34170,26 @@
           "IsArray": false,
           "MinValue": 0.0,
           "MaxValue": 360.0,
+          "EditorDisplayMode": 2
+        },
+        {
+          "Uid": 38,
+          "Identifier": "RimIntensity",
+          "FieldType": 1,
+          "DefaultValue": 0.3,
+          "IsArray": false,
+          "MinValue": 0.0,
+          "MaxValue": 1.0,
+          "EditorDisplayMode": 2
+        },
+        {
+          "Uid": 39,
+          "Identifier": "VolumetricIntensity",
+          "FieldType": 1,
+          "DefaultValue": 0.25,
+          "IsArray": false,
+          "MinValue": 0.0,
+          "MaxValue": 1.0,
           "EditorDisplayMode": 2
         }
       ],
