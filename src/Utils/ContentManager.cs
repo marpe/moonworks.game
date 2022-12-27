@@ -4,14 +4,22 @@ using MyGame.WorldsRoot;
 
 namespace MyGame.Utils;
 
-public class AsepriteAsset
+public class TextureAsset
 {
-    public AsepriteFile AsepriteFile;
     public TextureSlice TextureSlice;
 
-    public AsepriteAsset(TextureSlice textureSlice, AsepriteFile aseprite)
+    public TextureAsset(TextureSlice textureSlice)
     {
         TextureSlice = textureSlice;
+    }
+}
+
+public class AsepriteAsset : TextureAsset
+{
+    public AsepriteFile AsepriteFile;
+
+    public AsepriteAsset(TextureSlice textureSlice, AsepriteFile aseprite) : base(textureSlice)
+    {
         AsepriteFile = aseprite;
     }
 }
@@ -48,7 +56,8 @@ public class ContentManager
         if (forceReload)
         {
             _loadedAssets.Remove(assetName, out var oldAsset);
-            // TODO (marpe): Check if old should be disposed
+            if (oldAsset is IDisposable disposable)
+                disposable.Dispose();
         }
 
         if (!_loadedAssets.TryGetValue(assetName, out var asset))
@@ -56,24 +65,6 @@ public class ContentManager
             asset = InternalLoad<T>(assetName) ?? throw new Exception();
             _loadedAssets.Add(assetName, asset);
             Logs.LogInfo($"[{Shared.Game.Time.UpdateCount}] Loaded {typeof(T).Name} asset \"{assetName}\"");
-        }
-
-        if (typeof(T) == typeof(Texture) && asset is AsepriteAsset ase1)
-        {
-            asset = ase1.TextureSlice.Texture;
-        }
-        else if (typeof(T) == typeof(TextureSlice) && asset is AsepriteAsset ase2)
-        {
-            asset = ase2.TextureSlice;
-        }
-
-        if (typeof(T) == typeof(TextureSlice) && asset is Texture texture)
-        {
-            asset = new TextureSlice(texture);
-        }
-        else if (typeof(T) == typeof(Texture) && asset is TextureSlice slice)
-        {
-            asset = slice.Texture;
         }
 
         return (T)asset;
@@ -97,15 +88,10 @@ public class ContentManager
 
         foreach (var (key, value) in _loadedAssets)
         {
-            TextureSlice textureSlice;
-            if (value is Texture texture)
-                textureSlice = new TextureSlice(texture);
-            else if (value is AsepriteAsset ase)
-                textureSlice = ase.TextureSlice;
-            else if (value is TextureSlice slice)
-                textureSlice = slice;
-            else
+            if (value is not TextureAsset textureAsset)
                 continue;
+
+            var textureSlice = textureAsset.TextureSlice;
 
             if (packer.AddRect(textureSlice.Rectangle.W, textureSlice.Rectangle.H, ref dstX, ref dstY))
             {
@@ -140,8 +126,7 @@ public class ContentManager
             return root;
         }
 
-        if (t == typeof(Texture) ||
-            t == typeof(TextureSlice))
+        if (t == typeof(TextureAsset))
         {
             return LoadTexture(assetName, Shared.Content._game.GraphicsDevice);
         }
@@ -210,12 +195,12 @@ public class ContentManager
         return new AsepriteAsset(texture, aseprite);
     }
 
-    private static Texture LoadTexture(string assetName, GraphicsDevice device)
+    private static TextureAsset LoadTexture(string assetName, GraphicsDevice device)
     {
         var commandBuffer = device.AcquireCommandBuffer();
         var texture = Texture.LoadPNG(device, commandBuffer, assetName);
         device.Submit(commandBuffer);
-        return texture;
+        return new TextureAsset(texture);
     }
 
     [ConsoleHandler("content_list")]

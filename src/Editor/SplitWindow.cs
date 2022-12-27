@@ -149,7 +149,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         }
 
         var editor = (MyEditorMain)Shared.Game;
-        var texture = Shared.Content.Load<Texture>(path);
+        var texture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
         editor.ImGuiRenderer.BindTexture(texture);
         return texture;
     }
@@ -188,7 +188,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         ImGui.SetCursorPosY(cursorPosY + (rowHeight - buttonSize) / 2);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
         ImGui.Image(
-            (void*)Shared.Content.Load<Texture>(iconPath).Handle,
+            (void*)Shared.Content.Load<TextureAsset>(iconPath).TextureSlice.Texture.Handle,
             new Vector2(buttonSize, buttonSize),
             Vector2.Zero, Vector2.One,
             Color.White.ToNumerics(),

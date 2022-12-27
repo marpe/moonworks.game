@@ -112,7 +112,7 @@ public class DrawComponent
             return;
         var xform = GetTransform(alpha);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
-        var texture = Shared.Content.Load<TextureSlice>(TexturePath);
+        var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
         renderer.DrawSprite(sprite, xform, Color.White, 0, Flip, usePointFiltering);
     }

@@ -114,7 +114,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         foreach (var path in iconPaths)
         {
-            var texture = Shared.Content.Load<Texture>(path);
+            var texture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
             renderer.BindTexture(texture);
         }
     }
@@ -157,7 +157,7 @@ public unsafe class MyEditorMain : MyGameMain
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading png texture on thread: {Thread.CurrentThread.ManagedThreadId}");
-                Shared.Content.Load<Texture>(relativePath, true);
+                Shared.Content.Load<TextureAsset>(relativePath, true);
                 QueueAction(() => { Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}"); });
             });
         }
@@ -166,7 +166,7 @@ public unsafe class MyEditorMain : MyGameMain
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
-                Shared.Content.Load<Texture>(relativePath, true);
+                Shared.Content.Load<AsepriteAsset>(relativePath, true);
                 QueueAction(() => { Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}"); });
             });
         }

@@ -100,7 +100,7 @@ public class World
             var tileSet = Root.TileSetDefinitions[i];
             var worldFileDir = Path.GetDirectoryName(filepath);
             var path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSet.Path));
-            Shared.Content.Load<Texture>(path);
+            Shared.Content.Load<TextureAsset>(path);
             _tileSetTextures.Add(tileSet.Uid, path);
         }
 
@@ -421,7 +421,7 @@ public class World
 
         var tileSetDef = GetTileSetDef(Root, layerDef.TileSetDefId);
         var texturePath = _tileSetTextures[tileSetDef.Uid];
-        var texture = Shared.Content.Load<TextureSlice>(texturePath);
+        var texture = Shared.Content.Load<TextureAsset>(texturePath).TextureSlice;
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {
