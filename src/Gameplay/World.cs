@@ -37,8 +37,6 @@ public class World
     [HideInInspector]
     public float WorldTotalElapsedTime;
 
-    private static Vector2 _savedPos;
-
     public float FreezeFrameTimer;
 
     public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
@@ -51,7 +49,6 @@ public class World
     public string Filepath = "";
     private bool _isTrackingPlayer;
 
-    private List<(LayerDef, LayerInstance)> _intGridLayers = new();
 
     public int[] CollisionLayer = Array.Empty<int>();
 
@@ -62,26 +59,6 @@ public class World
     public World()
     {
         _debugDraw = new DebugDrawItems();
-    }
-
-    private static Level FindLevel(string identifier, RootJson root)
-    {
-        for (var i = 0; i < root.Worlds.Count; i++)
-        {
-            var world = root.Worlds[i];
-            for (var j = 0; j < world.Levels.Count; j++)
-            {
-                var level = world.Levels[j];
-                if (level.Identifier == identifier)
-                {
-                    return level;
-                }
-            }
-        }
-
-        Logs.LogError($"Level not found: {identifier}");
-
-        return root.Worlds.FirstOrDefault()?.Levels.FirstOrDefault() ?? throw new InvalidOperationException();
     }
 
     public void SetRoot(RootJson root, string filepath)
@@ -107,11 +84,6 @@ public class World
         sw.StopAndLog("LoadTileSetTextures");
     }
 
-    public List<(LayerDef, LayerInstance)> GetIntGridLayers()
-    {
-        return _intGridLayers;
-    }
-
     public void StartLevel(string levelIdentifier)
     {
         WorldTotalElapsedTime = WorldUpdateCount = 0;
@@ -122,15 +94,12 @@ public class World
         LevelGridSize = level.Size / DefaultGridSize;
         LevelMax = LevelMin + LevelGridSize;
 
-        _intGridLayers.Clear();
         CollisionLayer = Array.Empty<int>();
         foreach (var layerDef in Root.LayerDefinitions)
         {
             if (layerDef.Identifier == "Tiles" && layerDef.LayerType == LayerType.IntGrid)
             {
                 var layerInstance = level.LayerInstances.First(x => x.LayerDefId == layerDef.Uid);
-                _intGridLayers.Add((layerDef, layerInstance));
-
                 CollisionLayer = layerInstance.IntGrid;
             }
         }
@@ -144,7 +113,7 @@ public class World
                 continue;
             }
 
-            if (fieldDef.Identifier == "AmbientLight")
+            if (fieldDef.Identifier == nameof(AmbientColor))
             {
                 var fieldValue = (Color?)field.Value;
                 AmbientColor = fieldValue ?? Color.White;
@@ -285,14 +254,13 @@ public class World
             return;
         }
 
-        // TODO (marpe): Fix
-        /*for (var i = world.Entities.Count - 1; i >= 0; i--)
+        world.Entities.ForEach((entity) =>
         {
-            if (world.Entities[i] is Enemy)
+            if (entity is Enemy enemy)
             {
-                world.Entities.RemoveAt(i);
+                enemy.Kill();
             }
-        }*/
+        });
 
         Shared.Console.Print("Killed all enemies");
     }
@@ -305,10 +273,7 @@ public class World
 
     public void UpdateLastPositions()
     {
-        Entities.ForEach((entity) =>
-        {
-            entity.Position.SetLastUpdatePosition();
-        });
+        Entities.ForEach((entity) => { entity.Position.SetLastUpdatePosition(); });
     }
 
     public void Update(float deltaSeconds, InputHandler input, Camera camera)
@@ -337,11 +302,6 @@ public class World
         if (FreezeFrameTimer > 0)
             return;
 
-        UpdateEntities(deltaSeconds);
-    }
-
-    private void UpdateEntities(float deltaSeconds)
-    {
         Entities.Update(this, deltaSeconds);
     }
 
@@ -354,32 +314,6 @@ public class World
     private void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
         Entities.Draw(renderer, alpha, usePointFiltering);
-    }
-
-    private void DrawEntityDebug(Renderer renderer, double alpha)
-    {
-        if (!Debug)
-            return;
-
-        Entities.ForEach((entity) =>
-        {
-            DrawEntityDebug(renderer, entity, false, alpha);
-        });
-    }
-
-    private void DrawLevelDebug(Renderer renderer, Level level, Bounds cameraBounds)
-    {
-        if (!Debug || !DebugLevel)
-            return;
-
-        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
-        {
-            var layer = level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
-            DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
-        }
-
-        renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
 
     private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds, bool usePointFiltering, bool drawBackground)
@@ -499,7 +433,6 @@ public class World
         return false;
     }
 
-
     private static TileSetDef GetTileSetDef(RootJson root, long tileSetUid)
     {
         for (var i = 0; i < root.TileSetDefinitions.Count; i++)
@@ -519,39 +452,10 @@ public class World
             return;
 
         CollisionLayer = Array.Empty<int>();
-        _intGridLayers.Clear();
         _tileSetTextures.Clear();
         Entities.Clear();
         IsLoaded = false;
         _isTrackingPlayer = false;
-    }
-
-    private static void DrawEntityDebug(Renderer renderer, Entity e, bool drawCoords, double alpha)
-    {
-        if (!e.DrawDebug && !DebugEntities)
-            return;
-
-        var cell = e.Cell;
-        var cellInScreen = cell * DefaultGridSize;
-        renderer.DrawPoint(e.Position.Current, e.SmartColor, 2);
-
-        // draw small crosshair
-        {
-            renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), e.SmartColor);
-            renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), e.SmartColor);
-        }
-
-        renderer.DrawRectOutline(e.Bounds.Min, e.Bounds.Max, e.SmartColor, 1.0f);
-
-        if (drawCoords)
-        {
-            var cellText = $"{cell.X.ToString()}, {cell.Y.ToString()}";
-            var posText = $"{StringExt.TruncateNumber(e.Position.Current.X)}, {StringExt.TruncateNumber(e.Position.Current.Y)}";
-            ReadOnlySpan<char> str = posText + " " + cellText;
-            var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
-            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, e.Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
-            // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
-        }
     }
 
     public T CreateEntity<T>() where T : Entity
@@ -618,34 +522,6 @@ public class World
         }
 
         throw new InvalidOperationException();
-    }
-
-    [ConsoleHandler("save_pos")]
-    public static void SavePos(Vector2? position = null)
-    {
-        if (!Shared.Game.World.IsLoaded)
-            return;
-        _savedPos = position ?? Shared.Game.World.Entities.First<Player>().Position;
-        Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
-    }
-
-    [ConsoleHandler("load_pos")]
-    public static void LoadPos(Vector2? position = null)
-    {
-        if (!Shared.Game.World.IsLoaded)
-            return;
-
-        var loadPos = position ?? _savedPos;
-        Shared.Game.World.Entities.First<Player>().Position.SetPrevAndCurrent(loadPos);
-        Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
-    }
-
-    [ConsoleHandler("unstuck")]
-    public static void Unstuck()
-    {
-        if (!Shared.Game.World.IsLoaded)
-            return;
-        Shared.Game.World.Entities.First<Player>().Mover.Unstuck();
     }
 
     public void FreezeFrame(float duration, bool force = false)
@@ -754,15 +630,54 @@ public class World
         });
     }
 
+    private static Level FindLevel(string identifier, RootJson root)
+    {
+        for (var i = 0; i < root.Worlds.Count; i++)
+        {
+            var world = root.Worlds[i];
+            for (var j = 0; j < world.Levels.Count; j++)
+            {
+                var level = world.Levels[j];
+                if (level.Identifier == identifier)
+                {
+                    return level;
+                }
+            }
+        }
+
+        Logs.LogError($"Level not found: {identifier}");
+
+        return root.Worlds.FirstOrDefault()?.Levels.FirstOrDefault() ?? throw new InvalidOperationException();
+    }
+
     public void DrawDebug(Renderer renderer, Camera camera, double alpha)
     {
         if (!Debug)
             return;
 
-        DrawLevelDebug(renderer, Level, camera.ZoomedBounds);
-        DrawEntityDebug(renderer, alpha);
+        if (DebugLevel)
+            DrawLevelDebug(renderer, Level, camera.ZoomedBounds);
+        if (DebugEntities)
+            DrawEntityDebug(renderer, alpha);
         CameraDebug.DrawCameraBounds(renderer, camera);
         MouseDebug.DrawMousePosition(renderer);
         _debugDraw.Render(renderer);
+    }
+
+    private void DrawLevelDebug(Renderer renderer, Level level, Bounds cameraBounds)
+    {
+        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
+        {
+            var layer = level.LayerInstances[layerIndex];
+            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
+            DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
+        }
+
+        renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
+    }
+    
+    private void DrawEntityDebug(Renderer renderer, double alpha)
+    {
+        Entities.ForEach((entity) => { entity.DrawDebug(renderer, false, alpha); });
     }
 }

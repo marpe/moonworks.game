@@ -50,8 +50,6 @@ public class Entity
 
     [HideInInspector] public float TotalTimeActive;
 
-    public bool DrawDebug;
-
     public DrawComponent Draw = new();
 
     public virtual void Initialize(World world)
@@ -145,6 +143,31 @@ public class Entity
     {
         IsDestroyed = true;
         World.Entities.Remove(this);
+    }
+
+    public virtual void DrawDebug(Renderer renderer, bool drawCoords, double alpha)
+    {
+        var cell = Cell;
+        var cellInScreen = cell * World.DefaultGridSize;
+        renderer.DrawPoint(Position.Current, SmartColor, 2);
+
+        // draw small crosshair
+        {
+            renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), SmartColor);
+            renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), SmartColor);
+        }
+
+        renderer.DrawRectOutline(Bounds.Min, Bounds.Max, SmartColor, 1.0f);
+
+        if (drawCoords)
+        {
+            var cellText = $"{cell.X.ToString()}, {cell.Y.ToString()}";
+            var posText = $"{StringExt.TruncateNumber(Position.Current.X)}, {StringExt.TruncateNumber(Position.Current.Y)}";
+            ReadOnlySpan<char> str = posText + " " + cellText;
+            var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
+            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
+            // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
+        }
     }
 }
 

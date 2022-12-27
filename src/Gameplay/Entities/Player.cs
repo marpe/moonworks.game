@@ -10,6 +10,7 @@ public class Player : Entity
     public float LastJumpStartTime;
     public float LastOnGroundTime;
     public float Speed = 20f;
+    private static Vector2 _savedPos;
 
     public Velocity Velocity = new()
     {
@@ -34,4 +35,34 @@ public class Player : Entity
         Behaviour.Update(deltaSeconds, command);
         base.Update(deltaSeconds);
     }
+    
+    #region Console Commands
+    [ConsoleHandler("save_pos")]
+    public static void SavePos(Vector2? position = null)
+    {
+        if (!Shared.Game.World.IsLoaded)
+            return;
+        _savedPos = position ?? Shared.Game.World.Entities.First<Player>().Position;
+        Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
+    }
+
+    [ConsoleHandler("load_pos")]
+    public static void LoadPos(Vector2? position = null)
+    {
+        if (!Shared.Game.World.IsLoaded)
+            return;
+
+        var loadPos = position ?? _savedPos;
+        Shared.Game.World.Entities.First<Player>().Position.SetPrevAndCurrent(loadPos);
+        Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
+    }
+
+    [ConsoleHandler("unstuck")]
+    public static void Unstuck()
+    {
+        if (!Shared.Game.World.IsLoaded)
+            return;
+        Shared.Game.World.Entities.First<Player>().Mover.Unstuck();
+    }
+    #endregion
 }

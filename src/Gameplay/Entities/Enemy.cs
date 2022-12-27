@@ -53,4 +53,9 @@ public abstract class Enemy : Entity
         _light!.Center = Center;
         base.Update(deltaSeconds);
     }
+
+    public void Kill()
+    {
+        IsDead = true;
+    }
 }
