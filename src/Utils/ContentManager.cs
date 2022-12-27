@@ -1,4 +1,5 @@
 using MoonWorks.Audio;
+using MyGame.Fonts;
 using MyGame.WorldsRoot;
 
 namespace MyGame.Utils;
@@ -54,6 +55,7 @@ public class ContentManager
         {
             asset = InternalLoad<T>(assetName) ?? throw new Exception();
             _loadedAssets.Add(assetName, asset);
+            Logs.LogInfo($"[{Shared.Game.Time.UpdateCount}] Loaded {typeof(T).Name} asset \"{assetName}\"");
         }
 
         if (typeof(T) == typeof(Texture) && asset is AsepriteAsset ase1)
@@ -69,8 +71,63 @@ public class ContentManager
         {
             asset = new TextureSlice(texture);
         }
-        
+        else if (typeof(T) == typeof(Texture) && asset is TextureSlice slice)
+        {
+            asset = slice.Texture;
+        }
+
         return (T)asset;
+    }
+
+    public void PackTextures()
+    {
+        Logs.LogInfo($"[{Shared.Game.Time.UpdateCount}] Starting atlas packing");
+        var sw = Stopwatch.StartNew();
+        var packer = new RectPacker(2048, 2048);
+
+        var device = Shared.Content._game.GraphicsDevice;
+        var atlasTexture = Texture.CreateTexture2D(device, 2048, 2048, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        var dstX = 0;
+        var dstY = 0;
+
+        var cb = device.AcquireCommandBuffer();
+
+        var numPackedTextures = 0;
+        var packedTextures = new List<string>();
+
+        foreach (var (key, value) in _loadedAssets)
+        {
+            TextureSlice textureSlice;
+            if (value is Texture texture)
+                textureSlice = new TextureSlice(texture);
+            else if (value is AsepriteAsset ase)
+                textureSlice = ase.TextureSlice;
+            else if (value is TextureSlice slice)
+                textureSlice = slice;
+            else
+                continue;
+
+            if (packer.AddRect(textureSlice.Rectangle.W, textureSlice.Rectangle.H, ref dstX, ref dstY))
+            {
+                var newSlice = new TextureSlice(atlasTexture, new Rect(dstX, dstY, textureSlice.Rectangle.W, textureSlice.Rectangle.H));
+                _loadedAssets[key] = newSlice;
+                cb.CopyTextureToTexture(textureSlice, newSlice, Filter.Nearest);
+            }
+            else
+            {
+                throw new Exception("Atlas full");
+            }
+
+            numPackedTextures++;
+            packedTextures.Add(key);
+        }
+
+        device.Submit(cb);
+
+        // TextureUtils.SaveTexture("packed.png", device, atlasTexture);
+
+        Logs.LogInfo($"Packed {numPackedTextures.ToString()} textures:\n{string.Join('\n', packedTextures)}");
+        sw.StopAndLog(nameof(PackTextures));
     }
 
     private static object InternalLoad<T>(string assetName)

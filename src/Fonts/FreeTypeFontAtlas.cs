@@ -192,20 +192,6 @@ public class FreeTypeFontAtlas : IDisposable
         return true;
     }
 
-    private static void SaveTexture(string filename, GraphicsDevice device, Texture texture)
-    {
-        var tempBuffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * sizeof(uint));
-        var tempPixels = new byte[tempBuffer.Size];
-
-        var commandBuffer = device.AcquireCommandBuffer();
-        commandBuffer.CopyTextureToBuffer(texture, tempBuffer);
-        device.Submit(commandBuffer);
-        device.Wait();
-
-        tempBuffer.GetData(tempPixels, tempBuffer.Size);
-        Texture.SavePNG(filename, (int)texture.Width, (int)texture.Height, texture.Format, tempPixels);
-    }
-
     private static void SetTextureData(GraphicsDevice device, TextureSlice slice, byte[] data)
     {
         var commandBuffer = device.AcquireCommandBuffer();

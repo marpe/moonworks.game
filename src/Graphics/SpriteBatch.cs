@@ -33,7 +33,7 @@ public class SpriteBatch
 
     public uint DrawCalls { get; private set; }
 
-    public uint MaxDrawCalls { get; private set; }
+    public float MaxDrawCalls { get; private set; }
     public uint MaxNumAddedSprites { get; private set; }
 
     private TextureSamplerBinding[] _fragmentSamplerBindings;
@@ -136,7 +136,7 @@ public class SpriteBatch
 
     private void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings)
     {
-        MaxDrawCalls = Math.Max(MaxDrawCalls, DrawCalls);
+        MaxDrawCalls = MaxDrawCalls > DrawCalls ? MathF.Lerp(MaxDrawCalls, DrawCalls, 0.05f) : DrawCalls;
         DrawCalls = 0;
 
         if (_numSprites == 0)

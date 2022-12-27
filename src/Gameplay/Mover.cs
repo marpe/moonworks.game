@@ -130,7 +130,7 @@ public class Mover
             velocity.X = velocity.Y = 0;
             return;
         }
-        
+
         var deltaMove = velocity * deltaSeconds;
         var steps = MathF.Ceil((MathF.Abs(deltaMove.X) + MathF.Abs(deltaMove.Y)) / World.DefaultGridSize / 0.33f);
         var position = Parent.Position.Current;
@@ -186,7 +186,8 @@ public class Mover
         }
 
         Parent.Position.Current = position;
-        SanityCheck(Parent.Position.Current, "Post x/y update resulted in moving into a collision tile"); // one last check, because I don't trust anyone, including myself
+        SanityCheck(Parent.Position.Current,
+            "Post x/y update resulted in moving into a collision tile"); // one last check, because I don't trust anyone, including myself
 
         Velocity.ApplyFriction(velocity);
 

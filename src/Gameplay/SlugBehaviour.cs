@@ -8,18 +8,15 @@ public class SlugBehaviour : EnemyBehaviour
     public Enemy Parent => _parent ?? throw new InvalidOperationException();
 
     private float _speed = 50f;
+    private Coroutine? _destroyRoutine;
 
     public override void Initialize(Enemy parent)
     {
         _parent = parent;
-
-        _parent.CoroutineManager.StartCoroutine(DestroyOnDeath());
     }
 
     private IEnumerator DestroyOnDeath()
     {
-        while (!Parent.IsDead)
-            yield return null;
         yield return Coroutine.WaitForSeconds(.5f);
         Parent.IsDestroyed = true;
     }
@@ -27,7 +24,10 @@ public class SlugBehaviour : EnemyBehaviour
     public override void Update(float deltaSeconds)
     {
         if (Parent.IsDead)
+        {
+            _destroyRoutine ??= Parent.CoroutineManager.StartCoroutine(DestroyOnDeath());
             return;
+        }
 
         if (Parent.TotalTimeActive < Parent.FreezeMovementUntil)
             return;

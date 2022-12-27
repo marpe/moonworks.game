@@ -139,7 +139,6 @@ public static class MathF
 
     /// <summary>floors the float to the nearest int value below x. note that this only works for values in the range of short (-32,768 to 32,767)</summary>
     /// <returns>The floor to int.</returns>
-    /// <param name="x">The x coordinate.</param>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int FastFloorToInt(float x)
     {
@@ -304,6 +303,14 @@ public static class MathF
     public static int CeilToInt(float f)
     {
         return (int)Math.Ceiling(f);
+    }
+    
+    /// <summary> ceils the float to the nearest int value above y. note that this only works for values in the range of short(-32,768 to 32,767)</summary>
+    /// <returns>The ceil to int.</returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static int FastCeilToInt(float y)
+    {
+        return 32768 - (int)(32768f - y);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

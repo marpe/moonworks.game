@@ -76,30 +76,20 @@ public class Entity
     
     public static bool HasCollision(int x, int y, World world)
     {
-        var levelMin = world.Level.WorldPos / World.DefaultGridSize;
-        var levelGridSize = new Point((int)world.Level.Width, (int)world.Level.Height) / World.DefaultGridSize;
-        var levelMax = levelMin + levelGridSize;
-
-        if (x < levelMin.X || y < levelMin.Y || x >= levelMax.X || y >= levelMax.Y)
+        if (x < world.LevelMin.X || y < world.LevelMin.Y || x >= world.LevelMax.X || y >= world.LevelMax.Y)
             return true;
 
-        foreach (var layer in world.Level.LayerInstances)
-        {
-            var layerDef = World.GetLayerDefinition(world.Root, layer.LayerDefId);
-            if (layerDef.Identifier != "Tiles" || layerDef.LayerType != LayerType.IntGrid)
-                continue;
+        var (ix, iy) = (x - world.LevelMin.X, y - world.LevelMin.Y);
+        var gridIdx = iy * world.LevelGridSize.X + ix;
+        if (gridIdx < 0)
+            return true;
+        if (gridIdx > world.CollisionLayer.Length - 1)
+            return true;
 
-            var (ix, iy) = (x - levelMin.X, y - levelMin.Y);
-            var gridId = iy * levelGridSize.X + ix;
-            if (gridId < 0 || gridId > layer.IntGrid.Length - 1) // TODO (marpe): Check which scenarios this occurs 
-                continue;
-            
-            var value = layer.IntGrid[gridId];
-            if ((LayerDefs.Tiles)value is LayerDefs.Tiles.Ground or LayerDefs.Tiles.Left_Ground)
-                return true;
-        }
-
-        return false;
+        var collisionValue = world.CollisionLayer[gridIdx];
+        return collisionValue != 0 &&
+               (collisionValue == (int)LayerDefs.Tiles.Ground ||
+                collisionValue == (int)LayerDefs.Tiles.Left_Ground);
     }
 
     public static (Point min, Point max) GetMinMaxCell(Vector2 position, Vector2 size)
@@ -109,8 +99,8 @@ public class Entity
         // then the bottom right corner should still be in cell 1, 0 if the position is 0, 0 so we remove 1.
         // and a bottom right coordinate of 32.1f, 16.1f should be cell 2, 1 so we ceil 
         var max = new Vector2(
-            MathF.Ceil(position.X + size.X - 1),
-            MathF.Ceil(position.Y + size.Y - 1)
+            MathF.FastCeilToInt(position.X + size.X - 1),
+            MathF.FastCeilToInt(position.Y + size.Y - 1)
         );
         var maxCell = ToCell(max);
         return (minCell, maxCell);
@@ -139,7 +129,7 @@ public class Entity
 
     public static Point ToCell(Vector2 position, int gridSize = World.DefaultGridSize)
     {
-        return new Point(MathF.FloorToInt(position.X / gridSize), MathF.FloorToInt(position.Y / gridSize));
+        return new Point(MathF.FastFloorToInt(position.X / gridSize), MathF.FastFloorToInt(position.Y / gridSize));
     }
 }
 

@@ -51,6 +51,14 @@ public class World
     public string Filepath = "";
     private bool _isTrackingPlayer;
 
+    private List<(LayerDef, LayerInstance)> _intGridLayers = new();
+
+    public int[] CollisionLayer = Array.Empty<int>();
+
+    public Point LevelMin;
+    public Point LevelGridSize;
+    public Point LevelMax;
+
     public World()
     {
         _debugDraw = new DebugDrawItems();
@@ -99,11 +107,33 @@ public class World
         sw.StopAndLog("LoadTileSetTextures");
     }
 
+    public List<(LayerDef, LayerInstance)> GetIntGridLayers()
+    {
+        return _intGridLayers;
+    }
+
     public void StartLevel(string levelIdentifier)
     {
         WorldTotalElapsedTime = WorldUpdateCount = 0;
 
         var level = FindLevel(levelIdentifier, Root);
+
+        LevelMin = level.WorldPos / DefaultGridSize;
+        LevelGridSize = level.Size / DefaultGridSize;
+        LevelMax = LevelMin + LevelGridSize;
+        
+        _intGridLayers.Clear();
+        CollisionLayer = Array.Empty<int>();
+        foreach (var layerDef in Root.LayerDefinitions)
+        {
+            if (layerDef.Identifier == "Tiles" && layerDef.LayerType == LayerType.IntGrid)
+            {
+                var layerInstance = level.LayerInstances.First(x => x.LayerDefId == layerDef.Uid);
+                _intGridLayers.Add((layerDef, layerInstance));
+
+                CollisionLayer = layerInstance.IntGrid;
+            }
+        }
 
         foreach (var field in level.FieldInstances)
         {
@@ -124,7 +154,7 @@ public class World
         Entities.Clear();
         Level = level;
         _isTrackingPlayer = false;
-        var entities = LoadEntitiesInLevel(Root, level);
+        var entities = LoadEntitiesInLevel(this, Root, level);
         Entities.AddRange(entities);
     }
 
@@ -164,7 +194,7 @@ public class World
         Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
-    private static List<Entity> LoadEntitiesInLevel(RootJson root, Level level)
+    private static List<Entity> LoadEntitiesInLevel(World world, RootJson root, Level level)
     {
         var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)
@@ -504,6 +534,8 @@ public class World
         if (!IsLoaded)
             return;
 
+        CollisionLayer = Array.Empty<int>();
+        _intGridLayers.Clear();
         _tileSetTextures.Clear();
         Entities.Clear();
         IsLoaded = false;
@@ -591,7 +623,7 @@ public class World
         throw new InvalidOperationException();
     }
 
-    public static LayerDef GetLayerDefinition(RootJson root, long layerDefUid)
+    private static LayerDef GetLayerDefinition(RootJson root, long layerDefUid)
     {
         for (var j = 0; j < root.LayerDefinitions.Count; j++)
         {
