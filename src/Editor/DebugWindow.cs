@@ -18,7 +18,7 @@ public static class CollisionDebug
     {
         if (!Shared.Game.World.IsLoaded)
         {
-            var player = (Player)Shared.Game.World.Entities.First(x => x is Player);
+            var player = Shared.Game.World.Entities.First<Player>();
 
             if (ImGuiExt.BeginCollapsingHeader("Ground", ImGuiExt.Colors[0]))
             {

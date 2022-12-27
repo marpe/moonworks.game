@@ -10,9 +10,9 @@ public class Entity
     public Vector2 Pivot;
     public Color SmartColor;
     
-    [HideInInspector] public bool IsInitialized;
+    [HideInInspector] public bool IsInitialized { get; private set; }
 
-    [HideInInspector] public bool IsDestroyed;
+    [HideInInspector] public bool IsDestroyed { get; private set; }
 
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
 
@@ -130,6 +130,21 @@ public class Entity
     public static Point ToCell(Vector2 position, int gridSize = World.DefaultGridSize)
     {
         return new Point(MathF.FastFloorToInt(position.X / gridSize), MathF.FastFloorToInt(position.Y / gridSize));
+    }
+
+    public virtual void OnEntityAdded(World world)
+    {
+        Initialize(world);
+    }
+    
+    public virtual void OnEntityRemoved()
+    {
+    }
+
+    public virtual void Destroy()
+    {
+        IsDestroyed = true;
+        World.Entities.Remove(this);
     }
 }
 

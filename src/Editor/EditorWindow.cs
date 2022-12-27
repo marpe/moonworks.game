@@ -821,7 +821,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     ImGui.Text(layerInstance.EntityInstances.Count.ToString());
                 }
             }
-            
+
             ImGui.Dummy(new System.Numerics.Vector2(400, 0));
             ImGui.PopFont();
         }
@@ -1334,7 +1334,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var editor = (MyEditorMain)Shared.Game;
         var gridSize = editor.RootJson.DefaultGridSize;
 
-        if (isSelectedLevel)
+        if (isSelectedLevel && _gameRenderScale >= 0.5f)
         {
             var gridMin = GetWorldPosInScreen(level.WorldPos);
             var gridMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2());
@@ -1582,7 +1582,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (!GetEntityDef(entityDefId, out var entityDef))
         {
             DrawWarningRect(dl, level.WorldPos, entityInstance.Position, entityInstance.Size);
-            ImGui.PopID();
             return;
         }
 
@@ -1611,8 +1610,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             fillColor = entityDef.Color;
         }
 
+        var contentMin = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMin();
+        var contentMax = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMax();
+
         var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
         var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
+
+        if (boundsMin.X > contentMax.X || boundsMin.Y > contentMax.Y ||
+            boundsMax.X < contentMin.X || boundsMax.Y < contentMin.Y)
+        {
+            return;
+        }
+
+        var bounds = (boundsMax - boundsMin);
+        if (bounds.X <= 5 && bounds.Y <= 5)
+        {
+            return;
+        }
+
         // - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale
         var entitySize = entityInstance.Size.ToVec2() * _gameRenderScale;
         var gridSize = new Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
@@ -1633,6 +1648,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var idStr = "EntityButton";
             var id = ImGui.GetID(idStr);
             var buttonSize = boundsMax - boundsMin;
+  
+            // if (!ImGui.IsMouseHoveringRect(boundsMin, boundsMax))
+                // return;
+            
+            
             if (ImGui.InvisibleButton(idStr, buttonSize.EnsureNotZero(), (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
             {
             }
@@ -1904,6 +1924,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var cols = (int)(level.Width / layerDef.GridSize);
         // var rows = (int)(level.Height / layerDef.GridSize);
 
+        var contentMin = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMin();
+        var contentMax = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMax();
+
         for (var j = 0; j < layer.IntGrid.Length; j++)
         {
             var cellValue = layer.IntGrid[j];
@@ -1921,6 +1944,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var tilePos = new Vector2(x, y) * layerDef.GridSize;
             var iconMin = GetWorldPosInScreen(level.WorldPos + tilePos);
             var iconMax = GetWorldPosInScreen(level.WorldPos + tilePos + new Vector2(layerDef.GridSize));
+            if (iconMin.X > contentMax.X || iconMin.Y > contentMax.Y ||
+                iconMax.X < contentMin.X || iconMax.Y < contentMin.Y)
+            {
+                continue;
+            }
+
             dl->AddRectFilled(iconMin, iconMax, color.PackedValue);
         }
     }

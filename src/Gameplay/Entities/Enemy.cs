@@ -36,6 +36,12 @@ public abstract class Enemy : Entity
         world.Entities.Add(_light);
     }
 
+    public override void Destroy()
+    {
+        base.Destroy();
+        _light!.Destroy();
+    }
+
     public void FreezeMovement(float freezeTime)
     {
         FreezeMovementUntil = Math.Max(FreezeMovementUntil, TotalTimeActive + freezeTime);

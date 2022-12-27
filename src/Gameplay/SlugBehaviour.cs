@@ -18,7 +18,7 @@ public class SlugBehaviour : EnemyBehaviour
     private IEnumerator DestroyOnDeath()
     {
         yield return Coroutine.WaitForSeconds(.5f);
-        Parent.IsDestroyed = true;
+        Parent.Destroy();
     }
 
     public override void Update(float deltaSeconds)

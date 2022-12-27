@@ -6,12 +6,12 @@ public class MuzzleFlash : Entity
     {
         Draw.TexturePath = ContentPaths.animations.muzzle_flash_aseprite;
         base.Initialize(world);
-        CoroutineManager.StartCoroutine(Destroy());
+        CoroutineManager.StartCoroutine(DelayedDestroy());
     }
 
-    private IEnumerator Destroy()
+    private IEnumerator DelayedDestroy()
     {
         yield return Coroutine.WaitForSeconds(0.05f);
-        IsDestroyed = true;
+        Destroy();
     }
 }

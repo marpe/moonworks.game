@@ -367,7 +367,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var world = editor.World;
             if (world.IsLoaded)
             {
-                var player = (Player)world.Entities.First(x => x is Player);
+                var player = world.Entities.First<Player>();
                 var playerCell = player.Cell;
                 ImGuiExt.SeparatorText("Player", Color.White);
                 ImGuiExt.PrintVector("Cell", playerCell);

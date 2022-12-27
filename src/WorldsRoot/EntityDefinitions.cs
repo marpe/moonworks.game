@@ -71,6 +71,7 @@ public static class EntityDefinitions
                     Color = ColorExt.FromHex("FF9E31"),
                     ResizableX = true,
                     ResizableY = true,
+                    KeepAspectRatio = true,
                     TileSetDefId = 5,
                     TileId = 117,
                     PivotX = 0.5,

@@ -32,25 +32,23 @@ public class Bullet : Entity
         Mover.PerformMove(Velocity, deltaSeconds);
         var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
         var circle = new Circle(radius);
-
-        for (var i = World.Entities.Count - 1; i >= 0; i--)
+        
+        World.Entities.ForEach((entity) =>
         {
-            var entity = World.Entities[i];
             if (entity is not Enemy enemy)
-                continue;
+                return;
             if (enemy.IsDead || enemy.IsDestroyed)
-                continue;
+                return;
             var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
             if (NarrowPhase.TestCollision(circle, new Transform2D(Position + Size.ToVec2() * 0.5f), other, new Transform2D(enemy.Position)))
             {
-                IsDestroyed = true;
+                Destroy();
                 enemy.IsDead = true;
                 enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
                 enemy.Draw.IsAnimating = false;
                 World.FreezeFrame(0.1f);
-                return;
-            }
-        }
+            }   
+        });
 
         /*var levelSize = GetLevelSize(World.LdtkRaw, 0);
         var xs = new Point(Math.Max(0, Cell.X - 1),  Math.Min(levelSize.X - 1, Cell.X + 1));
@@ -65,7 +63,7 @@ public class Bullet : Entity
         */
 
         if (Mover.MoveCollisions.Count > 0 || Timer >= Lifetime)
-            IsDestroyed = true;
+            Destroy();
 
         base.Update(deltaSeconds);
     }

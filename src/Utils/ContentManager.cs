@@ -126,15 +126,15 @@ public class ContentManager
             return root;
         }
 
-        if (t == typeof(TextureAsset))
+        if (t == typeof(TextureAsset) ||
+            t == typeof(AsepriteAsset))
         {
+            var extension = Path.GetExtension(assetName);
+            if (extension == ".aseprite")
+                return LoadAseprite(assetName, Shared.Content._game.GraphicsDevice);
             return LoadTexture(assetName, Shared.Content._game.GraphicsDevice);
         }
 
-        if (t == typeof(AsepriteAsset))
-        {
-            return LoadAseprite(assetName, Shared.Content._game.GraphicsDevice);
-        }
 
         if (t == typeof(StaticSound))
         {

@@ -29,7 +29,7 @@ public class World
 
     public float Gravity = 800f;
 
-    public List<Entity> Entities { get; } = new();
+    public EntityList Entities { get; } = new();
 
     [HideInInspector]
     public ulong WorldUpdateCount;
@@ -121,7 +121,7 @@ public class World
         LevelMin = level.WorldPos / DefaultGridSize;
         LevelGridSize = level.Size / DefaultGridSize;
         LevelMax = LevelMin + LevelGridSize;
-        
+
         _intGridLayers.Clear();
         CollisionLayer = Array.Empty<int>();
         foreach (var layerDef in Root.LayerDefinitions)
@@ -285,13 +285,14 @@ public class World
             return;
         }
 
-        for (var i = world.Entities.Count - 1; i >= 0; i--)
+        // TODO (marpe): Fix
+        /*for (var i = world.Entities.Count - 1; i >= 0; i--)
         {
             if (world.Entities[i] is Enemy)
             {
                 world.Entities.RemoveAt(i);
             }
-        }
+        }*/
 
         Shared.Console.Print("Killed all enemies");
     }
@@ -304,10 +305,10 @@ public class World
 
     public void UpdateLastPositions()
     {
-        foreach (var entity in Entities)
+        Entities.ForEach((entity) =>
         {
             entity.Position.SetLastUpdatePosition();
-        }
+        });
     }
 
     public void Update(float deltaSeconds, InputHandler input, Camera camera)
@@ -320,7 +321,7 @@ public class World
 
         if (!_isTrackingPlayer)
         {
-            var player = Entities.FirstOrDefault(x => x is Player);
+            var player = Entities.FirstOrDefault<Player>();
             if (player != null)
             {
                 camera.TrackEntity(player);
@@ -341,19 +342,7 @@ public class World
 
     private void UpdateEntities(float deltaSeconds)
     {
-        for (var i = Entities.Count - 1; i >= 0; i--)
-        {
-            var entity = Entities[i];
-            if (!entity.IsInitialized)
-            {
-                entity.Initialize(this);
-            }
-
-            entity.Update(deltaSeconds);
-
-            if (entity.IsDestroyed)
-                Entities.RemoveAt(i);
-        }
+        Entities.Update(this, deltaSeconds);
     }
 
     public void Draw(Renderer renderer, Camera camera, double alpha, bool usePointFiltering)
@@ -364,11 +353,7 @@ public class World
 
     private void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
-        for (var i = 0; i < Entities.Count; i++)
-        {
-            var entity = Entities[i];
-            entity.Draw.Draw(renderer, alpha, usePointFiltering);
-        }
+        Entities.Draw(renderer, alpha, usePointFiltering);
     }
 
     private void DrawEntityDebug(Renderer renderer, double alpha)
@@ -376,11 +361,10 @@ public class World
         if (!Debug)
             return;
 
-        for (var i = 0; i < Entities.Count; i++)
+        Entities.ForEach((entity) =>
         {
-            var entity = Entities[i];
             DrawEntityDebug(renderer, entity, false, alpha);
-        }
+        });
     }
 
     private void DrawLevelDebug(Renderer renderer, Level level, Bounds cameraBounds)
@@ -641,7 +625,7 @@ public class World
     {
         if (!Shared.Game.World.IsLoaded)
             return;
-        _savedPos = position ?? ((Player)Shared.Game.World.Entities.First(x => x is Player)).Position;
+        _savedPos = position ?? Shared.Game.World.Entities.First<Player>().Position;
         Shared.Console.Print($"Saved position: {_savedPos.ToString()}");
     }
 
@@ -652,7 +636,7 @@ public class World
             return;
 
         var loadPos = position ?? _savedPos;
-        ((Player)Shared.Game.World.Entities.First(x => x is Player)).Position.SetPrevAndCurrent(loadPos);
+        Shared.Game.World.Entities.First<Player>().Position.SetPrevAndCurrent(loadPos);
         Shared.Console.Print($"Loaded position: {loadPos.ToString()}");
     }
 
@@ -661,7 +645,7 @@ public class World
     {
         if (!Shared.Game.World.IsLoaded)
             return;
-        ((Player)Shared.Game.World.Entities.First(x => x is Player)).Mover.Unstuck();
+        Shared.Game.World.Entities.First<Player>().Mover.Unstuck();
     }
 
     public void FreezeFrame(float duration, bool force = false)
@@ -728,14 +712,16 @@ public class World
 
     private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
-        for (var i = 0; i < Entities.Count; i++)
+        var tempCameraBounds = cameraBounds;
+        var tempCommandBuffer = commandBuffer;
+        Entities.ForEach((entity) =>
         {
-            if (Entities[i] is not Light light)
-                continue;
+            if (entity is not Light light)
+                return;
             if (!light.IsEnabled)
-                continue;
-            if (!light.Bounds.Intersects(cameraBounds))
-                continue;
+                return;
+            if (!light.Bounds.Intersects(tempCameraBounds))
+                return;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
             var fragUniform = new Pipelines.RimLightUniforms()
             {
@@ -755,17 +741,17 @@ public class World
                     renderDestinationSize.Y
                 ),
                 Bounds = new Vector4(
-                    cameraBounds.Min.X,
-                    cameraBounds.Min.Y,
-                    cameraBounds.Width,
-                    cameraBounds.Height
+                    tempCameraBounds.Min.X,
+                    tempCameraBounds.Min.Y,
+                    tempCameraBounds.Width,
+                    tempCameraBounds.Height
                 ),
             };
-            var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragUniform);
-            var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
-            commandBuffer.BindFragmentSamplers(fragmentBindings);
-            SpriteBatch.DrawIndexedQuads(ref commandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
-        }
+            var fragmentParamOffset = tempCommandBuffer.PushFragmentShaderUniforms(fragUniform);
+            var vertexParamOffset = tempCommandBuffer.PushVertexShaderUniforms(vertUniform);
+            tempCommandBuffer.BindFragmentSamplers(fragmentBindings);
+            SpriteBatch.DrawIndexedQuads(ref tempCommandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
+        });
     }
 
     public void DrawDebug(Renderer renderer, Camera camera, double alpha)

@@ -22,7 +22,7 @@ public class BeeBehaviour : EnemyBehaviour
             Parent.Position.Current += Parent.Velocity * deltaSeconds;
 
             if (Parent.Position.Current.Y >= Parent.World.Level.Bounds.Bottom)
-                Parent.IsDestroyed = true;
+                Parent.Destroy();
 
             Parent.Velocity.Y += Parent.World.Gravity * deltaSeconds;
             return;
