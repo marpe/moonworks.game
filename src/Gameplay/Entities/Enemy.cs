@@ -22,6 +22,8 @@ public abstract class Enemy : Entity
     [HideInInspector] public FacingDirection FacingDirection = FacingDirection.Right;
 
     public bool IsDead;
+    
+    private Light? _light;
 
     public override void Initialize(World world)
     {
@@ -29,6 +31,9 @@ public abstract class Enemy : Entity
 
         Mover.Initialize(this);
         TimeOffset = Position.Current.X;
+
+        _light = world.CreateEntity<Light>();
+        world.Entities.Add(_light);
     }
 
     public void FreezeMovement(float freezeTime)
@@ -39,6 +44,7 @@ public abstract class Enemy : Entity
     public override void Update(float deltaSeconds)
     {
         Behaviour.Update(deltaSeconds);
+        _light!.Center = Center;
         base.Update(deltaSeconds);
     }
 }

@@ -2,6 +2,7 @@ using System.Threading;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
 using MyGame.Editor;
+using MyGame.WorldsRoot;
 using NumVector2 = System.Numerics.Vector2;
 
 namespace MyGame;
@@ -110,11 +111,11 @@ public unsafe class MyEditorMain : MyGameMain
             .Cast<string>()
             .ToArray();
 
-        Shared.Content.LoadAndAddTextures(iconPaths);
 
         foreach (var path in iconPaths)
         {
-            renderer.BindTexture(Shared.Content.GetTexture(path));
+            var texture = Shared.Content.Load<Texture>(path);
+            renderer.BindTexture(texture);
         }
     }
 
@@ -129,7 +130,7 @@ public unsafe class MyEditorMain : MyGameMain
             {
                 Logs.LogInfo($"Started loading world on thread: {Thread.CurrentThread.ManagedThreadId}");
 
-                var rootJson = Shared.Content.LoadRoot(relativePath, true);
+                var rootJson = Shared.Content.Load<RootJson>(relativePath, true);
 
                 // start the same level we're currently on
                 Action? onComplete = null;
@@ -156,14 +157,8 @@ public unsafe class MyEditorMain : MyGameMain
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading png texture on thread: {Thread.CurrentThread.ManagedThreadId}");
-                var cb = GraphicsDevice.AcquireCommandBuffer();
-                var pngTexture = Texture.LoadPNG(GraphicsDevice, cb, e.FullPath);
-                GraphicsDevice.Submit(cb);
-                QueueAction(() =>
-                {
-                    Shared.Content.ReplaceTexture(relativePath, pngTexture);
-                    Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");
-                });
+                Shared.Content.Load<Texture>(relativePath, true);
+                QueueAction(() => { Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}"); });
             });
         }
         else if (extension == ".aseprite")
@@ -171,14 +166,8 @@ public unsafe class MyEditorMain : MyGameMain
             Task.Run(() =>
             {
                 Logs.LogInfo($"Started loading aseprite texture on thread: {Thread.CurrentThread.ManagedThreadId}");
-                var cb = GraphicsDevice.AcquireCommandBuffer();
-                var (texture, aseprite) = TextureUtils.LoadAseprite(GraphicsDevice, ref cb, e.FullPath);
-                GraphicsDevice.Submit(cb);
-                QueueAction(() =>
-                {
-                    Shared.Content.ReplaceTexture(relativePath, texture);
-                    Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}");
-                });
+                Shared.Content.Load<Texture>(relativePath, true);
+                QueueAction(() => { Logs.LogInfo($"Texture added from thread: {Thread.CurrentThread.ManagedThreadId}"); });
             });
         }
         else if (extension == ".spv")
@@ -209,7 +198,7 @@ public unsafe class MyEditorMain : MyGameMain
     {
         if (File.Exists(path))
         {
-            RootJson = Shared.Content.LoadRoot(path, true);
+            RootJson = Shared.Content.Load<RootJson>(path, true);
             Logs.LogInfo($"World loaded: {path}");
         }
     }

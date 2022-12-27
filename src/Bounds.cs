@@ -38,11 +38,19 @@ public struct Bounds
     {
         return new Rectangle((int)b.Min.X, (int)b.Min.Y, (int)b.Size.X, (int)b.Size.Y);
     }
-    
+
     public static Bounds Lerp(Bounds a, Bounds b, double alpha)
     {
         var min = Vector2.Lerp(a.Min, b.Min, (float)alpha);
         var max = Vector2.Lerp(a.Max, b.Max, (float)alpha);
         return new Bounds(min, max);
+    }
+
+    public bool Intersects(Bounds value)
+    {
+        return (value.Left < Right &&
+                Left < value.Right &&
+                value.Top < Bottom &&
+                Top < value.Bottom);
     }
 }

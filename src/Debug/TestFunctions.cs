@@ -23,11 +23,7 @@ public class TestFunctions
         var ts = ((MathF.Sin(Shared.Game.Time.TotalElapsedTime) + 1.0f) * 0.5f) * 5f + 5.0f;
         var xform = GetTransform(new Point(16, 16), new Vector2(0.5f, 0.5f), position, prevPosition, new Vector2(ts), alpha);
         var sprite = ContentPaths.animations.skull_aseprite;
-        if (!Shared.Content.HasTexture(sprite))
-        {
-            Shared.Content.LoadAndAddTextures(new[] { sprite });
-        }
-        var texture = Shared.Content.GetTexture(sprite);
+        var texture = Shared.Content.Load<Texture>(sprite);
         renderer.DrawSprite(texture, xform, Color.White, 0, SpriteFlip.None, true);
     }
 }

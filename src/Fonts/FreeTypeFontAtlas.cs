@@ -1,11 +1,6 @@
-﻿namespace MyGame.Fonts;
+﻿using FreeTypeSharp;
 
-public struct FontAtlasNode
-{
-    public int X;
-    public int Y;
-    public int Width;
-}
+namespace MyGame.Fonts;
 
 public class FontGlyph
 {
@@ -18,201 +13,31 @@ public class FontGlyph
     public int YOffset;
 }
 
-public class FreeTypeFontAtlas
+public class FreeTypeFontAtlas : IDisposable
 {
-    public Dictionary<int, FontGlyph> Glyphs = new();
-    public Texture? Texture;
-    private GraphicsDevice _graphicsDevice;
-    public FontAtlasNode[] Nodes;
-    public int NodesNumber;
-    public int Height;
-    public int Width;
+    private static FreeTypeLibrary? _freeTypeLibrary;
+    
     private FreeTypeFont? _font;
     private int _lineHeight;
     private int _ascent;
-    private Dictionary<(int, int), int> _kerning = new();
+    private Dictionary<(int, int), int> _kernings = new();
 
-    public FreeTypeFontAtlas(GraphicsDevice graphicsDevice, int width, int height)
-    {
-        _graphicsDevice = graphicsDevice;
+    private Dictionary<int, FontGlyph> _glyphs = new();
+    private Texture? _texture;
 
-        Width = width;
-        Height = height;
-
-        Nodes = new FontAtlasNode[256];
-        Nodes[0].X = 0;
-        Nodes[0].Y = 0;
-        Nodes[0].Width = Width;
-        NodesNumber++;
-    }
-
-    public void InsertNode(int idx, int x, int y, int w)
-    {
-        if (NodesNumber + 1 > Nodes.Length)
-        {
-            var oldNodes = Nodes;
-            var newLength = Nodes.Length == 0 ? 8 : Nodes.Length * 2;
-            Nodes = new FontAtlasNode[newLength];
-            for (var i = 0; i < oldNodes.Length; ++i)
-            {
-                Nodes[i] = oldNodes[i];
-            }
-        }
-
-        for (var i = NodesNumber; i > idx; i--)
-        {
-            Nodes[i] = Nodes[i - 1];
-        }
-
-        Nodes[idx].X = x;
-        Nodes[idx].Y = y;
-        Nodes[idx].Width = w;
-        NodesNumber++;
-    }
-
-    public void RemoveNode(int idx)
-    {
-        if (NodesNumber == 0)
-        {
-            return;
-        }
-
-        for (var i = idx; i < NodesNumber - 1; i++)
-        {
-            Nodes[i] = Nodes[i + 1];
-        }
-
-        NodesNumber--;
-    }
-
-    public void Reset(int w, int h)
-    {
-        Width = w;
-        Height = h;
-        NodesNumber = 0;
-        Nodes[0].X = 0;
-        Nodes[0].Y = 0;
-        Nodes[0].Width = w;
-        NodesNumber++;
-    }
-
-    public bool AddSkylineLevel(int idx, int x, int y, int w, int h)
-    {
-        InsertNode(idx, x, y + h, w);
-        for (var i = idx + 1; i < NodesNumber; i++)
-        {
-            if (Nodes[i].X < Nodes[i - 1].X + Nodes[i - 1].Width)
-            {
-                var shrink = Nodes[i - 1].X + Nodes[i - 1].Width - Nodes[i].X;
-                Nodes[i].X += shrink;
-                Nodes[i].Width -= shrink;
-                if (Nodes[i].Width <= 0)
-                {
-                    RemoveNode(i);
-                    i--;
-                }
-                else
-                {
-                    break;
-                }
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        for (var i = 0; i < NodesNumber - 1; i++)
-        {
-            if (Nodes[i].Y == Nodes[i + 1].Y)
-            {
-                Nodes[i].Width += Nodes[i + 1].Width;
-                RemoveNode(i + 1);
-                i--;
-            }
-        }
-
-        return true;
-    }
-
-    public int RectFits(int i, int w, int h)
-    {
-        var x = Nodes[i].X;
-        var y = Nodes[i].Y;
-        if (x + w > Width)
-        {
-            return -1;
-        }
-
-        var spaceLeft = w;
-        while (spaceLeft > 0)
-        {
-            if (i == NodesNumber)
-            {
-                return -1;
-            }
-
-            y = Math.Max(y, Nodes[i].Y);
-            if (y + h > Height)
-            {
-                return -1;
-            }
-
-            spaceLeft -= Nodes[i].Width;
-            ++i;
-        }
-
-        return y;
-    }
-
-    public bool AddRect(int rw, int rh, ref int rx, ref int ry)
-    {
-        var besth = Height;
-        var bestw = Width;
-        var besti = -1;
-        var bestx = -1;
-        var besty = -1;
-        for (var i = 0; i < NodesNumber; i++)
-        {
-            var y = RectFits(i, rw, rh);
-            if (y != -1)
-            {
-                if (y + rh < besth || (y + rh == besth && Nodes[i].Width < bestw))
-                {
-                    besti = i;
-                    bestw = Nodes[i].Width;
-                    besth = y + rh;
-                    bestx = Nodes[i].X;
-                    besty = y;
-                }
-            }
-        }
-
-        if (besti == -1)
-        {
-            return false;
-        }
-
-        if (!AddSkylineLevel(besti, bestx, besty, rw, rh))
-        {
-            return false;
-        }
-
-        rx = bestx;
-        ry = besty;
-        return true;
-    }
-
-    public void AddFont(string fileName, uint fontSize = 24u, bool premultiplyAlpha = true)
+    public FreeTypeFontAtlas(GraphicsDevice graphicsDevice, int width, int height, string fileName, uint fontSize, bool premultiplyAlpha)
     {
         var sw = Stopwatch.StartNew();
+        _freeTypeLibrary ??= new FreeTypeLibrary();
+        var packer = new RectPacker(width, height);
+   
         var fontBytes = File.ReadAllBytes(fileName);
-        _font = new FreeTypeFont(fontBytes);
+        _font = new FreeTypeFont(_freeTypeLibrary, fontBytes);
 
         // (charIndex, codepoint/charcode)
         var glyphList = GetGlyphList(_font);
 
-        var atlasBuffer = new byte[Width * Height * 4];
+        var atlasBuffer = new byte[packer.Width * packer.Height * 4];
         
         _font.GetMetricsForSize(fontSize, out var ascent, out var descent, out var lineHeight);
 
@@ -226,7 +51,7 @@ public class FreeTypeFontAtlas
 
             var dstX = 0;
             var dstY = 0;
-            if (!AddRect(info.Width, info.Height, ref dstX, ref dstY))
+            if (!packer.AddRect(info.Width, info.Height, ref dstX, ref dstY))
             {
                 Logs.LogWarn("Font atlas full");
                 break;
@@ -236,7 +61,7 @@ public class FreeTypeFontAtlas
             var dstRect = new Rect(dstX, dstY, info.Width, info.Height);
 
             // render glyph to texture
-            SetData(atlasBuffer, Width, dstRect, colorBuffer);
+            SetData(atlasBuffer, packer.Width, dstRect, colorBuffer);
 
             var glyph = new FontGlyph
             {
@@ -248,11 +73,11 @@ public class FreeTypeFontAtlas
                 YOffset = info.OffsetY,
                 FontSize = (int)fontSize,
             };
-            Glyphs.Add((int)charcode, glyph);
+            _glyphs.Add((int)charcode, glyph);
         }
 
-        Texture = Texture.CreateTexture2D(_graphicsDevice, (uint)Width, (uint)Height, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
-        SetTextureData(_graphicsDevice, new TextureSlice(Texture), atlasBuffer);
+        _texture = Texture.CreateTexture2D(graphicsDevice, (uint)packer.Width, (uint)packer.Height, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        SetTextureData(graphicsDevice, new TextureSlice(_texture), atlasBuffer);
 
         sw.StopAndLog("FontAtlas.AddFont");
     }
@@ -266,18 +91,18 @@ public class FreeTypeFontAtlas
         {
             var codepoint = rune.Value;
             
-            if (!Glyphs.TryGetValue(codepoint, out var glyph))
+            if (!_glyphs.TryGetValue(codepoint, out var glyph))
             {
-                offset.X += Glyphs.First().Value.XAdvance;
+                offset.X += _glyphs.First().Value.XAdvance;
                 continue;
             }
 
             if (prevGlyph != null)
             {
-                if (!_kerning.TryGetValue((prevGlyph.Index, glyph.Index), out var kerning))
+                if (!_kernings.TryGetValue((prevGlyph.Index, glyph.Index), out var kerning))
                 {
                     kerning = _font!.GetGlyphKernAdvance(prevGlyph.Index, glyph.Index);
-                    _kerning.Add((prevGlyph.Index, glyph.Index), kerning);
+                    _kernings.Add((prevGlyph.Index, glyph.Index), kerning);
                 }
                 offset.X += kerning;
             }
@@ -286,7 +111,7 @@ public class FreeTypeFontAtlas
                             Matrix3x2.CreateScale(1, 1) *
                             Matrix3x2.CreateTranslation(offset);
             
-            renderer.DrawSprite(new Sprite(Texture!, glyph.Bounds), transform.ToMatrix4x4(), color);
+            renderer.DrawSprite(new Sprite(_texture!, glyph.Bounds), transform.ToMatrix4x4(), color);
             offset.X += glyph.XAdvance;
             prevGlyph = glyph;
         }
@@ -387,5 +212,11 @@ public class FreeTypeFontAtlas
         commandBuffer.SetTextureData(slice, data);
         device.Submit(commandBuffer);
         device.Wait();
+    }
+
+    public void Dispose()
+    {
+        _font?.Dispose();
+        _texture?.Dispose();
     }
 }

@@ -174,14 +174,16 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     MyEditorMain.ResetDock = true;
                 }
+
                 ImGui.EndPopup();
             }
         }
-        
+
         var shouldDrawContent =
-            ImGuiExt.BeginWorkspaceWindow(WindowTitle, "EditorDockSpace", InitializeLayout, ImGuiExt.RefPtr(ref IsOpen), ref windowClass, ImGuiDockNodeFlags.None, ResetDock, DrawMenu);
+            ImGuiExt.BeginWorkspaceWindow(WindowTitle, "EditorDockSpace", InitializeLayout, ImGuiExt.RefPtr(ref IsOpen), ref windowClass,
+                ImGuiDockNodeFlags.None, ResetDock, DrawMenu);
         ResetDock = false;
-        
+
         if (shouldDrawContent)
         {
             _entityDefWindow.Draw();
@@ -577,7 +579,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
                             }*/
-                            
+
                             var cellX = (int)(entity.Position.X / (float)layerDef.GridSize);
                             var cellY = (int)(entity.Position.Y / (float)layerDef.GridSize);
 
@@ -594,7 +596,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                                 layerInstance.EntityInstances.RemoveAt(l);
                                 continue;
                             }
-                            
+
                             entity.EntityDefIdentifier = entityDef.Identifier;
 
                             if (IsExcluded(entityDef, layerDef))
@@ -803,6 +805,23 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
             ImGuiExt.PrintVector("MousePosInWorld", GetScreenPosInWorld(ImGui.GetMousePos()));
+            if (GetSelectedLevel(out var level))
+            {
+                var (mouseSnappedToGrid, mouseCell, mouseInLevel) = GetMouseInLevel(level);
+                ImGuiExt.PrintVector("MousePosInLevel", mouseInLevel);
+                ImGuiExt.PrintVector("MouseCell", mouseCell);
+            }
+
+            if (GetSelectedLayerInstance(out var world, out var lvl, out var layerInstance, out var layerDef))
+            {
+                if (layerDef.LayerType == LayerType.Entities)
+                {
+                    ImGui.Text("NumberOfEntities");
+                    ImGui.SameLine(0.6f * ImGui.GetContentRegionAvail().X);
+                    ImGui.Text(layerInstance.EntityInstances.Count.ToString());
+                }
+            }
+            
             ImGui.Dummy(new System.Numerics.Vector2(400, 0));
             ImGui.PopFont();
         }
@@ -1527,7 +1546,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
             var iconMax = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize + new Vector2(layerDef.GridSize));
             var tint = isSelectedLayer ? Color.White : Color.White.MultiplyAlpha(DeselectedAutoLayerAlpha);
-            dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, tint.PackedValue);
+            dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, tint.PackedValue);
         }
     }
 
@@ -1606,7 +1625,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         iconTint = isSelectedLayer ? iconTint : iconTint.MultiplyAlpha(DeselectedLayerAlpha);
         if (entityDef.Identifier != "Light")
             dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
-        dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
+        dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
 
         if (isSelectedLayer)
         {
@@ -1734,7 +1753,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
         }
     }
-    
+
     private static EntityInstance DuplicateInstance(EntityInstance entityInstance, EntityDef entityDef)
     {
         var serialized = JsonConvert.SerializeObject(entityInstance, ContentManager.JsonSerializerSettings);
@@ -2030,7 +2049,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
                     var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
                     var color = Color.White.MultiplyAlpha(0.33f);
-                    dl->AddImage((void*)sprite.Texture.Handle, iconMin, iconMax, uvMin, uvMax, color.PackedValue);
+                    dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, color.PackedValue);
 
                     if (!ImGui.IsAnyItemActive() && ImGui.IsMouseDown(ImGuiMouseButton.Left))
                     {

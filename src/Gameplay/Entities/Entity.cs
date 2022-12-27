@@ -20,7 +20,14 @@ public class Entity
 
     [HideInInspector] public int Height => Size.Y;
 
-    [HideInInspector] public Vector2 Center => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
+    [HideInInspector]
+    public Point HalfSize => new Point(Width / 2, Height / 2);
+    
+    [HideInInspector] public Vector2 Center
+    {
+        get => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
+        set => Position.Current = value - HalfSize;
+    }
 
     private World? _world;
 

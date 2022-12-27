@@ -64,9 +64,6 @@ public class SpriteBatch
 
     public void Draw(Sprite sprite, Color[] colors, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
     {
-        if (sprite.Texture.IsDisposed)
-            throw new ObjectDisposedException(nameof(sprite.Texture));
-
         if (_numSprites == _spriteInfo.Length)
         {
             var maxNumSprites = (int)(_numSprites + 2048);
@@ -84,7 +81,7 @@ public class SpriteBatch
         }
 
         _spriteInfo[_numSprites].Sampler = sampler;
-        _spriteInfo[_numSprites].Texture = sprite.Texture;
+        _spriteInfo[_numSprites].Texture = sprite.TextureSlice.Texture;
 
         PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, colors, flip);
 

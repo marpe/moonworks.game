@@ -1,10 +1,8 @@
 using System.Collections.Concurrent;
 using System.Threading;
-using FreeTypeSharp;
 using MyGame.Audio;
 using MyGame.Cameras;
 using MyGame.Debug;
-using MyGame.Fonts;
 using MyGame.Screens.Transitions;
 using MyGame.WorldsRoot;
 
@@ -205,7 +203,7 @@ public class MyGameMain : Game
             var dstSize = RenderTargets.CompositeRender.Size / (int)RenderTargets.RenderScale;
             // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
             var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
-            var gameRenderSprite = new Sprite(RenderTargets.GameRender, srcRect);
+            var gameRenderSprite = new Sprite(RenderTargets.GameRender.Target, srcRect);
             var scale = Matrix3x2.CreateScale((int)RenderTargets.RenderScale, (int)RenderTargets.RenderScale).ToMatrix4x4();
             Renderer.DrawSprite(gameRenderSprite, scale, Color.White, 0, SpriteFlip.None, false);
         }
@@ -408,7 +406,7 @@ public class MyGameMain : Game
         var filepath = Shared.Game.World.Filepath;
         if (filepath == "")
             filepath = ContentPaths.worlds.worlds_json;
-        var rootLoader = () => Shared.Content.LoadRoot(filepath, true);
+        var rootLoader = () => Shared.Content.Load<RootJson>(filepath, true);
         if (immediate)
             Shared.Game.QueueSetRoot(rootLoader(), filepath, World.NextLevel);
         else

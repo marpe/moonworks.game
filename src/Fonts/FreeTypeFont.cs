@@ -9,10 +9,10 @@ public class FreeTypeFont : IDisposable
     private IntPtr _faceHandle;
     private readonly FT_FaceRec _faceRec;
 
-    public FreeTypeFont(byte[] ttfData)
+    public FreeTypeFont(FreeTypeLibrary freeTypeLibrary, byte[] ttfData)
     {
         _ttfDataHandle = GCHandle.Alloc(ttfData, GCHandleType.Pinned);
-        var err = FT.FT_New_Memory_Face(Shared.FreeTypeLibrary.Native, _ttfDataHandle.AddrOfPinnedObject(), ttfData.Length, 0, out var face);
+        var err = FT.FT_New_Memory_Face(freeTypeLibrary.Native, _ttfDataHandle.AddrOfPinnedObject(), ttfData.Length, 0, out var face);
         if (err != FT_Error.FT_Err_Ok)
             throw new FreeTypeException(err);
 

@@ -2,7 +2,7 @@
 
 public struct Sprite
 {
-    public Texture Texture;
+    public TextureSlice TextureSlice;
     public Bounds SrcRect;
     public UV UV;
     
@@ -17,22 +17,27 @@ public struct Sprite
     public Sprite(Texture texture, Rectangle srcRect) : this(texture, (Bounds)srcRect)
     {
     }
-
-    public Sprite(Texture texture, Bounds srcRect)
+    
+    
+    public Sprite(TextureSlice textureSlice, Rectangle srcRect) : this(textureSlice, (Bounds)srcRect)
     {
-        Texture = texture;
-        SrcRect = srcRect;
-        UV = new UV();
-        GenerateUVs(ref UV, texture, srcRect);
     }
 
-    public static void GenerateUVs(ref UV uv, in Texture texture, in Bounds srcRect)
+    public Sprite(TextureSlice textureSlice, Bounds srcRect)
     {
-        var posX = srcRect.X / texture.Width;
-        var posY = srcRect.Y / texture.Height;
+        TextureSlice = textureSlice;
+        SrcRect = srcRect;
+        UV = new UV();
+        GenerateUVs(ref UV, textureSlice, srcRect);
+    }
 
-        var dimX = srcRect.Width / texture.Width;
-        var dimY = srcRect.Height / texture.Height;
+    public static void GenerateUVs(ref UV uv, in TextureSlice texture, in Bounds srcRect)
+    {
+        var posX = srcRect.X / texture.Rectangle.W;
+        var posY = srcRect.Y / texture.Rectangle.H;
+
+        var dimX = srcRect.Width / texture.Rectangle.W;
+        var dimY = srcRect.Height / texture.Rectangle.H;
 
         uv.Position.X = posX;
         uv.Position.Y = posY;

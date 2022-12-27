@@ -148,27 +148,10 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             _cachedPaths.Add(tileSetPath, path);
         }
 
-        Texture texture;
-
         var editor = (MyEditorMain)Shared.Game;
-
-        if (Shared.Content.HasTexture(path))
-        {
-            texture = Shared.Content.GetTexture(path);
-            editor.ImGuiRenderer.BindTexture(texture);
-            return texture;
-        }
-
-        if ((path.EndsWith(".png") || path.EndsWith(".aseprite")) && File.Exists(path))
-        {
-            Shared.Content.LoadAndAddTextures(new[] { path });
-            texture = Shared.Content.GetTexture(path);
-            editor.ImGuiRenderer.BindTexture(texture);
-            return texture;
-        }
-
-        editor.ImGuiRenderer.BindTexture(editor.Renderer.BlankSprite.Texture);
-        return editor.Renderer.BlankSprite.Texture;
+        var texture = Shared.Content.Load<Texture>(path);
+        editor.ImGuiRenderer.BindTexture(texture);
+        return texture;
     }
 
     public static bool GiantButton(string label, bool isSelected, Color color, int rowMinHeight)
@@ -205,7 +188,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         ImGui.SetCursorPosY(cursorPosY + (rowHeight - buttonSize) / 2);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
         ImGui.Image(
-            (void*)Shared.Content.GetTexture(iconPath).Handle,
+            (void*)Shared.Content.Load<Texture>(iconPath).Handle,
             new Vector2(buttonSize, buttonSize),
             Vector2.Zero, Vector2.One,
             Color.White.ToNumerics(),

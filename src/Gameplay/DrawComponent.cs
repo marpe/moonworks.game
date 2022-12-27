@@ -63,11 +63,12 @@ public class DrawComponent
 
         if (TexturePath != "")
         {
-            Shared.Content.LoadAndAddTextures(new[] { TexturePath });
-            var (texture, ase) = Shared.Content.GetAseprite(TexturePath);
-            var widthPerFrame = texture.Width / ase.Frames.Count;
-            var frameHeight = texture.Height;
-            Animations = CreateAnimations(ase, (int)widthPerFrame, (int)frameHeight, TexturePath);
+            var aseAsset = Shared.Content.Load<AsepriteAsset>(TexturePath);
+            var textureSlice = aseAsset.TextureSlice;
+            var ase = aseAsset.AsepriteFile;
+            var widthPerFrame = textureSlice.Rectangle.W / ase.Frames.Count;
+            var frameHeight = textureSlice.Rectangle.H;
+            Animations = CreateAnimations(ase, widthPerFrame, frameHeight, TexturePath);
             CurrentAnimation = Animations.FirstOrDefault().Value;
         }
     }
@@ -111,7 +112,7 @@ public class DrawComponent
             return;
         var xform = GetTransform(alpha);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
-        var texture = Shared.Content.GetTexture(currentFrame.TexturePath);
+        var texture = Shared.Content.Load<TextureSlice>(TexturePath);
         var sprite = new Sprite(texture, currentFrame.SrcRect);
         renderer.DrawSprite(sprite, xform, Color.White, 0, Flip, usePointFiltering);
     }

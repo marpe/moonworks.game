@@ -16,18 +16,9 @@ public class TextBatcher
 
     public TextBatcher()
     {
-        var fonts = new[]
-        {
-            (ContentPaths.fonts.Pixellari_ttf, new[] { 18, 48 }),
-            (ContentPaths.fonts.Roboto_Regular_ttf, new[] { 18, 48 }),
-            (ContentPaths.fonts.consola_ttf, new[] { 18, 48 }),
-        };
-
-        Shared.Content.LoadAndAddTTFFonts(fonts);
-
-        var pixellari = Shared.Content.GetTTFFont(ContentPaths.fonts.Pixellari_ttf);
-        var roboto = Shared.Content.GetTTFFont(ContentPaths.fonts.Roboto_Regular_ttf);
-        var consola = Shared.Content.GetTTFFont(ContentPaths.fonts.consola_ttf);
+        var pixellari = Shared.Content.Load<TTFFont>(ContentPaths.fonts.Pixellari_ttf);
+        var roboto = Shared.Content.Load<TTFFont>(ContentPaths.fonts.Roboto_Regular_ttf);
+        var consola = Shared.Content.Load<TTFFont>(ContentPaths.fonts.consola_ttf);
 
         _fonts.Add(FontType.Pixellari, pixellari.Sizes[18]);
         _fonts.Add(FontType.PixellariLarge, pixellari.Sizes[48]);
@@ -107,7 +98,7 @@ public class TextBatcher
                 var numVerts = vertexDataLengthInBytes / sizeOfVert;
 
                 var sprite = new Sprite();
-                sprite.Texture = font.Texture ?? throw new InvalidOperationException();
+                sprite.TextureSlice = font.Texture ?? throw new InvalidOperationException();
                 var fontTextureSize = new Vector2(font.Texture.Width, font.Texture.Height);
 
                 for (var i = 0; i < numVerts; i += 4)
@@ -120,7 +111,7 @@ public class TextBatcher
                     var srcRect = new Rectangle((int)srcPos.X, (int)srcPos.Y, (int)srcDim.X, (int)srcDim.Y);
 
                     sprite.SrcRect = srcRect;
-                    Sprite.GenerateUVs(ref sprite.UV, sprite.Texture, srcRect);
+                    Sprite.GenerateUVs(ref sprite.UV, sprite.TextureSlice, srcRect);
                     var color = topLeftVert.Color;
                     spriteBatch.Draw(sprite, color, topLeftVert.Position.Z, transform.ToMatrix4x4(), Renderer.PointClamp);
                 }

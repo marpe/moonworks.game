@@ -92,22 +92,8 @@ public class World
             var tileSet = Root.TileSetDefinitions[i];
             var worldFileDir = Path.GetDirectoryName(filepath);
             var path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSet.Path));
-
-            if (Shared.Content.HasTexture(path))
-            {
-                _tileSetTextures.Add(tileSet.Uid, path);
-                continue;
-            }
-
-            if ((path.EndsWith(".png") || path.EndsWith(".aseprite")) && File.Exists(path))
-            {
-                Shared.Content.LoadAndAddTextures(new[] { path });
-                var texture = Shared.Content.GetTexture(path);
-                _tileSetTextures.Add(tileSet.Uid, path);
-                continue;
-            }
-
-            _tileSetTextures.Add(tileSet.Uid, "blank");
+            Shared.Content.Load<Texture>(path);
+            _tileSetTextures.Add(tileSet.Uid, path);
         }
 
         sw.StopAndLog("LoadTileSetTextures");
@@ -304,9 +290,12 @@ public class World
 
         if (!_isTrackingPlayer)
         {
-            var player = Entities.First(x => x is Player);
-            camera.TrackEntity(player);
-            _isTrackingPlayer = true;
+            var player = Entities.FirstOrDefault(x => x is Player);
+            if (player != null)
+            {
+                camera.TrackEntity(player);
+                _isTrackingPlayer = true;
+            }
         }
 
         WorldUpdateCount++;
@@ -316,7 +305,7 @@ public class World
 
         if (FreezeFrameTimer > 0)
             return;
-        
+
         UpdateEntities(deltaSeconds);
     }
 
@@ -402,7 +391,7 @@ public class World
 
         var tileSetDef = GetTileSetDef(Root, layerDef.TileSetDefId);
         var texturePath = _tileSetTextures[tileSetDef.Uid];
-        var texture = Shared.Content.GetTexture(texturePath);
+        var texture = Shared.Content.Load<TextureSlice>(texturePath);
 
         for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
         {
@@ -468,12 +457,12 @@ public class World
         }
     }
 
-    public static Sprite GetTileSprite(Texture texture, uint tileId, uint gridSize)
+    public static Sprite GetTileSprite(TextureSlice texture, uint tileId, uint gridSize)
     {
         Sprite sprite;
         var tileSize = new Point(
-            (int)(texture.Width / gridSize),
-            (int)(texture.Height / gridSize)
+            (int)(texture.Rectangle.W / gridSize),
+            (int)(texture.Rectangle.H / gridSize)
         );
         var cellX = tileSize.X > 0 ? tileId % tileSize.X : 0;
         var cellY = tileSize.X > 0 ? (int)(tileId / tileSize.X) : 0;
@@ -549,7 +538,7 @@ public class World
         }
     }
 
-    private T CreateEntity<T>() where T : Entity
+    public T CreateEntity<T>() where T : Entity
     {
         var def = GetEntityDefinition(Root, typeof(T).Name);
         var instance = EntityDef.CreateEntityInstance(def);
@@ -694,7 +683,7 @@ public class World
             camera.ZoomedBounds,
             new[]
             {
-                new TextureSamplerBinding(renderer.BlankSprite.Texture, Renderer.PointClamp),
+                new TextureSamplerBinding(renderer.BlankSprite.TextureSlice.Texture, Renderer.PointClamp),
                 new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
             }
         );
@@ -712,6 +701,8 @@ public class World
             if (Entities[i] is not Light light)
                 continue;
             if (!light.IsEnabled)
+                continue;
+            if (!light.Bounds.Intersects(cameraBounds))
                 continue;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
             var fragUniform = new Pipelines.RimLightUniforms()

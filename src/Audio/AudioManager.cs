@@ -20,7 +20,7 @@ public class AudioManager
 
         for (var i = 0; i < soundEffects.Length; i++)
         {
-            var wav = Shared.Content.LoadAndAddSound(soundEffects[i]);
+            var wav = Shared.Content.Load<StaticSound>(soundEffects[i]);
             _staticSound.Add(soundEffects[i], wav);
         }
         audioTimer.StopAndLog("AudioManager");

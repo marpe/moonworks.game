@@ -1,5 +1,4 @@
-﻿using FreeTypeSharp;
-using MyGame.Fonts;
+﻿using MyGame.Fonts;
 
 namespace MyGame.Graphics;
 
@@ -61,9 +60,7 @@ public class Renderer
         bmFontTimer.StopAndLog("BMFonts");
 
         var freeTypeTimer = Stopwatch.StartNew();
-        Shared.FreeTypeLibrary = new FreeTypeLibrary();
-        FreeTypeFontAtlas = new FreeTypeFontAtlas(game.GraphicsDevice, 512, 512);
-        FreeTypeFontAtlas.AddFont(ContentPaths.fonts.consola_ttf, 18u, true);
+        FreeTypeFontAtlas = new FreeTypeFontAtlas(game.GraphicsDevice, 512, 512, ContentPaths.fonts.consola_ttf, 18u, true);
         freeTypeTimer.StopAndLog("FreeType");
         
         _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
@@ -104,7 +101,7 @@ public class Renderer
         for (var i = 0; i < bmFontTypes.Length; i++)
         {
             var (type, path) = bmFontTypes[i];
-            fonts[i] = Shared.Content.LoadAndAddBMFont(path);
+            fonts[i] = Shared.Content.Load<BMFont>(path);
         }
 
         return fonts;
@@ -249,7 +246,7 @@ public class Renderer
         {
             ClearColor = clearColor,
             LoadOp = LoadOp.Clear,
-            Texture = renderTarget
+            Texture = renderTarget,
         };
         commandBuffer.BeginRenderPass(cai);
         commandBuffer.EndRenderPass();
