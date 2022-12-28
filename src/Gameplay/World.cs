@@ -127,6 +127,20 @@ public class World
         Entities.AddRange(entities);
     }
 
+    [ConsoleHandler("restart_level")]
+    public static void RestartLevel()
+    {
+        if (!Shared.Game.World.IsLoaded)
+        {
+            Logs.LogInfo("Requires a world to be loaded");
+            return;
+        }
+
+        var world = Shared.Game.World;
+        world.StartLevel(world.Level.Identifier);
+        Logs.LogInfo($"Restarted level {world.Level.Identifier}");
+    }
+
     [ConsoleHandler("next_level")]
     public static void NextLevel()
     {
@@ -348,7 +362,7 @@ public class World
                 tile.Cell.Y < boundsMin.Y || tile.Cell.Y > boundsMax.Y)
                 continue;
 
-            var sprite = GetTileSprite(texture, tile.TileId, layerDef.GridSize);
+            var sprite = GetTileSprite(texture, tile.TileId, tileSetDef);
             var transform = (
                 Matrix3x2.CreateScale(1f, 1f) *
                 Matrix3x2.CreateTranslation(
@@ -405,16 +419,22 @@ public class World
         }
     }
 
-    public static Sprite GetTileSprite(TextureSlice texture, uint tileId, uint gridSize)
+    public static Sprite GetTileSprite(TextureSlice texture, uint tileId, TileSetDef tileSetDef)
     {
         Sprite sprite;
-        var tileSize = new Point(
-            (int)(texture.Rectangle.W / gridSize),
-            (int)(texture.Rectangle.H / gridSize)
+        var cWid = (int)MathF.Ceil((texture.Rectangle.W - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
+        var cHei = (int)MathF.Ceil((texture.Rectangle.H - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
+
+        var cellX = tileId % cWid;
+        var cellY = (int)(tileId / cWid);
+        var srcRect = new Rectangle(
+            (int)(tileSetDef.Padding + cellX * (tileSetDef.TileGridSize + tileSetDef.Spacing)),
+            (int)(tileSetDef.Padding + cellY * (tileSetDef.TileGridSize + tileSetDef.Spacing)),
+            (int)tileSetDef.TileGridSize,
+            (int)tileSetDef.TileGridSize
         );
-        var cellX = tileSize.X > 0 ? tileId % tileSize.X : 0;
-        var cellY = tileSize.X > 0 ? (int)(tileId / tileSize.X) : 0;
-        sprite = new Sprite(texture, new Rectangle((int)(cellX * gridSize), (int)(cellY * gridSize), (int)gridSize, (int)gridSize));
+        
+        sprite = new Sprite(texture, srcRect);
         return sprite;
     }
 
@@ -675,7 +695,7 @@ public class World
 
         renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
-    
+
     private void DrawEntityDebug(Renderer renderer, double alpha)
     {
         Entities.ForEach((entity) => { entity.DrawDebug(renderer, false, alpha); });

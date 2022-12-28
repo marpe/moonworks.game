@@ -51,7 +51,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     public static Matrix4x4 PreviewRenderViewportTransform = Matrix4x4.Identity;
 
     [CVar("editor.grid_color", "")]
-    public static Color GridColor = new(0.6f, 0.6f, 0.6f);
+    public static Color GridColor = new(0, 0, 0, 0.04f);
 
     [CVar("editor.grid_thickness", "")]
     public static float GridThickness = 1.0f;
@@ -1111,14 +1111,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private static void DrawEntityDefIcon(TileSetDef tileSet, uint tileId, Color color, Num.Vector2 cursorPos)
     {
         var dl = ImGui.GetWindowDrawList();
-        var texture = SplitWindow.GetTileSetTexture(tileSet.Path);
-
-        var gridSize = tileSet.TileGridSize;
-        var textureSizeInGrid = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
-        var cellX = textureSizeInGrid.X > 0 ? tileId % textureSizeInGrid.X : 0;
-        var cellY = textureSizeInGrid.X > 0 ? (int)(tileId / textureSizeInGrid.X) : 0;
-        var uvMin = new Num.Vector2(1.0f / texture.Width * cellX * gridSize, 1.0f / texture.Height * cellY * gridSize);
-        var uvMax = uvMin + new Num.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
 
         var iconSize = new Num.Vector2(32, 32);
         var iconPos = cursorPos + iconSize / 2;
@@ -1133,13 +1125,23 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             2f
         );
 
-        dl->AddImage(
-            (void*)texture.Handle,
-            iconPos,
-            iconPos + iconSize,
-            uvMin,
-            uvMax
-        );
+        if (SplitWindow.GetTileSetTexture(tileSet.Path, out var texture))
+        {
+            var gridSize = tileSet.TileGridSize;
+            var textureSizeInGrid = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
+            var cellX = textureSizeInGrid.X > 0 ? tileId % textureSizeInGrid.X : 0;
+            var cellY = textureSizeInGrid.X > 0 ? (int)(tileId / textureSizeInGrid.X) : 0;
+            var uvMin = new Num.Vector2(1.0f / texture.Width * cellX * gridSize, 1.0f / texture.Height * cellY * gridSize);
+            var uvMax = uvMin + new Num.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
+
+            dl->AddImage(
+                (void*)texture.Handle,
+                iconPos,
+                iconPos + iconSize,
+                uvMin,
+                uvMax
+            );
+        }
     }
 
     private static void DrawIntGridBrushes(LayerDef layerDef, ref int selectedIntGridValueIndex)
@@ -1537,10 +1539,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (!GetTileSetDef(layerDef.TileSetDefId, out var tileSetDef))
             return;
 
-        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+        if (!SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
+            return;
+
         foreach (var tile in layer.AutoLayerTiles)
         {
-            var sprite = World.GetTileSprite(texture, tile.TileId, layerDef.GridSize);
+            var sprite = World.GetTileSprite(texture, tile.TileId, tileSetDef);
             var uvMin = sprite.UV.TopLeft.ToNumerics();
             var uvMax = sprite.UV.BottomRight.ToNumerics();
             var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
@@ -1600,10 +1604,12 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             fillColor = colorField != null ? (Color)colorField.Value! : entityDef.Color;
             iconTint = colorField != null ? (Color)colorField.Value! : Color.White;
 
-            var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-            sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
-            uvMin = sprite.UV.TopLeft.ToNumerics();
-            uvMax = sprite.UV.BottomRight.ToNumerics();
+            if (SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
+            {
+                sprite = World.GetTileSprite(texture, entityDef.TileId, tileSetDef);
+                uvMin = sprite.UV.TopLeft.ToNumerics();
+                uvMax = sprite.UV.BottomRight.ToNumerics();
+            }
         }
         else
         {
@@ -1648,11 +1654,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var idStr = "EntityButton";
             var id = ImGui.GetID(idStr);
             var buttonSize = boundsMax - boundsMin;
-  
+
             // if (!ImGui.IsMouseHoveringRect(boundsMin, boundsMax))
-                // return;
-            
-            
+            // return;
+
+
             if (ImGui.InvisibleButton(idStr, buttonSize.EnsureNotZero(), (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
             {
             }
@@ -2071,8 +2077,10 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 if (!ImGui.IsAnyItemHovered())
                 {
                     // draw preview of entity being added
-                    var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                    var sprite = World.GetTileSprite(texture, entityDef.TileId, layerDef.GridSize);
+                    if (!SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
+                        return;
+
+                    var sprite = World.GetTileSprite(texture, entityDef.TileId, tileSetDef);
                     var uvMin = sprite.UV.TopLeft.ToNumerics();
                     var uvMax = sprite.UV.BottomRight.ToNumerics();
                     var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);

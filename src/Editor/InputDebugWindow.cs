@@ -26,10 +26,8 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         void DrawTableHeaders()
         {
             ImGui.TableSetupColumn("Key", ImGuiTableColumnFlags.None, 200);
-            ImGui.TableSetupColumn("Active", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 20);
-            ImGui.TableSetupColumn("WasActive", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 20);
-            ImGui.TableSetupColumn("WU", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 50);
-            ImGui.TableSetupColumn("GU", ImGuiTableColumnFlags.None | ImGuiTableColumnFlags.NoResize, 50);
+            ImGui.TableSetupColumn("Active", ImGuiTableColumnFlags.NoResize, 20);
+            ImGui.TableSetupColumn("Sources", ImGuiTableColumnFlags.None, 0);
         }
 
         var flags = ImGuiWindowFlags.NoCollapse;
@@ -50,11 +48,8 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                 ImGui.TableNextColumn();
                 SimpleTypeInspector.InspectBool("##Active", ref bind.Active);
                 ImGui.TableNextColumn();
-                SimpleTypeInspector.InspectBool("##WasActive", ref bind.WasActive);
-                ImGui.TableNextColumn();
-                SimpleTypeInspector.InspectULong("##WorldUpdateCount", ref bind.WorldUpdateCount);
-                ImGui.TableNextColumn();
-                SimpleTypeInspector.InspectULong("##GameUpdateCount", ref bind.GameUpdateCount);
+                SimpleTypeInspector.InspectString("##Source0", ref bind.Sources[0]);
+                SimpleTypeInspector.InspectString("##Source1", ref bind.Sources[1]);
 
                 ImGui.PopID();
             }
@@ -62,37 +57,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Hideable |
                              ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
 
-            if (ImGui.BeginTable("Buttons", 5, tableFlags, new Vector2(0, 150)))
-            {
-                DrawTableHeaders();
-
-                ImGui.TableHeadersRow();
-
-                foreach (var (key, value) in Binds.Buttons)
-                {
-                    ImGui.PushID(i);
-                    i++;
-
-                    ImGui.TableNextRow();
-
-                    ImGui.TableNextColumn();
-                    ImGui.Text(key.ToString());
-                    ImGui.TableNextColumn();
-                    SimpleTypeInspector.InspectBool("##Active", ref value.Active);
-                    ImGui.TableNextColumn();
-                    SimpleTypeInspector.InspectBool("##WasActive", ref value.WasActive);
-                    ImGui.TableNextColumn();
-                    SimpleTypeInspector.InspectULong("##WorldUpdateCount", ref value.WorldUpdateCount);
-                    ImGui.TableNextColumn();
-                    SimpleTypeInspector.InspectULong("##GameUpdateCount", ref value.GameUpdateCount);
-
-                    ImGui.PopID();
-                }
-
-                ImGui.EndTable();
-            }
-            
-            if (ImGui.BeginTable("Camera", 5, tableFlags, new Vector2(0, 350)))
+            if (ImGui.BeginTable("Camera", 3, tableFlags, new Vector2(0, 350)))
             {
                 DrawTableHeaders();
 
@@ -112,7 +77,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
                 ImGui.EndTable();
             }
             
-            if (ImGui.BeginTable("Player", 5, tableFlags, new Vector2(0, 0)))
+            if (ImGui.BeginTable("Player", 3, tableFlags, new Vector2(0, 0)))
             {
                 DrawTableHeaders();
 

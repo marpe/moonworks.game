@@ -15,7 +15,7 @@ public static unsafe class TileSetIdPopup
     {
         selectedTileId = -1;
         var result = false;
-        var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
+        SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture);
         var mainWindowSize = ((MyEditorMain)Shared.Game).MainWindow.Size;
         var windowSize = new Vector2((int)(mainWindowSize.X * 0.66f), (int)(mainWindowSize.Y * 0.66f));
         ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
@@ -49,16 +49,20 @@ public static unsafe class TileSetIdPopup
             
             var textureWidth = texture.Width;
             var textureHeight = texture.Height;
-            var cols = textureWidth / tileSetDef.TileGridSize;
-            var rows = textureHeight / tileSetDef.TileGridSize;
+            
+            var cols = (int)MathF.Ceil((textureWidth - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
+            var rows = (int)MathF.Ceil((textureHeight - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
 
             var cellSize = new Vector2(tileSetDef.TileGridSize * Scale);
+            var padding = tileSetDef.Padding * Scale;
+            var spacing = tileSetDef.Spacing * Scale;
+            
             if (ImGui.IsItemHovered())
             {
-                var mouseCellX = (int)((ImGui.GetMousePos().X - texturePosition.X) / cellSize.X);
-                var mouseCellY = (int)((ImGui.GetMousePos().Y - texturePosition.Y) / cellSize.Y);
-                var mouseCellPosX = texturePosition.X + mouseCellX * cellSize.X;
-                var mouseCellPosY = texturePosition.Y + mouseCellY * cellSize.Y;
+                var mouseCellX = (int)((ImGui.GetMousePos().X - texturePosition.X - padding) / (cellSize.X + spacing));
+                var mouseCellY = (int)((ImGui.GetMousePos().Y - texturePosition.Y - padding) / (cellSize.Y + spacing));
+                var mouseCellPosX = texturePosition.X + padding + mouseCellX * (cellSize.X + spacing);
+                var mouseCellPosY = texturePosition.Y + padding + mouseCellY * (cellSize.Y + spacing);
                 var mouseCellMin = new Vector2(mouseCellPosX, mouseCellPosY);
                 var mouseCellMax = mouseCellMin + cellSize;
                 ImGuiExt.RectWithOutline(dl, mouseCellMin, mouseCellMax, Color.Red.MultiplyAlpha(0.1f), Color.Red, 0);
@@ -70,14 +74,17 @@ public static unsafe class TileSetIdPopup
                 dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, cellLabelPosition, Color.White.PackedValue, cellLabel, 0, default);
             }
 
-
+            var paddingV = padding * Vector2.One;
+            var spacingV = spacing * Vector2.One;
+            
             for (var y = 0; y < rows; y++)
             {
                 ImGui.PushID(y);
                 for (var x = 0; x < cols; x++)
                 {
                     ImGui.PushID(x);
-                    ImGui.SetCursorScreenPos(texturePosition + new Vector2(x, y) * cellSize);
+                    var cell = new Vector2(x, y);
+                    ImGui.SetCursorScreenPos(texturePosition + paddingV + cell * (cellSize + spacingV));
                     if (ImGui.InvisibleButton($"AddTileId_{x}_{y}", cellSize))
                     {
                         selectedTileId = (int)(y * cols + x);

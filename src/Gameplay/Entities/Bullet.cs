@@ -46,7 +46,6 @@ public class Bullet : Entity
                 enemy.IsDead = true;
                 enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
                 enemy.Draw.IsAnimating = false;
-                World.FreezeFrame(0.1f);
             }   
         });
 

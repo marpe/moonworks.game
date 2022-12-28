@@ -4,8 +4,8 @@ public struct InputState
 {
     private static KeyCode[] _allKeyCodes = Enum.GetValues<KeyCode>();
     private static MouseButtonCode[] _allMouseButtonCodes = Enum.GetValues<MouseButtonCode>();
-
     public static readonly Vector2 DefaultMousePosition = new(-float.MaxValue, -float.MaxValue);
+
     public HashSet<KeyCode> KeysDown = new();
     public HashSet<MouseButtonCode> MouseButtonsDown = new();
     public Vector2 GlobalMousePosition = DefaultMousePosition;

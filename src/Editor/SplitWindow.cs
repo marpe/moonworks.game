@@ -139,19 +139,37 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
     protected abstract void DrawLeft();
     protected abstract void DrawRight();
 
-    public static Texture GetTileSetTexture(string tileSetPath)
+    public static string GetPathRelativeToCwd(string path)
     {
-        if (!_cachedPaths.TryGetValue(tileSetPath, out var path))
+        if (_cachedPaths.TryGetValue(path, out var relativePath))
+            return relativePath;
+        var editor = (MyEditorMain)Shared.Game;
+        var currentFileDir = Path.GetDirectoryName(editor.Filepath);
+        var resolvedPath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(currentFileDir, path));
+        _cachedPaths.Add(path, resolvedPath);
+        return resolvedPath;
+    }
+
+    public static bool GetTileSetTexture(string tileSetPath, out Texture tileSetTexture)
+    {
+        var editor = (MyEditorMain)Shared.Game;
+        if (tileSetPath == "")
         {
-            var worldFileDir = Path.GetDirectoryName(ContentPaths.worlds.worlds_json);
-            path = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, Path.Join(worldFileDir, tileSetPath));
-            _cachedPaths.Add(tileSetPath, path);
+            tileSetTexture = editor.Renderer.BlankSprite.TextureSlice.Texture;
+            return false;
+        }
+        
+        var path = GetPathRelativeToCwd(tileSetPath);
+
+        if (File.Exists(path))
+        {
+            tileSetTexture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
+            editor.ImGuiRenderer.BindTexture(tileSetTexture);
+            return true;
         }
 
-        var editor = (MyEditorMain)Shared.Game;
-        var texture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
-        editor.ImGuiRenderer.BindTexture(texture);
-        return texture;
+        tileSetTexture = editor.Renderer.BlankSprite.TextureSlice.Texture;
+        return false;
     }
 
     public static bool GiantButton(string label, bool isSelected, Color color, int rowMinHeight)

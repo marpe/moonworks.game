@@ -199,7 +199,7 @@ public class TWConsole
                 for (var i = 0; i < parameters.Length && i < numSuppliedParams; i++)
                 {
                     // args[0] will be the command
-                    var arg = i == parameters.Length - 1 ? string.Join(' ', args.AsSpan().Slice(1 + i).ToArray()) : args[1 + i];
+                    var arg = i == parameters.Length - 1 ? string.Join(' ', args[(1 + i)..]) : args[1 + i];
                     parameters[i] = ConsoleUtils.ParseArg(cmd.Arguments[i].Type, arg);
                 }
 
@@ -415,13 +415,13 @@ public class TWConsole
 
         var commandPart = args[0];
 
-        if (Commands.ContainsKey(commandPart))
+        if (Commands.TryGetValue(commandPart, out var command))
         {
-            ExecuteCommand(Commands[commandPart], args);
+            ExecuteCommand(command, args);
         }
-        else if (Aliases.ContainsKey(commandPart))
+        else if (Aliases.TryGetValue(commandPart, out var alias))
         {
-            ExecuteCommand(Aliases[commandPart], args);
+            ExecuteCommand(alias, args);
         }
         else
         {

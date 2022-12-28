@@ -126,6 +126,8 @@ public class TileSetDef
     public string Identifier = "TileSet";
     public string Path = "";
     public uint TileGridSize = 16;
+    public int Spacing;
+    public int Padding;
 }
 
 public enum LayerType

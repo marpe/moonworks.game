@@ -444,19 +444,18 @@ public unsafe class LayerDefWindow : SplitWindow
         else
         {
             var tileIdToRemove = -1;
-            var texture = GetTileSetTexture(tileSetDef.Path);
             var iconSize = new Vector2(layerDef.GridSize * 2f);
             for (var m = 0; m < rule.TileIds.Count; m++)
             {
                 ImGui.PushID(m);
                 var iconPos = ImGui.GetCursorScreenPos();
-                if (ImGuiExt.DrawTileSetIcon("TileId", layerDef.GridSize, texture, (uint)rule.TileIds[m], iconPos, iconSize, false,
+                if (ImGuiExt.DrawTileSetIcon("TileId", (uint)rule.TileIds[m], tileSetDef, iconPos, iconSize, false,
                         Color.White))
                 {
                     tileIdToRemove = m;
                 }
 
-                DrawZoomedTileTooltip(layerDef.GridSize, $"#{rule.TileIds[m]}", (uint)rule.TileIds[m], texture, iconSize);
+                DrawZoomedTileTooltip($"#{rule.TileIds[m]}", (uint)rule.TileIds[m], tileSetDef, iconSize);
 
                 ImGui.PopID();
 
@@ -472,7 +471,7 @@ public unsafe class LayerDefWindow : SplitWindow
         }
     }
 
-    private static void DrawZoomedTileTooltip(uint gridSize, string label, uint tileId, Texture texture, Vector2 iconSize)
+    private static void DrawZoomedTileTooltip(string label, uint tileId, TileSetDef tileSetDef, Vector2 iconSize)
     {
         if (!ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             return;
@@ -486,7 +485,7 @@ public unsafe class LayerDefWindow : SplitWindow
         ImGui.SetCursorPosX((ImGui.GetContentRegionAvail().X - labelSize.X) * 0.5f);
         ImGui.Text(label);
         ImGui.PopFont();
-        ImGuiExt.DrawTileSetIcon("TileIdZoomed", gridSize, texture, tileId, ImGui.GetCursorScreenPos(), iconSize * 4, false, Color.White);
+        ImGuiExt.DrawTileSetIcon("TileIdZoomed", tileId, tileSetDef, ImGui.GetCursorScreenPos(), iconSize * 4, false, Color.White);
 
         /*
             var dl = ImGui.GetForegroundDrawList();

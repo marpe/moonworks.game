@@ -97,8 +97,7 @@ public class MyGameMain : Game
 
         InputHandler.BeginFrame(Time.ElapsedTime);
 
-        Binds.UpdateButtonStates(InputState.Create(InputHandler));
-        Binds.ExecuteTriggeredBinds();
+        Binds.HandleButtonBinds(InputHandler);
 
         SetInputViewport();
 

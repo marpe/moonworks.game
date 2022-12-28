@@ -560,7 +560,7 @@ public unsafe class ImGuiRenderer : IDisposable
 
     #region Update
 
-    public void Update(float deltaTimeInSeconds, Point displaySize, in InputState inputState)
+    public void Update(float deltaTimeInSeconds, Point displaySize, InputHandler input)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
@@ -574,7 +574,7 @@ public unsafe class ImGuiRenderer : IDisposable
         io->DisplayFramebufferScale = _scaleFactor;
 
         io->DeltaTime = deltaTimeInSeconds;
-        UpdateInput(inputState);
+        UpdateInput(input);
         UpdateMouseCursor();
         UpdateMonitors();
     }
@@ -686,33 +686,34 @@ public unsafe class ImGuiRenderer : IDisposable
         _lastCursor = cursor;
     }
 
-    private void UpdateInput(in InputState input)
+    private void UpdateInput(InputHandler input)
     {
         var io = ImGui.GetIO();
 
-        io->AddMousePosEvent(input.GlobalMousePosition.X, input.GlobalMousePosition.Y);
+        SDL.SDL_GetGlobalMouseState(out var globalMouseX, out var globalMouseY);
+        io->AddMousePosEvent(globalMouseX, globalMouseY);
         io->AddMouseWheelEvent(0, input.MouseWheelDelta);
-        io->AddMouseButtonEvent(0, InputState.IsMouseButtonDown(input, MouseButtonCode.Left));
-        io->AddMouseButtonEvent(1, InputState.IsMouseButtonDown(input, MouseButtonCode.Right));
-        io->AddMouseButtonEvent(2, InputState.IsMouseButtonDown(input, MouseButtonCode.Middle));
+        io->AddMouseButtonEvent(0, input.IsMouseButtonDown(MouseButtonCode.Left));
+        io->AddMouseButtonEvent(1, input.IsMouseButtonDown(MouseButtonCode.Right));
+        io->AddMouseButtonEvent(2, input.IsMouseButtonDown(MouseButtonCode.Middle));
 
         for (var i = 0; i < _keys.Length; i++)
         {
             var keyCode = _keys[i];
             if (!_keyMap.ContainsKey(keyCode))
                 continue;
-            io->AddKeyEvent(_keyMap[keyCode], InputState.IsKeyDown(input, keyCode));
+            io->AddKeyEvent(_keyMap[keyCode], input.IsKeyDown(keyCode));
         }
 
-        io->AddKeyEvent(ImGuiKey.ImGuiMod_Ctrl, InputState.IsAnyKeyDown(input, InputHandler.ControlKeys));
-        io->AddKeyEvent(ImGuiKey.ImGuiMod_Alt, InputState.IsAnyKeyDown(input, InputHandler.AltKeys));
-        io->AddKeyEvent(ImGuiKey.ImGuiMod_Shift, InputState.IsAnyKeyDown(input, InputHandler.ShiftKeys));
-        io->AddKeyEvent(ImGuiKey.ImGuiMod_Super, InputState.IsAnyKeyDown(input, InputHandler.MetaKeys));
+        io->AddKeyEvent(ImGuiKey.ImGuiMod_Ctrl, input.IsAnyKeyDown(InputHandler.ControlKeys));
+        io->AddKeyEvent(ImGuiKey.ImGuiMod_Alt, input.IsAnyKeyDown(InputHandler.AltKeys));
+        io->AddKeyEvent(ImGuiKey.ImGuiMod_Shift, input.IsAnyKeyDown(InputHandler.ShiftKeys));
+        io->AddKeyEvent(ImGuiKey.ImGuiMod_Super, input.IsAnyKeyDown(InputHandler.MetaKeys));
 
-        for (var i = 0; i < input.NumTextInputChars; i++)
+        var textInput = input.GetTextInput();
+        for (var i = 0; i < textInput.Length; i++)
         {
-            var c = input.TextInput[i];
-            io->AddInputCharacter(c);
+            io->AddInputCharacter(textInput[i]);
         }
     }
 

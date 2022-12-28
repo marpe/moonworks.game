@@ -101,9 +101,8 @@ public unsafe class EntityDefWindow : SplitWindow
                 {
                     var lineHeight = Math.Max(_rowMinHeight, ImGui.GetTextLineHeight());
                     var iconSize = new Vector2(lineHeight, lineHeight) * 0.5f;
-                    var texture = GetTileSetTexture(tileSet.Path);
                     var iconPos = cursorPos + new Vector2(30, (int)((lineHeight - ImGui.GetStyle()->FramePadding.Y) / 2)) - iconSize / 2;
-                    ImGuiExt.DrawTileSetIcon("Icon", (uint)gridSize, texture, entityDef.TileId, iconPos, iconSize, true, entityDef.Color);
+                    ImGuiExt.DrawTileSetIcon("Icon", entityDef.TileId, tileSet, iconPos, iconSize, true, entityDef.Color);
                 }
 
                 ImGui.SetCursorScreenPos(cursorPos);
@@ -197,7 +196,7 @@ public unsafe class EntityDefWindow : SplitWindow
                     ResetInstanceFieldsToDefault(entityDef, fieldDef);
                 }
             }
-            
+
             FieldDefEditor.DrawFieldEditor(entityDef.FieldDefinitions, ref _selectedFieldDefinitionIndex, null, DrawPopupMenu);
         }
     }
@@ -259,7 +258,7 @@ public unsafe class EntityDefWindow : SplitWindow
             }
 
             ImGuiExt.ItemTooltip("Click to remove");
-            
+
             ImGui.SameLine();
             if (ImGui.GetContentRegionAvail().X < 30)
                 ImGui.NewLine();

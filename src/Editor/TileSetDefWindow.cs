@@ -98,11 +98,14 @@ public unsafe class TileSetDefWindow : SplitWindow
             SimpleTypeInspector.InspectInputInt("Uid", ref tileSetDef.Uid);
             SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);
             SimpleTypeInspector.InspectString("Path", ref tileSetDef.Path);
+            var resolvedPath = GetPathRelativeToCwd(tileSetDef.Path);
+            ImGui.TextDisabled(resolvedPath);
             SimpleTypeInspector.InspectInputUint("TileGridSize", ref tileSetDef.TileGridSize);
+            SimpleTypeInspector.InspectInputInt("Padding", ref tileSetDef.Padding);
+            SimpleTypeInspector.InspectInputInt("Spacing", ref tileSetDef.Spacing);
 
-            if (tileSetDef.Path != "")
+            if (GetTileSetTexture(tileSetDef.Path, out var texture))
             {
-                var texture = GetTileSetTexture(tileSetDef.Path);
                 var avail = ImGui.GetContentRegionAvail();
                 var height = MathF.Max(1.0f, texture.Height) / MathF.Max(1.0f, texture.Width) * avail.X;
                 var textureSize = new Vector2(avail.X, height);
@@ -125,6 +128,10 @@ public unsafe class TileSetDefWindow : SplitWindow
                 if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
                 {
                 }
+            }
+            else
+            {
+                ImGui.TextColored(Color.Red.ToNumerics(), $"File not found: {resolvedPath}");
             }
         }
     }

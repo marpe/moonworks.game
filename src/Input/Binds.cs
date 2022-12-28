@@ -4,6 +4,12 @@ namespace MyGame.Input;
 
 public static class Binds
 {
+    public enum MouseWheelCode
+    {
+        MouseWheelUp = 0,
+        MouseWheelDown = 1
+    }
+
     public enum InputAction
     {
         Jump,
@@ -28,51 +34,70 @@ public static class Binds
     {
         public string[] Sources = { "", "" }; // The id of the button which triggered this bind
         public bool Active;
-        public bool WasActive;
-        public ulong GameUpdateCount;
-        public ulong WorldUpdateCount;
     }
-    
+
     public static class Player
     {
+        private static bool _fireHeld;
+        private static bool _respawnHeld;
+        private static bool _jumpHeld;
+
         public static PlayerCommand ToPlayerCommand()
         {
             var cmd = new PlayerCommand();
 
-            var right = _actions[InputAction.Right];
-            var left = _actions[InputAction.Left];
-            var fire1 = _actions[InputAction.Fire1];
-            var respawn = _actions[InputAction.Respawn];
-            var jump = _actions[InputAction.Jump];
-            var moveToMouse = _actions[InputAction.MoveToMouse];
-            
+            var right = GetAction(InputAction.Right);
+            var left = GetAction(InputAction.Left);
+            var fire1 = GetAction(InputAction.Fire1);
+            var respawn = GetAction(InputAction.Respawn);
+            var jump = GetAction(InputAction.Jump);
+            var moveToMouse = GetAction(InputAction.MoveToMouse);
+
             if (right.Active)
                 cmd.MovementX += 1;
 
             if (left.Active)
                 cmd.MovementX += -1;
 
-            cmd.IsFiring = (!fire1.WasActive && fire1.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && fire1.Active;
-            cmd.Respawn = (!respawn.WasActive && respawn.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && respawn.Active;
+            if (!fire1.Active)
+                _fireHeld = false;
+
+            if (!jump.Active)
+                _jumpHeld = false;
+
+            if (!respawn.Active)
+                _respawnHeld = false;
+
+            cmd.IsFiring = fire1.Active && !_fireHeld;
+            if (fire1.Active)
+                _fireHeld = true;
+
+            cmd.Respawn = respawn.Active && !_respawnHeld;
+            if (respawn.Active)
+                _respawnHeld = true;
+
             cmd.IsJumpDown = jump.Active;
-            cmd.IsJumpPressed = (!jump.WasActive && jump.WorldUpdateCount == Shared.Game.World.WorldUpdateCount - 1) && jump.Active;
+            cmd.IsJumpPressed = jump.Active && !_jumpHeld;
+            if (jump.Active)
+                _jumpHeld = true;
+
             cmd.MoveToMouse = moveToMouse.Active;
 
             return cmd;
         }
     }
 
-    public const int MouseWheelUp = 0;
-    public const int MouseWheelDown = 1;
-
     private static readonly Dictionary<string, string> _binds = new(StringComparer.InvariantCultureIgnoreCase);
 
     public static Dictionary<InputAction, ActionState> _actions = new();
 
+    private static bool _prevMWheelUp;
+    private static bool _prevMWheelDown;
+
     #region Key/Button Names
 
     public static readonly Dictionary<MouseButtonCode, string> MouseButtonCodeToName;
-    public static readonly Dictionary<int, string> MouseWheelCodeToName;
+    public static readonly Dictionary<MouseWheelCode, string> MouseWheelCodeToName;
     public static readonly Dictionary<KeyCode, string> KeyCodeToName;
 
     private static readonly Dictionary<string, KeyCode> _keyCodeNames = new(StringComparer.InvariantCultureIgnoreCase)
@@ -190,10 +215,10 @@ public static class Binds
         { "mb_x2", MouseButtonCode.X2 },
     };
 
-    private static readonly Dictionary<string, int> _mouseWheelNames = new(StringComparer.InvariantCultureIgnoreCase)
+    private static readonly Dictionary<string, MouseWheelCode> _mouseWheelNames = new(StringComparer.InvariantCultureIgnoreCase)
     {
-        { "mwheelup", MouseWheelUp },
-        { "mwheeldown", MouseWheelDown },
+        { "mwheelup", MouseWheelCode.MouseWheelUp },
+        { "mwheeldown", MouseWheelCode.MouseWheelDown },
     };
 
     #endregion
@@ -214,7 +239,7 @@ public static class Binds
             ("f4", "world.debug"),
             ("f5", "kill_all"),
             ("f9", "step"),
-            ("f8", "restart"),
+            ("f8", "restart_level"),
             ("f10", "pause"),
             ("f12", "screenshot"),
             ("page_up", "speed_up"),
@@ -301,19 +326,13 @@ public static class Binds
         _actions.Add(inputAction, bind);
         ConsoleCommand.ConsoleCommandHandler downHandler = (console, cmd, args) =>
         {
-            bind.WasActive = bind.Active;
             bind.Active = true;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
-            bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
-            bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
         };
         ConsoleCommand.ConsoleCommandHandler upHandler = (console, cmd, args) =>
         {
-            bind.WasActive = bind.Active;
             bind.Active = false;
             bind.Sources[0] = args.Length > 1 ? args[1] : "";
-            bind.GameUpdateCount = Shared.Game.Time.UpdateCount;
-            bind.WorldUpdateCount = Shared.Game.World.WorldUpdateCount;
         };
         var downCmd = new ConsoleCommand($"+{cmdName}", description.ToString(), downHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
         var upCmd = new ConsoleCommand($"-{cmdName}", description.ToString(), upHandler, Array.Empty<ConsoleCommandArg>(), Array.Empty<string>(), false);
@@ -321,144 +340,90 @@ public static class Binds
         Shared.Console.RegisterCommand(upCmd);
     }
 
-    private static HashSet<int> _buttonsToClear = new();
-
-    private static Dictionary<int, ActionState> _buttons = new();
-    public static IReadOnlyDictionary<int, ActionState> Buttons => _buttons;
-
-    private const int MOUSE_WHEEL_OFFSET = 200;
-    private const int MOUSE_BUTTON_OFFSET = 100;
-
-    private static bool IsButtonDown(int buttonId)
+    public static void HandleButtonBinds(InputHandler input)
     {
-        return _buttons.ContainsKey(buttonId) && _buttons[buttonId].Active;
-    }
-
-    private static bool IsButtonReleased(int buttonId)
-    {
-        return _buttons.ContainsKey(buttonId) && _buttons[buttonId].WasActive && !_buttons[buttonId].Active;
-    }
-
-    private static bool IsButtonPressed(int buttonId)
-    {
-        return _buttons.ContainsKey(buttonId) && !_buttons[buttonId].WasActive && _buttons[buttonId].Active;
-    }
-
-    public static void UpdateButtonStates(in InputState inputState)
-    {
-        void UpdateButton(ActionState button, bool isActive)
+        for (var i = 0; i < InputHandler.KeyCodes.Length; i++)
         {
-            button.WasActive = button.Active;
-            button.Active = isActive;
-            button.GameUpdateCount = Shared.Game.Time.UpdateCount;
-        }
+            var code = InputHandler.KeyCodes[i];
 
-        foreach (var key in inputState.KeysDown)
-        {
-            var buttonId = (int)key;
-            if (!_buttons.ContainsKey(buttonId))
-                _buttons[buttonId] = new ActionState();
-            UpdateButton(_buttons[buttonId], true);
-        }
-
-        foreach (var mouseButton in inputState.MouseButtonsDown)
-        {
-            var buttonId = (int)mouseButton + 100;
-            if (!_buttons.ContainsKey(buttonId))
-                _buttons[buttonId] = new ActionState();
-            UpdateButton(_buttons[buttonId], true);
-        }
-
-        var mwheelUpId = MouseWheelUp + MOUSE_WHEEL_OFFSET;
-        var mwheelDownId = MouseWheelDown + MOUSE_WHEEL_OFFSET;
-
-        void UpdateWheel(int wheelId, bool isActive)
-        {
-            if (_buttons.TryGetValue(wheelId, out var wheel))
+            if (input.IsKeyPressed(code))
             {
-                if (wheel.Active != isActive)
-                    UpdateButton(wheel, isActive);
-                return;
+                // console key handled separately
+                if (code == KeyCode.Grave)
+                {
+                    ConsoleScreen.ToggleConsole();
+                    continue;
+                }
+
+                HandleButtonBind(true, KeyCodeToName[code]);
             }
-
-            if (!isActive)
-                return;
-
-            _buttons[wheelId] = new ActionState();
-            UpdateButton(_buttons[wheelId], true);
-        }
-
-        UpdateWheel(mwheelUpId, inputState.MouseWheelDelta > 0);
-        UpdateWheel(mwheelDownId, inputState.MouseWheelDelta < 0);
-
-        _buttonsToClear.Clear();
-        foreach (var (id, button) in _buttons)
-        {
-            // if it was updated this frame, continue
-            if (button.GameUpdateCount == Shared.Game.Time.UpdateCount)
-                continue;
-            button.WasActive = button.Active;
-            button.Active = false;
-
-            if (!button.WasActive && !button.Active)
-                _buttonsToClear.Add(id);
-        }
-
-        foreach (var id in _buttonsToClear)
-        {
-            _buttons.Remove(id);
-        }
-    }
-
-    public static void ExecuteTriggeredBinds()
-    {
-        // iterate through all mouse/keycodes, check if any binds are assigned to them
-        // and if so, execute the command if the button has been pressed (or released for "-" actions)
-        foreach (var (code, identifier) in MouseWheelCodeToName)
-        {
-            // offset the code since that's the "button id" used in the _buttons dictionary
-            HandleButtonBind(code + MOUSE_WHEEL_OFFSET, identifier);
-        }
-
-        foreach (var (code, identifier) in MouseButtonCodeToName)
-        {
-            // offset the code since that's the "button id" used in the _buttons dictionary
-            HandleButtonBind((int)code + MOUSE_BUTTON_OFFSET, identifier);
-        }
-
-        foreach (var (code, identifier) in KeyCodeToName)
-        {
-            // console key handled separately
-            if (code == KeyCode.Grave && IsButtonPressed((int)code))
+            else if (input.IsKeyReleased(code))
             {
-                ConsoleScreen.ToggleConsole();
-                continue;
+                HandleButtonBind(false, KeyCodeToName[code]);
             }
+        }
 
-            // keyboard codes map directly to "button id's" so no offset applied here 
-            HandleButtonBind((int)code, identifier);
+        for (var i = 0; i < InputHandler.MouseButtonCodes.Length; i++)
+        {
+            var code = InputHandler.MouseButtonCodes[i];
+            if (input.IsMouseButtonPressed(code))
+            {
+                HandleButtonBind(true, MouseButtonCodeToName[code]);
+            }
+            else if (input.IsMouseButtonReleased(code))
+            {
+                HandleButtonBind(false, MouseButtonCodeToName[code]);
+            }
+        }
+
+        if (input.MouseWheelDelta > 0)
+        {
+            HandleButtonBind(true, MouseWheelCodeToName[MouseWheelCode.MouseWheelUp]);
+            HandleButtonBind(false, MouseWheelCodeToName[MouseWheelCode.MouseWheelDown]);
+            _prevMWheelUp = true;
+            _prevMWheelDown = false;
+        }
+        else if (input.MouseWheelDelta < 0)
+        {
+            HandleButtonBind(false, MouseWheelCodeToName[MouseWheelCode.MouseWheelUp]);
+            HandleButtonBind(true, MouseWheelCodeToName[MouseWheelCode.MouseWheelDown]);
+            _prevMWheelUp = false;
+            _prevMWheelDown = true;
+        }
+        else
+        {
+            if (_prevMWheelUp)
+                HandleButtonBind(false, MouseWheelCodeToName[MouseWheelCode.MouseWheelUp]);
+            if (_prevMWheelDown)
+                HandleButtonBind(false, MouseWheelCodeToName[MouseWheelCode.MouseWheelDown]);
+            _prevMWheelUp = _prevMWheelDown = false;
+        }
+
+        foreach (var (action, state) in _actions)
+        {
         }
     }
 
     /// <summary>
     /// Pulls the bind identified by "buttonIdentifier", interprets the command string and executes it 
     /// </summary>
-    /// <param name="buttonId">An id corresponding to the keyboard, mouse or gamepad button being checked</param>
+    /// <param name="isPressed">If the button was pressed or released</param>
     /// <param name="buttonIdentifier">The buttons identifier, e.g mwheelup, kp_enter or gamepad_xyz</param>
-    private static void HandleButtonBind(int buttonId, string buttonIdentifier)
+    private static void HandleButtonBind(bool isPressed, string buttonIdentifier)
     {
         if (!TryGetBind(buttonIdentifier, out var bindStr))
             return;
 
-        var split = ConsoleUtils.SplitArgs(bindStr);
-        var cmdKey = split[0];
+        var cmdKey = bindStr;
         if (!Shared.Console.Commands.TryGetValue(cmdKey, out var cmd))
         {
             Logs.LogError($"Command not found: {buttonIdentifier} -> {cmdKey}");
             return;
         }
 
-        if (IsButtonReleased(buttonId))
+        // TODO (marpe): Split bindStr
+
+        if (!isPressed)
         {
             // key up events only trigger binds if the binding is a button command (leading + sign)
             if (!cmdKey.StartsWith('+'))
@@ -470,29 +435,25 @@ public static class Binds
             return;
         }
 
-        if (IsButtonPressed(buttonId))
+        // ignore if console is down
+        if (!Shared.Game.ConsoleScreen.IsHidden)
+            return;
+
+        // handle toggling of bool cvars
+        if ( /*split.Length == 1 && */cmd.IsCVar && Shared.Console.CVars.TryGetValue(cmdKey, out var cvar) && cvar.VarType == typeof(bool))
         {
-            // ignore if console is down
-            if (!Shared.Game.ConsoleScreen.IsHidden)
-                return;
-
-            // handle toggling of bool cvars
-            if (split.Length == 1 && cmd.IsCVar && Shared.Console.CVars.TryGetValue(cmdKey, out var cvar) && cvar.VarType == typeof(bool))
-            {
-                var curr = cvar.GetValue<bool>();
-                Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, (!curr).ToString() });
-                return;
-            }
-
-            if (cmdKey.StartsWith('+'))
-            {
-                Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, buttonIdentifier });
-                return;
-            }
-
-            Shared.Console.ExecuteCommand(cmd, split);
+            var curr = cvar.GetValue<bool>();
+            Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, (!curr).ToString() });
             return;
         }
+
+        if (cmdKey.StartsWith('+'))
+        {
+            Shared.Console.ExecuteCommand(cmd, new[] { cmdKey, buttonIdentifier });
+            return;
+        }
+
+        Shared.Console.ExecuteCommand(cmd, new[] { cmdKey });
     }
 
     public static bool TryGetBind(string key, [NotNullWhen(true)] out string? bind)

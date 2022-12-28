@@ -56,6 +56,7 @@ public unsafe class MyEditorMain : MyGameMain
     public uint ViewportDockSpaceId;
 
     public static ActiveInput ActiveInput = ActiveInput.None;
+    public string Filepath = "";
 
     public MyEditorMain(WindowCreateInfo windowCreateInfo, FrameLimiterSettings frameLimiterSettings, int targetTimestep, bool debugMode) : base(
         windowCreateInfo,
@@ -199,6 +200,7 @@ public unsafe class MyEditorMain : MyGameMain
         if (File.Exists(path))
         {
             RootJson = Shared.Content.Load<RootJson>(path, true);
+            Filepath = path;
             Logs.LogInfo($"World loaded: {path}");
         }
     }
@@ -385,7 +387,7 @@ public unsafe class MyEditorMain : MyGameMain
     {
         if (!IsHidden)
         {
-            ImGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputState.Create(InputHandler));
+            ImGuiRenderer.Update((float)dt.TotalSeconds, _imGuiRenderTarget.Size(), InputHandler);
             _imGuiUpdateCount++;
         }
 
@@ -402,8 +404,7 @@ public unsafe class MyEditorMain : MyGameMain
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
                                     ActiveInput == ActiveInput.Game; // !ImGui.GetIO()->WantCaptureMouse;
 
-        Binds.UpdateButtonStates(InputState.Create(InputHandler));
-        Binds.ExecuteTriggeredBinds();
+        Binds.HandleButtonBinds(InputHandler);
 
         SetInputViewport();
 

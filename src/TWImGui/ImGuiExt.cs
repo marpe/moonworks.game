@@ -2,6 +2,8 @@
 using System.Globalization;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using MyGame.Editor;
+using MyGame.WorldsRoot;
 
 namespace MyGame.TWImGui;
 
@@ -1385,28 +1387,10 @@ public static unsafe class ImGuiExt
         dl->AddRect(min, max, outlineColor.PackedValue, rounding);
     }
 
-    public static bool DrawTileSetIcon(string id, uint gridSize, Texture texture, uint tileId, Num.Vector2 iconPos, Num.Vector2 iconSize, bool drawOutline,
-        Color outlineColor,
-        float padding = 4f)
+    public static bool DrawTileSetIcon(string id, uint tileId, TileSetDef tileSetDef, Num.Vector2 iconPos, Num.Vector2 iconSize, bool drawOutline, Color outlineColor, float padding = 4f)
     {
         var dl = ImGui.GetWindowDrawList();
-
-        var cellSize = new Point(
-            (int)(texture.Width / gridSize),
-            (int)(texture.Height / gridSize)
-        );
-        var cellX = cellSize.X > 0 ? tileId % cellSize.X : 0;
-        var cellY = cellSize.X > 0 ? (int)(tileId / cellSize.X) : 0;
-        var uvMin = new Num.Vector2(
-            1.0f / texture.Width * cellX * gridSize,
-            1.0f / texture.Height * cellY * gridSize
-        );
-        var relCellSize = new Num.Vector2(
-            gridSize / (float)texture.Width,
-            gridSize / (float)texture.Height
-        );
-        var uvMax = uvMin + relCellSize;
-
+        
         var pad = new Num.Vector2(padding);
         if (drawOutline)
         {
@@ -1419,16 +1403,6 @@ public static unsafe class ImGuiExt
                 2f
             );
         }
-
-        /*dl->AddImage(
-            (void*)texture.Handle,
-            iconPos,
-            iconPos + iconSize,
-            uvMin,
-            uvMax
-        );
-        return ImGui.InvisibleButton(id, iconSize);*/
-
 
         if (!drawOutline)
             FillWithStripes(dl, new ImRect(iconPos, iconPos + iconSize + pad * 2), Color.White.MultiplyAlpha(0.1f).PackedValue);
@@ -1445,6 +1419,15 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(padding));
 
         ImGui.SetCursorScreenPos(iconPos);
+
+        var uvMin = Num.Vector2.Zero;
+        var uvMax = Num.Vector2.One;
+        if (SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
+        {
+            var tileSprite = World.GetTileSprite(texture, tileId, tileSetDef);
+            uvMin = tileSprite.UV.TopLeft.ToNumerics();
+            uvMax = tileSprite.UV.BottomRight.ToNumerics();
+        }
         var result = ImGui.ImageButton(
             id,
             (void*)texture.Handle,
