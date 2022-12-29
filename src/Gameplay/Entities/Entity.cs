@@ -1,6 +1,4 @@
-﻿using MyGame.WorldsRoot;
-
-namespace MyGame.Entities;
+﻿namespace MyGame.Entities;
 
 [CustomInspector<GroupInspector>]
 public class Entity

@@ -7,10 +7,23 @@ namespace MyGame.Editor;
 
 public unsafe class WorldWindow : ImGuiEditorWindow
 {
+    private class EntityInspector
+    {
+        public Entity Entity;
+        public IInspector Inspector;
+
+        public EntityInspector(Entity entity)
+        {
+            Entity = entity;
+            Inspector = InspectorExt.GetGroupInspectorForTarget(entity);
+        }
+    }
+    
     public const string WindowTitle = "World";
     private IInspector? _cameraInspector;
     private IInspector? _worldInspector;
     private RootJson? _prevRoot;
+    private Level? _prevLevel;
 
     private ColorAttachmentBlendState _rimBlendState = ColorAttachmentBlendState.Additive;
     private ColorAttachmentBlendState _lightBlendState = ColorAttachmentBlendState.Additive;
@@ -20,7 +33,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     private string _searchPattern = "";
     private string[] _entityNames = Array.Empty<string>();
     private Entity[] _entities = Array.Empty<Entity>();
-    private IInspector? _selectedEntityInspector;
+    private EntityInspector? _selectedEntity;
     private bool _isPickingEntity;
 
     public WorldWindow() : base(WindowTitle)
@@ -95,21 +108,24 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
             if (ImGui.BeginTabItem("World"))
             {
-                // var refreshInspector = ImGuiExt.ColoredButton("Refresh");
-                if (_prevRoot != Shared.Game.World.Root || _worldInspector == null) /* || refreshInspector)*/
+                if (_prevRoot != Shared.Game.World.Root ||
+                    _prevLevel != Shared.Game.World.Level ||
+                    _worldInspector == null)
                 {
                     _worldInspector = InspectorExt.GetGroupInspectorForTarget(world);
-                    _selectedEntityInspector = null;
+                    _selectedEntity = null;
                 }
 
                 _prevRoot = Shared.Game.World.Root;
+                _prevLevel = Shared.Game.World.Level;
+                
                 _worldInspector.Draw();
 
                 DrawPickEntityButton(world);
 
                 DrawSelectEntityButton(world);
 
-                _selectedEntityInspector?.Draw();
+                DrawSelectedEntity();
 
                 ImGui.EndTabItem();
             }
@@ -126,6 +142,20 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         }
 
         ImGui.End();
+    }
+
+    private void DrawSelectedEntity()
+    {
+        if (_selectedEntity == null)
+            return;
+
+        if (_selectedEntity.Entity.IsDestroyed)
+        {
+            _selectedEntity = null;
+            return;
+        }
+
+        _selectedEntity.Inspector.Draw();
     }
 
     private void DrawSelectEntityButton(World world)
@@ -150,7 +180,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         {
             _isSelectEntityDialogOpen = false;
             var entity = _entities[_selectedEntityIndex];
-            _selectedEntityInspector = InspectorExt.GetGroupInspectorForTarget(entity);
+            _selectedEntity = new EntityInspector(entity);
         }
     }
 
@@ -214,10 +244,11 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 var size = max - min;
                 if (ImGui.InvisibleButton("Entity" + i, size, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
                 {
-                    _selectedEntityInspector = InspectorExt.GetGroupInspectorForTarget(entity);
+                    _selectedEntity = new EntityInspector(entity);
                     _isPickingEntity = false;
                     break;
                 }
+
                 ImGui.SetItemAllowOverlap();
             }
         }

@@ -16,6 +16,8 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
     private string _keyHeader = "#";
 
     private ICollection? _collection;
+    private bool _useFixedHeight = true;
+    private int _fixedHeight = 100;
 
     public void SetType(Type type)
     {
@@ -48,13 +50,13 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
         {
             throw new Exception();
         }
-        
+
         // TODO (marpe): Check type and _target
 
         _isInitialized = true;
     }
 
-    private static IEnumerable<(object key, object? item)> Enumerate(ICollection collection)
+    private static IEnumerator<(object key, object? item)> Enumerate(ICollection collection)
     {
         if (collection is IDictionary dictionary)
         {
@@ -87,45 +89,93 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
 
         PushStyle();
 
-        if (ImGuiExt.Fold($"{_name}[{_collection.Count}]"))
+        var foldLabel = $"{_name}[{_collection.Count}]";
+        var isOpen = ImGuiExt.Fold(foldLabel);
+
+        if (ImGui.BeginPopupContextItem())
         {
-            foreach (var item in _inspectors.Keys)
-                _inactiveItems.Add(item);
-
-            if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags, new Num.Vector2(0, 0)))
+            ImGui.MenuItem("Fixed Height", default, ImGuiExt.RefPtr(ref _useFixedHeight));
+            if (ImGui.MenuItem("Height: 400 ", default))
             {
-                ImGui.TableSetupColumn(_keyHeader, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
-                ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.NoHide);
-
-                /*ImGui.TableNextRow(ImGuiTableRowFlags.Headers);
-                ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.Tiny));
-                ImGui.TableSetColumnIndex(0);
-                ImGui.TableHeader(_keyHeader);
-                ImGui.TableSetColumnIndex(1);
-                ImGui.TableHeader("Value");
-                ImGui.PopFont();*/
-
-                var i = 0;
-                foreach (var (key, value) in Enumerate(_collection))
-                {
-                    ImGui.PushID(i);
-                    DrawItem(key, value);
-                    i++;
-                    ImGui.PopID();
-                }
-
-                ImGui.EndTable();
+                _fixedHeight = 400;
+                _useFixedHeight = true;
             }
 
-            foreach (var item in _inactiveItems)
-                _inspectors.Remove(item);
-            _inactiveItems.Clear();
+            if (ImGui.MenuItem("Height: 250 ", default))
+            {
+                _fixedHeight = 250;
+                _useFixedHeight = true;
+            }
 
-            ImGuiExt.MediumVerticalSpace();
+            if (ImGui.MenuItem("Height: 100 ", default))
+            {
+                _fixedHeight = 100;
+                _useFixedHeight = true;
+            }
+            ImGui.EndPopup();
+        }
+
+        if (isOpen)
+        {
+            DrawFoldout();
         }
 
         PopStyle();
         ImGui.Spacing();
+    }
+
+    private void DrawFoldout()
+    {
+        if (_collection!.Count == 0)
+        {
+            ImGui.TextDisabled("There are no items in this collection");
+            return;
+        }
+
+        foreach (var item in _inspectors.Keys)
+            _inactiveItems.Add(item);
+
+        var tableSize = new Num.Vector2(0, _fixedHeight);
+        if (!_useFixedHeight)
+            tableSize.Y = 0;
+
+        if (ImGui.BeginTable("Items", 2, ImGuiExt.DefaultTableFlags | ImGuiTableFlags.ScrollY | ImGuiTableFlags.ContextMenuInBody, tableSize))
+        {
+            ImGui.TableSetupColumn(_keyHeader, ImGuiTableColumnFlags.WidthFixed | ImGuiTableColumnFlags.DefaultHide, 20f);
+            ImGui.TableSetupColumn("Value", ImGuiTableColumnFlags.NoHide);
+
+            var enumerator = Enumerate(_collection);
+
+            var clipper = new ImGuiListClipper();
+            clipper.Begin(_collection.Count);
+            var i = 0;
+            while (clipper.Step())
+            {
+                for (var row = clipper.DisplayStart; row < clipper.DisplayEnd; row++)
+                {
+                    while (i < row && enumerator.MoveNext())
+                    {
+                        i++;
+                    }
+
+                    if (enumerator.MoveNext())
+                    {
+                        ImGui.PushID(i++);
+                        var (key, value) = enumerator.Current;
+                        DrawItem(key, value);
+                        ImGui.PopID();
+                    }
+                }
+            }
+
+            ImGui.EndTable();
+        }
+
+        foreach (var item in _inactiveItems)
+            _inspectors.Remove(item);
+        _inactiveItems.Clear();
+
+        ImGuiExt.MediumVerticalSpace();
     }
 
     private static void PushStyle()
@@ -168,6 +218,7 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
         }
         else if (SimpleTypeInspector.SupportedTypes.Contains(item.GetType()))
         {
+            ImGui.SetNextItemWidth(-ImGuiExt.FLT_MIN);
             SimpleTypeInspector.DrawSimpleInspector(
                 item.GetType(),
                 "##Value",
@@ -175,6 +226,7 @@ public unsafe class CollectionInspector : IInspectorWithTarget, IInspectorWithMe
                 (newValue) => SetValue(key, newValue),
                 false
             );
+            ImGuiExt.ItemTooltip(key.ToString());
         }
         else if (!item.GetType().IsValueType)
         {

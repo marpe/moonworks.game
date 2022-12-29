@@ -2,8 +2,10 @@
 
 namespace MyGame;
 
+[CustomInspector<GroupInspector>]
 public class EntityList
 {
+    [Inspectable]
     private List<Entity> _entities = new();
     private List<Entity> _entitiesToRemove = new();
     private List<Entity> _tempList = new();
