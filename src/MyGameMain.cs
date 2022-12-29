@@ -41,7 +41,7 @@ public class MyGameMain : Game
     public static bool LightsEnabled = true;
 
     [CVar("use_point_filtering", "")]
-    public static bool UsePointFiltering = true;
+    public static bool UsePointFiltering = false;
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
