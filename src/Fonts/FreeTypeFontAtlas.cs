@@ -93,7 +93,7 @@ public class FreeTypeFontAtlas : IDisposable
             
             if (!_glyphs.TryGetValue(codepoint, out var glyph))
             {
-                offset.X += _glyphs.First().Value.XAdvance;
+                offset.X += _glyphs['?'].XAdvance;
                 continue;
             }
 

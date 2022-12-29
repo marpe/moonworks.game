@@ -53,4 +53,13 @@ public struct Bounds
                 value.Top < Bottom &&
                 Top < value.Bottom);
     }
+
+    public bool Contains(Vector2 point)
+    {
+        var x = point.X; var y = point.Y;
+        return X <= x &&
+               x < X + Width &&
+               Y <= y &&
+               y < Y + Height;
+    }
 }

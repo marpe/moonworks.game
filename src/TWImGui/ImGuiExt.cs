@@ -1251,7 +1251,7 @@ public static unsafe class ImGuiExt
         );
 
         drawContent?.Invoke();
-        
+
         ImGui.End();
 
         return shouldDrawWindowContents;
@@ -1387,10 +1387,11 @@ public static unsafe class ImGuiExt
         dl->AddRect(min, max, outlineColor.PackedValue, rounding);
     }
 
-    public static bool DrawTileSetIcon(string id, uint tileId, TileSetDef tileSetDef, Num.Vector2 iconPos, Num.Vector2 iconSize, bool drawOutline, Color outlineColor, float padding = 4f)
+    public static bool DrawTileSetIcon(string id, uint tileId, TileSetDef tileSetDef, Num.Vector2 iconPos, Num.Vector2 iconSize, bool drawOutline,
+        Color outlineColor, float padding = 4f)
     {
         var dl = ImGui.GetWindowDrawList();
-        
+
         var pad = new Num.Vector2(padding);
         if (drawOutline)
         {
@@ -1428,6 +1429,7 @@ public static unsafe class ImGuiExt
             uvMin = tileSprite.UV.TopLeft.ToNumerics();
             uvMax = tileSprite.UV.BottomRight.ToNumerics();
         }
+
         var result = ImGui.ImageButton(
             id,
             (void*)texture.Handle,
@@ -1443,7 +1445,7 @@ public static unsafe class ImGuiExt
 
         return result;
     }
-    
+
     public static void DrawCone(ImDrawList* dl, Num.Vector2 center, float coneAngle, float angle, float radius, Color fillColor, int numSegments = 64)
     {
         var numPoints = Math.Max(1, coneAngle / MathHelper.TwoPi * numSegments);
@@ -1460,6 +1462,244 @@ public static unsafe class ImGuiExt
         dl->PathLineTo(center + new Num.Vector2(MathF.Cos(aEnd), MathF.Sin(aEnd)) * radius);
 
         dl->PathFillConvex(fillColor.PackedValue);
+    }
+
+    public static bool DrawSearchDialog(string name, string buttonLabel, ref bool isOpen, ref int selectedIndex, ReadOnlySpan<string> items,
+        ref string searchPattern)
+    {
+        if (!isOpen)
+            return false;
+
+        ImGui.OpenPopup(name);
+
+        var center = ImGui.GetMainViewport()->GetCenter();
+        var vpSize = ImGui.GetMainViewport()->Size;
+        var windowSize = new Num.Vector2(400, 0);
+        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Num.Vector2(0.5f, 0.5f));
+        ImGui.SetNextWindowSizeConstraints(windowSize, new System.Numerics.Vector2(FLT_MAX, FLT_MAX));
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(windowSize.X, windowSize.Y), ImGuiCond.FirstUseEver);
+
+        var result = false;
+
+        if (ImGui.BeginPopupModal(name, RefPtr(ref isOpen), ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoDocking))
+        {
+            var itemSelected = ComboWithFilter(
+                "Filter",
+                ref selectedIndex,
+                ref searchPattern,
+                items
+            );
+
+            if (itemSelected && !ImGui.IsPopupOpen("Filter"))
+            {
+                ImGui.SetKeyboardFocusHere();
+            }
+
+            result |= ColoredButton(
+                buttonLabel,
+                Color.White,
+                Colors[0],
+                null,
+                new Num.Vector2(-FLT_MIN, 0),
+                ButtonPadding
+            );
+            
+            if (ImGui.IsKeyPressed(ImGuiKey.Escape))
+            {
+                isOpen = false;
+            }
+
+            ImGui.EndPopup();
+        }
+
+
+        return result;
+    }
+
+    public static bool ComboWithFilter(string label, ref int currentItemIndex, ref string searchPattern, ReadOnlySpan<string> items,
+        bool openOnAppear = true)
+    {
+        var style = ImGui.GetStyle();
+        var numItems = items.Length;
+
+        var previewValue = currentItemIndex >= 0 && currentItemIndex < numItems ? items[currentItemIndex] : label;
+
+        var buttonLabel = FontAwesome6.ChevronDown + " " + previewValue + "##ComboWithFilter_button";
+
+        // var frameHeight = ImGui.GetFrameHeight();
+        // var arrowSize = new Num.Vector2(frameHeight, frameHeight);
+        // var arrowOffset = new Num.Vector2(expectedWidth - frameHeight, 0);
+        // var arrowRect = new Rectangle((int)arrowOffset.X, (int)arrowOffset.Y, (int)arrowSize.X, (int)arrowSize.Y);
+
+        var buttonAlign = style->ButtonTextAlign.X;
+        style->ButtonTextAlign.X = 0;
+        if (ImGui.Button(buttonLabel, new System.Numerics.Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeightWithSpacing())) ||
+            (openOnAppear && ImGui.IsWindowAppearing()))
+        {
+            ImGui.OpenPopup(label);
+        }
+
+        style->ButtonTextAlign.X = buttonAlign;
+
+        var popupPos = new Num.Vector2(ImGui.GetItemRectMin().X, ImGui.GetItemRectMax().Y);
+
+        var result = false;
+
+        ImGui.SetNextWindowPos(popupPos, ImGuiCond.Appearing, new Num.Vector2(0, 0));
+        ImGui.SetNextWindowSize(new System.Numerics.Vector2(ImGui.GetItemRectSize().X, 0));
+        ImGui.SetNextWindowBgAlpha(1.0f);
+        ImGui.PushStyleColor(ImGuiCol.Border, Color.Black.PackedValue);
+        ImGui.PushStyleVar(ImGuiStyleVar.PopupRounding, 0);
+        // ImGui.SetNextWindowBgAlpha(0.75f);
+        if (ImGui.BeginPopup(label, ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoNavInputs))
+        {
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar(1);
+
+            if (ImGui.IsWindowAppearing())
+            {
+                ImGui.SetKeyboardFocusHere();
+            }
+
+            ImGui.SetNextItemWidth(-MathF.Epsilon - 40f);
+            var searchPatternBuffer = new ImGuiInputBuffer(searchPattern, 256);
+            fixed (byte* searchData = searchPatternBuffer.Bytes)
+            {
+                if (ImGui.InputText("##ComboWithFilter_inputText", searchData, (nuint)searchPatternBuffer.MaxLength, ImGuiInputTextFlags.EnterReturnsTrue))
+                {
+                    result = true;
+                    ImGui.CloseCurrentPopup();
+                }
+
+                searchPattern = ImGuiExt.StringFromPtr(searchData);
+            }
+
+            searchPatternBuffer.Dispose();
+
+            ImGui.SameLine();
+            if (ImGui.Button(FontAwesome6.Xmark, Num.Vector2.Zero))
+            {
+                searchPattern = string.Empty;
+            }
+
+            ImGui.PushItemWidth(-MathF.Epsilon);
+
+            var isFiltering = searchPattern.Length > 0;
+            var filteredIndex = 0;
+
+            List<(int index, int score)> itemScoreVector = new();
+            if (isFiltering)
+            {
+                for (var i = 0; i < numItems; i++)
+                {
+                    var matched = FuzzySearch.fuzzy_match(searchPattern, items[i], out var score);
+                    if (matched)
+                    {
+                        itemScoreVector.Add((i, score));
+                    }
+                }
+
+                itemScoreVector = itemScoreVector.OrderByDescending(match => match.score).ToList();
+
+                for (var i = 0; i < itemScoreVector.Count; i++)
+                {
+                    if (itemScoreVector[i].index == currentItemIndex)
+                    {
+                        filteredIndex = i;
+                        break;
+                    }
+                }
+            }
+
+            var itemsToShow = isFiltering ? itemScoreVector.Count : items.Length;
+            if (itemsToShow > 0)
+            {
+                var setScroll = false;
+                if (ImGui.IsKeyPressed(ImGuiKey.DownArrow))
+                {
+                    if (isFiltering)
+                    {
+                        var nextIndex = Math.Min(filteredIndex + 1, itemScoreVector.Count - 1);
+                        if (itemScoreVector.Count > 0)
+                        {
+                            currentItemIndex = itemScoreVector[nextIndex].index;
+                        }
+                    }
+                    else
+                    {
+                        currentItemIndex = Math.Min(currentItemIndex + 1, itemsToShow - 1);
+                    }
+
+                    setScroll = true;
+                    result = true;
+                }
+                else if (ImGui.IsKeyPressed(ImGuiKey.UpArrow))
+                {
+                    if (isFiltering)
+                    {
+                        var prevIndex = Math.Max(filteredIndex - 1, 0);
+                        if (itemScoreVector.Count > 0)
+                        {
+                            currentItemIndex = itemScoreVector[prevIndex].index;
+                        }
+                    }
+                    else
+                    {
+                        currentItemIndex = Math.Max(currentItemIndex - 1, 0);
+                    }
+
+                    setScroll = true;
+                    result = true;
+                }
+
+                var maxSize = ImGui.GetMainViewport()->WorkSize.Y - ImGui.GetCursorScreenPos().Y;
+                var contentHeight = (ImGui.GetFrameHeight() + ImGui.GetStyle()->FramePadding.Y) * itemsToShow;
+                maxSize = Math.Min(maxSize, contentHeight);
+
+                if (ImGui.BeginListBox("##ComboWithFilter_itemList", new Num.Vector2(0, maxSize)))
+                {
+                    for (var i = 0; i < itemsToShow; i++)
+                    {
+                        var itemIndex = isFiltering ? itemScoreVector[i].index : i;
+                        ImGui.PushID(itemIndex);
+                        var itemSelected = itemIndex == currentItemIndex;
+                        // ImGui.PushStyleColor(ImGuiCol.FrameBg, Color.Transparent.ToNumerics());
+                        if (ImGui.Selectable(items[itemIndex], itemSelected, ImGuiSelectableFlags.None, default))
+                        {
+                            currentItemIndex = itemIndex;
+                            result = true;
+                            ImGui.CloseCurrentPopup();
+                        }
+
+                        // ImGui.PopStyleColor();
+
+                        if (itemSelected)
+                        {
+                            ImGui.SetItemDefaultFocus();
+                            if (setScroll)
+                            {
+                                ImGui.SetScrollHereY();
+                            }
+                        }
+
+                        ImGui.PopID();
+                    }
+
+                    ImGui.EndListBox();
+                }
+            }
+
+            ImGui.PopItemWidth();
+
+            ImGui.EndPopup();
+        }
+        else
+        {
+            ImGui.PopStyleColor();
+            ImGui.PopStyleVar();
+        }
+
+        return result;
     }
 }
 

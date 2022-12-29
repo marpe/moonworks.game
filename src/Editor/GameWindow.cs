@@ -19,12 +19,12 @@ public unsafe class GameWindow : ImGuiEditorWindow
     /// <summary>
     /// User zoom
     /// </summary>
-    private float _gameRenderScale = 1f;
+    private static float _gameRenderScale = 1f;
 
     /// <summary>
     /// User panning offset
     /// </summary>
-    private Vector2 _gameRenderPosition = Vector2.Zero;
+    private static Vector2 _gameRenderPosition = Vector2.Zero;
 
     private MyEditorMain _editor;
 
@@ -37,6 +37,10 @@ public unsafe class GameWindow : ImGuiEditorWindow
     /// Used to set zoom to fill window height/width
     /// </summary>
     private Vector2 _gameViewWindowSize;
+
+    public Vector2 GameRenderSize;
+    public Vector2 GameRenderMin;
+    public Vector2 GameRenderMax;
 
     public bool IsPanZoomDirty => MathF.NotApprox(_gameRenderScale, 1.0f) || _gameRenderPosition != Vector2.Zero;
 
@@ -113,27 +117,27 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var viewportSize = viewport.Size.ToNumerics();
             var viewportHalfSize = viewportSize * 0.5f;
 
-            var gameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - // this gets us to the center
-                                _gameRenderScale * viewportHalfSize +
-                                _gameRenderScale * _gameRenderPosition;
-            var gameRenderMax = gameRenderMin + _gameRenderScale * viewportSize;
+            GameRenderMin = cursorScreenPosition + viewportPosition + viewportHalfSize - // this gets us to the center
+                             _gameRenderScale * viewportHalfSize +
+                             _gameRenderScale * _gameRenderPosition;
+            GameRenderMax = GameRenderMin + _gameRenderScale * viewportSize;
 
             var dl = ImGui.GetWindowDrawList();
             dl->AddImage(
                 (void*)_gameRenderTextureId.Value,
-                gameRenderMin,
-                gameRenderMax,
+                GameRenderMin,
+                GameRenderMax,
                 Vector2.Zero,
                 Vector2.One,
                 Color.White.PackedValue
             );
 
-            ImGui.SetCursorScreenPos(gameRenderMin);
+            ImGui.SetCursorScreenPos(GameRenderMin);
 
-            var gameRenderSize = viewportSize * _gameRenderScale;
+            GameRenderSize = viewportSize * _gameRenderScale;
             ImGui.InvisibleButton(
                 "GameRender",
-                gameRenderSize.EnsureNotZero(),
+                GameRenderSize.EnsureNotZero(),
                 // ImGuiButtonFlags.MouseButtonLeft |
                 // ImGuiButtonFlags.MouseButtonRight |
                 ImGuiButtonFlags.MouseButtonMiddle
@@ -150,7 +154,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             {
                 MyEditorMain.ActiveInput = ActiveInput.GameWindow;
             }
-            
+
             // draw border
             /*var isFocused = ImGui.IsItemFocused();
             var borderColor = (isActive, isFocused, isHovered) switch
@@ -164,7 +168,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             HandleInput(isActive, isHovered);
 
-            SetGameRenderViewportTransform(gameRenderMin, viewportTransform);
+            SetGameRenderViewportTransform(GameRenderMin, viewportTransform);
 
             var windowPos = ImGui.GetWindowPos();
             var bb = new ImRect(windowPos + contentMin, windowPos + contentMax);
@@ -304,16 +308,13 @@ public unsafe class GameWindow : ImGuiEditorWindow
         }
     }
 
-    public static bool BeginOverlay(string name, ref bool showDebug)
+    public static bool BeginOverlay(string name, ref bool showDebug, ImGuiWindowFlags windowFlags = ImGuiWindowFlags.NoDecoration |
+                                                                                                    ImGuiWindowFlags.NoDocking |
+                                                                                                    ImGuiWindowFlags.AlwaysAutoResize |
+                                                                                                    ImGuiWindowFlags.NoSavedSettings |
+                                                                                                    ImGuiWindowFlags.NoNav,
+        bool setViewport = true)
     {
-        var windowFlags = ImGuiWindowFlags.NoDecoration |
-                          ImGuiWindowFlags.NoDocking |
-                          ImGuiWindowFlags.AlwaysAutoResize |
-                          /*ImGuiWindowFlags.NoFocusOnAppearing |
-                           ImGuiWindowFlags.NoBringToFrontOnFocus |*/
-                          ImGuiWindowFlags.NoSavedSettings |
-                          ImGuiWindowFlags.NoNav;
-
         ImGui.SetNextWindowBgAlpha(0.8f);
 
         var contentMin = ImGui.GetWindowContentRegionMin();
@@ -329,10 +330,15 @@ public unsafe class GameWindow : ImGuiEditorWindow
             1.0f,
             0
         );
-        var flags = ImGuiCond.Always;
+        var condFlags = ImGuiCond.Always;
 
-        ImGui.SetNextWindowPos(overlayPos, flags, windowPosPivot);
-        ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);
+        if ((ImGui.GetCurrentContext()->NextWindowData.Flags & ImGuiNextWindowDataFlags.HasPos) == 0)
+        {
+            ImGui.SetNextWindowPos(overlayPos, condFlags, windowPosPivot);
+        }
+
+        if (setViewport)
+            ImGui.SetNextWindowViewport(ImGui.GetWindowViewport()->ID);
         return ImGui.Begin(name, ImGuiExt.RefPtr(ref showDebug), windowFlags);
     }
 

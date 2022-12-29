@@ -13,7 +13,7 @@ public class EntityList
     {
         _entitiesToAdd.Add(entity);
     }
-    
+
     public void AddRange(IEnumerable<Entity> entities)
     {
         _entitiesToAdd.AddRange(entities);
@@ -43,7 +43,7 @@ public class EntityList
     public void Update(World world, float deltaSeconds)
     {
         UpdateLists(world);
-        
+
         for (var i = 0; i < _entities.Count; i++)
         {
             _entities[i].Update(deltaSeconds);
@@ -101,5 +101,16 @@ public class EntityList
         {
             callback(_entities[i]);
         }
+    }
+
+    public Entity? FirstOrDefault(Predicate<Entity> func)
+    {
+        for (var i = 0; i < _entities.Count; i++)
+        {
+            if (func(_entities[i]))
+                return _entities[i];
+        }
+
+        return null;
     }
 }

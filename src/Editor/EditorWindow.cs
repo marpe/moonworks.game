@@ -829,7 +829,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
-    private static Vector2 GetMouseInWorld()
+    public static Vector2 GetMouseInWorld()
     {
         var editor = (MyEditorMain)Shared.Game;
         var mousePos = editor.InputHandler.MousePosition.ToNumerics();
@@ -845,7 +845,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         return result.ToXNA();
     }
 
-    private static Num.Vector2 GetWorldPosInScreen(Vector2 position)
+    public static Num.Vector2 GetWorldPosInScreen(Vector2 position)
     {
         return _renderPos + _renderSize * 0.5f +
                -_gameRenderPosition * _gameRenderScale +

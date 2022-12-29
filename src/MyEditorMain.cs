@@ -37,7 +37,7 @@ public unsafe class MyEditorMain : MyGameMain
     private Buffer _screenshotBuffer;
     private byte[] _screenshotPixels;
 
-    private GameWindow _gameWindow;
+    public GameWindow GameWindow;
     private DebugWindow _debugWindow;
     private ImGuiDemoWindow _demoWindow;
     private Task _screenshotTask;
@@ -72,7 +72,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _demoWindow = new ImGuiDemoWindow();
 
-        _gameWindow = new GameWindow(this);
+        GameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
 
         EditorWindow = new EditorWindow(this) { IsOpen = true };
@@ -243,7 +243,7 @@ public unsafe class MyEditorMain : MyGameMain
         {
             new LoadingScreenDebugWindow(),
             new WorldWindow() { IsOpen = false },
-            _gameWindow,
+            GameWindow,
             _debugWindow,
             _demoWindow,
             new RenderTargetsWindow(this),
@@ -267,7 +267,7 @@ public unsafe class MyEditorMain : MyGameMain
                 base.SetInputViewport();
                 break;
             case ActiveInput.GameWindow:
-                InputHandler.SetViewportTransform(_gameWindow.GameRenderViewportTransform);
+                InputHandler.SetViewportTransform(GameWindow.GameRenderViewportTransform);
                 break;
             case ActiveInput.EditorWindow:
                 InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
