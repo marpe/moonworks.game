@@ -7,6 +7,7 @@ public static class EntityDefinitions
     public static List<EntityDef> All = new();
 
     public static Dictionary<string, EntityDef> ByName = new();
+    public static Dictionary<int, EntityDef> ById = new();
 
     public static Dictionary<string, Type> TypeMap = new();
 
@@ -163,6 +164,7 @@ public static class EntityDefinitions
             
             TypeMap.Add(entityDef.Identifier, type);
             ByName.Add(entityDef.Identifier, entityDef);
+            ById.Add(entityDef.Uid, entityDef);
         }
     }
     

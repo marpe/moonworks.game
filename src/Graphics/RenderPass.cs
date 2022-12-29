@@ -135,7 +135,7 @@ public class WorldRenderPass : RenderPass
     private void DrawLightBaseLayer(World world, Renderer renderer, ref CommandBuffer commandBuffer, RenderTarget renderDestination, Camera camera, double alpha,
         bool usePointFiltering)
     {
-        world.DrawLevel(renderer, world.Level, camera.ZoomedBounds, usePointFiltering, drawBackground: false);
+        LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds, usePointFiltering, drawBackground: false);
         world.DrawEntities(renderer, alpha, usePointFiltering);
 
         var viewProjection = camera.GetViewProjection(renderDestination.Width, renderDestination.Height, alpha);

@@ -32,7 +32,7 @@ public abstract class Enemy : Entity
         Mover.Initialize(this);
         TimeOffset = Position.Current.X;
 
-        _light = world.CreateEntity<Light>();
+        _light = World.CreateEntity<Light>();
         world.Entities.Add(_light);
     }
 

@@ -16,7 +16,8 @@ internal class Program
             WindowHeight = 1080,
             WindowTitle = "ProjectName",
             ScreenMode = ScreenMode.Windowed,
-            PresentMode = PresentMode.FIFORelaxed,
+            // PresentMode = PresentMode.FIFORelaxed,
+            PresentMode = PresentMode.Immediate,
             SystemResizable = true,
         };
         var frameLimiterSettings = new FrameLimiterSettings

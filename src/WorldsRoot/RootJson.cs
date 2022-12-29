@@ -147,7 +147,7 @@ public class LayerDef
     public List<string> ExcludedTags = new();
     public uint GridSize = 16;
     public List<IntGridValue> IntGridValues = new();
-    public uint TileSetDefId;
+    public int TileSetDefId;
 
     public List<AutoRuleGroup> AutoRuleGroups = new();
 
@@ -390,7 +390,7 @@ public class EntityDef
     public bool ResizableX;
     public bool ResizableY;
     public bool ShowName;
-    public uint TileSetDefId;
+    public int TileSetDefId;
     public uint TileId;
     public double PivotX;
     public double PivotY;

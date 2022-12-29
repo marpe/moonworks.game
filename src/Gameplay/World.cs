@@ -46,12 +46,14 @@ public class World
     public string Filepath = "";
     private bool _isTrackingPlayer;
 
-
     public int[] CollisionLayer = Array.Empty<int>();
 
     public Point LevelMin;
     public Point LevelGridSize;
     public Point LevelMax;
+    private Dictionary<(int layerDefUId, int tileValue), IntGridValue> _intGridValueCache = new();
+    private Dictionary<int, LayerDef> _layerDefCache = new();
+    private Dictionary<int, TileSetDef> _tileSetDefCache = new();
 
     public World()
     {
@@ -69,6 +71,8 @@ public class World
     private void LoadTileSetTextures(string filepath)
     {
         var sw = Stopwatch.StartNew();
+        
+        _tileSetTextures.Clear();
         for (var i = 0; i < Root.TileSetDefinitions.Count; i++)
         {
             var tileSet = Root.TileSetDefinitions[i];
@@ -91,6 +95,10 @@ public class World
         LevelGridSize = level.Size / DefaultGridSize;
         LevelMax = LevelMin + LevelGridSize;
 
+        _intGridValueCache.Clear();
+        _layerDefCache.Clear();
+        _tileSetDefCache.Clear();
+        
         CollisionLayer = Array.Empty<int>();
         foreach (var layerDef in Root.LayerDefinitions)
         {
@@ -179,13 +187,13 @@ public class World
         var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)
         {
-            var layerDef = GetLayerDefinition(root, layer.LayerDefId);
+            var layerDef = world.GetLayerDefinition(layer.LayerDefId);
             if (layerDef.LayerType != LayerType.Entities)
                 continue;
 
             foreach (var entityInstance in layer.EntityInstances)
             {
-                var entityDef = GetEntityDefinition(root, entityInstance.EntityDefId);
+                var entityDef = EntityDefinitions.ById[entityInstance.EntityDefId];
                 var entity = CreateEntity(entityDef, entityInstance);
                 entity.Position.SetPrevAndCurrent(level.WorldPos + entityInstance.Position);
                 entities.Add(entity);
@@ -287,7 +295,7 @@ public class World
         Entities.ForEach((entity) => { entity.Position.SetLastUpdatePosition(); });
     }
 
-    public void Update(float deltaSeconds, InputHandler input, Camera camera)
+    public void Update(float deltaSeconds, Camera camera)
     {
         // first update stuff
         if (WorldUpdateCount == 0)
@@ -318,149 +326,13 @@ public class World
 
     public void Draw(Renderer renderer, Camera camera, double alpha, bool usePointFiltering)
     {
-        DrawLevel(renderer, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: true);
+        LevelRenderer.DrawLevel(renderer, this, Root, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: true);
         DrawEntities(renderer, alpha, usePointFiltering);
     }
 
     public void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
         Entities.Draw(renderer, alpha, usePointFiltering);
-    }
-
-    public void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds, bool usePointFiltering, bool drawBackground)
-    {
-        if (drawBackground)
-            renderer.DrawRect(level.Bounds, level.BackgroundColor);
-
-        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
-        {
-            var layer = level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
-            if (!drawBackground && layerDef.Identifier == "Background")
-                continue;
-            DrawLayer(renderer, Root, level, layer, layerDef, (Rectangle)cameraBounds, usePointFiltering);
-        }
-    }
-
-    private void DrawLayer(Renderer renderer, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds,
-        bool usePointFiltering)
-    {
-        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
-        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
-
-        var tileSetDef = GetTileSetDef(Root, layerDef.TileSetDefId);
-        var texturePath = _tileSetTextures[tileSetDef.Uid];
-        var texture = Shared.Content.Load<TextureAsset>(texturePath).TextureSlice;
-
-        for (var i = 0; i < layer.AutoLayerTiles.Count; i++)
-        {
-            var tile = layer.AutoLayerTiles[i];
-            if (tile.Cell.X < boundsMin.X || tile.Cell.X > boundsMax.X ||
-                tile.Cell.Y < boundsMin.Y || tile.Cell.Y > boundsMax.Y)
-                continue;
-
-            var sprite = GetTileSprite(texture, tile.TileId, tileSetDef);
-            var transform = (
-                Matrix3x2.CreateScale(1f, 1f) *
-                Matrix3x2.CreateTranslation(
-                    level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
-                    level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
-                )
-            ).ToMatrix4x4();
-            renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None, usePointFiltering);
-        }
-    }
-
-    private static void DrawLayerDebug(Renderer renderer, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
-    {
-        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
-        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
-
-        var cols = level.Width / layerDef.GridSize;
-        var rows = level.Height / layerDef.GridSize;
-
-        if (layerDef.LayerType == LayerType.IntGrid && Debug && DebugLevel)
-        {
-            for (var y = boundsMin.Y; y <= boundsMax.Y; y++)
-            {
-                if (y < 0 || y >= rows)
-                    continue;
-
-                for (var x = boundsMin.X; x <= boundsMax.X; x++)
-                {
-                    if (x < 0 || x >= cols)
-                        continue;
-
-                    var cellId = y * cols + x;
-                    if (cellId < 0 || cellId > layer.IntGrid.Length - 1)
-                        continue;
-
-                    var value = layer.IntGrid[cellId];
-                    if (value == 0)
-                        continue;
-
-                    var enumValue = (LayerDefs.Tiles)value;
-                    var gridSize = layerDef.GridSize;
-                    var min = level.WorldPos + new Vector2(x, y) * gridSize;
-                    var max = min + new Vector2(gridSize, gridSize);
-
-                    var color = LayerDefs.TilesColors[enumValue];
-                    if (GetIntDef(layerDef, value, out var intDef))
-                    {
-                        color = intDef.Color;
-                    }
-
-                    renderer.DrawRect(min, max, color * 0.5f, 0);
-                }
-            }
-        }
-    }
-
-    public static Sprite GetTileSprite(TextureSlice texture, uint tileId, TileSetDef tileSetDef)
-    {
-        Sprite sprite;
-        var cWid = (int)MathF.Ceil((texture.Rectangle.W - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
-        var cHei = (int)MathF.Ceil((texture.Rectangle.H - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
-
-        var cellX = tileId % cWid;
-        var cellY = (int)(tileId / cWid);
-        var srcRect = new Rectangle(
-            (int)(tileSetDef.Padding + cellX * (tileSetDef.TileGridSize + tileSetDef.Spacing)),
-            (int)(tileSetDef.Padding + cellY * (tileSetDef.TileGridSize + tileSetDef.Spacing)),
-            (int)tileSetDef.TileGridSize,
-            (int)tileSetDef.TileGridSize
-        );
-        
-        sprite = new Sprite(texture, srcRect);
-        return sprite;
-    }
-
-    private static bool GetIntDef(LayerDef layerDef, int value, [NotNullWhen(true)] out IntGridValue? intValue)
-    {
-        for (var i = 0; i < layerDef.IntGridValues.Count; i++)
-        {
-            if (layerDef.IntGridValues[i].Value == value)
-            {
-                intValue = layerDef.IntGridValues[i];
-                return true;
-            }
-        }
-
-        intValue = null;
-        return false;
-    }
-
-    private static TileSetDef GetTileSetDef(RootJson root, long tileSetUid)
-    {
-        for (var i = 0; i < root.TileSetDefinitions.Count; i++)
-        {
-            if (root.TileSetDefinitions[i].Uid == tileSetUid)
-            {
-                return root.TileSetDefinitions[i];
-            }
-        }
-
-        throw new Exception($"Could not find a TileSetDefinition with id \"{tileSetUid}\"");
     }
 
     public void Unload()
@@ -475,9 +347,9 @@ public class World
         _isTrackingPlayer = false;
     }
 
-    public T CreateEntity<T>() where T : Entity
+    public static T CreateEntity<T>() where T : Entity
     {
-        var def = GetEntityDefinition(Root, typeof(T).Name);
+        var def = EntityDefinitions.ByName[typeof(T).Name];
         var instance = EntityDef.CreateEntityInstance(def);
         var entity = CreateEntity(def, instance);
         return (T)entity;
@@ -506,46 +378,65 @@ public class World
         Entities.Add(muzzleFlash);
     }
 
-    private static EntityDef GetEntityDefinition(RootJson root, int entityDefId)
+    public LayerDef GetLayerDefinition(int layerDefUid)
     {
-        for (var i = 0; i < EntityDefinitions.Count; i++)
+        if (_layerDefCache.TryGetValue(layerDefUid, out var layerDef))
+            return layerDef;
+        
+        for (var j = 0; j < Root.LayerDefinitions.Count; j++)
         {
-            if (EntityDefinitions.ByIndex(i).Uid == entityDefId)
-                return EntityDefinitions.ByIndex(i);
-        }
-
-        throw new InvalidOperationException();
-    }
-
-    private static EntityDef GetEntityDefinition(RootJson root, string identifier)
-    {
-        for (var i = 0; i < EntityDefinitions.Count; i++)
-        {
-            if (EntityDefinitions.ByIndex(i).Identifier == identifier)
-                return EntityDefinitions.ByIndex(i);
-        }
-
-        throw new InvalidOperationException();
-    }
-
-    private static LayerDef GetLayerDefinition(RootJson root, long layerDefUid)
-    {
-        for (var j = 0; j < root.LayerDefinitions.Count; j++)
-        {
-            if (root.LayerDefinitions[j].Uid == layerDefUid)
+            layerDef = Root.LayerDefinitions[j];
+            if (layerDef.Uid == layerDefUid)
             {
-                return root.LayerDefinitions[j];
+                _layerDefCache.Add(layerDefUid, layerDef);
+                return layerDef;
             }
         }
 
         throw new InvalidOperationException();
+    }
+    
+    public TileSetDef GetTileSetDef(int tileSetUid)
+    {
+        if (_tileSetDefCache.TryGetValue(tileSetUid, out var tileSetDef))
+            return tileSetDef;
+        
+        for (var i = 0; i < Root.TileSetDefinitions.Count; i++)
+        {
+            tileSetDef = Root.TileSetDefinitions[i];
+            if (tileSetDef.Uid == tileSetUid)
+            {
+                _tileSetDefCache.Add(tileSetUid, tileSetDef);
+                return tileSetDef;
+            }
+        }
+
+        throw new Exception($"Could not find a TileSetDefinition with id \"{tileSetUid}\"");
+    }
+
+    public bool GetIntDef(LayerDef layerDef, int tileValue, [NotNullWhen(true)] out IntGridValue? intGridValue)
+    {
+        if (_intGridValueCache.TryGetValue((layerDef.Uid, tileValue), out intGridValue))
+            return true;
+        
+        for (var i = 0; i < layerDef.IntGridValues.Count; i++)
+        {
+            if (layerDef.IntGridValues[i].Value != tileValue)
+                continue;
+
+            intGridValue = layerDef.IntGridValues[i];
+            _intGridValueCache.Add((layerDef.Uid, tileValue), intGridValue);
+            return true;
+        }
+
+        intGridValue = null;
+        return false;
     }
 
     public void FreezeFrame(float duration, bool force = false)
     {
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
-
 
     private static Level FindLevel(string identifier, RootJson root)
     {
@@ -573,28 +464,21 @@ public class World
             return;
 
         if (DebugLevel)
-            DrawLevelDebug(renderer, Level, camera.ZoomedBounds);
+           LevelRenderer.DrawLevelDebug(renderer, this, Root, Level, camera.ZoomedBounds);
         if (DebugEntities)
             DrawEntityDebug(renderer, alpha);
         CameraDebug.DrawCameraBounds(renderer, camera);
         MouseDebug.DrawMousePosition(renderer);
         _debugDraw.Render(renderer);
     }
-
-    private void DrawLevelDebug(Renderer renderer, Level level, Bounds cameraBounds)
-    {
-        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
-        {
-            var layer = level.LayerInstances[layerIndex];
-            var layerDef = GetLayerDefinition(Root, layer.LayerDefId);
-            DrawLayerDebug(renderer, level, layer, layerDef, (Rectangle)cameraBounds);
-        }
-
-        renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
-    }
-
+    
     private void DrawEntityDebug(Renderer renderer, double alpha)
     {
         Entities.ForEach((entity) => { entity.DrawDebug(renderer, false, alpha); });
+    }
+
+    public string GetTileSetTexture(int uid)
+    {
+        return _tileSetTextures[uid];
     }
 }

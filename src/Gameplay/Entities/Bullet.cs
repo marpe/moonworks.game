@@ -7,12 +7,18 @@ public class Bullet : Entity
     public float Timer;
     public float Lifetime = 3f;
     public Mover Mover = new();
+    private Action<Entity> _collisionCheck;
 
     public Velocity Velocity = new()
     {
         Delta = Vector2.Zero,
         Friction = new Vector2(1f, 1f),
     };
+
+    public Bullet()
+    {
+        _collisionCheck = CollisionCheck;
+    }
 
     public override void Initialize(World world)
     {
@@ -23,6 +29,26 @@ public class Bullet : Entity
             Draw.Flip = SpriteFlip.FlipHorizontally;
     }
 
+    private void CollisionCheck(Entity entity)
+    {
+        if (entity is not Enemy enemy) return;
+        if (enemy.IsDead || enemy.IsDestroyed) return;
+        var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
+        var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
+        var circle = new Circle(radius);
+
+        var circleTransform = new Transform2D(Position + Size.ToVec2() * 0.5f);
+        var rectTransform = new Transform2D(enemy.Position);
+        // if (NarrowPhase.TestCollision(circle, circleTransform, other, rectTransform))
+        if (NarrowPhase.TestCircleRectangleOverlap(circle, circleTransform, other, rectTransform))
+        {
+            Destroy();
+            enemy.IsDead = true;
+            enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
+            enemy.Draw.IsAnimating = false;
+        }
+    }
+
     public override void Update(float deltaSeconds)
     {
         if (IsDestroyed)
@@ -30,24 +56,8 @@ public class Bullet : Entity
 
         Timer += deltaSeconds;
         Mover.PerformMove(Velocity, deltaSeconds);
-        var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
-        var circle = new Circle(radius);
-        
-        World.Entities.ForEach((entity) =>
-        {
-            if (entity is not Enemy enemy)
-                return;
-            if (enemy.IsDead || enemy.IsDestroyed)
-                return;
-            var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
-            if (NarrowPhase.TestCollision(circle, new Transform2D(Position + Size.ToVec2() * 0.5f), other, new Transform2D(enemy.Position)))
-            {
-                Destroy();
-                enemy.IsDead = true;
-                enemy.Draw.Squash = new Vector2(2.0f, 2.0f);
-                enemy.Draw.IsAnimating = false;
-            }   
-        });
+
+        World.Entities.ForEach(_collisionCheck);
 
         /*var levelSize = GetLevelSize(World.LdtkRaw, 0);
         var xs = new Point(Math.Max(0, Cell.X - 1),  Math.Min(levelSize.X - 1, Cell.X + 1));

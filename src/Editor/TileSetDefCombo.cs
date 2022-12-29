@@ -5,9 +5,9 @@ namespace MyGame.Editor;
 
 using Vector2 = Num.Vector2;
 
-public static unsafe class TileSetDefCombo
+public static class TileSetDefCombo
 {
-    public static bool DrawTileSetDefCombo(string id, ref uint tileSetDefId, List<TileSetDef> tileSetDefinitions)
+    public static bool DrawTileSetDefCombo(string id, ref int tileSetDefId, List<TileSetDef> tileSetDefinitions)
     {
         if (tileSetDefinitions.Count == 0)
         {
@@ -22,7 +22,7 @@ public static unsafe class TileSetDefCombo
             ImGui.TextColored(ImGuiExt.Colors[2].ToNumerics(), $"Could not find a TileSet with Id \"{tileSetDefId}\"");
             if (ImGuiExt.ColoredButton("Ok", ImGuiExt.Colors[2], new Vector2(-1, 0)))
             {
-                tileSetDefId = (uint)tileSetDefinitions.First().Uid;
+                tileSetDefId = tileSetDefinitions.First().Uid;
             }
 
             return false;
@@ -45,7 +45,7 @@ public static unsafe class TileSetDefCombo
                 var isSelected = i == currentIndex;
                 if (ImGui.Selectable(tileSetDefinitions[i].Identifier, isSelected, ImGuiSelectableFlags.None, default))
                 {
-                    tileSetDefId = (uint)tileSetDefinitions[i].Uid;
+                    tileSetDefId = tileSetDefinitions[i].Uid;
                     result = true;
                 }
 

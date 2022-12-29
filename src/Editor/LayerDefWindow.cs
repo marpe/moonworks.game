@@ -21,7 +21,7 @@ public unsafe class LayerDefWindow : SplitWindow
                                                                   ImGuiTableFlags.Hideable | ImGuiTableFlags.PreciseWidths |
                                                                   ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg;
 
-    private uint _remapFromTileSetDefId;
+    private int _remapFromTileSetDefId;
     private int _remapFromTileSetDefIdx;
     private int[] _remappingTileIds = Array.Empty<int>();
     private int _remapIndex;
@@ -206,7 +206,7 @@ public unsafe class LayerDefWindow : SplitWindow
             var dl = ImGui.GetForegroundDrawList();
             if (SplitWindow.GetTileSetTexture(oldTileSetDef.Path, out var texture))
             {
-                var sprite = World.GetTileSprite(texture, (uint)oldTileId, oldTileSetDef);
+                var sprite = LevelRenderer.GetTileSprite(texture, (uint)oldTileId, oldTileSetDef);
                 ImGuiExt.RectWithOutline(
                     dl,
                     iconPos,
@@ -236,7 +236,7 @@ public unsafe class LayerDefWindow : SplitWindow
                 }
                 else
                 {
-                    layerDef.TileSetDefId = (uint)newTileSetDef.Uid;
+                    layerDef.TileSetDefId = newTileSetDef.Uid;
                 }
             }
         }

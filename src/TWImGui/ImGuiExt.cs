@@ -1424,7 +1424,7 @@ public static unsafe class ImGuiExt
         var uvMax = Num.Vector2.One;
         if (SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
         {
-            var tileSprite = World.GetTileSprite(texture, tileId, tileSetDef);
+            var tileSprite = LevelRenderer.GetTileSprite(texture, tileId, tileSetDef);
             uvMin = tileSprite.UV.TopLeft.ToNumerics();
             uvMax = tileSprite.UV.BottomRight.ToNumerics();
         }

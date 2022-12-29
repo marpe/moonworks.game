@@ -244,7 +244,7 @@ public class MyGameMain : Game
                        (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
         if (doUpdate)
         {
-            World.Update(deltaSeconds, InputHandler, Camera);
+            World.Update(deltaSeconds, Camera);
             Camera.Update(deltaSeconds, InputHandler);
         }
         else

@@ -1127,7 +1127,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         if (SplitWindow.GetTileSetTexture(tileSet.Path, out var texture))
         {
-            var sprite = World.GetTileSprite(texture, tileId, tileSet);
+            var sprite = LevelRenderer.GetTileSprite(texture, tileId, tileSet);
             
             dl->AddImage(
                 (void*)sprite.TextureSlice.Texture.Handle,
@@ -1539,7 +1539,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         foreach (var tile in layer.AutoLayerTiles)
         {
-            var sprite = World.GetTileSprite(texture, tile.TileId, tileSetDef);
+            var sprite = LevelRenderer.GetTileSprite(texture, tile.TileId, tileSetDef);
             var uvMin = sprite.UV.TopLeft.ToNumerics();
             var uvMax = sprite.UV.BottomRight.ToNumerics();
             var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
@@ -1601,7 +1601,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             if (SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
             {
-                sprite = World.GetTileSprite(texture, entityDef.TileId, tileSetDef);
+                sprite = LevelRenderer.GetTileSprite(texture, entityDef.TileId, tileSetDef);
                 uvMin = sprite.UV.TopLeft.ToNumerics();
                 uvMax = sprite.UV.BottomRight.ToNumerics();
             }
@@ -2075,7 +2075,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     if (!SplitWindow.GetTileSetTexture(tileSetDef.Path, out var texture))
                         return;
 
-                    var sprite = World.GetTileSprite(texture, entityDef.TileId, tileSetDef);
+                    var sprite = LevelRenderer.GetTileSprite(texture, entityDef.TileId, tileSetDef);
                     var uvMin = sprite.UV.TopLeft.ToNumerics();
                     var uvMax = sprite.UV.BottomRight.ToNumerics();
                     var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
@@ -2300,7 +2300,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         return -1;
     }
 
-    private static bool GetTileSetDef(uint uid, [NotNullWhen(true)] out TileSetDef? tileSetDef)
+    private static bool GetTileSetDef(int uid, [NotNullWhen(true)] out TileSetDef? tileSetDef)
     {
         var editor = (MyEditorMain)Shared.Game;
         var root = editor.RootJson;
