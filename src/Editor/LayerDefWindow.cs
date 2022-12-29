@@ -15,10 +15,18 @@ public unsafe class LayerDefWindow : SplitWindow
     private string _tempExcludedTag = "";
     private string _tempRequiredTag = "";
     public const string WindowTitle = "Layers";
+    const string RemapTilesPopup = "RemapTilesPopup";
 
     private static ImGuiTableFlags _horizontalBordersTableFlags = ImGuiTableFlags.BordersH | ImGuiTableFlags.BordersOuter |
                                                                   ImGuiTableFlags.Hideable | ImGuiTableFlags.PreciseWidths |
                                                                   ImGuiTableFlags.SizingFixedFit | ImGuiTableFlags.RowBg;
+
+    private uint _remapFromTileSetDefId;
+    private int _remapFromTileSetDefIdx;
+    private int[] _remappingTileIds = Array.Empty<int>();
+    private int _remapIndex;
+    private List<(int oldId, int newId)> _remapMap = new();
+    private bool _isRemapping;
 
 
     public LayerDefWindow(MyEditorMain editor) : base(WindowTitle, editor)
@@ -154,6 +162,16 @@ public unsafe class LayerDefWindow : SplitWindow
         else if (layerDef.LayerType == LayerType.IntGrid)
         {
             TileSetDefCombo.DrawTileSetDefCombo("TileSetDefId", ref layerDef.TileSetDefId, RootJson.TileSetDefinitions);
+
+            if (TileSetDefCombo.DrawTileSetDefCombo("Remap", ref _remapFromTileSetDefId, RootJson.TileSetDefinitions))
+            {
+                _remapMap.Clear();
+                _remappingTileIds = GetUsedTileIds(layerDef);
+                _remapFromTileSetDefIdx = RootJson.TileSetDefinitions.FindIndex(x => x.Uid == _remapFromTileSetDefId);
+                _isRemapping = true;
+                _remapIndex = 0;
+                ImGui.OpenPopup(RemapTilesPopup);
+            }
         }
 
         if (layerDef.LayerType == LayerType.IntGrid)
@@ -163,11 +181,113 @@ public unsafe class LayerDefWindow : SplitWindow
             DrawIntGridValues(_horizontalBordersTableFlags, layerDef, rowHeight);
 
             var tileSetDef = RootJson.TileSetDefinitions.FirstOrDefault(x => x.Uid == layerDef.TileSetDefId);
-            if (tileSetDef != null && tileSetDef.Path != "") // TODO (marpe): Check that the texture is loaded etc
+
+            if (tileSetDef != null)
             {
+                DrawRemapTileId(tileSetDef, layerDef);
+            }
+
+            if (tileSetDef != null)
                 DrawAutoRuleGroups(layerDef, tileSetDef);
+        }
+    }
+
+    private void DrawRemapTileId(TileSetDef oldTileSetDef, LayerDef layerDef)
+    {
+        if (!_isRemapping)
+            return;
+        if (_remapIndex < _remappingTileIds.Length)
+        {
+            var oldTileId = _remappingTileIds[_remapIndex];
+
+            var iconPos = ImGui.GetWindowPos() + new Vector2(ImGui.GetMainViewport()->WorkSize.X / 2, 50);
+            var iconSize = new Vector2(oldTileSetDef.TileGridSize, oldTileSetDef.TileGridSize) * 4;
+
+            var dl = ImGui.GetForegroundDrawList();
+            if (SplitWindow.GetTileSetTexture(oldTileSetDef.Path, out var texture))
+            {
+                var sprite = World.GetTileSprite(texture, (uint)oldTileId, oldTileSetDef);
+                ImGuiExt.RectWithOutline(
+                    dl,
+                    iconPos,
+                    iconPos + iconSize,
+                    ColorExt.FromPacked(ImGui.GetColorU32(ImGuiCol.FrameBg)),
+                    Color.Black,
+                    0
+                );
+                dl->AddImage(
+                    (void*)sprite.TextureSlice.Texture.Handle,
+                    iconPos,
+                    iconPos + iconSize,
+                    sprite.UV.TopLeft.ToNumerics(),
+                    sprite.UV.BottomRight.ToNumerics()
+                );
+            }
+
+            var newTileSetDef = RootJson.TileSetDefinitions[_remapFromTileSetDefIdx];
+            if (TileSetIdPopup.DrawTileSetIdPopup(RemapTilesPopup, newTileSetDef, out var tileId))
+            {
+                _remapMap.Add((_remappingTileIds[_remapIndex], tileId));
+                _remapIndex++;
+
+                if (_remapIndex < _remappingTileIds.Length)
+                {
+                    ImGui.OpenPopup(RemapTilesPopup);
+                }
+                else
+                {
+                    layerDef.TileSetDefId = (uint)newTileSetDef.Uid;
+                }
             }
         }
+        else
+        {
+            for (var i = 0; i < _remapMap.Count; i++)
+            {
+                var (oldId, newId) = _remapMap[i];
+                RemapTileId(oldId, newId);
+            }
+
+            _isRemapping = false;
+        }
+    }
+
+    private void RemapTileId(int oldId, int newId)
+    {
+        var layerDef = RootJson.LayerDefinitions[_selectedLayerDefIndex];
+        for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
+        {
+            var group = layerDef.AutoRuleGroups[i];
+            for (var j = 0; j < group.Rules.Count; j++)
+            {
+                var rule = group.Rules[j];
+
+                for (var k = 0; k < rule.TileIds.Count; k++)
+                {
+                    if (rule.TileIds[k] == oldId)
+                        rule.TileIds[k] = newId;
+                }
+            }
+        }
+    }
+
+    private static int[] GetUsedTileIds(LayerDef layerDef)
+    {
+        var tmpIdList = new HashSet<int>();
+        for (var i = 0; i < layerDef.AutoRuleGroups.Count; i++)
+        {
+            var group = layerDef.AutoRuleGroups[i];
+            for (var j = 0; j < group.Rules.Count; j++)
+            {
+                var rule = group.Rules[j];
+                for (var k = 0; k < rule.TileIds.Count; k++)
+                {
+                    tmpIdList.Add(rule.TileIds[k]);
+                }
+            }
+        }
+
+        return tmpIdList.ToArray();
     }
 
 

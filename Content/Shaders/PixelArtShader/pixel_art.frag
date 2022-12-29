@@ -74,13 +74,13 @@ vec4 test5()
     vec2 pix = floor(tex) + min(fract(tex) / fwidth(tex), 1) - 0.5; // aa point sampling
 
     // TODO (marpe): this hack prevents bleed but should probably be fixed by adding padding to the tilesets
-    int cellSize = 16;
+    /**int cellSize = 16;
     vec2 cellBounds = floor(tex / cellSize) * cellSize;
     float i = 0.5f;
     pix = vec2(
         clamp(pix.x, cellBounds.x + i, cellBounds.x + cellSize - i),
         clamp(pix.y, cellBounds.y + i, cellBounds.y + cellSize - i)
-    );
+    );*/
             
     vec2 uv = pix / txSize;
     return texture(uniformTexture, uv) * color;

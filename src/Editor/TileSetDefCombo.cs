@@ -7,12 +7,12 @@ using Vector2 = Num.Vector2;
 
 public static unsafe class TileSetDefCombo
 {
-    public static void DrawTileSetDefCombo(string id, ref uint tileSetDefId, List<TileSetDef> tileSetDefinitions)
+    public static bool DrawTileSetDefCombo(string id, ref uint tileSetDefId, List<TileSetDef> tileSetDefinitions)
     {
         if (tileSetDefinitions.Count == 0)
         {
             ImGui.TextDisabled("No tilesets have been added");
-            return;
+            return false;
         }
 
         var tmpId = tileSetDefId;
@@ -25,7 +25,7 @@ public static unsafe class TileSetDefCombo
                 tileSetDefId = (uint)tileSetDefinitions.First().Uid;
             }
 
-            return;
+            return false;
         }
 
         var currentIndex = 0;
@@ -37,6 +37,7 @@ public static unsafe class TileSetDefCombo
 
         var label = tileSetDefinitions[currentIndex].Identifier;
         ImGui.SetNextItemWidth(-1);
+        var result = false;
         if (ImGui.BeginCombo(ImGuiExt.LabelPrefix(id), label))
         {
             for (var i = 0; i < tileSetDefinitions.Count; i++)
@@ -45,6 +46,7 @@ public static unsafe class TileSetDefCombo
                 if (ImGui.Selectable(tileSetDefinitions[i].Identifier, isSelected, ImGuiSelectableFlags.None, default))
                 {
                     tileSetDefId = (uint)tileSetDefinitions[i].Uid;
+                    result = true;
                 }
 
                 if (isSelected)
@@ -53,5 +55,7 @@ public static unsafe class TileSetDefCombo
 
             ImGui.EndCombo();
         }
+
+        return result;
     }
 }

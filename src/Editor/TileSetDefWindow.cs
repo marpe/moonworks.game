@@ -91,49 +91,49 @@ public unsafe class TileSetDefWindow : SplitWindow
 
     protected override void DrawRight()
     {
-        if (_selectedTileSetDefinitionIndex <= RootJson.TileSetDefinitions.Count - 1)
+        if (_selectedTileSetDefinitionIndex > RootJson.TileSetDefinitions.Count - 1)
+            return;
+ 
+        var tileSetDef = RootJson.TileSetDefinitions[_selectedTileSetDefinitionIndex];
+
+        SimpleTypeInspector.InspectInputInt("Uid", ref tileSetDef.Uid);
+        SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);
+        SimpleTypeInspector.InspectString("Path", ref tileSetDef.Path);
+        var resolvedPath = GetPathRelativeToCwd(tileSetDef.Path);
+        ImGui.TextDisabled(resolvedPath);
+        SimpleTypeInspector.InspectInputUint("TileGridSize", ref tileSetDef.TileGridSize);
+        SimpleTypeInspector.InspectInputInt("Padding", ref tileSetDef.Padding);
+        SimpleTypeInspector.InspectInputInt("Spacing", ref tileSetDef.Spacing);
+
+        if (GetTileSetTexture(tileSetDef.Path, out var texture))
         {
-            var tileSetDef = RootJson.TileSetDefinitions[_selectedTileSetDefinitionIndex];
-
-            SimpleTypeInspector.InspectInputInt("Uid", ref tileSetDef.Uid);
-            SimpleTypeInspector.InspectString("Identifier", ref tileSetDef.Identifier);
-            SimpleTypeInspector.InspectString("Path", ref tileSetDef.Path);
-            var resolvedPath = GetPathRelativeToCwd(tileSetDef.Path);
-            ImGui.TextDisabled(resolvedPath);
-            SimpleTypeInspector.InspectInputUint("TileGridSize", ref tileSetDef.TileGridSize);
-            SimpleTypeInspector.InspectInputInt("Padding", ref tileSetDef.Padding);
-            SimpleTypeInspector.InspectInputInt("Spacing", ref tileSetDef.Spacing);
-
-            if (GetTileSetTexture(tileSetDef.Path, out var texture))
+            var avail = ImGui.GetContentRegionAvail();
+            var height = MathF.Max(1.0f, texture.Height) / MathF.Max(1.0f, texture.Width) * avail.X;
+            var textureSize = new Vector2(avail.X, height);
+            var min = ImGui.GetCursorScreenPos();
+            var max = min + textureSize;
+            ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(min, max), Color.White.MultiplyAlpha(0.33f).PackedValue);
+            ImGui.Image(
+                (void*)texture.Handle,
+                textureSize,
+                Vector2.Zero, Vector2.One,
+                Color.White.ToNumerics(),
+                Color.Black.ToNumerics()
+            );
+            ImGui.SetCursorScreenPos(ImGui.GetItemRectMin());
+            var popupId = "TileIdPopup";
+            if (ImGui.InvisibleButton("OpenTileSetPopup", ImGui.GetItemRectSize()))
             {
-                var avail = ImGui.GetContentRegionAvail();
-                var height = MathF.Max(1.0f, texture.Height) / MathF.Max(1.0f, texture.Width) * avail.X;
-                var textureSize = new Vector2(avail.X, height);
-                var min = ImGui.GetCursorScreenPos();
-                var max = min + textureSize;
-                ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(min, max), Color.White.MultiplyAlpha(0.33f).PackedValue);
-                ImGui.Image(
-                    (void*)texture.Handle,
-                    textureSize,
-                    Vector2.Zero, Vector2.One,
-                    Color.White.ToNumerics(),
-                    Color.Black.ToNumerics()
-                );
-                ImGui.SetCursorScreenPos(ImGui.GetItemRectMin());
-                var popupId = "TileIdPopup";
-                if (ImGui.InvisibleButton("OpenTileSetPopup", ImGui.GetItemRectSize()))
-                {
-                    ImGui.OpenPopup(popupId);
-                }
+                ImGui.OpenPopup(popupId);
+            }
 
-                if (TileSetIdPopup.DrawTileSetIdPopup(popupId, tileSetDef, out var tileId))
-                {
-                }
-            }
-            else
+            if (TileSetIdPopup.DrawTileSetIdPopup(popupId, tileSetDef, out var tileId))
             {
-                ImGui.TextColored(Color.Red.ToNumerics(), $"File not found: {resolvedPath}");
             }
+        }
+        else
+        {
+            ImGui.TextColored(Color.Red.ToNumerics(), $"File not found: {resolvedPath}");
         }
     }
 }

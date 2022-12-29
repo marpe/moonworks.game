@@ -1127,19 +1127,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         if (SplitWindow.GetTileSetTexture(tileSet.Path, out var texture))
         {
-            var gridSize = tileSet.TileGridSize;
-            var textureSizeInGrid = new Point((int)(texture.Width / gridSize), (int)(texture.Height / gridSize));
-            var cellX = textureSizeInGrid.X > 0 ? tileId % textureSizeInGrid.X : 0;
-            var cellY = textureSizeInGrid.X > 0 ? (int)(tileId / textureSizeInGrid.X) : 0;
-            var uvMin = new Num.Vector2(1.0f / texture.Width * cellX * gridSize, 1.0f / texture.Height * cellY * gridSize);
-            var uvMax = uvMin + new Num.Vector2(gridSize / (float)texture.Width, gridSize / (float)texture.Height);
-
+            var sprite = World.GetTileSprite(texture, tileId, tileSet);
+            
             dl->AddImage(
-                (void*)texture.Handle,
+                (void*)sprite.TextureSlice.Texture.Handle,
                 iconPos,
                 iconPos + iconSize,
-                uvMin,
-                uvMax
+                sprite.UV.TopLeft.ToNumerics(),
+                sprite.UV.BottomRight.ToNumerics()
             );
         }
     }
