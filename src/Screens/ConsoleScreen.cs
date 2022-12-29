@@ -412,16 +412,6 @@ public class ConsoleScreen
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
         renderer.DrawFTText(BMFontType.ConsolasMonoSmall, text, position, color);
-        return;
-        
-        if (ConsoleSettings.UseBMFont)
-        {
-            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, text, position, Vector2.Zero, Vector2.One, 0, depth, color);
-        }
-        else
-        {
-            // renderer.DrawText(FontType.ConsolasMonoMedium, text, position, depth, color);
-        }
     }
 
     public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';

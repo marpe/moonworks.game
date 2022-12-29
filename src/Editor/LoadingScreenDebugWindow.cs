@@ -12,7 +12,6 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
 
     private float _deltaSeconds = 1f / 30f;
     private float _sleepDurationInSeconds = 3f;
-    private EnumInspector? _stateInspector;
 
     public LoadingScreenDebugWindow() : base(WindowTitle)
     {

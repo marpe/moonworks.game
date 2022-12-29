@@ -1,6 +1,7 @@
 using System.Threading;
 using Mochi.DearImGui;
 using Mochi.DearImGui.Internal;
+using MyGame.Debug;
 using MyGame.Editor;
 using MyGame.WorldsRoot;
 using NumVector2 = System.Numerics.Vector2;
@@ -327,12 +328,8 @@ public unsafe class MyEditorMain : MyGameMain
             ImGuiInternal.DockBuilderDockWindow(DebugWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(LoadingScreenDebugWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(EditorWindow.WindowTitle, dockLeftId);
-            // ImGuiInternal.DockBuilderDockWindow(EntityDefWindow.WindowTitle, dockLeftId);
-            // ImGuiInternal.DockBuilderDockWindow(LevelsWindow.WindowTitle, dockLeftId);
-            // ImGuiInternal.DockBuilderDockWindow(LayerDefWindow.WindowTitle, dockLeftId);
-            // ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockLeftId);
-            // ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockLeftId);
             ImGuiInternal.DockBuilderDockWindow(WorldWindow.WindowTitle, dockRightId);
+            ImGuiInternal.DockBuilderDockWindow(InputDebugWindow.WindowTitle, dockRightId);
 
             ImGuiInternal.DockBuilderFinish(ViewportDockSpaceId);
         }
@@ -408,6 +405,8 @@ public unsafe class MyEditorMain : MyGameMain
 
         SetInputViewport();
 
+        ConsoleToast.Update((float)dt.TotalSeconds);
+
         UpdateScreens();
 
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow;
@@ -419,19 +418,24 @@ public unsafe class MyEditorMain : MyGameMain
         _gameUpdateStopwatch.Stop();
         _gameUpdateDurationMs = _gameUpdateStopwatch.GetElapsedMilliseconds();
 
+        ShowOrHideChildWindows(wasHidden);
+    }
+
+    private static void ShowOrHideChildWindows(bool wasHidden)
+    {
         // show/hide child windows when showing/hiding imgui
-        if (wasHidden != IsHidden)
+        if (wasHidden == IsHidden)
+            return;
+
+        var platformIO = ImGui.GetPlatformIO();
+        for (var i = 1; i < platformIO->Viewports.Size; i++)
         {
-            var platformIO = ImGui.GetPlatformIO();
-            for (var i = 1; i < platformIO->Viewports.Size; i++)
-            {
-                ImGuiViewport* vp = platformIO->Viewports[i];
-                var window = vp->Window();
-                if (IsHidden)
-                    SDL.SDL_HideWindow(window.Handle);
-                else
-                    SDL.SDL_ShowWindow(window.Handle);
-            }
+            ImGuiViewport* vp = platformIO->Viewports[i];
+            var window = vp->Window();
+            if (IsHidden)
+                SDL.SDL_HideWindow(window.Handle);
+            else
+                SDL.SDL_ShowWindow(window.Handle);
         }
     }
 

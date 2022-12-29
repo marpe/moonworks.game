@@ -108,7 +108,6 @@ public class LevelRenderer
     
     public static Sprite GetTileSprite(TextureSlice texture, uint tileId, TileSetDef tileSetDef)
     {
-        Sprite sprite;
         var cWid = (int)MathF.Ceil((texture.Rectangle.W - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
         var cHei = (int)MathF.Ceil((texture.Rectangle.H - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
 
@@ -121,7 +120,6 @@ public class LevelRenderer
             (int)tileSetDef.TileGridSize
         );
         
-        sprite = new Sprite(texture, srcRect);
-        return sprite;
+        return new Sprite(texture, srcRect);
     }
 }

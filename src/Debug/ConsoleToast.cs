@@ -9,9 +9,9 @@ public static class ConsoleToast
     private static float _lineDisplayDuration = 1.0f;
     private static float _elapsedTime;
     private static float _lineRemovePercentage = 1.0f;
-    private static float _speed = 1.0f;
+    private static float _speed = 2.0f;
 
-    private static void Update()
+    public static void Update(float deltaSeconds)
     {
         if (_lastCursorY < Shared.Console.ScreenBuffer.CursorY)
         {
@@ -19,8 +19,9 @@ public static class ConsoleToast
             var linesLeft = Shared.Console.ScreenBuffer.Height - _numLinesToDraw;
             var linesToAdd = Math.Min(linesLeft, numNewLines);
             if (_numLinesToDraw == 0)
-                _nextRemoveTime = _elapsedTime + linesToAdd * _lineDisplayDuration;
+                _nextRemoveTime = _elapsedTime + /*linesToAdd **/ _lineDisplayDuration;
             _numLinesToDraw += linesToAdd;
+            _speed = Math.Max(_numLinesToDraw / 5.0f, 1.0f);
             if (_numLinesToDraw < 0)
             {
                 Logs.LogInfo("numLinesToDrawBug");
@@ -29,8 +30,7 @@ public static class ConsoleToast
 
         _lastCursorY = Shared.Console.ScreenBuffer.CursorY;
 
-        _speed = Math.Max(_numLinesToDraw / 5.0f, 1.0f);
-        _elapsedTime += Shared.Game.Time.ElapsedTime * _speed;
+        _elapsedTime += deltaSeconds * _speed;
 
         if (_numLinesToDraw > 0 && _elapsedTime >= _nextRemoveTime)
         {
@@ -43,8 +43,6 @@ public static class ConsoleToast
 
     public static void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
     {
-        Update();
-
         if (_numLinesToDraw == 0 || Shared.Console.ScreenBuffer.CursorY == 0)
             return;
 

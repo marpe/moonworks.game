@@ -106,6 +106,8 @@ public class MyGameMain : Game
 
         SetInputViewport();
 
+        ConsoleToast.Update((float)dt.TotalSeconds);
+        
         UpdateScreens();
 
         Shared.AudioManager.Update((float)dt.TotalSeconds);

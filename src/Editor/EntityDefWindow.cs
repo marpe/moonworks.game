@@ -169,11 +169,7 @@ public unsafe class EntityDefWindow : SplitWindow
 
             DrawTags(entityDef);
 
-            if (SimpleTypeInspector.InspectColor("Smart Color", ref entityDef.Color, null, ImGuiColorEditFlags.NoAlpha))
-            {
-                entityDef.Color = entityDef.Color;
-            }
-
+            SimpleTypeInspector.InspectColor("Smart Color", ref entityDef.Color, null, ImGuiColorEditFlags.NoAlpha);
             SimpleTypeInspector.InspectFloat("FillOpacity", ref entityDef.FillOpacity, new RangeSettings(0, 1, 0.1f, false));
             SimpleTypeInspector.InspectBool("ResizableX", ref entityDef.ResizableX);
             SimpleTypeInspector.InspectBool("ResizableY", ref entityDef.ResizableY);

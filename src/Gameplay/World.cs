@@ -128,7 +128,7 @@ public class World
         Entities.Clear();
         Level = level;
         _isTrackingPlayer = false;
-        var entities = LoadEntitiesInLevel(this, Root, level);
+        var entities = LoadEntitiesInLevel(this, level);
         Entities.AddRange(entities);
     }
 
@@ -182,7 +182,7 @@ public class World
         Logs.LogInfo($"Set prev level {prevLevel.Identifier} ({prevIndex})");
     }
 
-    private static List<Entity> LoadEntitiesInLevel(World world, RootJson root, Level level)
+    private static List<Entity> LoadEntitiesInLevel(World world, Level level)
     {
         var entities = new List<Entity>();
         foreach (var layer in level.LayerInstances)

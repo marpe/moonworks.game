@@ -222,7 +222,6 @@ public class Renderer
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth);
     }
     
-    
     public Vector2 MeasureString(BMFontType fontType, ReadOnlySpan<char> text)
     {
         // TODO (marpe): Replace with FreeType

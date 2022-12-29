@@ -24,7 +24,9 @@ public static unsafe class FieldDefEditor
         return isArray ? $"Array<{typeStr}>" : typeStr;
     }
 
-    public static void DrawFieldEditor(List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex, Action<FieldDef>? defRemovedCallback = null, Action<FieldDef> popupCallback = null)
+    public static void DrawFieldEditor(List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex,
+        Action<FieldDef>? defRemovedCallback = null,
+        Action<FieldDef>? popupCallback = null)
     {
         ImGui.PushID("FieldEditor");
 
