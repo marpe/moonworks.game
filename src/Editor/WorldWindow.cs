@@ -1,4 +1,5 @@
 ﻿using Mochi.DearImGui;
+using Mochi.DearImGui.Internal;
 using MyGame.Entities;
 using MyGame.WorldsRoot;
 
@@ -143,7 +144,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
             _isSelectEntityDialogOpen = true;
         }
 
-        if (ImGuiExt.DrawSearchDialog("SelectEntityDialog", "Select",
+        if (ImGuiExt.DrawSearchDialog("Select Entity", "Select",
                 ref _isSelectEntityDialogOpen, ref _selectedEntityIndex,
                 _entityNames.AsSpan(), ref _searchPattern))
         {
@@ -211,12 +212,13 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 dl->AddRect(min, max, Color.Cyan.PackedValue, 0, ImDrawFlags.None, 4f);
                 ImGui.SetCursorScreenPos(min);
                 var size = max - min;
-                if (ImGui.InvisibleButton("Entity" + i, size))
+                if (ImGui.InvisibleButton("Entity" + i, size, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
                 {
                     _selectedEntityInspector = InspectorExt.GetGroupInspectorForTarget(entity);
                     _isPickingEntity = false;
                     break;
                 }
+                ImGui.SetItemAllowOverlap();
             }
         }
 
