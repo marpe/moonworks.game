@@ -44,6 +44,9 @@ public class ContentManager
     private static StringBuilder _sb = new();
 
     private Dictionary<string, object> _loadedAssets = new();
+
+    private object lockObject = new object();
+
     // private Dictionary<string, IDisposable> _disposableAssets = new();
 
     public ContentManager(MyGameMain game)
@@ -53,21 +56,31 @@ public class ContentManager
 
     public T Load<T>(string assetName, bool forceReload = false)
     {
-        if (forceReload)
+        T? result;
+        
+        lock (lockObject)
         {
-            _loadedAssets.Remove(assetName, out var oldAsset);
-            if (oldAsset is IDisposable disposable)
-                disposable.Dispose();
+            if (forceReload)
+            {
+                _loadedAssets.Remove(assetName, out var oldAsset);
+                if (oldAsset is IDisposable disposable)
+                    disposable.Dispose();
+            }
+
+            if (!_loadedAssets.TryGetValue(assetName, out var asset))
+            {
+                asset = InternalLoad<T>(assetName) ?? throw new Exception();
+                _loadedAssets.Add(assetName, asset);
+                result = (T)asset;
+                Logs.LogInfo($"[{Shared.Game.Time.UpdateCount}] Loaded {typeof(T).Name} asset \"{assetName}\"");
+            }
+            else
+            {
+                result = (T)asset;
+            }
         }
 
-        if (!_loadedAssets.TryGetValue(assetName, out var asset))
-        {
-            asset = InternalLoad<T>(assetName) ?? throw new Exception();
-            _loadedAssets.Add(assetName, asset);
-            Logs.LogInfo($"[{Shared.Game.Time.UpdateCount}] Loaded {typeof(T).Name} asset \"{assetName}\"");
-        }
-
-        return (T)asset;
+        return result ?? throw new Exception();
     }
 
     public void PackTextures()
