@@ -744,8 +744,10 @@ public unsafe class ImGuiRenderer : IDisposable
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
 
-        if (!_textures.ContainsKey(texture.Handle))
-            _textures.Add(texture.Handle, texture);
+        if (_textures.TryGetValue(texture.Handle, out var boundTexture))
+            return boundTexture.Handle;
+        
+        _textures.Add(texture.Handle, texture);
         return texture.Handle;
     }
 

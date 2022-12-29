@@ -174,7 +174,7 @@ public class LoadingScreen
         }
     }
 
-    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Texture gameRender, Texture menuRender, double alpha)
+    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         if (State == TransitionState.Hidden)
             return;

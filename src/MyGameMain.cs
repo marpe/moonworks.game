@@ -3,7 +3,7 @@ using System.Threading;
 using MyGame.Audio;
 using MyGame.Cameras;
 using MyGame.Debug;
-using MyGame.Screens.Transitions;
+using MyGame.Entities;
 using MyGame.WorldsRoot;
 
 namespace MyGame;
@@ -19,7 +19,6 @@ public class MyGameMain : Game
     public static int GameUpdateRate = 1;
     public static bool IsStepping;
     public static bool IsPaused;
-    public static bool DebugViewBounds = false;
     public World World { get; }
 
     public ConsoleScreen ConsoleScreen;
@@ -33,15 +32,15 @@ public class MyGameMain : Game
 
     protected UPoint _swapSize;
 
-    protected readonly FPSDisplay _fpsDisplay;
-    private bool _hasRenderedConsole;
-    public DebugRenderTarget DebugRenderTarget = DebugRenderTarget.None;
+    public readonly FPSDisplay _fpsDisplay;
 
     [CVar("lights_enabled", "Toggle lights")]
     public static bool LightsEnabled = true;
 
     [CVar("use_point_filtering", "")]
     public static bool UsePointFiltering = false;
+
+    public List<RenderPass> _renderPasses = new();
 
     public MyGameMain(
         WindowCreateInfo windowCreateInfo,
@@ -69,7 +68,7 @@ public class MyGameMain : Game
         ConsoleScreen = new ConsoleScreen(this);
         Shared.AudioManager = new AudioManager();
         Shared.Menus = new MenuHandler(this);
-        
+
         World = new World();
 
         Camera = new Camera(RenderTargets.GameRenderSize.X, RenderTargets.GameRenderSize.Y)
@@ -82,6 +81,12 @@ public class MyGameMain : Game
             Shared.Console.Initialize();
             Logs.Loggers.Add(new TWConsoleLogger());
         });
+
+        _renderPasses.Add(new WorldRenderPass());
+        _renderPasses.Add(new MenuRenderPass());
+        _renderPasses.Add(new DebugRenderPass());
+        _renderPasses.Add(new LoadingScreenRenderPass());
+        _renderPasses.Add(new ConsoleRenderPass());
 
         _fpsDisplay = new FPSDisplay();
 
@@ -151,7 +156,7 @@ public class MyGameMain : Game
         {
             RenderGame(alpha, RenderTargets.CompositeRender);
         }
-        
+
         {
             var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 
@@ -163,22 +168,12 @@ public class MyGameMain : Game
 
             _swapSize = swapTexture.Size();
 
-            var finalRenderTarget = DebugRenderTarget switch
-            {
-                DebugRenderTarget.GameRender => RenderTargets.GameRender,
-                DebugRenderTarget.LightSource => RenderTargets.LightSource,
-                DebugRenderTarget.LightTarget => RenderTargets.LightTarget,
-                DebugRenderTarget.Console => RenderTargets.ConsoleRender,
-                DebugRenderTarget.Menu => RenderTargets.MenuRender,
-                _ => RenderTargets.CompositeRender
-            };
-
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), finalRenderTarget.Size);
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(finalRenderTarget.Target, viewportTransform, Color.White, 0,  SpriteFlip.None, false);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, PipelineType.Sprite);  // PipelineType.PixelArt);
+            Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None, false);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, PipelineType.Sprite); // PipelineType.PixelArt);
             Renderer.Submit(ref commandBuffer);
         }
         _fpsDisplay.EndRender();
@@ -190,60 +185,15 @@ public class MyGameMain : Game
         Time.UpdateDrawCount();
 
         var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
-        Renderer.Clear(ref commandBuffer, RenderTargets.LightSource, Color.Transparent);
-        Renderer.Clear(ref commandBuffer, RenderTargets.LightTarget, Color.Transparent);
-        DrawWorld(Renderer, ref commandBuffer, RenderTargets.GameRender, alpha);
 
-        Shared.Menus.Draw(Renderer, ref commandBuffer, RenderTargets.MenuRender, alpha);
-        
-        if (RenderTargets.RenderScale != 1)
+        for (var i = 0; i < _renderPasses.Count; i++)
         {
-            var camera = Camera;
-            var dstSize = RenderTargets.CompositeRender.Size / (int)RenderTargets.RenderScale;
-            // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
-            var srcRect = new Bounds(camera.FloorRemainder.X, camera.FloorRemainder.Y, dstSize.X, dstSize.Y);
-            var gameRenderSprite = new Sprite(RenderTargets.GameRender.Target, srcRect);
-            var scale = Matrix3x2.CreateScale((int)RenderTargets.RenderScale, (int)RenderTargets.RenderScale).ToMatrix4x4();
-            Renderer.DrawSprite(gameRenderSprite, scale, Color.White, 0, SpriteFlip.None, false);
+            _renderPasses[i].Draw(Renderer, ref commandBuffer, renderDestination, alpha);
         }
-        else
-        {
-            Renderer.DrawSprite(RenderTargets.GameRender.Target, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None, true);
-        }
-
-        Renderer.DrawSprite(RenderTargets.MenuRender.Target, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None, false);
-        Renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, PipelineType.Sprite);
-
-        Shared.LoadingScreen.Draw(Renderer, ref commandBuffer, renderDestination, RenderTargets.GameRender, RenderTargets.MenuRender, alpha);
-
-        RenderConsole(Renderer, ref commandBuffer, renderDestination, alpha);
-        _fpsDisplay.DrawFPS(Renderer, commandBuffer, renderDestination);
 
         Renderer.Submit(ref commandBuffer);
 
         _fpsDisplay.EndRenderGame();
-    }
-
-    private void RenderConsole(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
-    {
-        if ((int)Time.UpdateCount % ConsoleSettings.RenderRate == 0)
-        {
-            _hasRenderedConsole = true;
-            renderer.Clear(ref commandBuffer, RenderTargets.ConsoleRender, Color.Transparent);
-
-            ConsoleToast.Draw(renderer, ref commandBuffer, RenderTargets.ConsoleRender);
-
-            if (!ConsoleScreen.IsHidden)
-            {
-                ConsoleScreen.Draw(renderer, ref commandBuffer, RenderTargets.ConsoleRender, alpha);
-            }
-        }
-
-        if (_hasRenderedConsole)
-        {
-            renderer.DrawSprite(RenderTargets.ConsoleRender.Target, Matrix4x4.Identity, Color.White);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
-        }
     }
 
     private void LoadRoot(Func<RootJson> rootLoader, string filepath, Action? onCompleteCallback)
@@ -283,51 +233,6 @@ public class MyGameMain : Game
             return;
         World.UpdateLastPositions();
         Camera.UpdateLastPosition();
-    }
-
-    /// Call before loading starts
-    private void SetCircleCropPosition(Vector2 position)
-    {
-        var viewProjection = Camera.GetViewProjection(RenderTargets.GameRender.Width, RenderTargets.GameRender.Height, 0);
-        var positionInScreen = Vector2.Transform(position, viewProjection);
-        positionInScreen = Vector2.Half + positionInScreen * 0.5f;
-        var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
-        circleLoad.CenterX = positionInScreen.X;
-        circleLoad.CenterY = positionInScreen.Y;
-    }
-
-    private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
-    {
-        if (!World.Debug) return;
-        if (!DebugViewBounds) return;
-
-        renderer.DrawRectOutline(Vector2.Zero, RenderTargets.CompositeRender.Size, Color.LimeGreen, 10f);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
-    }
-
-    private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
-    {
-        if (!World.IsLoaded)
-        {
-            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
-            return;
-        }
-
-        renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
-        World.Draw(renderer, Camera, alpha, UsePointFiltering);
-
-        World.DrawDebug(renderer, Camera, alpha);
-        // draw ambient background color
-        // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
-
-        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height, alpha);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.PixelArt);
-
-
-        if (LightsEnabled)
-            World.DrawLights(renderer, ref commandBuffer, renderDestination, Camera, RenderTargets.LightSource, RenderTargets.LightTarget, alpha, UsePointFiltering);
-
-        DrawViewBounds(renderer, ref commandBuffer, renderDestination);
     }
 
     private void UpdateWorld(float deltaSeconds)

@@ -39,9 +39,6 @@ public class World
 
     public float FreezeFrameTimer;
 
-    public PipelineType LightsToDestinationBlend = PipelineType.Multiply;
-    public PipelineType RimLightToDestinationBlend = PipelineType.Additive;
-
     public RootJson Root = new();
     public Level Level = new();
 
@@ -325,12 +322,12 @@ public class World
         DrawEntities(renderer, alpha, usePointFiltering);
     }
 
-    private void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
+    public void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
     {
         Entities.Draw(renderer, alpha, usePointFiltering);
     }
 
-    private void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds, bool usePointFiltering, bool drawBackground)
+    public void DrawLevel(Renderer renderer, Level level, Bounds cameraBounds, bool usePointFiltering, bool drawBackground)
     {
         if (drawBackground)
             renderer.DrawRect(level.Bounds, level.BackgroundColor);
@@ -549,106 +546,6 @@ public class World
         FreezeFrameTimer = force ? duration : MathF.Max(duration, FreezeFrameTimer);
     }
 
-    private void DrawLightBaseLayer(Renderer renderer, ref CommandBuffer commandBuffer, RenderTarget lightSource, Camera camera, double alpha,
-        bool usePointFiltering)
-    {
-        DrawLevel(renderer, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: false);
-        DrawEntities(renderer, alpha, usePointFiltering);
-
-        var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height, alpha);
-        renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection, PipelineType.PixelArt);
-    }
-
-    public void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Camera camera,
-        RenderTarget lightSource, RenderTarget lightTarget, double alpha, bool usePointFiltering)
-    {
-        DrawLightBaseLayer(renderer, ref commandBuffer, lightSource, camera, alpha, usePointFiltering);
-
-        // render lights
-        renderer.DrawSprite(lightSource.Target, Matrix4x4.Identity, Color.White);
-        renderer.UpdateBuffers(ref commandBuffer);
-        renderer.SpriteBatch.Discard();
-        renderer.BeginRenderPass(ref commandBuffer, lightTarget, AmbientColor, PipelineType.Light);
-        DrawAllLights(
-            ref commandBuffer,
-            renderDestination.Size(),
-            camera.ZoomedBounds,
-            new[]
-            {
-                new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
-            }
-        );
-        renderer.EndRenderPass(ref commandBuffer);
-
-        // render light to game
-        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, LightsToDestinationBlend);
-
-        // render rim
-        renderer.DrawSprite(renderer.BlankSprite, Matrix3x2.CreateScale(renderDestination.Width, renderDestination.Height).ToMatrix4x4(), Color.White);
-        renderer.UpdateBuffers(ref commandBuffer);
-        renderer.SpriteBatch.Discard();
-        renderer.BeginRenderPass(ref commandBuffer, lightTarget, Color.Transparent, PipelineType.RimLight);
-        DrawAllLights(
-            ref commandBuffer,
-            renderDestination.Size(),
-            camera.ZoomedBounds,
-            new[]
-            {
-                new TextureSamplerBinding(renderer.BlankSprite.TextureSlice.Texture, Renderer.PointClamp),
-                new TextureSamplerBinding(lightSource.Target, Renderer.PointClamp),
-            }
-        );
-        renderer.EndRenderPass(ref commandBuffer);
-
-        // render rim light to game
-        renderer.DrawSprite(lightTarget.Target, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, RimLightToDestinationBlend);
-    }
-
-    private void DrawAllLights(ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
-    {
-        var tempCameraBounds = cameraBounds;
-        var tempCommandBuffer = commandBuffer;
-        Entities.ForEach((entity) =>
-        {
-            if (entity is not Light light)
-                return;
-            if (!light.IsEnabled)
-                return;
-            if (!light.Bounds.Intersects(tempCameraBounds))
-                return;
-            var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
-            var fragUniform = new Pipelines.RimLightUniforms()
-            {
-                LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
-                LightIntensity = light.Intensity,
-                LightRadius = Math.Max(light.Width, light.Height) / MathF.Sqrt(2),
-                LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
-                VolumetricIntensity = light.VolumetricIntensity,
-                RimIntensity = light.RimIntensity,
-                Angle = light.Angle,
-                ConeAngle = light.ConeAngle,
-
-                TexelSize = new Vector4(
-                    1.0f / renderDestinationSize.X,
-                    1.0f / renderDestinationSize.Y,
-                    renderDestinationSize.X,
-                    renderDestinationSize.Y
-                ),
-                Bounds = new Vector4(
-                    tempCameraBounds.Min.X,
-                    tempCameraBounds.Min.Y,
-                    tempCameraBounds.Width,
-                    tempCameraBounds.Height
-                ),
-            };
-            var fragmentParamOffset = tempCommandBuffer.PushFragmentShaderUniforms(fragUniform);
-            var vertexParamOffset = tempCommandBuffer.PushVertexShaderUniforms(vertUniform);
-            tempCommandBuffer.BindFragmentSamplers(fragmentBindings);
-            SpriteBatch.DrawIndexedQuads(ref tempCommandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
-        });
-    }
 
     private static Level FindLevel(string identifier, RootJson root)
     {

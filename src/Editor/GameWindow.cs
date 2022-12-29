@@ -47,7 +47,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
         IsOpen = true;
     }
 
-    public static void EnsureTextureIsBound([NotNull] ref IntPtr? ptr, Texture texture, ImGuiRenderer renderer)
+    public static void EnsureTextureIsBound([NotNull] ref nint? ptr, Texture texture, ImGuiRenderer renderer)
     {
         if (texture.IsDisposed)
             throw new Exception("Attempted to bind a disposed texture");

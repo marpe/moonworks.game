@@ -8,21 +8,31 @@ namespace MyGame.Editor;
 public unsafe class RenderTargetsWindow : ImGuiEditorWindow
 {
     private MyEditorMain _editor;
-    private IntPtr? _lightPtr;
-    private IntPtr? _consolePtr;
-    private IntPtr? _menuPtr;
-    private IntPtr? _gamePtr;
-    private IntPtr? _compositePtr;
-    private IntPtr? _lightTargetPtr;
     public const string WindowTitle = "RenderTargets";
-    public DebugRenderTarget CurrentTarget = DebugRenderTarget.GameRender;
+    private int _selectedTargetIdx = 0;
 
     private Color _backgroundColor = Color.Black;
     private Color _stripesColor = new Color(0, 0, 0, 0.2f);
 
+    private readonly RenderTarget[] _renderTargets;
+    private readonly string[] _renderTargetNames;
+
     public RenderTargetsWindow(MyEditorMain editor) : base(WindowTitle)
     {
         _editor = editor;
+
+        var fields = editor.RenderTargets.GetType()
+            .GetFields(BindingFlags.Instance | BindingFlags.Public);
+        var renderTargetFields = fields.Where(x => x.FieldType == typeof(RenderTarget)).ToList();
+
+        _renderTargets = new RenderTarget[renderTargetFields.Count];
+        _renderTargetNames = new string[renderTargetFields.Count];
+        for (var i = 0; i < renderTargetFields.Count; i++)
+        {
+            var renderTarget = renderTargetFields[i].GetValue(editor.RenderTargets) ?? throw new InvalidOperationException();
+            _renderTargetNames[i] = renderTargetFields[i].Name;
+            _renderTargets[i] = (RenderTarget)renderTarget;
+        }
     }
 
     public override void Draw()
@@ -35,45 +45,44 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
         ImGui.SetNextWindowSizeConstraints(new Vector2(480, 270), new Vector2(1920, 1080));
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
-            GameWindow.EnsureTextureIsBound(ref _lightPtr, _editor.RenderTargets.LightSource, _editor.ImGuiRenderer);
-            GameWindow.EnsureTextureIsBound(ref _lightTargetPtr, _editor.RenderTargets.LightTarget, _editor.ImGuiRenderer);
-            GameWindow.EnsureTextureIsBound(ref _consolePtr, _editor.RenderTargets.ConsoleRender, _editor.ImGuiRenderer);
-            GameWindow.EnsureTextureIsBound(ref _menuPtr, _editor.RenderTargets.MenuRender, _editor.ImGuiRenderer);
-            GameWindow.EnsureTextureIsBound(ref _gamePtr, _editor.RenderTargets.GameRender, _editor.ImGuiRenderer);
-            GameWindow.EnsureTextureIsBound(ref _compositePtr, _editor.RenderTargets.CompositeRender, _editor.ImGuiRenderer);
-
             ImGui.BeginGroup();
             {
-                var widthAvail = ImGui.GetContentRegionAvail().X;
-                if (ImGui.BeginChild("TargetButtons", new Vector2(widthAvail * 0.5f, 20), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGui.BeginChild("TargetButtons", new Vector2(200, 20), false, ImGuiWindowFlags.NoScrollbar))
                 {
-                    EnumInspector.InspectEnum("CurrentTarget", ref CurrentTarget);
+                    ImGui.SetNextItemWidth(-ImGuiExt.FLT_MIN);
+                    if (ImGui.BeginCombo("##RenderTarget", _renderTargetNames[_selectedTargetIdx]))
+                    {
+                        for (var i = 0; i < _renderTargetNames.Length; i++)
+                        {
+                            var isSelected = i == _selectedTargetIdx;
+                            if (ImGui.Selectable(_renderTargetNames[i], isSelected, ImGuiSelectableFlags.None, default))
+                            {
+                                _selectedTargetIdx = i;
+                            }
+
+                            if (isSelected)
+                                ImGui.SetItemDefaultFocus();
+                        }
+
+                        ImGui.EndCombo();
+                    }
                 }
 
                 ImGui.EndChild();
 
                 ImGui.SameLine();
-                if (ImGui.BeginChild("Colors", new Vector2(widthAvail * 0.5f - ImGui.GetStyle()->ItemInnerSpacing.X, 20), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGui.BeginChild("Colors", new Vector2(200, 20), false, ImGuiWindowFlags.NoScrollbar))
                 {
                     SimpleTypeInspector.InspectColor("##BackgroundColor", ref _backgroundColor);
+                    ImGuiExt.ItemTooltip("BackgroundColor");
                     ImGui.SameLine();
                     SimpleTypeInspector.InspectColor("##StripesColor", ref _stripesColor);
+                    ImGuiExt.ItemTooltip("StripeColor");
                 }
 
                 ImGui.EndChild();
             }
             ImGui.EndGroup();
-
-            var ptr = CurrentTarget switch
-            {
-                DebugRenderTarget.GameRender => _gamePtr,
-                DebugRenderTarget.LightSource => _lightPtr,
-                DebugRenderTarget.LightTarget => _lightTargetPtr,
-                DebugRenderTarget.Menu => _menuPtr,
-                DebugRenderTarget.Console => _consolePtr,
-                DebugRenderTarget.None => _compositePtr,
-                _ => throw new ArgumentOutOfRangeException()
-            };
 
             var contentAvail = ImGui.GetContentRegionAvail();
 
@@ -83,8 +92,11 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             dl->AddRectFilled(cursorPos, cursorPos + imageSize, _backgroundColor.PackedValue);
             ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(cursorPos, cursorPos + imageSize), _stripesColor.PackedValue);
 
+            nint? ptr = null;
+            GameWindow.EnsureTextureIsBound(ref ptr, _renderTargets[_selectedTargetIdx], _editor.ImGuiRenderer);
+
             ImGui.Image(
-                ptr!.Value.ToPointer(),
+                ptr.Value.ToPointer(),
                 imageSize,
                 new Vector2(0, 0),
                 new Vector2(1, 1),

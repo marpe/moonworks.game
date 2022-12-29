@@ -15,4 +15,5 @@ public class RenderTarget
     }
 
     public static implicit operator Texture(RenderTarget rt) => rt.Target;
+    public static implicit operator Sprite(RenderTarget rt) => new(rt.Target);
 }

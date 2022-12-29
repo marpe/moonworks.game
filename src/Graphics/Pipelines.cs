@@ -6,10 +6,6 @@ public enum PipelineType
     AlphaBlend,
     NonPremultiplied,
     Opaque,
-    // None,
-    // Disable,
-
-    ///
     Multiply,
     CustomBlendState,
     Sprite,
@@ -18,7 +14,7 @@ public enum PipelineType
     CircleCropTransition,
     PixelizeTransition,
     DiamondTransition,
-    PixelArt
+    PixelArt,
 }
 
 public class Pipelines
