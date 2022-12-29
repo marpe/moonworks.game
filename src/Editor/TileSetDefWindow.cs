@@ -120,12 +120,13 @@ public unsafe class TileSetDefWindow : SplitWindow
                     Color.Black.ToNumerics()
                 );
                 ImGui.SetCursorScreenPos(ImGui.GetItemRectMin());
+                var popupId = "TileIdPopup";
                 if (ImGui.InvisibleButton("OpenTileSetPopup", ImGui.GetItemRectSize()))
                 {
-                    ImGui.OpenPopup("TileIdPopup");
+                    ImGui.OpenPopup(popupId);
                 }
 
-                if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
+                if (TileSetIdPopup.DrawTileSetIdPopup(popupId, tileSetDef, out var tileId))
                 {
                 }
             }

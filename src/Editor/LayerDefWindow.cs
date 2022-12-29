@@ -426,12 +426,13 @@ public unsafe class LayerDefWindow : SplitWindow
         SimpleTypeInspector.InspectBool("IsActive", ref rule.IsActive);
         SimpleTypeInspector.InspectFloat("Chance", ref rule.Chance, new RangeSettings(0, 1.0f, 0.1f, false));
 
+        var addTilePopupName = "AddTilePopup";
         if (ImGuiExt.ColoredButton("+", ImGuiExt.Colors[1], new Vector2(-ImGuiExt.FLT_MIN, ImGui.GetFrameHeight()), "Add TileId"))
         {
-            ImGui.OpenPopup("TileIdPopup");
+            ImGui.OpenPopup(addTilePopupName);
         }
 
-        if (TileSetIdPopup.DrawTileSetIdPopup("TileIdPopup", tileSetDef, out var tileId))
+        if (TileSetIdPopup.DrawTileSetIdPopup(addTilePopupName, tileSetDef, out var tileId))
         {
             if (!rule.TileIds.Contains(tileId))
                 rule.TileIds.Add(tileId);
@@ -440,34 +441,45 @@ public unsafe class LayerDefWindow : SplitWindow
         if (rule.TileIds.Count == 0)
         {
             ImGui.TextDisabled("No TileId have been assigned");
+            return;
         }
-        else
+
+        var replaceTileIdPopupName = "ReplaceTilePopUp";
+
+        var tileIdToRemove = -1;
+        var iconSize = new Vector2(layerDef.GridSize * 2f);
+        for (var m = 0; m < rule.TileIds.Count; m++)
         {
-            var tileIdToRemove = -1;
-            var iconSize = new Vector2(layerDef.GridSize * 2f);
-            for (var m = 0; m < rule.TileIds.Count; m++)
+            ImGui.PushID(m);
+            var iconPos = ImGui.GetCursorScreenPos();
+            if (ImGuiExt.DrawTileSetIcon("TileId", (uint)rule.TileIds[m], tileSetDef, iconPos, iconSize, false,
+                    Color.White))
             {
-                ImGui.PushID(m);
-                var iconPos = ImGui.GetCursorScreenPos();
-                if (ImGuiExt.DrawTileSetIcon("TileId", (uint)rule.TileIds[m], tileSetDef, iconPos, iconSize, false,
-                        Color.White))
-                {
-                    tileIdToRemove = m;
-                }
-
-                DrawZoomedTileTooltip($"#{rule.TileIds[m]}", (uint)rule.TileIds[m], tileSetDef, iconSize);
-
-                ImGui.PopID();
-
-                ImGui.SameLine();
-                if (ImGui.GetContentRegionAvail().X < iconSize.X + ImGui.GetStyle()->ItemSpacing.X)
-                    ImGui.NewLine();
+                ImGui.OpenPopup(replaceTileIdPopupName);
             }
 
-            if (tileIdToRemove != -1)
+            if (TileSetIdPopup.DrawTileSetIdPopup(replaceTileIdPopupName, tileSetDef, out var newTileId))
             {
-                rule.TileIds.RemoveAt(tileIdToRemove);
+                rule.TileIds[m] = newTileId;
             }
+
+            if (ImGui.IsItemClicked(ImGuiMouseButton.Right))
+            {
+                tileIdToRemove = m;
+            }
+
+            DrawZoomedTileTooltip($"#{rule.TileIds[m]}", (uint)rule.TileIds[m], tileSetDef, iconSize);
+
+            ImGui.PopID();
+
+            ImGui.SameLine();
+            if (ImGui.GetContentRegionAvail().X < iconSize.X + ImGui.GetStyle()->ItemSpacing.X)
+                ImGui.NewLine();
+        }
+
+        if (tileIdToRemove != -1)
+        {
+            rule.TileIds.RemoveAt(tileIdToRemove);
         }
     }
 
@@ -517,9 +529,14 @@ public unsafe class LayerDefWindow : SplitWindow
             rule.Pattern.Add(0);
         }
 
+        var avail = ImGui.GetContentRegionAvail();
         ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Num.Vector2(3, 3));
+        var spacing = ImGui.GetStyle()->ItemInnerSpacing.X;
+        var buttonSize = Math.Max(20, (avail.X - spacing * (rule.Size - 1)) / rule.Size);
+        var rowWidth = rule.Size * buttonSize + spacing * (rule.Size - 1);
         for (var y = 0; y < rule.Size; y++)
         {
+            ImGui.SetCursorPosX(ImGui.GetCursorPosX() + (int)((avail.X - rowWidth) / 2));
             ImGui.PushID(y);
             for (var x = 0; x < rule.Size; x++)
             {
@@ -538,10 +555,19 @@ public unsafe class LayerDefWindow : SplitWindow
                 var popupName = "RulePopup";
 
                 var cursorPos = ImGui.GetCursorScreenPos();
-                var buttonSize = 40;
+
+                ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
                 if (ImGuiExt.ColoredButton(label, textColor, buttonColor, new Vector2(buttonSize), null))
                 {
                     ImGui.OpenPopup(popupName);
+                }
+
+                ImGui.PopStyleVar();
+
+                if (x == rule.Size / 2 && y == rule.Size / 2)
+                {
+                    var dl = ImGui.GetWindowDrawList();
+                    dl->AddRect(ImGui.GetItemRectMin(), ImGui.GetItemRectMax(), Color.Yellow.PackedValue, 0, ImDrawFlags.None, 1f);
                 }
 
                 DrawRuleTooltip(rule.Pattern[patternIndex], intValue);
