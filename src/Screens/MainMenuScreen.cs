@@ -16,17 +16,14 @@ public class MainMenuScreen : MenuScreen
             new FancyTextMenuItem("New Game", OnPlay)
             {
                 FontType = BMFontType.PixellariLarge,
-                ShadowOffset = Vector2.One * 3f
             },
             new FancyTextMenuItem("Options", () => { Shared.Menus.AddScreen(Shared.Menus.OptionsScreen); })
             {
                 FontType = BMFontType.PixellariLarge,
-                ShadowOffset = Vector2.One * 3f
             },
             new FancyTextMenuItem("Quit", OnQuit)
             {
                 FontType = BMFontType.PixellariLarge,
-                ShadowOffset = Vector2.One * 3f
             },
         });
 

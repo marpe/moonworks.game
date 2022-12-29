@@ -58,7 +58,7 @@ public class FancyTextComponent
     public float Timer;
     public static float WaveAmplitudeScale = 2f;
 
-    public float LineHeightScaling = 2f;
+    public float LineHeightScaling = 1f;
 
     public FancyTextComponent(ReadOnlySpan<char> rawText)
     {
@@ -219,7 +219,7 @@ public class FancyTextComponent
     public void Render(BMFontType fontType, Renderer renderer, Vector2 position, Color color, double alpha)
     {
         var font = renderer.GetFont(fontType);
-        var textSize = font.MeasureString(_strippedText);
+        var textSize = renderer.MeasureString(fontType, _strippedText);
         var origin = GetAlignVector(AlignH, AlignV) * textSize;
         
         LastRenderSize = new Vector2(textSize.X, textSize.Y * LineHeightScaling);
@@ -316,17 +316,10 @@ public class FancyTextComponent
         }
 
         _tempColors[0] = tint;
-        _tempColors[1] = tint.MultiplyRGB(tint * 0.5f);
+        _tempColors[1] = tint.MultiplyRGB(tint * 0.9f);
         _tempColors[2] = tint;
-        _tempColors[3] = tint.MultiplyRGB(tint * 0.5f);
+        _tempColors[3] = tint.MultiplyRGB(tint * 0.9f);
         ColorExt.MultiplyColors(_tempColors, tint);
         return _tempColors;
-    }
-
-    private static Vector2 MeasureText(ReadOnlySpan<char> text, FontData font, HorizontalAlignment alignH, VerticalAlignment alignV)
-    {
-        var s = new string(text);
-        font.Packer.TextBounds(s, 500, 500, alignH, alignV, out var rect);
-        return new Vector2(rect.W, rect.H);
     }
 }

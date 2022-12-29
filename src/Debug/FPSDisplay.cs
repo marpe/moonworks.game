@@ -74,13 +74,13 @@ public class FPSDisplay
         var drawFps = Shared.Game.Time.DrawFps;
         
         var str = $"Update: {updateFps:0.##} ({_peakUpdateDurationMs:00.00}), Draw: {drawFps:0.##} ({_peakRenderGameDurationMs:00.00}/{_peakRenderDurationMs:00.00})";
-        var strSize = renderer.TextBatcher.GetFont(FontType.ConsolasMonoMedium).MeasureString(str);
+        var strSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, str);
         var min = position - strSize * origin;
         var max = min + strSize;
         var bg = RectangleExt.FromMinMax(min, max);
         
         renderer.DrawRect(bg, Color.Black * 0.66f);
-        renderer.DrawText(FontType.ConsolasMonoMedium, str, min, 0, Color.Yellow);
+        renderer.DrawFTText(BMFontType.ConsolasMonoSmall, str, min, Color.Yellow);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }

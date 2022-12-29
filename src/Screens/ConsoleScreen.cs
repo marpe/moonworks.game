@@ -411,7 +411,7 @@ public class ConsoleScreen
 
     private void DrawText(Renderer renderer, ReadOnlySpan<char> text, Vector2 position, float depth, Color color)
     {
-        renderer.DrawFTText(text, position, color);
+        renderer.DrawFTText(BMFontType.ConsolasMonoSmall, text, position, color);
         return;
         
         if (ConsoleSettings.UseBMFont)
@@ -420,7 +420,7 @@ public class ConsoleScreen
         }
         else
         {
-            renderer.DrawText(FontType.ConsolasMonoMedium, text, position, depth, color);
+            // renderer.DrawText(FontType.ConsolasMonoMedium, text, position, depth, color);
         }
     }
 
@@ -508,8 +508,6 @@ public class ConsoleScreen
 
         if (ConsoleSettings.ShowDebug)
         {
-            renderer.TextBatcher.FlushToSpriteBatch(renderer.SpriteBatch);
-            
             _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) " +

@@ -25,7 +25,6 @@ public class Renderer
     private readonly MyGameMain _game;
 
     public readonly SpriteBatch SpriteBatch;
-    public readonly TextBatcher TextBatcher;
 
     private ColorAttachmentInfo _colorAttachmentInfo;
 
@@ -47,10 +46,6 @@ public class Renderer
         PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
         LinearClamp = new Sampler(_device, SamplerCreateInfo.LinearClamp);
         SpriteBatch = new SpriteBatch(_device);
-
-        var textBatcherTimer = Stopwatch.StartNew();
-        TextBatcher = new TextBatcher();
-        textBatcherTimer.StopAndLog("TextBatcher");
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
         _blankSprite = new Sprite(_blankTexture);
@@ -210,17 +205,11 @@ public class Renderer
         SpriteBatch.Draw(sprite, colors, depth, transform, usePointFiltering ? PointClamp : LinearClamp, flip);
     }
     
-    public void DrawFTText(ReadOnlySpan<char> text, Vector2 position, Color color)
+    public void DrawFTText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Color color)
     {
         FreeTypeFontAtlas.DrawText(this, text, position, color);
     }
     
-    public void DrawText(FontType fontType, ReadOnlySpan<char> text, Vector2 position, float depth, Color color,
-        HorizontalAlignment alignH = HorizontalAlignment.Left, VerticalAlignment alignV = VerticalAlignment.Top)
-    {
-        TextBatcher.Add(fontType, text, position.X, position.Y, depth, color, alignH, alignV);
-    }
-
     public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
         Color color)
     {
@@ -231,6 +220,14 @@ public class Renderer
         Color[] colors)
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth);
+    }
+    
+    
+    public Vector2 MeasureString(BMFontType fontType, ReadOnlySpan<char> text)
+    {
+        // TODO (marpe): Replace with FreeType
+        var font = GetFont(fontType);
+        return font.MeasureString(text);
     }
 
     public (CommandBuffer, Texture?) AcquireSwapchainTexture()
@@ -254,7 +251,6 @@ public class Renderer
 
     public void UpdateBuffers(ref CommandBuffer commandBuffer)
     {
-        TextBatcher.FlushToSpriteBatch(SpriteBatch);
         SpriteBatch.UpdateBuffers(ref commandBuffer);
     }
 
@@ -318,7 +314,6 @@ public class Renderer
 
         Pipelines.Clear();
         _blankTexture.Dispose();
-        TextBatcher.Unload();
         SpriteBatch.Unload();
         PointClamp.Dispose();
         LinearClamp.Dispose();

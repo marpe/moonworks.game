@@ -18,10 +18,7 @@ public class OptionsMenuScreen : MenuScreen
 
     public OptionsMenuScreen(MyGameMain game) : base(game)
     {
-        _volume = new TextMenuItem($"Volume: {AudioManager.Volume.ToString("P0")}", () =>
-        {
-            
-        });
+        _volume = new TextMenuItem($"Volume: {AudioManager.Volume.ToString("P0")}", () => { });
 
 
         var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(_game.MainWindow.Handle);
@@ -48,7 +45,6 @@ public class OptionsMenuScreen : MenuScreen
 
     private void ChangeScale()
     {
-        
     }
 
     private void CycleScreenMode()

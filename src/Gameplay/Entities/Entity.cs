@@ -164,9 +164,8 @@ public class Entity
             var cellText = $"{cell.X.ToString()}, {cell.Y.ToString()}";
             var posText = $"{StringExt.TruncateNumber(Position.Current.X)}, {StringExt.TruncateNumber(Position.Current.Y)}";
             ReadOnlySpan<char> str = posText + " " + cellText;
-            var textSize = renderer.GetFont(BMFontType.ConsolasMonoSmall).MeasureString(str);
+            var textSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, str);
             renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
-            // renderer.DrawText(FontType.RobotoMedium, str, e.Position.Current, 0, Color.Black, HorizontalAlignment.Center, VerticalAlignment.Top);
         }
     }
 }

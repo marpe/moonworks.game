@@ -210,9 +210,9 @@ public class LoadingScreen
         var offset = 3 - (int)(_game.Time.TotalElapsedTime / 0.2f) % 4;
         var loadingSpan = loadingStr.Slice(0, loadingStr.Length - offset);
 
-        var textSize = renderer.TextBatcher.GetFont(FontType.RobotoLarge).MeasureString(loadingStr);
+        var textSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
-        renderer.DrawText(FontType.RobotoMedium, loadingSpan, position, 0, Color.White * _progress);
+        renderer.DrawFTText(BMFontType.ConsolasMonoSmall, loadingSpan, position,Color.White * _progress);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 

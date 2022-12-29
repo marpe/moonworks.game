@@ -159,45 +159,7 @@ public class ContentManager
             return BMFont.LoadFromFile(Shared.Content._game.GraphicsDevice, assetName);
         }
 
-        if (t == typeof(TTFFont))
-        {
-            var sizes = new[] { 18, 48 };
-            return LoadAndAddTTFFonts(assetName, sizes);
-        }
-
         throw new Exception($"Unsupported asset type \"{t.Name}\" ({assetName})");
-    }
-
-    private static TTFFont LoadAndAddTTFFonts(string fontPath, int[] sizes)
-    {
-        var device = Shared.Content._game.GraphicsDevice;
-
-        var commandBuffer = device.AcquireCommandBuffer();
-
-        var font = new Font(fontPath);
-        var ttfFont = new TTFFont();
-
-        foreach (var size in sizes)
-        {
-            var fontPacker = new Packer(device, font, size, 512, 512, 2u);
-            fontPacker.PackFontRanges(TextBatcher.BasicLatin);
-            fontPacker.SetTextureData(commandBuffer);
-            var textBatchFont = new FontData(new TextBatch(device), fontPacker, font, size);
-            ttfFont.Add(size, textBatchFont);
-        }
-
-        device.Submit(commandBuffer);
-
-        foreach (var (_, fontData) in ttfFont.Sizes)
-        {
-            var pixels = TextureUtils.ConvertSingleChannelTextureToRGBA(device, fontData.Packer.Texture);
-            TextureUtils.PremultiplyAlpha(pixels);
-            var (width, height) = (fontData.Packer.Texture.Width, fontData.Packer.Texture.Height);
-            var fontTexture = TextureUtils.CreateTexture(device, width, height, pixels);
-            fontData.Texture = fontTexture;
-        }
-
-        return ttfFont;
     }
 
     private static AsepriteAsset LoadAseprite(string assetName, GraphicsDevice device)

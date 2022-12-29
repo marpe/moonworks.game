@@ -118,6 +118,7 @@ public abstract class MenuScreen
         for (var i = 0; i < _menuItems.Count; i++)
         {
             _menuItems[i].PreviousPosition = _menuItems[i].Position = position;
+            position.Y += _menuItems[i].Bounds.Height + ItemSpacingY;
             _menuItems[i].NudgeSpring.Position = 0;
             _menuItems[i].Alpha = 0;
         }
@@ -251,11 +252,9 @@ public abstract class MenuScreen
             _menuItems[i].PreviousPosition = _menuItems[i].Position;
             _menuItems[i].NudgeSpring.Update(deltaSeconds);
             _menuItems[i].Position = position;
-            position.Y = _menuItems[i].Bounds.Bottom + ItemSpacingY;
+            position.Y += _menuItems[i].Bounds.Height + ItemSpacingY;
             _menuItems[i].Position.X += _menuItems[i].NudgeSpring.Position;
-
             _menuItems[i].Alpha = (1.0f - MathF.Abs(_spring.Position));
-
 
             if (_menuItems[i] is FancyTextMenuItem ft)
             {
