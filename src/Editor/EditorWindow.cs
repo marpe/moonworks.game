@@ -14,6 +14,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private const string SelectedEntityPopupName = "SelectedEntityInstance";
     private const string EditorWindowTitle = "Editor";
     private const string EditorSettingsWindowTitle = "EditorSettings";
+    private const string CurrentLevelWindowName = "CurrentLevelWindow";
 
     private static int _rowMinHeight = 60;
 
@@ -82,6 +83,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private static Point _lastAddedCell;
     private static List<EntityDef> _tempEntityDefList = new();
     public static bool ResetDock = true;
+    private bool _currentLevelWindowWasDocked;
 
     public EditorWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -163,7 +165,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             ImGuiInternal.DockBuilderDockWindow(WorldsWindow.WindowTitle, dockSpaceId);
             ImGuiInternal.DockBuilderDockWindow(TileSetDefWindow.WindowTitle, dockSpaceId);
             ImGuiInternal.DockBuilderDockWindow(EditorSettingsWindowTitle, dockSpaceId);
-            ImGuiInternal.DockBuilderDockWindow("CurrentLevelWindow", dockSpaceId);
+            ImGuiInternal.DockBuilderDockWindow(CurrentLevelWindowName, dockSpaceId);
         }
 
         void DrawMenu()
@@ -325,9 +327,15 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     private void DrawCurrentLevelData()
     {
         var windowFlags = ImGuiWindowFlags.NoCollapse;
-        if (ImGui.Begin("CurrentLevelWindow", default, windowFlags))
+
+        if (ImGui.Begin(CurrentLevelWindowName, default, windowFlags))
         {
+            if (!ImGui.IsWindowDocked() && _currentLevelWindowWasDocked)
+            {
+                ImGui.SetWindowSize(new Num.Vector2(300, 500), ImGuiCond.Always);
+            }
             DrawLayersInSelectedLevel();
+            _currentLevelWindowWasDocked = ImGui.IsWindowDocked();
         }
 
         ImGui.End();

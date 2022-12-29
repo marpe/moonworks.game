@@ -14,6 +14,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
     protected MyEditorMain Editor;
     private Action _drawLeft;
     private Action _drawRight;
+    private Action _drawWorkspaceWindowContent;
 
     public static ImGuiTableFlags TableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
@@ -27,6 +28,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
     private uint _leftDockID;
 
     private bool _shouldForceDock = false;
+    private bool _workspaceWindowWasDocked;
 
     protected virtual void PushStyles()
     {
@@ -64,6 +66,17 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             PopStyles();
         };
         _initializeDockSpace = InitializeDockSpace;
+        _drawWorkspaceWindowContent = DrawWorkspaceWindowContent;
+    }
+
+    private void DrawWorkspaceWindowContent()
+    {
+        if (!ImGui.IsWindowDocked() && _workspaceWindowWasDocked)
+        {
+            ImGui.SetWindowSize(new Num.Vector2(500, 600), ImGuiCond.Always);
+        }
+
+        _workspaceWindowWasDocked = ImGui.IsWindowDocked();
     }
 
     public override void Draw()
@@ -74,7 +87,8 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         var windowClass = new ImGuiWindowClass();
 
         _shouldForceDock |= _leftDockID == 0 || _rightDockID == 0;
-        var result = ImGuiExt.BeginWorkspaceWindow(Title, _dockSpaceId, _initializeDockSpace, null, ref windowClass, ImGuiDockNodeFlags.None, _shouldForceDock);
+        var result = ImGuiExt.BeginWorkspaceWindow(Title, _dockSpaceId, _initializeDockSpace, null, ref windowClass, ImGuiDockNodeFlags.None, _shouldForceDock,
+            _drawWorkspaceWindowContent);
         _shouldForceDock = false;
 
         if (result)
@@ -158,7 +172,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
             tileSetTexture = editor.Renderer.BlankSprite.TextureSlice.Texture;
             return false;
         }
-        
+
         var path = GetPathRelativeToCwd(tileSetPath);
 
         if (File.Exists(path))

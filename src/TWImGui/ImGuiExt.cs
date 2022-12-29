@@ -1238,7 +1238,7 @@ public static unsafe class ImGuiExt
             ImGuiInternal.DockBuilderFinish(dockspaceID);
         }
 
-        dockSpaceFlags |= ImGuiDockNodeFlags.NoSplit |
+        dockSpaceFlags |= /*ImGuiDockNodeFlags.NoSplit |*/
                           (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton;
         // ImGuiDockNodeFlags.AutoHideTabBar |
         // (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_HiddenTabBar;
