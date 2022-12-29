@@ -555,7 +555,7 @@ public class World
         DrawLevel(renderer, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: false);
         DrawEntities(renderer, alpha, usePointFiltering);
 
-        var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height);
+        var viewProjection = camera.GetViewProjection(lightSource.Width, lightSource.Height, alpha);
         renderer.RunRenderPass(ref commandBuffer, lightSource, Color.Transparent, viewProjection, PipelineType.PixelArt);
     }
 

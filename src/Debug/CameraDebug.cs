@@ -24,8 +24,8 @@ public static class CameraDebug
         if (isDeadZoneActive)
         {
             var pointOnDeadZone = new Vector2(
-                MathF.Clamp(camera.TargetPosition.X, camera.Position.X - dz.X, camera.Position.X + dz.X),
-                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Y - dz.Y, camera.Position.Y + dz.Y)
+                MathF.Clamp(camera.TargetPosition.X, camera.Position.Current.X - dz.X, camera.Position.Current.X + dz.X),
+                MathF.Clamp(camera.TargetPosition.Y, camera.Position.Current.Y - dz.Y, camera.Position.Current.Y + dz.Y)
             );
             renderer.DrawLine(pointOnDeadZone, camera.TargetPosition, Color.Red);
         }

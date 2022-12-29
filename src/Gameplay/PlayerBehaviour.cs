@@ -50,7 +50,7 @@ public class PlayerBehaviour
         if (command.MoveToMouse)
         {
             var mousePosition = Shared.Game.InputHandler.MousePosition;
-            var view = Shared.Game.Camera.GetView();
+            var view = Shared.Game.Camera.GetView(0);
             Matrix3x2.Invert(view, out var invertedView);
             var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
 

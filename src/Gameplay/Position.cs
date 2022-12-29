@@ -37,4 +37,9 @@ public class Position
     {
         LastUpdatePosition = Current;
     }
+
+    public Vector2 Lerp(double alpha)
+    {
+        return Vector2.Lerp(LastUpdatePosition, Current, (float)alpha);
+    }
 }

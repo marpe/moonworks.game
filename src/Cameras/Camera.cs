@@ -32,7 +32,7 @@ public class Camera
     public Vector2 BrakeZone => _brakeZoneInPercentOfViewport * ZoomedSize;
     private float _brakeZoneInPercentOfViewport = 0.2f;
 
-    public Vector2 Position;
+    public Position Position = new();
 
     public Vector3 Position3D = new(0, 0, -1000);
 
@@ -55,8 +55,8 @@ public class Camera
         {
             var size = ZoomedSize;
             var bounds = new Bounds(
-                Position.X - size.X / 2f,
-                Position.Y - size.Y / 2f,
+                Position.Current.X - size.X / 2f,
+                Position.Current.Y - size.Y / 2f,
                 size.X,
                 size.Y
             );
@@ -199,7 +199,7 @@ public class Camera
             }
         }
 
-        Position += Velocity * deltaSeconds;
+        Position.Current += Velocity * deltaSeconds;
 
         Velocity.ApplyFriction(Velocity);
 
@@ -209,12 +209,12 @@ public class Camera
             if (LevelBounds.Width < cameraSize.X)
             {
                 // if the level width is less than the camera width, center the camera
-                Position.X = LevelBounds.X + LevelBounds.Width * 0.5f;
+                Position.Current.X = LevelBounds.X + LevelBounds.Width * 0.5f;
             }
             else
             {
-                Position.X = MathF.Clamp(
-                    Position.X,
+                Position.Current.X = MathF.Clamp(
+                    Position.Current.X,
                     LevelBounds.X + cameraSize.X * 0.5f,
                     LevelBounds.X + LevelBounds.Width - cameraSize.X * 0.5f
                 );
@@ -223,12 +223,12 @@ public class Camera
             if (LevelBounds.Height < cameraSize.Y)
             {
                 // if the level height is less than the camera height, center the camera
-                Position.Y = LevelBounds.Y + LevelBounds.Height * 0.5f;
+                Position.Current.Y = LevelBounds.Y + LevelBounds.Height * 0.5f;
             }
             else
             {
-                Position.Y = MathF.Clamp(
-                    Position.Y,
+                Position.Current.Y = MathF.Clamp(
+                    Position.Current.Y,
                     LevelBounds.Y + cameraSize.Y * 0.5f,
                     LevelBounds.Y + LevelBounds.Height - cameraSize.Y * 0.5f
                 );
@@ -304,7 +304,7 @@ public class Camera
         {
             if (Binds.GetAction(Binds.InputAction.Pan).Active)
             {
-                Position -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
+                Position.Current -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
             }
 
             var moveDelta = _cameraSpeed * deltaSeconds;
@@ -313,7 +313,7 @@ public class Camera
             {
                 Zoom = GetZoomFromRenderScale();
                 TargetPosition = _trackingEntity != null ? _trackingEntity.Center + _targetOffset : TargetPosition;
-                Position = TargetPosition;
+                Position.Current = TargetPosition;
             }
 
             if (Binds.GetAction(Binds.InputAction.ZoomIn).Active)
@@ -328,22 +328,22 @@ public class Camera
 
             if (Binds.GetAction(Binds.InputAction.Forward).Active)
             {
-                Position.Y -= moveDelta;
+                Position.Current.Y -= moveDelta;
             }
 
             if (Binds.GetAction(Binds.InputAction.Back).Active)
             {
-                Position.Y += moveDelta;
+                Position.Current.Y += moveDelta;
             }
 
             if (Binds.GetAction(Binds.InputAction.CameraLeft).Active)
             {
-                Position.X -= moveDelta;
+                Position.Current.X -= moveDelta;
             }
 
             if (Binds.GetAction(Binds.InputAction.CameraRight).Active)
             {
-                Position.X += moveDelta;
+                Position.Current.X += moveDelta;
             }
         }
 
@@ -363,13 +363,13 @@ public class Camera
         if (target != null)
         {
             var targetPosition = target.Center + _targetOffset;
-            Position = TargetPosition = targetPosition;
+            Position.Current = TargetPosition = targetPosition;
         }
     }
-    
-    public Matrix3x2 GetView()
+
+    public Matrix3x2 GetView(double alpha)
     {
-        ViewPosition = Position + _shakeOffset + _bumpOffset;
+        ViewPosition = Position.Lerp(alpha) + _shakeOffset + _bumpOffset;
         var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
         return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
                Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
@@ -386,7 +386,7 @@ public class Camera
             Vector3.Down
         );
     }
-    
+
     private Matrix4x4 GetProjection(uint width, uint height)
     {
         return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
@@ -400,9 +400,9 @@ public class Camera
         return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
     }
 
-    public Matrix4x4 GetViewProjection(uint width, uint height)
+    public Matrix4x4 GetViewProjection(uint width, uint height, double alpha)
     {
-        var cameraView = GetView().ToMatrix4x4();
+        var cameraView = GetView(alpha).ToMatrix4x4();
         cameraView.M43 = -1000;
         var cameraView3D = GetView3D();
 
@@ -410,5 +410,10 @@ public class Camera
         var projection3D = GetProjection3D(width, height);
 
         return Matrix4x4.Lerp(cameraView * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
+    }
+
+    public void UpdateLastPosition()
+    {
+        Position.SetLastUpdatePosition();
     }
 }

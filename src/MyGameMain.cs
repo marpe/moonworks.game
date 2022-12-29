@@ -282,12 +282,13 @@ public class MyGameMain : Game
         if (!World.IsLoaded)
             return;
         World.UpdateLastPositions();
+        Camera.UpdateLastPosition();
     }
 
     /// Call before loading starts
     private void SetCircleCropPosition(Vector2 position)
     {
-        var viewProjection = Camera.GetViewProjection(RenderTargets.GameRender.Width, RenderTargets.GameRender.Height);
+        var viewProjection = Camera.GetViewProjection(RenderTargets.GameRender.Width, RenderTargets.GameRender.Height, 0);
         var positionInScreen = Vector2.Transform(position, viewProjection);
         positionInScreen = Vector2.Half + positionInScreen * 0.5f;
         var circleLoad = (CircleCropTransition)LoadingScreen.SceneTransitions[TransitionType.CircleCrop];
@@ -319,7 +320,7 @@ public class MyGameMain : Game
         // draw ambient background color
         // renderer.DrawRect(Camera.Position - Camera.ZoomedSize * 0.5f, (Camera.Position + Camera.ZoomedSize * 0.5f).Ceil(), World.AmbientColor);
 
-        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        var viewProjection = Camera.GetViewProjection(renderDestination.Width, renderDestination.Height, alpha);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, viewProjection, PipelineType.PixelArt);
 
 

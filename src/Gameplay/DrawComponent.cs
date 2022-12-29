@@ -132,7 +132,7 @@ public class DrawComponent
 
         var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *
-                    Matrix3x2.CreateTranslation(Vector2.Lerp(Parent.Position.LastUpdatePosition, Parent.Position.Current, (float)alpha));
+                    Matrix3x2.CreateTranslation(Parent.Position.Lerp(alpha));
 
         return xform.ToMatrix4x4();
     }
