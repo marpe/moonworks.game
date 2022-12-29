@@ -422,7 +422,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             new AutoRuleTile
             {
                 Cell = new UPoint((uint)x, (uint)y),
-                TileId = rule.TileIds[0],
+                TileId = rule.TileIds[Random.Shared.Next(rule.TileIds.Count)],
                 TileSetDefId = tileSetDef.Uid,
                 LevelWorldPos = level.WorldPos,
                 LayerGridSize = layerDef.GridSize,
