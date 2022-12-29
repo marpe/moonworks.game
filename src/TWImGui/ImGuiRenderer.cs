@@ -31,7 +31,7 @@ public unsafe class ImGuiRenderer : IDisposable
     private readonly Sampler _linearSampler;
     private readonly Sampler _pointSampler;
 
-    public bool UsePointSampler = true;
+    public bool UsePointSampler = false;
 
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
     private readonly Dictionary<IntPtr, Texture> _textures = new();
