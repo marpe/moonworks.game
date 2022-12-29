@@ -23,6 +23,11 @@ public class PlayerBehaviour
         _player = player;
     }
 
+    private IEnumerator JumpRoutine()
+    {
+        yield break;
+    }
+
     public void Update(float deltaSeconds, PlayerCommand command)
     {
         if (command.Respawn)
@@ -58,19 +63,18 @@ public class PlayerBehaviour
             Player.Velocity.Delta = offset * deltaSeconds * 1000f;
         }
 
-        if (!Player.IsJumping && command.IsJumpPressed)
+        // initiate jump
+        var timeSinceOnGround = Player.TotalTimeActive - Player.LastOnGroundTime;
+        if (!Player.IsJumping && command.IsJumpPressed && timeSinceOnGround < 0.1f)
         {
-            var timeSinceOnGround = Player.TotalTimeActive - Player.LastOnGroundTime;
-            if (timeSinceOnGround < 0.1f)
-            {
-                Player.Draw.Squash = new Vector2(0.6f, 1.4f);
-                Player.LastOnGroundTime = 0;
-                Player.Velocity.Y = Player.JumpSpeed;
-                Player.LastJumpStartTime = Player.TotalTimeActive;
-                Player.IsJumping = true;
-            }
+            Player.Draw.Squash = new Vector2(0.6f, 1.4f);
+            Player.LastOnGroundTime = 0;
+            Player.Velocity.Y = Player.JumpSpeed;
+            Player.LastJumpStartTime = Player.TotalTimeActive;
+            Player.IsJumping = true;
         }
 
+        // ascending jump
         if (Player.IsJumping)
         {
             if (!command.IsJumpDown)
@@ -79,6 +83,7 @@ public class PlayerBehaviour
             }
             else
             {
+                // check if we've reached the peak of the jump
                 var timeAirborne = Player.TotalTimeActive - Player.LastJumpStartTime;
                 if (timeAirborne > Player.JumpHoldTime)
                 {
@@ -96,15 +101,16 @@ public class PlayerBehaviour
 
         if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
         {
-            Player.IsJumping = false;
+            Player.IsJumping = false; // hitting a ceiling cancels jump
             Player.Draw.Squash = new Vector2(1.5f, 0.5f);
         }
 
+        // falling
         if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping && !command.MoveToMouse)
         {
             Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
         }
-        
+
         UpdateAnimation(command);
     }
 

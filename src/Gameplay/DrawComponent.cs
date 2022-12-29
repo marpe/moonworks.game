@@ -56,6 +56,7 @@ public class DrawComponent
     private float _timer = 0;
 
     public bool IsAnimating = true;
+    private Matrix4x4 _lastUpdateTransform = Matrix4x4.Identity;
 
     public void Initialize(Entity parent)
     {
@@ -71,6 +72,8 @@ public class DrawComponent
             Animations = CreateAnimations(ase, widthPerFrame, frameHeight, TexturePath);
             CurrentAnimation = Animations.FirstOrDefault().Value;
         }
+
+        _lastUpdateTransform = GetTransform();
     }
 
     public void PlayAnimation(string animationName)
@@ -90,7 +93,7 @@ public class DrawComponent
     {
         if (CurrentAnimation == null)
             return;
-        
+
         Squash = Vector2.SmoothStep(Squash, Vector2.One, deltaSeconds * 20f);
 
         if (!IsAnimating)
@@ -110,17 +113,19 @@ public class DrawComponent
     {
         if (CurrentAnimation == null)
             return;
-        var xform = GetTransform(alpha);
+        var xform = Matrix4x4.Lerp(_lastUpdateTransform, GetTransform(), (float)alpha);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
         renderer.DrawSprite(sprite, xform, Color.White, 0, Flip, usePointFiltering);
     }
 
-    private Matrix4x4 GetTransform(double alpha)
+    private Matrix4x4 GetTransform()
     {
-        var currentFrame = CurrentAnimation!.Frames[FrameIndex];
-        var spriteOrigin = currentFrame.Origin;
+        var spriteOrigin = Vector2.Zero;
+        if (CurrentAnimation != null)
+            spriteOrigin = CurrentAnimation.Frames[FrameIndex].Origin;
+        
         if (spriteOrigin == Vector2.Zero)
             spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
@@ -132,7 +137,7 @@ public class DrawComponent
 
         var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *
-                    Matrix3x2.CreateTranslation(Parent.Position.Lerp(alpha));
+                    Matrix3x2.CreateTranslation(Parent.Position.Current);
 
         return xform.ToMatrix4x4();
     }
@@ -272,4 +277,9 @@ public class DrawComponent
     }
 
     #endregion
+
+    public void SetLastUpdateTransform()
+    {
+        _lastUpdateTransform = GetTransform();
+    }
 }

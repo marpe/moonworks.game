@@ -292,7 +292,11 @@ public class World
 
     public void UpdateLastPositions()
     {
-        Entities.ForEach((entity) => { entity.Position.SetLastUpdatePosition(); });
+        Entities.ForEach((entity) =>
+        {
+            entity.Position.SetLastUpdatePosition();
+            entity.Draw.SetLastUpdateTransform();
+        });
     }
 
     public void Update(float deltaSeconds, Camera camera)

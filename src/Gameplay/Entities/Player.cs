@@ -3,7 +3,6 @@ namespace MyGame.Entities;
 [CustomInspector<GroupInspector>]
 public class Player : Entity
 {
-    [HideInInspector]
     public bool IsJumping;
     public float JumpHoldTime = 0.3f;
     public float JumpSpeed = -300f;
