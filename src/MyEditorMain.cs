@@ -43,9 +43,7 @@ public unsafe class MyEditorMain : MyGameMain
     private Task _screenshotTask;
 
     private Stopwatch _imguiRenderStopwatch = new();
-    private Stopwatch _renderGameStopwatch = new();
     private Stopwatch _renderStopwatch = new();
-    private Stopwatch _gameUpdateStopwatch = new();
     public float _imGuiRenderDurationMs;
     public float _renderGameDurationMs;
     public float _renderDurationMs;
@@ -347,13 +345,6 @@ public unsafe class MyEditorMain : MyGameMain
         if (ImGui.GetMouseCursor() != ImGuiMouseCursor.Arrow)
             return;
 
-        /*if (_gameWindow.IsHoveringGameWindow)
-        {
-            var hoveredWindow = ImGui.GetCurrentContext()->HoveredWindow;
-            if (hoveredWindow != null && ImGuiExt.StringFromPtr(hoveredWindow->Name) == GameWindow.GameWindowTitle)
-                return;
-        }*/
-
         var cursor = ImGui.GetCurrentContext()->HoveredIdDisabled switch
         {
             true => ImGuiMouseCursor.NotAllowed,
@@ -389,35 +380,13 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         var wasHidden = IsHidden;
-
-        _gameUpdateStopwatch.Restart();
-        _fpsDisplay.BeginUpdate();
-        Time.Update(dt);
-
-        UpdateWindowTitle();
-
-        InputHandler.BeginFrame(Time.ElapsedTime);
+     
         InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
-                                    ActiveInput == ActiveInput.Game; // !ImGui.GetIO()->WantCaptureMouse;
+                                    ActiveInput == ActiveInput.Game;
 
-        Binds.HandleButtonBinds(InputHandler);
-
-        SetInputViewport();
-
-        ConsoleToast.Update((float)dt.TotalSeconds);
-
-        UpdateScreens();
-
-        InputHandler.MouseEnabled = ActiveInput == ActiveInput.EditorWindow;
-
-        Shared.AudioManager.Update((float)dt.TotalSeconds);
-
-        InputHandler.EndFrame();
-        _fpsDisplay.EndUpdate();
-        _gameUpdateStopwatch.Stop();
-        _gameUpdateDurationMs = _gameUpdateStopwatch.GetElapsedMilliseconds();
-
+        base.Update(dt);
+        
         ShowOrHideChildWindows(wasHidden);
     }
 
@@ -454,10 +423,7 @@ public unsafe class MyEditorMain : MyGameMain
             return;
 
         _renderStopwatch.Restart();
-        _renderGameStopwatch.Restart();
         RenderGame(alpha, RenderTargets.CompositeRender);
-        _renderGameStopwatch.Stop();
-        _renderGameDurationMs = _renderGameStopwatch.GetElapsedMilliseconds();
 
         if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
         {

@@ -8,6 +8,7 @@ public class OptionsMenuScreen : MenuScreen
     private readonly TextMenuItem _scale;
     private readonly TextMenuItem _volume;
     private readonly TextMenuItem _windowMode;
+    private readonly TextMenuItem _presentMode;
 
     public static Dictionary<ScreenMode, string> ScreenModeNames = new()
     {
@@ -15,6 +16,16 @@ public class OptionsMenuScreen : MenuScreen
         { ScreenMode.BorderlessFullscreen, "Fullscreen window" },
         { ScreenMode.Windowed, "Windowed" },
     };
+
+    public static Dictionary<PresentMode, string> PresentModeNames = new()
+    {
+        { PresentMode.Immediate, "Immediate" },
+        { PresentMode.Mailbox, "Mailbox" },
+        { PresentMode.FIFO, "FIFO" },
+        { PresentMode.FIFORelaxed, "FIFO Relaxed" },
+    };
+
+    private readonly int _maxScale;
 
     public OptionsMenuScreen(MyGameMain game) : base(game)
     {
@@ -24,12 +35,16 @@ public class OptionsMenuScreen : MenuScreen
         var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(_game.MainWindow.Handle);
         var desktopDisplayMode = MyGameMain.GetDesktopDisplayMode(windowDisplayIndex);
         var gameResolution = _game.RenderTargets.GameRenderSize;
-        var maxScale = MathF.Min(
-            gameResolution.X / (float)desktopDisplayMode.w,
-            gameResolution.Y / (float)desktopDisplayMode.h
+        _maxScale = Math.Max(
+            1,
+            Math.Min(
+                (int)(desktopDisplayMode.w / (float)gameResolution.X),
+                (int)(desktopDisplayMode.h / (float)gameResolution.Y)
+            )
         );
-        _scale = new TextMenuItem($"Scale: {maxScale}", ChangeScale);
+        _scale = new TextMenuItem($"Scale: {_maxScale}", ChangeScale);
         _windowMode = new TextMenuItem($"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}", CycleScreenMode);
+        _presentMode = new TextMenuItem($"Present mode: {PresentModeNames[_game.MainWindow.PresentMode]}", CyclePresentMode);
 
         _menuItems.AddRange(new MenuItem[]
         {
@@ -37,6 +52,7 @@ public class OptionsMenuScreen : MenuScreen
             _volume,
             _scale,
             _windowMode,
+            _presentMode,
             new TextMenuItem("Back", OnCancelled)
         });
 
@@ -51,6 +67,12 @@ public class OptionsMenuScreen : MenuScreen
     {
         MyGameMain.ScreenMode = (ScreenMode)(((int)MyGameMain.ScreenMode + 1) % 3);
         _windowMode.Text = $"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}";
+    }
+
+    private void CyclePresentMode()
+    {
+        Shared.Game.MainWindow.SetPresentMode((PresentMode)(((int)Shared.Game.MainWindow.PresentMode + 1) % 4));
+        _presentMode.Text = $"Present mode: {PresentModeNames[Shared.Game.MainWindow.PresentMode]}";
     }
 
     public override void OnCancelled()

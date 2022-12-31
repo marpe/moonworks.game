@@ -38,7 +38,16 @@ public abstract class MenuItem
 
 public class TextMenuItem : MenuItem
 {
-    public string Text;
+    private string _text;
+    public string Text
+    {
+        get => _text;
+        set
+        {
+            _text = value;
+            UpdateSize();
+        }
+    }
 
     public HorizontalAlignment AlignH = HorizontalAlignment.Center;
     public VerticalAlignment AlignV = VerticalAlignment.Middle;
@@ -64,9 +73,14 @@ public class TextMenuItem : MenuItem
     
     public TextMenuItem(string text, Action callback)
     {
-        Text = text;
+        _text = text;
+        UpdateSize();
         Callback = callback;
-        var size = Shared.Game.Renderer.MeasureString(FontType, text);
+    }
+
+    private void UpdateSize()
+    {
+        var size = Shared.Game.Renderer.MeasureString(FontType, _text);
         Width = (int)size.X;
         Height = (int)size.Y;
     }

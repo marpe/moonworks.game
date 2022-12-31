@@ -104,11 +104,16 @@ public class MyGameMain : Game
         UpdateWindowTitle();
 
         InputHandler.BeginFrame(Time.ElapsedTime);
+        SetInputViewport();
 
         Binds.HandleButtonBinds(InputHandler);
 
-        SetInputViewport();
-
+        if (InputHandler.IsKeyPressed(KeyCode.B))
+        {
+            GraphicsDevice.UnclaimWindow(MainWindow);
+            GraphicsDevice.ClaimWindow(MainWindow, PresentMode.Mailbox);
+        }
+        
         ConsoleToast.Update((float)dt.TotalSeconds);
         
         UpdateScreens();
@@ -423,6 +428,7 @@ public class MyGameMain : Game
 
     #endregion
 
+    #region Helpers
     protected void UpdateWindowTitle()
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
@@ -431,4 +437,5 @@ public class MyGameMain : Game
             _nextWindowTitleUpdate += 1f;
         }
     }
+    #endregion
 }
