@@ -232,7 +232,7 @@ public class DebugRenderPass : RenderPass
 {
     private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
     {
-        if (!World.Debug)
+        // if (!World.Debug)
             return;
 
         var bounds = Shared.Game.Camera.ZoomedBounds;
