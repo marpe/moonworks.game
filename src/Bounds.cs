@@ -1,5 +1,6 @@
 ﻿namespace MyGame;
 
+[DebuggerDisplay("{DebugDisplayString,nq}")]
 public struct Bounds
 {
     public Vector2 Min;
@@ -24,6 +25,8 @@ public struct Bounds
         Min = new Vector2(x, y);
         Size = new Vector2(w, h);
     }
+    
+    internal string DebugDisplayString => $"{X} {Y} {Width} {Height}";
 
     public Bounds(Vector2 min, Vector2 max) : this(min.X, min.Y, max.X - min.X, max.Y - min.Y)
     {

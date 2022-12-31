@@ -42,6 +42,16 @@ public class EntityList
         return null;
     }
 
+    public void FindAll<T>(List<T> result) where T : Entity
+    {
+        result.Clear();
+        for (var i = 0; i < _entities.Count; i++)
+        {
+            if(_entities[i] is T entity)
+                result.Add(entity);
+        }
+    }
+
     public void Update(World world, float deltaSeconds)
     {
         UpdateLists(world);

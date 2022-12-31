@@ -39,6 +39,8 @@ public class DrawComponent
     private Entity Parent => _parent ?? throw new Exception();
 
     public Dictionary<string, SpriteAnimation> Animations = new(StringComparer.OrdinalIgnoreCase);
+    
+    [HideInInspector]
     public SpriteAnimation? CurrentAnimation;
     private SpriteAnimation? _previousAnimation;
 

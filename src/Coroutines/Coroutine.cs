@@ -2,100 +2,105 @@ namespace MyGame.Coroutines;
 
 public class Coroutine
 {
-	private static readonly WaitHelper WaitHelper = new();
-	private readonly IEnumerator _enumerator;
-	private Coroutine? _childRoutine;
-	private Coroutine? _waitForCoroutine;
-	private float _waitTimer;
-	private string Name;
-	public int NumUpdates { get; private set; }
+    public string Name;
+    private static readonly WaitHelper WaitHelper = new();
+    private readonly Stack<IEnumerator> _enumerators = new();
+    private Coroutine? _waitForCoroutine;
+    private float _waitTimer;
+    private bool _isCancelled;
+    public int NumUpdates { get; private set; }
 
-	public bool IsDone { get; set; }
-	public bool IsPaused { get; set; }
+    public bool IsDone { get; set; }
 
-	public Coroutine(IEnumerator enumerator, string name = "")
-	{
-		Name = name;
-		_enumerator = enumerator;
-	}
+    public Coroutine(IEnumerator enumerator, string name)
+    {
+        Name = name;
+        _enumerators.Push(enumerator);
+    }
 
-	public void Stop()
-	{
-		IsDone = true;
-	}
+    public void Stop()
+    {
+        IsDone = true;
+    }
 
-	public void Tick(float deltaSeconds, bool isUpdate = true)
-	{
-		if (IsDone)
-			return;
+    public void Tick(float deltaSeconds, bool isUpdate = true)
+    {
+        while (true)
+        {
+            if (IsDone) return;
 
-		if(isUpdate)
-			NumUpdates++;
+            if (isUpdate) NumUpdates++;
 
-		if (IsPaused)
-			return;
-		
-		if (_childRoutine != null)
-		{
-			_childRoutine.Tick(deltaSeconds);
-			if (_childRoutine.IsDone)
-				_childRoutine = null;
-			else
-				return;
-		}
+            if (_waitForCoroutine != null)
+            {
+                if (_waitForCoroutine.IsDone)
+                    _waitForCoroutine = null;
+                else
+                    return;
+            }
 
-		if (_waitForCoroutine != null)
-		{
-			if (_waitForCoroutine.IsDone)
-				_waitForCoroutine = null;
-			else
-				return;
-		}
+            if (_waitTimer > 0)
+            {
+                _waitTimer -= deltaSeconds;
+                return;
+            }
 
-		if (_waitTimer > 0)
-		{
-			_waitTimer -= deltaSeconds;
-			return;
-		}
-		
-		if (!_enumerator.MoveNext())
-		{
-			IsDone = true;
-			return;
-		}
+            _isCancelled = false;
+            var enumerator = _enumerators.Peek();
+            if (!enumerator.MoveNext())
+            {
+                if (_isCancelled) // this routine got replaced
+                    continue;
+                _enumerators.Pop();
+                IsDone = _enumerators.Count == 0;
+                continue;
+            }
+            if (_isCancelled) // this routine got replaced
+                continue;
 
-		switch (_enumerator.Current)
-		{
-			case null:
-				// noop
-				break;
-			case WaitHelper waitForSeconds:
-				_waitTimer = waitForSeconds.WaitTime;
-				break;
-			case Coroutine runner:
-				_waitForCoroutine = runner;
-				break;
-			case IEnumerator childRoutine:
-				var child = new Coroutine(childRoutine);
-				child.Tick(deltaSeconds);
-				if (!child.IsDone)
-					_childRoutine = child;
-				else
-					Tick(deltaSeconds, false); // continue execution if the child routine isn't running for more than 1 frame
-				break;
-			default:
-				throw new InvalidOperationException("Coroutine yielded unexpected value");
-		}
-	}
+            switch (enumerator.Current)
+            {
+                case null:
+                    // noop
+                    break;
+                case WaitHelper waitForSeconds:
+                    _waitTimer = waitForSeconds.WaitTime;
+                    break;
+                case Coroutine runner:
+                    _waitForCoroutine = runner;
+                    break;
+                case IEnumerator childRoutine:
+                    _enumerators.Push(childRoutine);
+                    isUpdate = false;
+                    continue;
+                default:
+                    throw new InvalidOperationException("Coroutine yielded unexpected value");
+            }
 
-	public static WaitHelper WaitForSeconds(float seconds)
-	{
-		WaitHelper.WaitTime = seconds;
-		return WaitHelper;
-	}
+            break;
+        }
+    }
+
+    public void Replace(IEnumerator func, string name)
+    {
+        Name = name;
+        _isCancelled = true;
+        IsDone = false;
+        NumUpdates = 0;
+        _waitTimer = 0;
+        _waitForCoroutine = null;
+        _enumerators.Clear();
+        _enumerators.Push(func);
+    }
+
+    public static WaitHelper WaitForSeconds(float seconds)
+    {
+        WaitHelper.WaitTime = seconds;
+        return WaitHelper;
+    }
 }
 
 public class WaitHelper
 {
-	public float WaitTime;
+    public float WaitTime;
 }

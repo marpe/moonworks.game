@@ -15,106 +15,150 @@ public struct PlayerCommand
 public class PlayerBehaviour
 {
     private Player? _player;
+    private PlayerCommand _command;
+    private Coroutine? _locomoteRoutine;
+    private float _jumpHeldTimer = 0;
+    private IEnumerator? _groundMove;
+    private IEnumerator? _airMove;
+    private bool _firstGroundUpdate;
+    private float _fallDuration;
+    private bool _hasJumped;
 
     public Player Player => _player ?? throw new InvalidOperationException();
+
+    private float dt => Shared.Game.Time.ElapsedTime;
 
     public void Initialize(Player player)
     {
         _player = player;
+
+        player.CoroutineManager.StartCoroutine(CheckJumpHeld());
+        _groundMove = GroundMove();
+        _airMove = AirMove();
+        _locomoteRoutine = player.CoroutineManager.StartCoroutine(_groundMove);
+        player.CoroutineManager.StartCoroutine(RespawnRoutine());
+        player.CoroutineManager.StartCoroutine(WeaponRoutine());
+        player.CoroutineManager.StartCoroutine(MouseMoveRoutine());
     }
 
-    private IEnumerator JumpRoutine()
+    private IEnumerator CheckJumpHeld()
     {
-        yield break;
-    }
-
-    public void Update(float deltaSeconds, PlayerCommand command)
-    {
-        if (command.Respawn)
+        while (true)
         {
-            Player.Position.SetPrevAndCurrent(Player.Position.Initial);
-        }
-
-        if (command.IsFiring)
-        {
-            var direction = Player.Draw.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
-            Player.World.SpawnBullet(Player.Position.Current, direction);
-            Player.World.SpawnMuzzleFlash(Player.Position.Current, direction);
-        }
-
-        if (Player.Mover.IsGrounded(Player.Velocity))
-        {
-            Player.LastOnGroundTime = Player.TotalTimeActive;
-        }
-
-        if (command.MovementX != 0)
-        {
-            Player.Velocity.X += command.MovementX * Player.Speed;
-        }
-
-        if (command.MoveToMouse)
-        {
-            var mousePosition = Shared.Game.InputHandler.MousePosition;
-            var view = Shared.Game.Camera.GetView(0);
-            Matrix3x2.Invert(view, out var invertedView);
-            var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
-
-            var offset = mouseInWorld - Player.Position;
-            Player.Velocity.Delta = offset * deltaSeconds * 1000f;
-        }
-
-        // initiate jump
-        var timeSinceOnGround = Player.TotalTimeActive - Player.LastOnGroundTime;
-        if (!Player.IsJumping && command.IsJumpPressed && timeSinceOnGround < 0.1f)
-        {
-            Player.Draw.Squash = new Vector2(0.6f, 1.4f);
-            Player.LastOnGroundTime = 0;
-            Player.Velocity.Y = Player.JumpSpeed;
-            Player.LastJumpStartTime = Player.TotalTimeActive;
-            Player.IsJumping = true;
-        }
-
-        // ascending jump
-        if (Player.IsJumping)
-        {
-            if (!command.IsJumpDown)
-            {
-                Player.IsJumping = false;
-            }
+            if (_command.IsJumpDown)
+                _jumpHeldTimer += dt;
             else
-            {
-                // check if we've reached the peak of the jump
-                var timeAirborne = Player.TotalTimeActive - Player.LastJumpStartTime;
-                if (timeAirborne > Player.JumpHoldTime)
-                {
-                    Player.IsJumping = false;
-                }
-            }
+                _jumpHeldTimer = 0;
+
+            yield return null;
         }
-
-        Player.Mover.PerformMove(Player.Velocity, deltaSeconds);
-
-        if (Mover.HasCollisionInDirection(CollisionDir.Down, Player.Mover.MoveCollisions))
-        {
-            Player.Draw.Squash = new Vector2(1.5f, 0.5f);
-        }
-
-        if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
-        {
-            Player.IsJumping = false; // hitting a ceiling cancels jump
-            Player.Draw.Squash = new Vector2(1.5f, 0.5f);
-        }
-
-        // falling
-        if (!Player.Mover.IsGrounded(Player.Velocity) && !Player.IsJumping && !command.MoveToMouse)
-        {
-            Player.Velocity.Y += Player.World.Gravity * deltaSeconds;
-        }
-
-        UpdateAnimation(command);
     }
 
-    private void UpdateAnimation(PlayerCommand command)
+    private IEnumerator RespawnRoutine()
+    {
+        while (true)
+        {
+            if (_command.Respawn)
+            {
+                Player.Position.SetPrevAndCurrent(Player.Position.Initial);
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator WeaponRoutine()
+    {
+        while (true)
+        {
+            if (_command.IsFiring)
+            {
+                var direction = Player.Draw.Flip == SpriteFlip.FlipHorizontally ? -1 : 1;
+                Player.World.SpawnBullet(Player.Position.Current, direction);
+                Player.World.SpawnMuzzleFlash(Player.Position.Current, direction);
+
+                Player.Draw.PlayAnimation("Fire");
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator MouseMoveRoutine()
+    {
+        while (true)
+        {
+            if (_command.MoveToMouse)
+            {
+                var mousePosition = Shared.Game.InputHandler.MousePosition;
+                var view = Shared.Game.Camera.GetView(0);
+                Matrix3x2.Invert(view, out var invertedView);
+                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+
+                var offset = mouseInWorld - Player.Position;
+                Player.Velocity.Delta = offset * dt * 1000f;
+                Player.Mover.PerformMove(Player.Velocity, dt);
+            }
+
+            yield return null;
+        }
+    }
+
+    private void ChangeState(IEnumerator nextState, string name)
+    {
+        _firstGroundUpdate = true;
+        
+        _fallDuration = 0;
+        _hasJumped = false;
+
+        _locomoteRoutine!.Replace(nextState, name);
+    }
+
+    private IEnumerator GroundMove()
+    {
+        while (true)
+        {
+            var isGrounded = Player.Mover.IsGrounded(Player.Velocity);
+            if (!isGrounded)
+            {
+                ChangeState(_airMove!, nameof(AirMove));
+                yield return null;
+                continue;
+            }
+
+            if (_command.IsJumpPressed || (_firstGroundUpdate && _command.IsJumpDown && _jumpHeldTimer < 0.1f))
+            {
+                ChangeState(_airMove!, nameof(AirMove));
+                yield return null;
+                continue;
+            }
+
+            _firstGroundUpdate = false;
+
+            // horizontal movement
+            if (_command.MovementX != 0)
+            {
+                Player.Velocity.X += _command.MovementX * Player.Speed;
+
+                Player.Draw.PlayAnimation("Run");
+                Player.Draw.IsAnimating = true;
+
+                UpdateSpriteFlip();
+            }
+
+            if (MathF.IsNearZero(Player.Velocity.X, 1f))
+            {
+                Player.Draw.IsAnimating = false;
+                Player.Draw.FrameIndex = 0;
+            }
+
+            Player.Mover.PerformMove(Player.Velocity, dt);
+
+            yield return null;
+        }
+    }
+
+    private void UpdateSpriteFlip()
     {
         Player.Draw.Flip = Player.Velocity.X switch
         {
@@ -122,31 +166,83 @@ public class PlayerBehaviour
             < 0 => SpriteFlip.FlipHorizontally,
             _ => Player.Draw.Flip
         };
+    }
 
-        if (command.IsFiring)
-        {
-            Player.Draw.PlayAnimation("Fire");
-            return;
-        }
+    private IEnumerator AirMove()
+    {
 
-        if (Player.IsJumping)
+        while (true)
         {
             Player.Draw.PlayAnimation("Run");
             Player.Draw.IsAnimating = false;
-            return;
-        }
+            
+            if ((_command.IsJumpPressed || _command.IsJumpDown && _jumpHeldTimer < 0.1f) && _fallDuration < 0.1f && !_hasJumped)
+            {
+                _hasJumped = true;
+                Player.Draw.Squash = new Vector2(0.6f, 1.4f);
 
-        if (command.MovementX != 0 && Player.Mover.IsGrounded(Player.Velocity))
-        {
-            Player.Draw.PlayAnimation("Run");
-            Player.Draw.IsAnimating = true;
-            return;
-        }
+                // vertical movement
+                Player.Velocity.Y = Player.JumpSpeed;
 
-        if (MathF.IsNearZero(Player.Velocity.X, 1f))
-        {
-            Player.Draw.IsAnimating = false;
-            Player.Draw.FrameIndex = 0;
+                var jumpTime = 0f;
+                while (true)
+                {
+                    jumpTime += dt;
+
+                    if (!_command.IsJumpDown)
+                        break;
+
+                    if (jumpTime > Player.JumpMaxHoldTime)
+                        break;
+
+                    // horizontal movement
+                    if (_command.MovementX != 0)
+                    {
+                        Player.Velocity.X += _command.MovementX * Player.Speed;
+                        UpdateSpriteFlip();
+                    }
+
+                    Player.Mover.PerformMove(Player.Velocity, dt);
+
+                    if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
+                    {
+                        Player.Draw.Squash = new Vector2(1.5f, 0.5f);
+                        break;
+                    }
+
+                    yield return null;
+                }
+            }
+
+            _fallDuration += dt;
+
+            // vertical movement
+            Player.Velocity.Y += Player.World.Gravity * dt;
+
+            // horizontal movement
+            if (_command.MovementX != 0)
+            {
+                Player.Velocity.X += _command.MovementX * Player.Speed;
+                UpdateSpriteFlip();
+            }
+
+            Player.Mover.PerformMove(Player.Velocity, dt);
+
+            // land on ground
+            if (Mover.HasCollisionInDirection(CollisionDir.Down, Player.Mover.MoveCollisions))
+            {
+                Player.Draw.Squash = new Vector2(1.5f, 0.5f);
+                ChangeState(_groundMove!, nameof(GroundMove));
+                yield return null;
+                continue;
+            }
+
+            yield return null;
         }
+    }
+
+    public void Update(float deltaSeconds, PlayerCommand command)
+    {
+        _command = command;
     }
 }

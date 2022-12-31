@@ -42,6 +42,7 @@ public class ConsoleRenderPass : RenderPass
 
 public class WorldRenderPass : RenderPass
 {
+    private List<Light> _lights = new();
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         DrawWorld(renderer, ref commandBuffer, Shared.Game.RenderTargets.GameRender, alpha);
@@ -147,20 +148,20 @@ public class WorldRenderPass : RenderPass
     {
         var tempCameraBounds = cameraBounds;
         var tempCommandBuffer = commandBuffer;
-        world.Entities.ForEach((entity) =>
+        world.Entities.FindAll(_lights);
+        for(var i = 0; i < _lights.Count; i++)
         {
-            if (entity is not Light light)
-                return;
+            var light = _lights[i];
             if (!light.IsEnabled)
-                return;
+                continue;
             if (!light.Bounds.Intersects(tempCameraBounds))
-                return;
+                continue;
             var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
             var fragUniform = new Pipelines.RimLightUniforms()
             {
                 LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
                 LightIntensity = light.Intensity,
-                LightRadius = Math.Max(light.Width, light.Height) / MathF.Sqrt(2),
+                LightRadius = Math.Max(light.Width, light.Height) * 0.5f,
                 LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
                 VolumetricIntensity = light.VolumetricIntensity,
                 RimIntensity = light.RimIntensity,
@@ -184,7 +185,7 @@ public class WorldRenderPass : RenderPass
             var vertexParamOffset = tempCommandBuffer.PushVertexShaderUniforms(vertUniform);
             tempCommandBuffer.BindFragmentSamplers(fragmentBindings);
             SpriteBatch.DrawIndexedQuads(ref tempCommandBuffer, 0, 1, vertexParamOffset, fragmentParamOffset);
-        });
+        }
     }
 }
 
@@ -212,9 +213,9 @@ public class DebugRenderPass : RenderPass
 {
     private void DrawViewBounds(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
     {
-        if (!World.Debug) return;
+        /*if (!World.Debug) */return;
 
-        renderer.DrawRectOutline(Vector2.Zero, Shared.Game.RenderTargets.CompositeRender.Size, Color.LimeGreen, 10f);
+        renderer.DrawRectOutline(Vector2.Zero, Shared.Game.RenderTargets.CompositeRender.Size, Color.LimeGreen, 1f);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 

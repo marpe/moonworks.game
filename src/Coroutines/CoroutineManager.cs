@@ -2,68 +2,77 @@ namespace MyGame.Coroutines;
 
 public class CoroutineManager : IDisposable
 {
-	private readonly List<Coroutine> _routines = new();
-	private readonly List<Coroutine> _routinesToAddNextFrame = new();
-	private readonly List<Coroutine> _routinesToUpdate = new();
-	public bool IsDisposed { get; private set; }
+    private readonly List<Coroutine> _routines = new();
+    private readonly List<Coroutine> _routinesToAddNextFrame = new();
+    private readonly List<Coroutine> _routinesToUpdate = new();
+    public bool IsDisposed { get; private set; }
 
-	public Coroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds = 0, [CallerArgumentExpression(nameof(enumerator))] string name = "")
-	{
-		if (IsDisposed)
-			throw new ObjectDisposedException(nameof(CoroutineManager));
+    public Coroutine StartCoroutine(IEnumerator enumerator, float deltaSeconds = 0, bool runNextFrame = true,
+        [CallerArgumentExpression(nameof(enumerator))] string name = "")
+    {
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(CoroutineManager));
 
-		var coroutine = new Coroutine(enumerator, name);
-		coroutine.Tick(deltaSeconds);
-		if (!coroutine.IsDone)
-			_routinesToAddNextFrame.Add(coroutine);
-		return coroutine;
-	}
+        var coroutine = new Coroutine(enumerator, name);
+        if (runNextFrame)
+        {
+            _routinesToAddNextFrame.Add(coroutine);
+        }
+        else
+        {
+            coroutine.Tick(deltaSeconds);
+            if (!coroutine.IsDone)
+                _routinesToAddNextFrame.Add(coroutine);
+        }
 
-	public void StopAll()
-	{
-		foreach (var coroutine in _routines)
-		{
-			coroutine.Stop();
-		}
+        return coroutine;
+    }
 
-		foreach (var coroutine in _routinesToAddNextFrame)
-		{
-			coroutine.Stop();
-		}
+    public void StopAll()
+    {
+        foreach (var coroutine in _routines)
+        {
+            coroutine.Stop();
+        }
 
-		_routinesToAddNextFrame.Clear();
-	}
+        foreach (var coroutine in _routinesToAddNextFrame)
+        {
+            coroutine.Stop();
+        }
 
-	public void Dispose()
-	{
-		if (IsDisposed)
-			return;
+        _routinesToAddNextFrame.Clear();
+    }
 
-		_routines.Clear();
-		_routinesToUpdate.Clear();
-		_routinesToAddNextFrame.Clear();
+    public void Dispose()
+    {
+        if (IsDisposed)
+            return;
 
-		IsDisposed = true;
-		GC.SuppressFinalize(this);
-	}
+        _routines.Clear();
+        _routinesToUpdate.Clear();
+        _routinesToAddNextFrame.Clear();
 
-	public void Update(float deltaSeconds)
-	{
-		if (IsDisposed)
-			throw new ObjectDisposedException(nameof(CoroutineManager));
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+    }
 
-		_routinesToUpdate.Clear();
-		_routinesToUpdate.AddRange(_routines);
+    public void Update(float deltaSeconds)
+    {
+        if (IsDisposed)
+            throw new ObjectDisposedException(nameof(CoroutineManager));
 
-		for (var i = 0; i < _routinesToUpdate.Count; i++)
-		{
-			var coroutine = _routinesToUpdate[i];
-			coroutine.Tick(deltaSeconds);
-			if (coroutine.IsDone)
-				_routines.Remove(coroutine);
-		}
+        _routinesToUpdate.Clear();
+        _routinesToUpdate.AddRange(_routines);
 
-		_routines.AddRange(_routinesToAddNextFrame);
-		_routinesToAddNextFrame.Clear();
-	}
+        for (var i = 0; i < _routinesToUpdate.Count; i++)
+        {
+            var coroutine = _routinesToUpdate[i];
+            coroutine.Tick(deltaSeconds);
+            if (coroutine.IsDone)
+                _routines.Remove(coroutine);
+        }
+
+        _routines.AddRange(_routinesToAddNextFrame);
+        _routinesToAddNextFrame.Clear();
+    }
 }

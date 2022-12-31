@@ -10,19 +10,25 @@ public abstract class Enemy : Entity
 {
     public Velocity Velocity = new();
 
-    [HideInInspector] public float TimeOffset;
+    [HideInInspector]
+    public float TimeOffset;
 
     protected EnemyBehaviour? _behaviour;
+    
+    [HideInInspector]
     public EnemyBehaviour Behaviour => _behaviour ?? throw new InvalidOperationException();
 
-    [HideInInspector] public float FreezeMovementUntil;
-
+    [HideInInspector]
+    public float FreezeMovementUntil;
+    
+    [HideInInspector]
     public Mover Mover = new();
 
-    [HideInInspector] public FacingDirection FacingDirection = FacingDirection.Right;
+    [HideInInspector]
+    public FacingDirection FacingDirection = FacingDirection.Right;
 
     public bool IsDead;
-    
+
     private Light? _light;
 
     public override void Initialize(World world)

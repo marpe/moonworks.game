@@ -3,25 +3,33 @@
 [CustomInspector<GroupInspector>]
 public class Entity
 {
+    [HideInInspector]
     public Guid Iid;
+
     public Point Size;
     public Vector2 Pivot;
     public Color SmartColor;
-    
-    [HideInInspector] public bool IsInitialized { get; private set; }
 
-    [HideInInspector] public bool IsDestroyed { get; private set; }
+    [HideInInspector]
+    public bool IsInitialized { get; private set; }
 
+    [HideInInspector]
+    public bool IsDestroyed { get; private set; }
+
+    [HideInInspector]
     public Bounds Bounds => new(Position.Current.X, Position.Current.Y, Size.X, Size.Y);
 
-    [HideInInspector] public int Width => Size.X;
+    [HideInInspector]
+    public int Width => Size.X;
 
-    [HideInInspector] public int Height => Size.Y;
+    [HideInInspector]
+    public int Height => Size.Y;
 
     [HideInInspector]
     public Point HalfSize => new Point(Width / 2, Height / 2);
-    
-    [HideInInspector] public Vector2 Center
+
+    [HideInInspector]
+    public Vector2 Center
     {
         get => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
         set => Position.Current = value - HalfSize;
@@ -29,8 +37,10 @@ public class Entity
 
     private World? _world;
 
-    [HideInInspector] public World World => _world ?? throw new InvalidOperationException();
+    [HideInInspector]
+    public World World => _world ?? throw new InvalidOperationException();
 
+    [HideInInspector]
     public CoroutineManager CoroutineManager = new();
 
     [CustomDrawInspector(nameof(DrawPosition))]
@@ -46,7 +56,8 @@ public class Entity
 
     public Point Cell => ToCell(Position);
 
-    [HideInInspector] public float TotalTimeActive;
+    [HideInInspector]
+    public float TotalTimeActive;
 
     public DrawComponent Draw = new();
 
@@ -69,7 +80,7 @@ public class Entity
     {
         return HasCollision(x, y, _world ?? throw new Exception());
     }
-    
+
     public static bool HasCollision(int x, int y, World world)
     {
         if (x < world.LevelMin.X || y < world.LevelMin.Y || x >= world.LevelMax.X || y >= world.LevelMax.Y)
@@ -132,7 +143,7 @@ public class Entity
     {
         Initialize(world);
     }
-    
+
     public virtual void OnEntityRemoved()
     {
     }

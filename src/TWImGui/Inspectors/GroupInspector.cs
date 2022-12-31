@@ -166,7 +166,10 @@ public unsafe class GroupInspector : Inspector
 
         if (drawWindow && _drawInSeparateWindow)
         {
-            if (ImGuiExt.Begin($"{title}###GroupWindow{_id}", ref _drawInSeparateWindow))
+            ImGui.SetNextWindowSize(new Num.Vector2(400, 400), ImGuiCond.FirstUseEver);
+            var windowFlags = ImGuiWindowFlags.NoSavedSettings |
+                              ImGuiWindowFlags.NoCollapse;
+            if (ImGuiExt.Begin($"{title}###GroupWindow{_id}", ref _drawInSeparateWindow, windowFlags))
             {
                 Draw(path + "/Window", false, true);
             }

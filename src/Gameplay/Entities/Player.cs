@@ -3,11 +3,8 @@ namespace MyGame.Entities;
 [CustomInspector<GroupInspector>]
 public class Player : Entity
 {
-    public bool IsJumping;
-    public float JumpHoldTime = 0.3f;
+    public float JumpMaxHoldTime = 0.3f;
     public float JumpSpeed = -300f;
-    public float LastJumpStartTime;
-    public float LastOnGroundTime;
     public float Speed = 20f;
     private static Vector2 _savedPos;
 
