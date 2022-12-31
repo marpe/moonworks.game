@@ -55,7 +55,7 @@ public class FPSDisplay
         _updateDurationMs = _updateStopwatch.GetElapsedMilliseconds();
     }
 
-    public void DrawFPS(Renderer renderer, CommandBuffer commandBuffer, Texture renderDestination, FPSDisplayPosition corner = FPSDisplayPosition.BottomRight)
+    public void DrawFPS(Renderer renderer, Vector2 renderSize, FPSDisplayPosition corner = FPSDisplayPosition.BottomRight)
     {
         var origin = corner switch
         {
@@ -65,7 +65,7 @@ public class FPSDisplay
             _ => new Vector2(0, 1),
         };
 
-        var position = renderDestination.Size() * origin;
+        var position = renderSize * origin;
         _peakUpdateDurationMs = StopwatchExt.SmoothValue(_peakUpdateDurationMs, _updateDurationMs);
         _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
         _peakRenderGameDurationMs = StopwatchExt.SmoothValue(_peakRenderGameDurationMs, _renderGameDurationMs);
@@ -81,6 +81,5 @@ public class FPSDisplay
         
         renderer.DrawRect(bg, Color.Black * 0.66f);
         renderer.DrawFTText(BMFontType.ConsolasMonoSmall, str, min, Color.Yellow);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }

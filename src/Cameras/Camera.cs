@@ -32,7 +32,16 @@ public class Camera
     public Vector2 BrakeZone => _brakeZoneInPercentOfViewport * ZoomedSize;
     private float _brakeZoneInPercentOfViewport = 0.2f;
 
+    [CustomDrawInspector(nameof(DrawPosition))]
     public Position Position = new();
+
+    private void DrawPosition()
+    {
+        if (ImGuiExt.InspectVector2("Position", ref Position.Current.X, ref Position.Current.Y))
+        {
+            Position.SetLastUpdatePosition();
+        }
+    }
 
     public Vector3 Position3D = new(0, 0, -1000);
 
@@ -92,7 +101,7 @@ public class Camera
     private float _freezeCameraTimer;
 
     private Vector2 _trackingSpeed = new(5f, 5f);
-    public bool ClampToLevelBounds;
+    public bool ClampToLevelBounds = true;
 
     public Rectangle LevelBounds = Rectangle.Empty;
 
@@ -116,13 +125,7 @@ public class Camera
         Rotation3D = Quaternion.CreateFromYawPitchRoll(_cameraRotation3D.X, _cameraRotation3D.Y, 0);
 
         _size = new UPoint(width, height);
-        Zoom = GetZoomFromRenderScale();
-        FloorViewPosition = RenderTargets.RenderScale > 1; // only floor when rendering at a larger scale than 1
-    }
-
-    private static float GetZoomFromRenderScale()
-    {
-        return 5 - RenderTargets.RenderScale; // should be 1 when rendering at 480x270 and 4 when rendering at 1920x1080
+        Zoom = 1;
     }
 
     public void Update(float deltaSeconds, InputHandler input)
@@ -311,7 +314,7 @@ public class Camera
 
             if (Binds.GetAction(Binds.InputAction.Reset).Active)
             {
-                Zoom = GetZoomFromRenderScale();
+                Zoom = 1;
                 TargetPosition = _trackingEntity != null ? _trackingEntity.Center + _targetOffset : TargetPosition;
                 Position.Current = TargetPosition;
             }
@@ -387,16 +390,22 @@ public class Camera
         );
     }
 
-    private Matrix4x4 GetProjection(uint width, uint height)
+    private static Matrix4x4 GetProjection(uint width, uint height)
     {
         return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
     }
 
-    private Matrix4x4 GetProjection3D(uint width, uint height)
+    private static float GetVerticalFovDegrees(float horizontalFovDegrees, float aspectRatio)
+    {
+        var hFov = horizontalFovDegrees * MathF.Deg2Rad;
+        var vFov = MathF.Atan(MathF.Tan(hFov / 2.0f) / aspectRatio) * 2.0f;
+        return vFov;
+    }
+
+    private static Matrix4x4 GetProjection3D(float horizontalFovDegrees, uint width, uint height)
     {
         var aspectRatio = width / (float)height;
-        var hFov = _horizontalFovDegrees * MathF.Deg2Rad;
-        var vFov = MathF.Atan(MathF.Tan(hFov / 2.0f) / aspectRatio) * 2.0f;
+        var vFov = GetVerticalFovDegrees(horizontalFovDegrees, aspectRatio);
         return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
     }
 
@@ -407,7 +416,7 @@ public class Camera
         var cameraView3D = GetView3D();
 
         var projection = GetProjection(width, height);
-        var projection3D = GetProjection3D(width, height);
+        var projection3D = GetProjection3D(_horizontalFovDegrees, width, height);
 
         return Matrix4x4.Lerp(cameraView * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }

@@ -416,7 +416,7 @@ public class ConsoleScreen
 
     public static bool CanSkipChar(char c) => c < 0x20 || c > 0x7e || c == ' ';
 
-    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, double alpha)
     {
         if (ConsoleScreenState == ConsoleScreenState.Hidden)
             return;
@@ -513,7 +513,6 @@ public class ConsoleScreen
             DrawText(renderer, scrolledLinesStr, scrollLinesPos, 0, Color.Yellow);
         }
         
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
         _drawCalls = renderer.SpriteBatch.DrawCalls;
         _renderStopwatch.Stop();
         _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();

@@ -38,9 +38,9 @@ public class PixelizeTransition : SceneTransition
         var fragmentBindings = new[]
         {
             new TextureSamplerBinding(), // dummy entry, will be replaced with whatever texture was supplied to DrawSprite, which is horribly ugly I know...
-            new TextureSamplerBinding(toTexture, Renderer.PointClamp)
+            new TextureSamplerBinding(toTexture, SpriteBatch.PointClamp)
         };
-        renderer.DrawIndexedSprites(ref commandBuffer, vertUniform, FragUniform, fragmentBindings);
+        renderer.DrawIndexedSprites(ref commandBuffer, vertUniform, FragUniform, fragmentBindings, true);
 
         renderer.EndRenderPass(ref commandBuffer);
     }

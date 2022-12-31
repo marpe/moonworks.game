@@ -28,6 +28,12 @@ public class World
     [CVar("mouse.debug", "Toggle mouse debugging", false)]
     public static bool DebugMouse;
     
+    [CVar("lights_enabled", "Toggle lights")]
+    public static bool LightsEnabled = true;
+    
+    [CVar("rim_lights_enabled", "Toggle lights")]
+    public static bool RimLightsEnabled = true;
+    
     private readonly DebugDrawItems _debugDraw;
 
     public float Gravity = 800f;
@@ -330,16 +336,10 @@ public class World
 
         Entities.Update(this, deltaSeconds);
     }
-
-    public void Draw(Renderer renderer, Camera camera, double alpha, bool usePointFiltering)
+    
+    public void DrawEntities(Renderer renderer, double alpha)
     {
-        LevelRenderer.DrawLevel(renderer, this, Root, Level, camera.ZoomedBounds, usePointFiltering, drawBackground: true);
-        DrawEntities(renderer, alpha, usePointFiltering);
-    }
-
-    public void DrawEntities(Renderer renderer, double alpha, bool usePointFiltering)
-    {
-        Entities.Draw(renderer, alpha, usePointFiltering);
+        Entities.Draw(renderer, alpha);
     }
 
     public void Unload()

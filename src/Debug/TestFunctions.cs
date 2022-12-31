@@ -24,6 +24,6 @@ public class TestFunctions
         var xform = GetTransform(new Point(16, 16), new Vector2(0.5f, 0.5f), position, prevPosition, new Vector2(ts), alpha);
         var sprite = ContentPaths.animations.skull_aseprite;
         var texture = Shared.Content.Load<TextureAsset>(sprite).TextureSlice.Texture;
-        renderer.DrawSprite(texture, xform, Color.White, 0, SpriteFlip.None, true);
+        renderer.DrawSprite(texture, xform, Color.White, 0, SpriteFlip.None);
     }
 }

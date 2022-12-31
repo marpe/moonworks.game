@@ -34,7 +34,7 @@ public class OptionsMenuScreen : MenuScreen
 
         var windowDisplayIndex = SDL.SDL_GetWindowDisplayIndex(_game.MainWindow.Handle);
         var desktopDisplayMode = MyGameMain.GetDesktopDisplayMode(windowDisplayIndex);
-        var gameResolution = _game.RenderTargets.GameRenderSize;
+        var gameResolution = _game.RenderTargets.GameSize;
         _maxScale = Math.Max(
             1,
             Math.Min(

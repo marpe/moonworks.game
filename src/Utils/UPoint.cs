@@ -4,6 +4,11 @@ public record struct UPoint(uint X, uint Y)
 {
     public static readonly UPoint One = new(1u, 1u);
 
+    public static UPoint operator -(UPoint a, UPoint b)
+    {
+        return new UPoint(a.X - b.X, a.Y - b.Y);
+    }
+    
     public static UPoint operator +(UPoint a, UPoint b)
     {
         return new UPoint(a.X + b.X, a.Y + b.Y);
@@ -17,6 +22,11 @@ public record struct UPoint(uint X, uint Y)
     public static UPoint operator /(UPoint p, uint n)
     {
         return new UPoint(p.X / n, p.Y / n);
+    }
+    
+    public static UPoint operator /(UPoint a, UPoint b)
+    {
+        return new UPoint(a.X / b.X, a.Y / b.Y);
     }
 
     public static implicit operator Point(UPoint p)

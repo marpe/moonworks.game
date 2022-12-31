@@ -98,12 +98,12 @@ public class EntityList
         _tempList.Clear();
     }
 
-    public void Draw(Renderer renderer, double alpha, bool usePointFiltering)
+    public void Draw(Renderer renderer, double alpha)
     {
         for (var i = 0; i < _entities.Count; i++)
         {
             var entity = _entities[i];
-            entity.Draw.Draw(renderer, alpha, usePointFiltering);
+            entity.Draw.Draw(renderer, alpha);
         }
     }
 

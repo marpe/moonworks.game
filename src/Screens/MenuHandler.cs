@@ -60,19 +60,14 @@ public class MenuHandler
         }
     }
 
-    public void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
+    public void Draw(Renderer renderer, double alpha)
     {
-        if (Menus.Count > 0)
-        {
-            foreach (var menu in Menus)
-            {
-                menu.Draw(renderer, alpha);
-            }
-
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Transparent, null);
+        if (Menus.Count == 0)
             return;
-        }
 
-        renderer.Clear(ref commandBuffer, renderDestination, Color.Transparent);
+        foreach (var menu in Menus)
+        {
+            menu.Draw(renderer, alpha);
+        }
     }
 }

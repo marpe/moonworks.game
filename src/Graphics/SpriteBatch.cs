@@ -10,6 +10,9 @@ public enum SpriteFlip
 
 public class SpriteBatch
 {
+    public static Sampler PointClamp = null!;
+    public static Sampler LinearClamp = null!;
+    
     [CVar("batch_round", "Toggle rounding of destinations when rendering with SpriteBatch")]
     public static bool ShouldRoundPositions;
 
@@ -26,7 +29,7 @@ public class SpriteBatch
 
     public uint LastNumAddedSprites { get; private set; }
 
-    private TextureSamplerBinding[] _spriteInfo;
+    private Texture[] _spriteInfo;
     private Buffer _vertexBuffer;
 
     private Position3DTextureColorVertex[] _vertices;
@@ -41,9 +44,12 @@ public class SpriteBatch
 
     public SpriteBatch(GraphicsDevice device)
     {
+        PointClamp = new Sampler(device, SamplerCreateInfo.PointClamp);
+        LinearClamp = new Sampler(device, SamplerCreateInfo.LinearClamp);
+        
         _device = device;
         var maxSprites = 8192u;
-        _spriteInfo = new TextureSamplerBinding[maxSprites];
+        _spriteInfo = new Texture[maxSprites];
         _vertices = new Position3DTextureColorVertex[_spriteInfo.Length * 4];
         _vertexBuffer = Buffer.Create<Position3DTextureColorVertex>(device, BufferUsageFlags.Vertex, (uint)_vertices.Length);
         _indices = GenerateIndexArray((uint)(_spriteInfo.Length * 6));
@@ -55,15 +61,18 @@ public class SpriteBatch
     {
         _vertexBuffer.Dispose();
         _indexBuffer.Dispose();
+
+        PointClamp.Dispose();
+        LinearClamp.Dispose();
     }
 
-    public void Draw(Sprite sprite, Color color, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
+    public void Draw(Sprite sprite, Color color, float depth, Matrix4x4 transform, SpriteFlip flip = SpriteFlip.None)
     {
         _tempColors.AsSpan().Fill(color);
-        Draw(sprite, _tempColors, depth, transform, sampler, flip);
+        Draw(sprite, _tempColors, depth, transform, flip);
     }
 
-    public void Draw(Sprite sprite, Color[] colors, float depth, Matrix4x4 transform, Sampler sampler, SpriteFlip flip = SpriteFlip.None)
+    public void Draw(Sprite sprite, Color[] colors, float depth, Matrix4x4 transform, SpriteFlip flip = SpriteFlip.None)
     {
         if (_numSprites == _spriteInfo.Length)
         {
@@ -82,8 +91,7 @@ public class SpriteBatch
             _indicesNeedsUpdate = true;
         }
 
-        _spriteInfo[_numSprites].Sampler = sampler;
-        _spriteInfo[_numSprites].Texture = sprite.TextureSlice.Texture;
+        _spriteInfo[_numSprites] = sprite.TextureSlice.Texture;
 
         PushSpriteVertices(_vertices, _numSprites * 4, sprite, transform, depth, colors, flip);
 
@@ -122,17 +130,17 @@ public class SpriteBatch
 
     /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
     public void DrawIndexed<TVertUniform, TFragmentUniform>(ref CommandBuffer commandBuffer, TVertUniform vertUniforms, TFragmentUniform fragmentUniforms,
-        TextureSamplerBinding[] fragmentSamplerBindings) where TVertUniform : unmanaged where TFragmentUniform : unmanaged
+        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering) where TVertUniform : unmanaged where TFragmentUniform : unmanaged
     {
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniforms);
         var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragmentUniforms);
-        DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentSamplerBindings);
+        DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentSamplerBindings, usePointFiltering);
     }
 
-    public void DrawIndexed(ref CommandBuffer commandBuffer, Matrix4x4 viewProjection)
+    public void DrawIndexed(ref CommandBuffer commandBuffer, Matrix4x4 viewProjection, bool usePointFiltering)
     {
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
-        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings);
+        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings, usePointFiltering);
     }
 
     public void Discard()
@@ -140,7 +148,7 @@ public class SpriteBatch
         _numSprites = 0;
     }
 
-    private void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings)
+    private void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering)
     {
         MaxDrawCalls = MaxDrawCalls > DrawCalls ? MathF.Lerp(MaxDrawCalls, DrawCalls, 0.05f) : DrawCalls;
         DrawCalls = 0;
@@ -154,19 +162,21 @@ public class SpriteBatch
         commandBuffer.BindVertexBuffers(_vertexBuffer);
         commandBuffer.BindIndexBuffer(_indexBuffer, IndexElementSize.ThirtyTwo);
 
-        fragmentSamplerBindings[0] = _spriteInfo[0];
+        var textureBinding = new TextureSamplerBinding(_spriteInfo[0], usePointFiltering ? PointClamp : LinearClamp);
+        
+        fragmentSamplerBindings[0] = textureBinding;
         var offset = 0u;
 
         for (var i = 1u; i < _numSprites; i += 1)
         {
             var spriteInfo = _spriteInfo[i];
 
-            if (!BindingsAreEqual(fragmentSamplerBindings[0], spriteInfo))
+            if (fragmentSamplerBindings[0].Texture.Handle != spriteInfo.Handle)
             {
                 commandBuffer.BindFragmentSamplers(fragmentSamplerBindings);
                 DrawIndexedQuads(ref commandBuffer, offset, i - offset, vertexUniformOffset, fragmentUniformOffset);
                 DrawCalls++;
-                fragmentSamplerBindings[0] = spriteInfo;
+                fragmentSamplerBindings[0].Texture = spriteInfo;
                 offset = i;
             }
         }
@@ -253,11 +263,5 @@ public class SpriteBatch
     public static void DrawIndexedQuads(ref CommandBuffer commandBuffer, uint offset, uint numSprites, uint vertexParamOffset, uint fragmentParamOffset)
     {
         commandBuffer.DrawIndexedPrimitives(offset * 4u, 0u, numSprites * 2u, vertexParamOffset, fragmentParamOffset);
-    }
-
-    public static bool BindingsAreEqual(in TextureSamplerBinding a, in TextureSamplerBinding b)
-    {
-        return a.Sampler.Handle == b.Sampler.Handle &&
-               a.Texture.Handle == b.Texture.Handle;
     }
 }

@@ -19,7 +19,7 @@ public class DiamondTransition : SceneTransition
         if (compositeOldCopy != null && isLoading)
         {
             renderer.DrawSprite(new Sprite(compositeOldCopy), Matrix4x4.Identity, Color.White);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
         }
 
         renderer.DrawRect(new Rectangle(0, 0, (int)renderDestination.Width, (int)renderDestination.Height), Color.Black, 1f);
@@ -27,7 +27,7 @@ public class DiamondTransition : SceneTransition
         renderer.BeginRenderPass(ref commandBuffer, renderDestination, null, PipelineType.DiamondTransition);
         Uniform.Progress = progress;
         var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(Uniform);
-        renderer.DrawIndexedSprites(ref commandBuffer, null);
+        renderer.DrawIndexedSprites(ref commandBuffer, null, true);
         renderer.EndRenderPass(ref commandBuffer);
     }
 

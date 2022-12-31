@@ -46,7 +46,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         var editor = (MyEditorMain)Shared.Game;
         var view = editor.Camera.GetView(0);
         var posInGameWindow = Vector2.Transform(position, view);
-        var viewportTransform = editor.GameWindow.GameRenderViewportTransform;
+        var viewportTransform = editor.GameWindow.GameRenderView.GameRenderViewportTransform;
         var posInScreen = Vector2.Transform(posInGameWindow, viewportTransform) + ImGui.GetMainViewport()->Pos.ToXNA();
         return posInScreen.ToNumerics();
     }
@@ -209,8 +209,11 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                           ImGuiWindowFlags.NoScrollWithMouse;
 
         var editor = (MyEditorMain)Shared.Game;
-        ImGui.SetNextWindowPos(editor.GameWindow.GameRenderMin, ImGuiCond.Always, Num.Vector2.Zero);
-        ImGui.SetNextWindowSize(editor.GameWindow.GameRenderSize, ImGuiCond.Always);
+        var gameRenderMin = editor.GameWindow.GameRenderView.GameRenderMin;
+        var gameRenderMax = editor.GameWindow.GameRenderView.GameRenderMax;
+        var gameRenderSize = gameRenderMax - gameRenderMin;
+        ImGui.SetNextWindowPos(gameRenderMin, ImGuiCond.Always, Num.Vector2.Zero);
+        ImGui.SetNextWindowSize(gameRenderSize, ImGuiCond.Always);
         if (GameWindow.BeginOverlay("PickEntityOverlay", ref _isPickingEntity, windowFlags, false))
         {
             // if (ImGui.IsWindowHovered())

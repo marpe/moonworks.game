@@ -2,13 +2,8 @@
 
 public class RenderTargets
 {
-    public static uint RenderScale = 1;
-
-    public UPoint GameRenderSize => new(
-        CompositeRender.Width / RenderScale,
-        CompositeRender.Height / RenderScale
-    );
-
+    public UPoint GameSize => new(480, 270);
+    
     public RenderTarget CompositeRender;
     public RenderTarget MenuRender;
     public RenderTarget LightBase;
@@ -21,11 +16,12 @@ public class RenderTargets
     {
         var createRtsTimer = Stopwatch.StartNew();
         var compositeRenderSize = new UPoint(1920, 1080);
-        // increase game render target size with 1 pixel if render at < 1920x1080 to enable smooth camera panning by offsetting the upscaled render
-        var gameRenderSize = RenderScale == 1 ? compositeRenderSize : compositeRenderSize / (int)RenderScale + UPoint.One;
         var textureFlags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
-
         CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, compositeRenderSize.X, compositeRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
+
+        var highRes = true;
+        // increase game render target size with 1 pixel if render at < 1920x1080 to enable smooth camera panning by offsetting the upscaled render
+        var gameRenderSize = highRes ? compositeRenderSize : compositeRenderSize / GameSize + UPoint.One;
         GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
         NormalLights = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
         LightBase = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));

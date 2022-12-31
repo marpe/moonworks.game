@@ -14,6 +14,7 @@ public enum ActiveInput
     Game,
     GameWindow,
     EditorWindow,
+    RenderTargetsWindow
 }
 
 public unsafe class MyEditorMain : MyGameMain
@@ -73,6 +74,8 @@ public unsafe class MyEditorMain : MyGameMain
         GameWindow = new GameWindow(this);
         _debugWindow = new DebugWindow(this);
 
+        _renderTargetsWindow = new RenderTargetsWindow(this);
+
         EditorWindow = new EditorWindow(this) { IsOpen = true };
 
         var imguiSw = Stopwatch.StartNew();
@@ -103,6 +106,7 @@ public unsafe class MyEditorMain : MyGameMain
     }
 
     public static bool ResetDock = true;
+    private RenderTargetsWindow _renderTargetsWindow;
 
     private static void LoadIcons(ImGuiRenderer renderer)
     {
@@ -244,7 +248,7 @@ public unsafe class MyEditorMain : MyGameMain
             GameWindow,
             _debugWindow,
             _demoWindow,
-            new RenderTargetsWindow(this),
+            _renderTargetsWindow,
             new InputDebugWindow(this),
             EditorWindow,
         };
@@ -265,7 +269,10 @@ public unsafe class MyEditorMain : MyGameMain
                 base.SetInputViewport();
                 break;
             case ActiveInput.GameWindow:
-                InputHandler.SetViewportTransform(GameWindow.GameRenderViewportTransform);
+                InputHandler.SetViewportTransform(GameWindow.GameRenderView.GameRenderViewportTransform);
+                break;
+            case ActiveInput.RenderTargetsWindow:
+                InputHandler.SetViewportTransform(_renderTargetsWindow.GameRenderView.GameRenderViewportTransform);
                 break;
             case ActiveInput.EditorWindow:
                 InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
@@ -380,13 +387,13 @@ public unsafe class MyEditorMain : MyGameMain
         }
 
         var wasHidden = IsHidden;
-     
+
         InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
                                     ActiveInput == ActiveInput.Game;
 
         base.Update(dt);
-        
+
         ShowOrHideChildWindows(wasHidden);
     }
 
@@ -457,19 +464,10 @@ public unsafe class MyEditorMain : MyGameMain
             commandBuffer.CopyTextureToBuffer(RenderTargets.RimLights.Target, _screenshotBuffer);
         }
 
-        /*{
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), CompositeRender.Size());
-            var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-            var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
-
-            Renderer.DrawSprite(CompositeRender, viewportTransform, Color.White);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection);
-        }*/
-
         if (_imGuiDrawCount > 0)
         {
             Renderer.DrawSprite(_imGuiRenderTarget, Matrix4x4.Identity, Color.White);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null, true);
         }
 
         Renderer.Submit(ref commandBuffer);

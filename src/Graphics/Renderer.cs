@@ -14,8 +14,7 @@ public class Renderer
 {
     public BMFont[] BMFonts { get; }
 
-    public static Sampler PointClamp = null!;
-    public static Sampler LinearClamp = null!;
+
     private readonly Sprite _blankSprite;
     private readonly Texture _blankTexture;
     public Sprite BlankSprite => _blankSprite;
@@ -43,8 +42,7 @@ public class Renderer
         var createRendererTimer = Stopwatch.StartNew();
         _game = game;
         _device = game.GraphicsDevice;
-        PointClamp = new Sampler(_device, SamplerCreateInfo.PointClamp);
-        LinearClamp = new Sampler(_device, SamplerCreateInfo.LinearClamp);
+        
         SpriteBatch = new SpriteBatch(_device);
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
@@ -112,20 +110,20 @@ public class Renderer
         var scale = Matrix3x2.CreateTranslation(-0.5f, -0.5f) *
                     Matrix3x2.CreateScale(size, size) *
                     Matrix3x2.CreateTranslation(position.X, position.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
     }
 
     public void DrawRect(Vector2 min, Vector2 max, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(max.X - min.X, max.Y - min.Y) *
                     Matrix3x2.CreateTranslation(min.X, min.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
     }
 
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
         var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4(), PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
     }
 
     public void DrawCircleOutline(Vector2 position, float radius, Color color, float thickness, int numSegments = 12)
@@ -148,7 +146,7 @@ public class Renderer
         var rotation = Matrix3x2.CreateRotation(MathF.AngleBetweenVectors(from, to));
         var translation = Matrix3x2.CreateTranslation(from);
         var tAll = origin * scale * rotation * translation;
-        SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4(), PointClamp);
+        SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4());
     }
 
     public void DrawRectWithOutline(Vector2 min, Vector2 max, Color color, Color outlineColor, float thickness = 1.0f)
@@ -195,14 +193,14 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None, bool usePointFiltering = true)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, color, depth, transform, usePointFiltering ? PointClamp : LinearClamp, flip);
+        SpriteBatch.Draw(sprite, color, depth, transform, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None, bool usePointFiltering = true)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, colors, depth, transform, usePointFiltering ? PointClamp : LinearClamp, flip);
+        SpriteBatch.Draw(sprite, colors, depth, transform, flip);
     }
     
     public void DrawFTText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Color color)
@@ -267,12 +265,11 @@ public class Renderer
         commandBuffer.BindGraphicsPipeline(pipeline.Pipeline);
     }
 
-    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection,
-        PipelineType pipeline = PipelineType.Sprite)
+    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection, bool usePointFiltering, PipelineType pipeline = PipelineType.Sprite)
     {
         UpdateBuffers(ref commandBuffer);
         BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipeline);
-        DrawIndexedSprites(ref commandBuffer, viewProjection);
+        DrawIndexedSprites(ref commandBuffer, viewProjection, usePointFiltering);
         EndRenderPass(ref commandBuffer);
     }
 
@@ -283,15 +280,15 @@ public class Renderer
     }
 
     public void DrawIndexedSprites<TVert, TFrag>(ref CommandBuffer commandBuffer, TVert vertUniforms, TFrag fragUniforms,
-        TextureSamplerBinding[] fragmentSamplerBindings) where TVert : unmanaged where TFrag : unmanaged
+        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering) where TVert : unmanaged where TFrag : unmanaged
     {
-        SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, fragUniforms, fragmentSamplerBindings);
+        SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, fragUniforms, fragmentSamplerBindings, usePointFiltering);
     }
 
-    public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection)
+    public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection, bool usePointFiltering)
     {
-        SpriteBatch.DrawIndexed(ref commandBuffer,
-            viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height));
+        var vertUniforms = viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height);
+        SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, usePointFiltering);
     }
 
     public void Submit(ref CommandBuffer commandBuffer)
@@ -314,8 +311,6 @@ public class Renderer
         Pipelines.Clear();
         _blankTexture.Dispose();
         SpriteBatch.Unload();
-        PointClamp.Dispose();
-        LinearClamp.Dispose();
 
         foreach (var (_, texture) in _depthTextureCache)
         {

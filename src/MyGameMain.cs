@@ -3,7 +3,6 @@ using System.Threading;
 using MyGame.Audio;
 using MyGame.Cameras;
 using MyGame.Debug;
-using MyGame.Entities;
 using MyGame.WorldsRoot;
 
 namespace MyGame;
@@ -33,15 +32,6 @@ public class MyGameMain : Game
     protected UPoint _swapSize;
 
     public readonly FPSDisplay _fpsDisplay;
-
-    [CVar("lights_enabled", "Toggle lights")]
-    public static bool LightsEnabled = true;
-    
-    [CVar("rim_lights_enabled", "Toggle lights")]
-    public static bool RimLightsEnabled = true;
-
-    [CVar("use_point_filtering", "")]
-    public static bool UsePointFiltering = false;
 
     public List<RenderPass> _renderPasses = new();
 
@@ -74,10 +64,10 @@ public class MyGameMain : Game
 
         World = new World();
 
-        Camera = new Camera(RenderTargets.GameRenderSize.X, RenderTargets.GameRenderSize.Y)
-        {
-            ClampToLevelBounds = true,
-        };
+        Camera = new Camera(RenderTargets.GameSize.X, RenderTargets.GameSize.Y);
+        // only floor when rendering at a different scale than composite
+        Camera.FloorViewPosition = !(RenderTargets.GameRender.Width == RenderTargets.CompositeRender.Width &&
+                                    RenderTargets.GameRender.Height == RenderTargets.CompositeRender.Height);
 
         Shared.LoadingScreen.LoadImmediate(() =>
         {
@@ -182,8 +172,10 @@ public class MyGameMain : Game
             var view = Matrix4x4.CreateTranslation(0, 0, -1000);
             var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
 
-            Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None, false);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, PipelineType.Sprite); // PipelineType.PixelArt);
+            // TODO (marpe): Render at int scale ?
+            
+            Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, false, PipelineType.Sprite); // PipelineType.PixelArt);
             Renderer.Submit(ref commandBuffer);
         }
         _fpsDisplay.EndRender();

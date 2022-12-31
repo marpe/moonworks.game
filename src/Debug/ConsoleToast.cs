@@ -41,7 +41,7 @@ public static class ConsoleToast
         _lineRemovePercentage = MathF.Clamp01((_nextRemoveTime - _elapsedTime) / _lineDisplayDuration);
     }
 
-    public static void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination)
+    public static void Draw(Renderer renderer, Texture renderDestination)
     {
         if (_numLinesToDraw == 0 || Shared.Console.ScreenBuffer.CursorY == 0)
             return;
@@ -81,8 +81,6 @@ public static class ConsoleToast
                 renderer.DrawFTText(BMFontType.ConsolasMonoSmall, _tmp, position, charColor);
             }
         }
-
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 
     private static int GetLineWidth(int lineIndex)

@@ -34,7 +34,7 @@ public class CircleCropTransition : SceneTransition
         renderer.UpdateBuffers(ref commandBuffer);
         renderer.BeginRenderPass(ref commandBuffer, renderDestination, ClearColor, PipelineType.CircleCropTransition);
         commandBuffer.PushFragmentShaderUniforms(uniforms);
-        renderer.DrawIndexedSprites(ref commandBuffer, null);
+        renderer.DrawIndexedSprites(ref commandBuffer, null, true);
         commandBuffer.EndRenderPass();
     }
 }

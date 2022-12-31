@@ -5,23 +5,33 @@ namespace MyGame.Graphics;
 
 public class LevelRenderer
 {
-    public static void DrawLevel(Renderer renderer, World world, RootJson root, Level level, Bounds cameraBounds, bool usePointFiltering, bool drawBackground)
+    public static void DrawBackground(Renderer renderer, World world, RootJson root, Level level, Bounds cameraBounds)
     {
-        if (drawBackground)
-            renderer.DrawRect(level.Bounds, level.BackgroundColor);
+        renderer.DrawRect(level.Bounds, level.BackgroundColor);
 
         for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = level.LayerInstances[layerIndex];
             var layerDef = world.GetLayerDefinition(layer.LayerDefId);
-            if (!drawBackground && layerDef.Identifier == "Background")
+            if (layerDef.Identifier != "Background")
                 continue;
-            DrawLayer(renderer, world, root, level, layer, layerDef, (Rectangle)cameraBounds, usePointFiltering);
+            DrawLayer(renderer, world, root, level, layer, layerDef, (Rectangle)cameraBounds);
         }
     }
 
-    private static void DrawLayer(Renderer renderer, World world, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds,
-        bool usePointFiltering)
+    public static void DrawLevel(Renderer renderer, World world, RootJson root, Level level, Bounds cameraBounds)
+    {
+        for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
+        {
+            var layer = level.LayerInstances[layerIndex];
+            var layerDef = world.GetLayerDefinition(layer.LayerDefId);
+            if (layerDef.Identifier == "Background")
+                continue;
+            DrawLayer(renderer, world, root, level, layer, layerDef, (Rectangle)cameraBounds);
+        }
+    }
+
+    private static void DrawLayer(Renderer renderer, World world, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
         var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
         var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
@@ -45,7 +55,7 @@ public class LevelRenderer
                     level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
                 )
             ).ToMatrix4x4();
-            renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None, usePointFiltering);
+            renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None);
         }
     }
 
@@ -105,7 +115,7 @@ public class LevelRenderer
             }
         }
     }
-    
+
     public static Sprite GetTileSprite(TextureSlice texture, uint tileId, TileSetDef tileSetDef)
     {
         var cWid = (int)MathF.Ceil((texture.Rectangle.W - tileSetDef.Padding * 2) / (float)(tileSetDef.TileGridSize + tileSetDef.Spacing));
@@ -119,7 +129,7 @@ public class LevelRenderer
             (int)tileSetDef.TileGridSize,
             (int)tileSetDef.TileGridSize
         );
-        
+
         return new Sprite(texture, srcRect);
     }
 }

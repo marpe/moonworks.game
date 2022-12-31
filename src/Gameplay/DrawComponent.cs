@@ -111,7 +111,7 @@ public class DrawComponent
         }
     }
 
-    public void Draw(Renderer renderer, double alpha, bool usePointFiltering)
+    public void Draw(Renderer renderer, double alpha)
     {
         if (CurrentAnimation == null)
             return;
@@ -119,7 +119,7 @@ public class DrawComponent
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
-        renderer.DrawSprite(sprite, xform, Color.White, 0, Flip, usePointFiltering);
+        renderer.DrawSprite(sprite, xform, Color.White, 0, Flip);
     }
 
     private Matrix4x4 GetTransform()

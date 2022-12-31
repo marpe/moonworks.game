@@ -213,7 +213,7 @@ public class LoadingScreen
         var textSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, loadingStr);
         var position = new Vector2(renderDestination.Width, renderDestination.Height) - textSize;
         renderer.DrawFTText(BMFontType.ConsolasMonoSmall, loadingSpan, position,Color.White * _progress);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
     }
 
     public void Unload()
