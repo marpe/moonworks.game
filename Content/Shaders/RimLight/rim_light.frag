@@ -61,8 +61,8 @@ void main()
 	vec2 offset = Uniforms.lightPos - worldPos;
 	vec2 dir = normalize(offset);
 	float relativeLength = length(offset) / Uniforms.lightRadius;
-	float atten = clamp(1.0 - relativeLength, 0, 1);
-	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * atten;
+	float attenuation = clamp(1.0 - relativeLength, 0, 1) * depth.a;
+	vec3 light = Uniforms.lightIntensity * Uniforms.lightColor * attenuation;
 
 	if ( inFrontOf == 0 )
 	{
