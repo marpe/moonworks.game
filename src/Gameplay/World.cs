@@ -19,12 +19,15 @@ public class World
     [CVar("level.debug", "Toggle level debugging")]
     public static bool DebugLevel;
 
-    [CVar("lights.debug", "Toggle light debugging", false)]
-    public static bool DebugLights;
-
     [CVar("entities.debug", "Toggle debugging of entities")]
     public static bool DebugEntities;
 
+    [CVar("cam.debug", "Toggle camera debugging")]
+    public static bool DebugCamera;
+    
+    [CVar("mouse.debug", "Toggle mouse debugging", false)]
+    public static bool DebugMouse;
+    
     private readonly DebugDrawItems _debugDraw;
 
     public float Gravity = 800f;
@@ -471,8 +474,10 @@ public class World
            LevelRenderer.DrawLevelDebug(renderer, this, Root, Level, camera.ZoomedBounds);
         if (DebugEntities)
             DrawEntityDebug(renderer, alpha);
-        CameraDebug.DrawCameraBounds(renderer, camera);
-        MouseDebug.DrawMousePosition(renderer);
+        if (DebugCamera)
+            CameraDebug.DrawCameraBounds(renderer, camera);
+        if (DebugMouse)
+            MouseDebug.DrawMousePosition(renderer);
         _debugDraw.Render(renderer);
     }
     

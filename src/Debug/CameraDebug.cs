@@ -4,14 +4,8 @@ namespace MyGame.Debug;
 
 public static class CameraDebug
 {
-    [CVar("cam.debug", "Toggle camera debugging")]
-    public static bool DebugCamera;
-
     public static void DrawCameraBounds(Renderer renderer, Camera camera)
     {
-        if (!DebugCamera)
-            return;
-
         var cameraBounds = camera.ZoomedBounds;
         var (boundsMin, boundsMax) = (cameraBounds.Min, cameraBounds.Max);
         renderer.DrawRectOutline(boundsMin, boundsMax, Color.Red, 1f);

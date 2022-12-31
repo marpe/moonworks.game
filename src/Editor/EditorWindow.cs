@@ -334,6 +334,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 ImGui.SetWindowSize(new Num.Vector2(300, 500), ImGuiCond.Always);
             }
+
             DrawLayersInSelectedLevel();
             _currentLevelWindowWasDocked = ImGui.IsWindowDocked();
         }
@@ -684,16 +685,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     {
         ImGuiExt.SeparatorText("Layers");
 
-        for (var i = 0; i < _editor.RootJson.LayerDefinitions.Count; i++)
-        {
-            if (level.LayerInstances.Any(x => x.LayerDefId == _editor.RootJson.LayerDefinitions[i].Uid))
-            {
-                continue;
-            }
-
-            var layerInstance = CreateLayerInstance(_editor.RootJson.LayerDefinitions[i], level);
-            level.LayerInstances.Add(layerInstance);
-        }
+        CreateMissingLayerInstances(level);
 
         DrawLayerInstances(level.LayerInstances, _editor.RootJson.LayerDefinitions);
 
@@ -701,6 +693,30 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             SortLevelInstances();
         }*/
+    }
+
+    private void CreateMissingLayerInstances(Level level)
+    {
+        for (var i = 0; i < _editor.RootJson.LayerDefinitions.Count; i++)
+        {
+            var layerDef = _editor.RootJson.LayerDefinitions[i];
+
+            var hasLayerInstance = false;
+            for (var j = 0; j < level.LayerInstances.Count; j++)
+            {
+                if (level.LayerInstances[j].LayerDefId == layerDef.Uid)
+                {
+                    hasLayerInstance = true;
+                    break;
+                }
+            }
+
+            if (hasLayerInstance)
+                continue;
+
+            var layerInstance = CreateLayerInstance(layerDef, level);
+            level.LayerInstances.Add(layerInstance);
+        }
     }
 
     private static void SortLevelInstances()
@@ -1136,7 +1152,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (SplitWindow.GetTileSetTexture(tileSet.Path, out var texture))
         {
             var sprite = LevelRenderer.GetTileSprite(texture, tileId, tileSet);
-            
+
             dl->AddImage(
                 (void*)sprite.TextureSlice.Texture.Handle,
                 iconPos,

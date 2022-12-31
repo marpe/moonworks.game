@@ -182,12 +182,21 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
             if (ImGui.BeginPopupContextWindow("GameContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
             {
-                ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
-                ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref MouseDebug.DebugMouse));
                 ImGui.MenuItem("Enable mouse pan & zoom", default, ImGuiExt.RefPtr(ref IsMousePanAndZoomEnabled));
                 if (IsPanZoomDirty && ImGui.MenuItem("Reset pan & zoom", default))
                     ResetPanAndZoom();
-
+                
+                ImGui.Separator();
+                ImGui.MenuItem("Show debug overlay", default, ImGuiExt.RefPtr(ref _showDebug));
+                ImGui.Separator();
+                ImGui.MenuItem("Draw debug", default, ImGuiExt.RefPtr(ref World.Debug));
+                if (World.Debug)
+                {
+                    ImGui.MenuItem("Draw mouse debug", default, ImGuiExt.RefPtr(ref World.DebugMouse));
+                    ImGui.MenuItem("Draw camera debug", default, ImGuiExt.RefPtr(ref World.DebugCamera));
+                    ImGui.MenuItem("Draw level debug", default, ImGuiExt.RefPtr(ref World.DebugLevel));    
+                }
+                
                 ImGui.EndPopup();
             }
 
@@ -386,7 +395,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 ImGui.EndPopup();
             }
 
-            ImGui.Dummy(new Vector2(200, 0));
+            ImGui.Dummy(new Vector2(300, 0));
 
             ImGui.PopFont();
             ImGui.PopStyleVar();

@@ -7,14 +7,8 @@ public static class MouseDebug
     public static Vector2 MousePivot = new Vector2(0f, 0f);
     public static Point MouseSize = new Point(8, 12);
 
-    [CVar("mouse.debug", "Toggle mouse debugging", false)]
-    public static bool DebugMouse;
-
     public static void DrawMousePosition(Renderer renderer)
     {
-        if (!DebugMouse)
-            return;
-
         var mousePosition = Shared.Game.InputHandler.MousePosition;
         var view = Shared.Game.Camera.GetView(0);
         Matrix3x2.Invert(view, out var invertedView);

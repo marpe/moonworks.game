@@ -36,6 +36,9 @@ public class MyGameMain : Game
 
     [CVar("lights_enabled", "Toggle lights")]
     public static bool LightsEnabled = true;
+    
+    [CVar("rim_lights_enabled", "Toggle lights")]
+    public static bool RimLightsEnabled = true;
 
     [CVar("use_point_filtering", "")]
     public static bool UsePointFiltering = false;

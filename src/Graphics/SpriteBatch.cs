@@ -37,6 +37,7 @@ public class SpriteBatch
     public uint MaxNumAddedSprites { get; private set; }
 
     private TextureSamplerBinding[] _fragmentSamplerBindings;
+    private bool _indicesNeedsUpdate = true;
 
     public SpriteBatch(GraphicsDevice device)
     {
@@ -78,6 +79,7 @@ public class SpriteBatch
 
             _indexBuffer.Dispose();
             _indexBuffer = Buffer.Create<uint>(_device, BufferUsageFlags.Index, (uint)_indices.Length);
+            _indicesNeedsUpdate = true;
         }
 
         _spriteInfo[_numSprites].Sampler = sampler;
@@ -110,7 +112,11 @@ public class SpriteBatch
             return;
         }
 
-        commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, _numSprites * 6);
+        if (_indicesNeedsUpdate)
+        {
+            commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, (uint)(_spriteInfo.Length * 6));
+            _indicesNeedsUpdate = false;
+        }
         commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
     }
 
