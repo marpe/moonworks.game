@@ -411,7 +411,7 @@ public unsafe class MyEditorMain : MyGameMain
         for (var i = 1; i < platformIO->Viewports.Size; i++)
         {
             ImGuiViewport* vp = platformIO->Viewports[i];
-            var window = vp->Window();
+            var window = vp->ViewportData().Window;
             if (IsHidden)
                 SDL.SDL_HideWindow(window.Handle);
             else

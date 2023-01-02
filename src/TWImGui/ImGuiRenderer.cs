@@ -39,13 +39,32 @@ public unsafe class ImGuiRenderer : IDisposable
     private Texture? _fontAtlasTexture;
     private GCHandle _handle;
 
-    private Buffer? _indexBuffer;
-    private uint _indexBufferSize;
     private ImGuiMouseCursor _lastCursor = ImGuiMouseCursor.None;
     private GraphicsPipeline _pipeline;
+    
+    public class ImGuiRenderData
+    {
+        public Buffer? VertexBuffer;
+        public uint VertexBufferSize;
+        
+        public Buffer? IndexBuffer;
+        public uint IndexBufferSize;
+    }
 
-    private Buffer? _vertexBuffer;
-    private uint _vertexBufferSize;
+    public class ViewportData
+    {
+        public Window Window;
+        public ImGuiRenderData RenderData = new();
+        public uint WindowID;
+        public bool WindowOwned;
+
+        public ViewportData(Window window, bool windowOwned)
+        {
+            Window = window;
+            WindowID = SDL.SDL_GetWindowID(window.Handle);
+            WindowOwned = windowOwned;
+        }
+    }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static byte* GetClipboardText(void* userData)
@@ -171,7 +190,8 @@ public unsafe class ImGuiRenderer : IDisposable
 
         // Register main window handle (which is owned by the main application, not by us)
         var mainViewport = ImGui.GetMainViewport();
-        var gcHandle = GCHandle.Alloc(mainWindow);
+        var viewportData = new ViewportData(mainWindow, false);
+        var gcHandle = GCHandle.Alloc(viewportData);
         mainViewport->PlatformUserData = (void*)(IntPtr)gcHandle;
         mainViewport->PlatformHandle = (void*)mainWindow.Handle;
 
@@ -344,8 +364,6 @@ public unsafe class ImGuiRenderer : IDisposable
 
             _mouseCursors.Clear();
 
-            _vertexBuffer?.Dispose();
-            _indexBuffer?.Dispose();
             _linearSampler.Dispose();
             _pointSampler.Dispose();
             _pipeline.Dispose();
@@ -374,7 +392,8 @@ public unsafe class ImGuiRenderer : IDisposable
         ImGui.Render();
 
         var commandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-        Render(ref commandBuffer, renderDestination, ImGui.GetDrawData());
+        var mainVpData = ImGui.GetMainViewport()->ViewportData();
+        Render(ref commandBuffer, renderDestination, mainVpData, ImGui.GetDrawData());
         _game.GraphicsDevice.Submit(commandBuffer);
 
         var io = ImGui.GetIO();
@@ -392,50 +411,50 @@ public unsafe class ImGuiRenderer : IDisposable
                     continue;
                 }
 
-                var window = vp->Window();
+                var window = vp->ViewportData();
                 var windowCommandBuffer = _game.GraphicsDevice.AcquireCommandBuffer();
-                var windowTexture = windowCommandBuffer.AcquireSwapchainTexture(window);
+                var windowTexture = windowCommandBuffer.AcquireSwapchainTexture(window.Window);
                 if (windowTexture == null)
                 {
                     Logs.LogError("Couldn't acquire swapchain texture");
                     continue;
                 }
 
-                Render(ref windowCommandBuffer, windowTexture, vp->DrawData);
+                Render(ref windowCommandBuffer, windowTexture, window, vp->DrawData);
                 _game.GraphicsDevice.Submit(windowCommandBuffer);
             }
         }
     }
 
-    private void Render(ref CommandBuffer commandBuffer, Texture swapchainTexture, ImDrawData* drawData)
+    private void Render(ref CommandBuffer commandBuffer, Texture swapchainTexture, ViewportData vpData, ImDrawData* drawData)
     {
-        UpdateBuffers(ref commandBuffer, drawData);
+        UpdateBuffers(ref commandBuffer, vpData, drawData);
         commandBuffer.BeginRenderPass(
             new ColorAttachmentInfo(swapchainTexture, Color.Transparent)
         );
-        RenderDrawData(ref commandBuffer, drawData);
+        RenderDrawData(ref commandBuffer, vpData, drawData);
         commandBuffer.EndRenderPass();
     }
 
-    private void UpdateBuffers(ref CommandBuffer commandBuffer, ImDrawData* drawData)
+    private void UpdateBuffers(ref CommandBuffer commandBuffer, ViewportData vpData, ImDrawData* drawData)
     {
         var totalVtxBufferSize =
             (uint)(drawData->TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>()); // Unsafe.SizeOf<ImDrawVert>());
-        if (totalVtxBufferSize > _vertexBufferSize)
+        if (totalVtxBufferSize > vpData.RenderData.VertexBufferSize)
         {
-            _vertexBuffer?.Dispose();
+            vpData.RenderData.VertexBuffer?.Dispose();
 
-            _vertexBufferSize = (uint)(drawData->TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>());
-            _vertexBuffer = new Buffer(_game.GraphicsDevice, BufferUsageFlags.Vertex, _vertexBufferSize);
+            vpData.RenderData.VertexBufferSize = (uint)(drawData->TotalVtxCount * Unsafe.SizeOf<PositionTextureColorVertex>());
+            vpData.RenderData.VertexBuffer = new Buffer(_game.GraphicsDevice, BufferUsageFlags.Vertex, vpData.RenderData.VertexBufferSize);
         }
 
         var totalIdxBufferSize = (uint)(drawData->TotalIdxCount * sizeof(ushort));
-        if (totalIdxBufferSize > _indexBufferSize)
+        if (totalIdxBufferSize > vpData.RenderData.IndexBufferSize)
         {
-            _indexBuffer?.Dispose();
+            vpData.RenderData.IndexBuffer?.Dispose();
 
-            _indexBufferSize = (uint)(drawData->TotalIdxCount * sizeof(ushort));
-            _indexBuffer = new Buffer(_game.GraphicsDevice, BufferUsageFlags.Index, _indexBufferSize);
+            vpData.RenderData.IndexBufferSize = (uint)(drawData->TotalIdxCount * sizeof(ushort));
+            vpData.RenderData.IndexBuffer = new Buffer(_game.GraphicsDevice, BufferUsageFlags.Index, vpData.RenderData.IndexBufferSize);
         }
 
         var vtxOffset = 0u;
@@ -448,14 +467,14 @@ public unsafe class ImGuiRenderer : IDisposable
             var cmdList = drawData->CmdLists[n];
             var imVtxBufferSize = (uint)(cmdList->VtxBuffer.Size * vtxStride);
             var imIdxBufferSize = (uint)(cmdList->IdxBuffer.Size * idxStride);
-            commandBuffer.SetBufferData(_vertexBuffer, (IntPtr)cmdList->VtxBuffer.Data, vtxOffset, imVtxBufferSize);
-            commandBuffer.SetBufferData(_indexBuffer, (IntPtr)cmdList->IdxBuffer.Data, idxOffset, imIdxBufferSize);
+            commandBuffer.SetBufferData(vpData.RenderData.VertexBuffer, (IntPtr)cmdList->VtxBuffer.Data, vtxOffset, imVtxBufferSize);
+            commandBuffer.SetBufferData(vpData.RenderData.IndexBuffer, (IntPtr)cmdList->IdxBuffer.Data, idxOffset, imIdxBufferSize);
             vtxOffset += imVtxBufferSize;
             idxOffset += imIdxBufferSize;
         }
     }
 
-    private void RenderDrawData(ref CommandBuffer commandBuffer, ImDrawData* drawData)
+    private void RenderDrawData(ref CommandBuffer commandBuffer, ViewportData vpData, ImDrawData* drawData)
     {
         if (drawData->CmdListsCount == 0)
         {
@@ -484,8 +503,8 @@ public unsafe class ImGuiRenderer : IDisposable
                                    );
         var vtxUniformsOffset = commandBuffer.PushVertexShaderUniforms(viewProjectionMatrix);
 
-        commandBuffer.BindVertexBuffers(_vertexBuffer);
-        commandBuffer.BindIndexBuffer(_indexBuffer, IndexElementSize.Sixteen);
+        commandBuffer.BindVertexBuffers(vpData.RenderData.VertexBuffer);
+        commandBuffer.BindIndexBuffer(vpData.RenderData.IndexBuffer, IndexElementSize.Sixteen);
 
         var vtxOffset = 0u;
         var idxOffset = 0u;
@@ -796,7 +815,8 @@ public unsafe class ImGuiRenderer : IDisposable
         window.WindowEvent += HandleWindowEvent;
         window.SetWindowPosition((int)viewport->Pos.X, (int)viewport->Pos.Y);
 
-        var gcHandle = GCHandle.Alloc(window);
+        var viewportData = new ViewportData(window, true);
+        var gcHandle = GCHandle.Alloc(viewportData);
         viewport->PlatformHandle = (void*)window.Handle;
         viewport->PlatformUserData = (void*)(IntPtr)gcHandle;
 
@@ -814,10 +834,14 @@ public unsafe class ImGuiRenderer : IDisposable
         var gcHandle = GCHandle.FromIntPtr((IntPtr)viewport->PlatformUserData);
         if (gcHandle.Target != null)
         {
-            var window = (Window)gcHandle.Target;
+            var viewportData = (ViewportData)gcHandle.Target;
+            var window = viewportData.Window;
             Logs.LogVerbose($"ImGui destroying window: {window.Title}");
             window.WindowEvent -= HandleWindowEvent;
             window.Dispose();
+            
+            viewportData.RenderData.IndexBuffer?.Dispose();
+            viewportData.RenderData.VertexBuffer?.Dispose();
         }
 
         gcHandle.Free();
@@ -830,8 +854,8 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static Num.Vector2* GetWindowPos(Num.Vector2* returnBuffer, ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
-        SDL.SDL_GetWindowPosition(window.Handle, out var x, out var y);
+        var window = viewport->ViewportData();
+        SDL.SDL_GetWindowPosition(window.Window.Handle, out var x, out var y);
         *returnBuffer = new Num.Vector2(x, y);
         return returnBuffer;
     }
@@ -839,21 +863,21 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetWindowPos(ImGuiViewport* viewport, Num.Vector2 position)
     {
-        var window = viewport->Window();
-        SDL.SDL_SetWindowPosition(window.Handle, (int)position.X, (int)position.Y);
+        var window = viewport->ViewportData();
+        SDL.SDL_SetWindowPosition(window.Window.Handle, (int)position.X, (int)position.Y);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetWindowSize(ImGuiViewport* viewport, Num.Vector2 size)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         window.SetWindowSize((uint)size.X, (uint)size.Y);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static Num.Vector2* GetWindowSize(Num.Vector2* returnBuffer, ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         var windowSize = window.Size;
         var size = new Num.Vector2(windowSize.X, windowSize.Y);
         *returnBuffer = size;
@@ -863,21 +887,21 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void ShowWindow(ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         SDL.SDL_ShowWindow(window.Handle);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetWindowFocus(ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         SDL.SDL_RaiseWindow(window.Handle);
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static NativeBoolean GetWindowFocus(ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         var flags = (SDL.SDL_WindowFlags)SDL.SDL_GetWindowFlags(window.Handle);
         return (flags & SDL.SDL_WindowFlags.SDL_WINDOW_INPUT_FOCUS) != 0;
     }
@@ -885,14 +909,14 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static NativeBoolean GetWindowMinimized(ImGuiViewport* viewport)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         return window.IsMinimized;
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetWindowTitle(ImGuiViewport* viewport, byte* title)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         var titleStr = ImGuiExt.StringFromPtr(title);
         SDL.SDL_SetWindowTitle(window.Handle, titleStr);
         Logs.LogVerbose($"Created window: {titleStr}");
@@ -901,7 +925,7 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetWindowAlpha(ImGuiViewport* viewport, float alpha)
     {
-        var window = viewport->Window();
+        var window = viewport->ViewportData().Window;
         SDL.SDL_SetWindowOpacity(window.Handle, alpha);
     }
 
@@ -1021,8 +1045,8 @@ public unsafe class ImGuiRenderer : IDisposable
 
 public static unsafe class ImGuiViewportPtrExt
 {
-    public static Window Window(this ImGuiViewport vp)
+    public static ImGuiRenderer.ViewportData ViewportData(this ImGuiViewport vp)
     {
-        return (Window)(GCHandle.FromIntPtr((IntPtr)vp.PlatformUserData).Target ?? throw new InvalidOperationException("UserData was null"));
+        return (ImGuiRenderer.ViewportData)(GCHandle.FromIntPtr((IntPtr)vp.PlatformUserData).Target ?? throw new InvalidOperationException("UserData was null"));
     }
 }
