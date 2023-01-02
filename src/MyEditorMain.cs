@@ -26,7 +26,8 @@ public unsafe class MyEditorMain : MyGameMain
 
     private ulong _imGuiDrawCount;
     private readonly List<ImGuiMenu> _menuItems = new();
-    public int ImGuiDrawRate = 1;
+    public int ImGuiRenderFPS = 60;
+    private float _nextRenderTime;
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private Texture _imGuiRenderTarget;
 
@@ -420,9 +421,6 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void Draw(double alpha)
     {
-        PrevActiveInput = ActiveInput;
-        ActiveInput = ActiveInput.None;
-
         if (IsHidden)
         {
             ActiveInput = ActiveInput.Game;
@@ -438,8 +436,11 @@ public unsafe class MyEditorMain : MyGameMain
 
         RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
 
-        if ((int)Time.UpdateCount % ImGuiDrawRate == 0 && _imGuiUpdateCount > 0)
+        if (Time.TotalElapsedTime >= _nextRenderTime)
         {
+            PrevActiveInput = ActiveInput;
+            ActiveInput = ActiveInput.None;
+
             _imguiRenderStopwatch.Restart();
             _imGuiDrawCount++;
             ImGuiRenderer.Begin();
@@ -453,6 +454,7 @@ public unsafe class MyEditorMain : MyGameMain
             ImGuiRenderer.End(_imGuiRenderTarget);
             _imguiRenderStopwatch.Stop();
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
+            _nextRenderTime = Time.TotalElapsedTime + 1.0f / ImGuiRenderFPS;
         }
 
         if (swapTexture == null)

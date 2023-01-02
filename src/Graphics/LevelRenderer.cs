@@ -21,6 +21,7 @@ public class LevelRenderer
 
     public static void DrawLevel(Renderer renderer, World world, RootJson root, Level level, Bounds cameraBounds)
     {
+        renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
         for (var layerIndex = level.LayerInstances.Count - 1; layerIndex >= 0; layerIndex--)
         {
             var layer = level.LayerInstances[layerIndex];

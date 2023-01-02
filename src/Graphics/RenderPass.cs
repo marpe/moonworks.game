@@ -14,10 +14,11 @@ public class RenderPass
 public class ConsoleRenderPass : RenderPass
 {
     private bool _hasRenderedConsole;
+    private float _nextRender;
 
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        if ((int)Shared.Game.Time.UpdateCount % ConsoleSettings.RenderRate == 0)
+        if (Shared.Game.Time.TotalElapsedTime >= _nextRender)
         {
             _hasRenderedConsole = true;
             renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, Color.Transparent);
@@ -30,17 +31,17 @@ public class ConsoleRenderPass : RenderPass
                 Shared.Game.ConsoleScreen.Draw(renderer, alpha);
             }
 
-            renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, null, null, true);
+            Shared.Game._fpsDisplay.DrawFPS(renderer, Shared.Game.RenderTargets.ConsoleRender.Size);
+            renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, null, null);
+
+            _nextRender = Shared.Game.Time.TotalElapsedTime + 1.0f / ConsoleSettings.RenderFPS;
         }
 
         if (_hasRenderedConsole)
         {
             renderer.DrawSprite(Shared.Game.RenderTargets.ConsoleRender, Matrix4x4.Identity, Color.White);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
         }
-
-        Shared.Game._fpsDisplay.DrawFPS(renderer, renderDestination.Size(), FPSDisplayPosition.BottomRight);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
     }
 }
 
@@ -66,9 +67,9 @@ public class WorldRenderPass : RenderPass
         var dstSize = renderDestination.Size();
         var dstRect = new Bounds(0, 0, dstSize.X, dstSize.Y);
 
-        renderer.DrawSprite(renderTargets.GameRender, srcRect, dstRect, Color.White, 0, SpriteFlip.None);
+        renderer.DrawSprite(renderTargets.GameRender, srcRect, dstRect, Color.White);
 
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false);
     }
 
     private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
@@ -90,23 +91,23 @@ public class WorldRenderPass : RenderPass
         var viewProjection = view.ToMatrix4x4() * projection;
 
         LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection);
         
         world.DrawEntities(renderer, alpha);
         var entitiesViewProjection = view.ToMatrix4x4() *
                                      projection;
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection);
 
         LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         world.DrawDebug(renderer, camera, alpha);
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.Background, Color.Transparent, viewProjection, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.Background, Color.Transparent, viewProjection);
 
         renderer.DrawSprite(renderTargets.Background, Matrix4x4.Identity, Color.White);
         renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
 
         renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.LightBase, Color.Transparent, null, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LightBase, Color.Transparent, null);
 
         if (World.LightsEnabled)
         {
@@ -168,8 +169,7 @@ public class WorldRenderPass : RenderPass
             renderer.DrawSprite(
                 lightTexture,
                 Matrix3x2.Identity,
-                Color.White,
-                SpriteFlip.None
+                Color.White
             );
 
             var vertUniform = Renderer.GetOrthographicProjection(renderDestinationSize.X, renderDestinationSize.Y);
@@ -213,9 +213,9 @@ public class MenuRenderPass : RenderPass
         renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent);
         renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
         Shared.Menus.Draw(renderer, alpha);
-        renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent, null, true);
-        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White, SpriteFlip.None);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
+        renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent, null);
+        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 }
 
@@ -239,8 +239,8 @@ public class DebugRenderPass : RenderPass
         var view = Shared.Game.Camera.GetView(0);
         var min = Vector2.Transform(bounds.Min, view);
         var max = Vector2.Transform(bounds.Max, view);
-        renderer.DrawRectOutline(min, max, Color.LimeGreen, 1f);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
+        renderer.DrawRectOutline(min, max, Color.LimeGreen);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
     }
 
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Mochi.DearImGui;
+﻿using Mochi.DearImGui;
 using Vector2 = System.Numerics.Vector2;
 
 namespace MyGame.Editor;
@@ -16,7 +15,7 @@ public static unsafe class ImGuiUtils
         var imGuiCursor = ImGui.GetCursorScreenPos();
 
         viewportSize = viewport.Size.ToNumerics();
-        var viewportHalfSize = viewportSize * 0.5f;
+        var viewportHalfSize = (viewport.Size / 2).ToNumerics();
 
         min = imGuiCursor + viewportPosition + viewportHalfSize - // this gets us to the center
                             scale * viewportHalfSize +

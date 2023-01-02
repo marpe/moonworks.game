@@ -71,7 +71,7 @@ public static unsafe class TileSetIdPopup
                 var cellLabel = $"#{mouseCell}";
                 var cellLabelSize = ImGui.CalcTextSize(cellLabel);
                 var cellLabelPosition = texturePosition + new Vector2((textureSize.X - cellLabelSize.X) * 0.5f, -ImGui.GetTextLineHeightWithSpacing());
-                dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, cellLabelPosition, Color.White.PackedValue, cellLabel, 0, default);
+                dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), cellLabelPosition, Color.White.PackedValue, cellLabel, 0, default);
             }
 
             var paddingV = padding * Vector2.One;

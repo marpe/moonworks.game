@@ -634,7 +634,7 @@ public unsafe class LayerDefWindow : SplitWindow
     private static void AddText(string text, Vector2 position, int rowHeight, Color textColor)
     {
         var dl = ImGui.GetWindowDrawList();
-        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, position + new Vector2(0, rowHeight * 0.5f - ImGui.GetTextLineHeight() / 2),
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), position + new Vector2(0, rowHeight * 0.5f - ImGui.GetTextLineHeight() / 2),
             textColor.PackedValue, text, 0, default);
     }
 

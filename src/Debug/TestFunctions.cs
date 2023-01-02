@@ -19,7 +19,7 @@ public class TestFunctions
         var size = max - min;
 
         var dstRect1 = new Bounds(min.X, min.Y, size.X * 0.5f, size.Y);
-        var dstRect2 = new Bounds(min.X + size.X * 0.5f, min.Y, size.X * 0.5f, size.Y);
+        var dstRect2 = new Bounds(min.X + size.X * 0.5f + 1, min.Y, size.X * 0.5f, size.Y);
 
         var srcRect1 = new Bounds(0, 0, texture.Width * 0.5f, texture.Height);
         var srcRect2 = new Bounds(texture.Width * 0.5f, 0, texture.Width * 0.5f, texture.Height);
@@ -30,8 +30,7 @@ public class TestFunctions
 
         // renderer.DrawRect((Rectangle)dstRect2, Color.Green);
         renderer.DrawSprite(texture, srcRect2, dstRect2, Color.White, 0, SpriteFlip.None);
-        var viewProjection = Matrix4x4.CreateTranslation(-0.5f, -0.5f, 0) * 
-                             Renderer.GetOrthographicProjection(renderDestination.Width, renderDestination.Height);
+        var viewProjection = Renderer.GetOrthographicProjection(renderDestination.Width, renderDestination.Height);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, viewProjection, false, PipelineType.PixelArt);
     }
 }

@@ -10,6 +10,8 @@ public class World
 {
     public Color AmbientColor = new Color(80, 80, 80, 255);
 
+    public static float TimeScale = 1.0f;
+    
     public const int DefaultGridSize = 16;
     public bool IsLoaded { get; private set; }
 
@@ -310,6 +312,8 @@ public class World
 
     public void Update(float deltaSeconds, Camera camera)
     {
+        var scaledTime = deltaSeconds * TimeScale;
+        
         // first update stuff
         if (WorldUpdateCount == 0)
         {
@@ -327,14 +331,14 @@ public class World
         }
 
         WorldUpdateCount++;
-        WorldTotalElapsedTime += deltaSeconds;
+        WorldTotalElapsedTime += scaledTime;
 
-        UpdateFreezeTime(deltaSeconds);
+        UpdateFreezeTime(scaledTime);
 
         if (FreezeFrameTimer > 0)
             return;
 
-        Entities.Update(this, deltaSeconds);
+        Entities.Update(this, scaledTime);
     }
     
     public void DrawEntities(Renderer renderer, double alpha)

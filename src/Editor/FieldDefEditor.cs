@@ -152,7 +152,7 @@ public static unsafe class FieldDefEditor
         var rectMin = labelPos - rectPadding;
         var rectMax = rectMin + labelSize + rectPadding * 2;
         ImGuiExt.RectWithOutline(dl, rectMin, rectMax, fieldColor.MultiplyAlpha(0.2f), fieldColor, 2f);
-        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, labelPos, Color.White.MultiplyAlpha(0.5f).PackedValue, labelStr);
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), labelPos, Color.White.MultiplyAlpha(0.5f).PackedValue, labelStr);
     }
 
     private static void DrawAddButtons(int minWidth, List<FieldDef> fieldDefs, ref int selectedFieldDefinitionIndex)

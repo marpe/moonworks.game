@@ -15,7 +15,6 @@ public class MyGameMain : Game
     public Camera Camera { get; }
     private ConcurrentQueue<Action> _queuedActions = new();
 
-    public static int GameUpdateRate = 1;
     public static bool IsStepping;
     public static bool IsPaused;
     public World World { get; }
@@ -167,6 +166,7 @@ public class MyGameMain : Game
 
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
             // TODO (marpe): Render at int scale ?
+            
             Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, SpriteFlip.None);
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null, true, PipelineType.Sprite);
             Renderer.Submit(ref commandBuffer);
@@ -231,12 +231,10 @@ public class MyGameMain : Game
         if (!World.IsLoaded)
             return;
 
-        var doUpdate = IsStepping ||
-                       (int)Shared.Game.Time.UpdateCount % GameUpdateRate == 0 && !IsPaused;
-        if (doUpdate)
+        if (IsStepping || !IsPaused)
         {
             World.Update(deltaSeconds, Camera);
-            Camera.Update(deltaSeconds, InputHandler);
+            Camera.Update(deltaSeconds * World.TimeScale, InputHandler);
         }
         else
         {
@@ -326,19 +324,19 @@ public class MyGameMain : Game
     }
 
     [ConsoleHandler("speed_up")]
-    public static void IncreaseUpdateRate()
+    public static void IncreaseTimeScale()
     {
-        GameUpdateRate -= 5;
-        if (GameUpdateRate < 1)
-            GameUpdateRate = 1;
-        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
+        World.TimeScale += 0.25f;
+        Logs.LogInfo($"TimeScale: {World.TimeScale}");
     }
 
     [ConsoleHandler("speed_down")]
-    public static void DecreaseUpdateRate()
+    public static void DecreaseTimeScale()
     {
-        GameUpdateRate += 5;
-        Logs.LogInfo($"UpdateRate: {GameUpdateRate}");
+        World.TimeScale -= -0.25f;
+        if (World.TimeScale < 0)
+            World.TimeScale = 0;
+        Logs.LogInfo($"TimeScale: {World.TimeScale}");
     }
 
     [CVar("screen_mode", "Sets screen mode (Window, Fullscreen Window or Fullscreen)")]

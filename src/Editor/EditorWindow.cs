@@ -1391,7 +1391,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var xLabel = $"{level.Width}x{level.Height} px ({cols}x{rows} cells)";
         var xLabelSize = ImGui.CalcTextSize(xLabel);
         var offset = new Num.Vector2(-0.5f, 2.0f) * xLabelSize;
-        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16f, (xLabelPos + offset).Round(), Color.White.PackedValue, xLabel, 0, default);
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), (xLabelPos + offset).Round(), Color.White.PackedValue, xLabel, 0, default);
     }
 
     private static void HandleLevelResize(Level level, Num.Vector2 min, Num.Vector2 max, uint gridSize)

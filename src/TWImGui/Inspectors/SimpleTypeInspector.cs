@@ -518,9 +518,11 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             result = true;
             value = !value;
+            ImGuiInternal.NavMoveRequestCancel();
         }
 
         result |= ImGuiExt.DrawCheckbox(label, ref value);
+
         return result;
     }
 

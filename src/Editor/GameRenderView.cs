@@ -32,6 +32,7 @@ public unsafe class GameRenderView
     private bool _usePointFiltering = true;
     private Vector2 _contentSize;
     private Vector2 _viewportSize;
+    private Vector2 _textureSize;
 
     public void Draw(string id, Texture texture)
     {
@@ -40,11 +41,12 @@ public unsafe class GameRenderView
         var contentMin = ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowContentRegionMax();
         _contentSize = contentMax - contentMin;
-        
+
         DrawToolbar();
 
         ImGui.SetCursorScreenPos(imGuiCursor);
 
+        _textureSize = texture.SizeVec().ToNumerics();
         ImGuiUtils.DrawGame(texture, _contentSize, Zoom, Offset, _usePointFiltering, out var min, out var max, out var viewportSize,
             out var viewportInvTransform);
 
@@ -60,32 +62,45 @@ public unsafe class GameRenderView
         var isActive = ImGui.IsItemActive();
         var isHovered = ImGui.IsItemHovered();
 
-        if (isHovered)
-        {
-            var dl = ImGui.GetWindowDrawList();
-            var thickness = 2f;
-            var borderColor = Color.Green;
-            var borderPadding = new Vector2(-thickness, thickness) * 0.5f;
-            borderPadding.X = MathF.Ceil(borderPadding.X);
-            borderPadding.Y = MathF.Ceil(borderPadding.Y);
-            var borderMin = min - borderPadding;
-            var borderMax = max + borderPadding;
-
-            var contentRect = ImGui.GetCurrentContext()->CurrentWindow->ContentRegionRect;
-            
-            borderMin.X = MathF.Max(borderMin.X, contentRect.Min.X + thickness * 0.5f);
-            borderMin.Y = MathF.Max(borderMin.Y, contentRect.Min.Y + thickness * 0.5f);
-            borderMax.X = MathF.Min(borderMax.X, contentRect.Max.X - thickness * 0.5f);
-            borderMax.Y = MathF.Min(borderMax.Y, contentRect.Max.Y - thickness * 0.5f);
-            
-            dl->AddRect(borderMin, borderMax, borderColor.PackedValue, 0, ImDrawFlags.None, thickness);
-        }
+        var borderColor = isHovered ? Color.LightGreen : Color.Green;
+        DrawBorder(max, min, borderColor);
 
         GameRenderMin = min;
         GameRenderMax = max;
         GameRenderViewportTransform = viewportInvTransform;
 
+        var label = $"{texture.Width}x{texture.Height}";
+        var labelSize = ImGui.CalcTextSize(label);
+        var x = min.X + ((max.X - min.X) - labelSize.X) * 0.5f;
+        var y = min.Y - labelSize.Y - 10;
+        var dl = ImGui.GetWindowDrawList();
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), ImGui.GetFontSize(), new Vector2(x, y), Color.White.PackedValue, label, 0, default);
+
         HandleInput(isActive, isHovered);
+    }
+
+    private static void DrawBorder(Vector2 max, Vector2 min, Color color, float thickness = 2)
+    {
+        var dl = ImGui.GetWindowDrawList();
+        var borderSize = max - min;
+        var thicknessOverTwo = (int)(thickness * 0.5f);
+        var contentRect = ImGui.GetCurrentContext()->CurrentWindow->ContentRegionRect;
+        var contentRectMin = contentRect.Min + new Vector2(1, 0) + new Vector2(thicknessOverTwo);
+        var contentRectMax = contentRect.Max + new Vector2(-1, -1) - new Vector2(thicknessOverTwo);
+        var contentRectSize = contentRectMax - contentRectMin;
+        var r1 = new Rectangle((int)contentRectMin.X, (int)contentRectMin.Y, (int)contentRectSize.X, (int)contentRectSize.Y);
+        var r2 = new Rectangle((int)(min.X), (int)min.Y, (int)borderSize.X, (int)borderSize.Y);
+        r2.Inflate(thicknessOverTwo, thicknessOverTwo);
+        var rect = Rectangle.Intersect(r1, r2);
+        var borderMin = rect.MinVec().ToNumerics();
+        var borderMax = rect.MaxVec().ToNumerics();
+        if (thickness % 2 == 0)
+        {
+            borderMin -= new Vector2(0.5f);
+            borderMax += new Vector2(0.5f);
+        }
+
+        dl->AddRect(borderMin, borderMax, color.PackedValue, 0, ImDrawFlags.None, thickness);
     }
 
     private void HandleInput(bool isActive, bool isHovered)
@@ -135,7 +150,7 @@ public unsafe class GameRenderView
         if (ImGui.BeginChild("Toolbar", new Vector2(ImGui.GetContentRegionAvail().X, toolbarHeight), false,
                 ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.AlwaysUseWindowPadding))
         {
-            if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Reset pan & zoom"))
+            if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlass, ImGuiExt.Colors[0], "Fit"))
             {
                 ResetPanAndZoom();
             }
@@ -148,6 +163,18 @@ public unsafe class GameRenderView
             {
                 Zoom = _contentSize.Y / _viewportSize.Y;
             }
+
+            ImGui.SameLine();
+
+            if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlassMinus, ImGuiExt.Colors[0], "Zoom to original size"))
+            {
+                var scale = MathF.Min(
+                    _textureSize.X / _viewportSize.X,
+                    _textureSize.Y / _viewportSize.Y
+                );
+                Zoom = scale;
+            }
+
 
             ImGui.SameLine();
 

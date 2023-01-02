@@ -475,13 +475,13 @@ public unsafe class ImGuiRenderer : IDisposable
         });
 
         var viewProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
-            drawData->DisplayPos.X,
-            drawData->DisplayPos.X + drawData->DisplaySize.X,
-            drawData->DisplayPos.Y + drawData->DisplaySize.Y,
-            drawData->DisplayPos.Y,
-            -1f,
-            1f
-        );
+                                       drawData->DisplayPos.X,
+                                       drawData->DisplayPos.X + drawData->DisplaySize.X,
+                                       drawData->DisplayPos.Y + drawData->DisplaySize.Y,
+                                       drawData->DisplayPos.Y,
+                                       -1f,
+                                       1f
+                                   );
         var vtxUniformsOffset = commandBuffer.PushVertexShaderUniforms(viewProjectionMatrix);
 
         commandBuffer.BindVertexBuffers(_vertexBuffer);

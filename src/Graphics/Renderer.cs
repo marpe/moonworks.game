@@ -289,7 +289,7 @@ public class Renderer
         commandBuffer.BindGraphicsPipeline(pipeline.Pipeline);
     }
 
-    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection, bool usePointFiltering,
+    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection, bool usePointFiltering = true,
         PipelineType pipeline = PipelineType.Sprite)
     {
         UpdateBuffers(ref commandBuffer);

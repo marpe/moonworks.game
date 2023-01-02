@@ -95,13 +95,6 @@ public class SpriteBatch
         _numSprites += 1;
     }
 
-    /// Subtract b from a, modifying a
-    private static void SubtractVector(ref Vector2 a, in Vector2 b)
-    {
-        a.X -= b.X;
-        a.Y -= b.Y;
-    }
-
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
     {
         dest.X = src.X;

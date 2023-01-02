@@ -102,12 +102,6 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             GameRenderView.Zoom = editor.GameWindow.GameRenderView.Zoom;
             GameRenderView.Offset = editor.GameWindow.GameRenderView.Offset;
         }
-
-        var label = $"{_renderTargets[_selectedTargetIdx].Size.X}x{_renderTargets[_selectedTargetIdx].Size.Y}";
-        var labelSize = ImGui.CalcTextSize(label);
-        var x = min.X + ((max.X - min.X) - labelSize.X) * 0.5f;
-        var y = min.Y - labelSize.Y - 10;
-        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16, new Vector2(x, y), Color.White.PackedValue, label, 0, default);
         
         GameRenderView.Draw("RenderTarget", _renderTargets[_selectedTargetIdx]);
         if (ImGui.IsItemHovered())

@@ -5,7 +5,7 @@ namespace MyGame.Graphics;
 public class BMFont : IDisposable
 {
     private static Color[] _tempColors = new Color[4];
-    
+
     public BitmapFont Font;
 
     public Texture[] Textures;
@@ -21,7 +21,7 @@ public class BMFont : IDisposable
         using var stream = File.OpenRead(filename);
         using var reader = new StreamReader(stream);
         var font = BitmapFont.LoadXml(reader);
-        
+
         var textures = new Texture[font.Pages.Length];
         var directoryName = Path.GetDirectoryName(filename);
         for (var i = 0; i < textures.Length; i++)
@@ -78,7 +78,7 @@ public class BMFont : IDisposable
         var transformationMatrix = o * s * r * t;
         return DrawInto(renderer, bmFont, text, transformationMatrix, colors, depth);
     }
-    
+
     public static Vector2 DrawInto(Renderer renderer, BMFont bmFont, ReadOnlySpan<char> text, Matrix3x2 transform, Color color, float depth)
     {
         _tempColors.AsSpan().Fill(color);
