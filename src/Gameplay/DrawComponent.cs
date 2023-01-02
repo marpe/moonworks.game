@@ -98,7 +98,17 @@ public class DrawComponent
             return;
 
         Squash = Vector2.SmoothStep(Squash, Vector2.One, deltaSeconds * 20f);
-
+        
+        if (MathF.Approx(Squash.X, 1.0f, 0.0005f))
+        {
+            Squash.X = 1.0f;
+        }
+        
+        if (MathF.Approx(Squash.Y, 1.0f, 0.0005f))
+        {
+            Squash.Y = 1.0f;
+        }
+        
         if (!IsAnimating)
             return;
 
@@ -120,7 +130,7 @@ public class DrawComponent
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
-        renderer.DrawSprite(sprite, xform, Color.White, 0, Flip);
+        renderer.DrawSprite(sprite, xform, Color.White, Flip);
     }
 
     private Matrix3x2 GetTransform()

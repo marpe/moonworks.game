@@ -58,7 +58,8 @@ public class WorldRenderPass : RenderPass
         var camera = Shared.Game.Camera;
         // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
         camera.GetViewFloored(alpha, out var floorRemainder);
-
+        TestFunctions.DrawPixelArtShaderTestSkull(renderer, ref commandBuffer, renderTargets.GameRender,
+            renderTargets.GameRender.Size / (2 * 4) + floorRemainder * renderTargets.RenderScale);
         var srcPos = floorRemainder * renderTargets.RenderScale;
         var srcSize = renderTargets.GameRender.Size - UPoint.One * (uint)renderTargets.RenderScale;
         var srcRect = new Bounds(srcPos.X, srcPos.Y, srcSize.X, srcSize.Y);
@@ -89,8 +90,12 @@ public class WorldRenderPass : RenderPass
         var viewProjection = view.ToMatrix4x4() * projection;
 
         LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
-        world.DrawEntities(renderer, alpha);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection, true, PipelineType.Sprite);
+        
+        world.DrawEntities(renderer, alpha);
+        var entitiesViewProjection = view.ToMatrix4x4() *
+                                     projection;
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection, true, PipelineType.Sprite);
 
         LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         world.DrawDebug(renderer, camera, alpha);
@@ -164,7 +169,6 @@ public class WorldRenderPass : RenderPass
                 lightTexture,
                 Matrix3x2.Identity,
                 Color.White,
-                0,
                 SpriteFlip.None
             );
 
@@ -210,7 +214,7 @@ public class MenuRenderPass : RenderPass
         renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
         Shared.Menus.Draw(renderer, alpha);
         renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent, null, true);
-        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White, 0, SpriteFlip.None);
+        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White, SpriteFlip.None);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
     }
 }

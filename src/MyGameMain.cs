@@ -167,7 +167,7 @@ public class MyGameMain : Game
 
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
             // TODO (marpe): Render at int scale ?
-            Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None);
+            Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, SpriteFlip.None);
             Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null, true, PipelineType.Sprite);
             Renderer.Submit(ref commandBuffer);
         }

@@ -95,11 +95,9 @@ public sealed class FileWatcher : IDisposable
     {
         if (IsFileLocked(fileChangedEvent.FullPath))
         {
-            Logs.LogError($"File is locked ({fileChangedEvent.FullPath}), ignoring...");
             return;
         }
 
-        Logs.LogInfo($"Invoking callback for {fileChangedEvent.FullPath} ({fileChangedEvent.ChangeType})");
         _callback?.Invoke(fileChangedEvent);
     }
 

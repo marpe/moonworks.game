@@ -53,7 +53,7 @@ public class LevelRenderer
                                 level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
                                 level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
                             );
-            renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None);
+            renderer.DrawSprite(sprite, transform, Color.White, SpriteFlip.None);
         }
     }
 

@@ -30,6 +30,8 @@ public class TestFunctions
 
         // renderer.DrawRect((Rectangle)dstRect2, Color.Green);
         renderer.DrawSprite(texture, srcRect2, dstRect2, Color.White, 0, SpriteFlip.None);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.PixelArt);
+        var viewProjection = Matrix4x4.CreateTranslation(-0.5f, -0.5f, 0) * 
+                             Renderer.GetOrthographicProjection(renderDestination.Width, renderDestination.Height);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, viewProjection, false, PipelineType.PixelArt);
     }
 }

@@ -20,6 +20,9 @@ public struct Bounds
     public float X => Min.X;
     public float Y => Min.Y;
 
+    public Vector2 BottomLeft => new(X, Y + Height);
+    public Vector2 TopRight => new(X + Width, Y);
+
     public Bounds(float x, float y, float w, float h)
     {
         Min = new Vector2(x, y);

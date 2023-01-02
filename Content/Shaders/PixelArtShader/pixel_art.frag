@@ -70,7 +70,8 @@ vec4 test4()
 vec4 test5()
 {
     vec2 txSize = textureSize(uniformTexture, 0);
-    vec2 tex = txSize * texCoord;
+    float scale = 4;
+    vec2 tex = txSize * texCoord + vec2(0.5 / scale);
     vec2 pix = floor(tex) + min(fract(tex) / fwidth(tex), 1) - 0.5; // aa point sampling
 
     // TODO (marpe): this hack prevents bleed but should probably be fixed by adding padding to the tilesets
@@ -88,6 +89,6 @@ vec4 test5()
 
 void main()
 {
-    fragColor = test5();
+    fragColor = test2();
 }
 

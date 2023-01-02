@@ -126,7 +126,7 @@ public class BMFont : IDisposable
                 );
 
             var sprite = new Sprite(bmFont.Textures[currentChar.TexturePage], currentChar.Bounds);
-            renderer.DrawSprite(sprite, (characterTransform * transform), colors, depth);
+            renderer.DrawSprite(sprite, (characterTransform * transform).ToMatrix4x4(), colors, depth);
 
             previousCharacter = c;
         }

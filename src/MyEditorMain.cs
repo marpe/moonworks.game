@@ -127,9 +127,11 @@ public unsafe class MyEditorMain : MyGameMain
 
     private void OnFileChanged(FileEvent e)
     {
+        var extension = Path.GetExtension(e.FullPath);
+        if (extension is not (".json" or ".png" or ".aseprite" or ".spv"))
+            return;
         Logs.LogInfo($"File changed: {e.FullPath}, {e.ChangeType}");
         var relativePath = Path.GetRelativePath(AppDomain.CurrentDomain.BaseDirectory, e.FullPath);
-        var extension = Path.GetExtension(relativePath);
         if (extension == ".json")
         {
             Task.Run(() =>

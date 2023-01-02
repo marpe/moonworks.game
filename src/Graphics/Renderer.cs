@@ -36,6 +36,7 @@ public class Renderer
     public Dictionary<PipelineType, GfxPipeline> Pipelines;
 
     public FreeTypeFontAtlas FreeTypeFontAtlas;
+    private static Color[] _tempColors = new Color[4]; 
 
     public Renderer(MyGameMain game)
     {
@@ -107,23 +108,24 @@ public class Renderer
 
     public void DrawPoint(Vector2 position, Color color, float size = 1.0f, float depth = 0)
     {
-        var scale = Matrix3x2.CreateTranslation(-0.5f, -0.5f) *
-                    Matrix3x2.CreateScale(size, size) *
-                    Matrix3x2.CreateTranslation(position.X, position.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
+        var t = Matrix3x2.CreateTranslation(-0.5f, -0.5f) *
+                Matrix3x2.CreateScale(size, size) *
+                Matrix3x2.CreateTranslation(position.X, position.Y);
+        DrawSprite(_blankSprite, t, color);
     }
 
     public void DrawRect(Vector2 min, Vector2 max, Color color, float depth = 0)
     {
-        var scale = Matrix3x2.CreateScale(max.X - min.X, max.Y - min.Y) *
-                    Matrix3x2.CreateTranslation(min.X, min.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
+        var t = Matrix3x2.CreateScale(max.X - min.X, max.Y - min.Y) *
+                Matrix3x2.CreateTranslation(min.X, min.Y);
+        DrawSprite(_blankSprite, t, color);
     }
 
     public void DrawRect(Rectangle rect, Color color, float depth = 0)
     {
-        var scale = Matrix3x2.CreateScale(rect.Width, rect.Height) * Matrix3x2.CreateTranslation(rect.X, rect.Y);
-        SpriteBatch.Draw(_blankSprite, color, depth, scale.ToMatrix4x4());
+        var t = Matrix3x2.CreateScale(rect.Width, rect.Height) * 
+                Matrix3x2.CreateTranslation(rect.X, rect.Y);
+        DrawSprite(_blankSprite, t, color);
     }
 
     public void DrawCircleOutline(Vector2 position, float radius, Color color, float thickness, int numSegments = 12)
@@ -146,7 +148,7 @@ public class Renderer
         var rotation = Matrix3x2.CreateRotation(MathF.AngleBetweenVectors(from, to));
         var translation = Matrix3x2.CreateTranslation(from);
         var tAll = origin * scale * rotation * translation;
-        SpriteBatch.Draw(_blankSprite, color, 0, tAll.ToMatrix4x4());
+        DrawSprite(_blankSprite, tAll, color);
     }
 
     public void DrawRectWithOutline(Vector2 min, Vector2 max, Color color, Color outlineColor, float thickness = 1.0f)
@@ -195,25 +197,34 @@ public class Renderer
 
     public void DrawSprite(Texture texture, Bounds? srcRect, Bounds dstRect, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
+        _tempColors.AsSpan().Fill(color);
+        DrawSprite(texture, srcRect, dstRect, _tempColors, depth, flip);
+    }
+    public void DrawSprite(Texture texture, Bounds? srcRect, Bounds dstRect, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    {
         var sprite = new Sprite(texture, srcRect);
-        var transform = Matrix3x2.CreateScale(dstRect.Width / sprite.SrcRect.Width, dstRect.Height / sprite.SrcRect.Height) *
-                        Matrix3x2.CreateTranslation(dstRect.X, dstRect.Y);
-        SpriteBatch.Draw(sprite, color, depth, transform.ToMatrix4x4(), flip);
+        SpriteBatch.Draw(texture, sprite.SrcRect, dstRect, colors, depth, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, color, depth, transform.ToMatrix4x4(), flip);
+        DrawSprite(sprite, transform.ToMatrix4x4(), color, flip);
     }
 
     public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, color, 0, transform, flip);
+        _tempColors.AsSpan().Fill(color);
+        DrawSprite(sprite, transform, _tempColors, 0, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, colors, depth, transform.ToMatrix4x4(), flip);
+        var min = new Vector2(0, 0);
+        var max = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);
+        Vector2.Transform(ref min, ref transform, out min);
+        Vector2.Transform(ref max, ref transform, out max);
+        var dstRect = new Bounds(min, max);
+        DrawSprite(sprite.TextureSlice.Texture, sprite.SrcRect, dstRect, colors, depth, flip);
     }
 
     public void DrawFTText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Color color)
