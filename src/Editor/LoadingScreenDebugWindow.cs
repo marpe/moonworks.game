@@ -28,7 +28,7 @@ public unsafe class LoadingScreenDebugWindow : ImGuiEditorWindow
             ImGuiExt.LabelPrefix("TransitionType");
             ImGui.Dummy(Vector2.Zero);
 
-            if (BlendStateEditor.ComboStep("##TransitionType", true, ref transitionType, _transitionTypeNames))
+            if (ImGuiExt.ComboStep("##TransitionType", true, ref transitionType, _transitionTypeNames))
             {
                 LoadingScreen.TransitionType = (TransitionType)transitionType;
 

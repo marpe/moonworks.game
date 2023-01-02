@@ -21,7 +21,7 @@ public class Camera
     }
 
     private float _lerpSpeed = 1f;
-    private float _lerpT = 0;
+    public float Use3DLerpT = 0;
 
     private float _zoom = 1.0f;
 
@@ -50,9 +50,6 @@ public class Camera
     public Quaternion Rotation3D;
     private Vector2 _targetOffset = Vector2.Zero;
     public Vector2 TargetPosition;
-
-    /// <summary>This is the "true" position, that was used for the view projection calculation Which has shake and bump and crap applied</summary>
-    public Vector2 ViewPosition;
 
     private UPoint _size;
 
@@ -85,10 +82,6 @@ public class Camera
         get => _zoom;
         set => _zoom = MathF.Clamp(value, 0.001f, 50f);
     }
-
-    public bool FloorViewPosition;
-    public Vector2 FloorRemainder => ViewPosition - FlooredViewPosition;
-    public Vector2 FlooredViewPosition => ViewPosition.Floor();
 
     private float _timer = 0;
     private Vector2 _shakeFrequencies = new(15, 12);
@@ -131,7 +124,7 @@ public class Camera
     public void Update(float deltaSeconds, InputHandler input)
     {
         _timer += deltaSeconds;
-        _lerpT = MathF.Clamp01(_lerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
+        Use3DLerpT = MathF.Clamp01(Use3DLerpT + (Use3D ? 1 : -1) * deltaSeconds * _lerpSpeed);
 
         if (NoClip)
         {
@@ -370,14 +363,42 @@ public class Camera
         }
     }
 
-    public Matrix3x2 GetView(double alpha)
+    public Vector2 GetViewPosition(double alpha)
     {
-        ViewPosition = Position.Lerp(alpha) + _shakeOffset + _bumpOffset;
-        var position = FloorViewPosition ? FlooredViewPosition : ViewPosition;
-        return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
-               Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
-               Matrix3x2.CreateScale(_zoom) *
-               Matrix3x2.CreateTranslation(_size.X * 0.5f, _size.Y * 0.5f);
+        return Position.Lerp(alpha) + _shakeOffset + _bumpOffset;
+    }
+
+    public Vector2 GetFlooredViewPosition(double alpha, out Vector2 floorRemainder)
+    {
+        var viewPosition = GetViewPosition(alpha);
+        var flooredViewPosition = viewPosition.Floor();
+        floorRemainder = viewPosition - flooredViewPosition;
+        return flooredViewPosition;
+    }
+
+    public Matrix4x4 GetViewFloored(double alpha, out Vector2 floorRemainder)
+    {
+        var flooredViewPosition = GetFlooredViewPosition(alpha, out floorRemainder);
+        return GetView(flooredViewPosition);
+    }
+
+    public Matrix4x4 GetView(double alpha)
+    {
+        var viewPosition = GetViewPosition(alpha);
+        return GetView(viewPosition);
+    }
+
+    private Matrix4x4 GetView(Vector2 position)
+    {
+        var view = (
+                Matrix3x2.CreateTranslation(-position.X, -position.Y) *
+                Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
+                Matrix3x2.CreateScale(_zoom) *
+                Matrix3x2.CreateTranslation(_size.X * 0.5f, _size.Y * 0.5f)
+            )
+            .ToMatrix4x4();
+        view.M43 = -1000;
+        return view;
     }
 
     private Matrix4x4 GetView3D()
@@ -390,7 +411,12 @@ public class Camera
         );
     }
 
-    private static Matrix4x4 GetProjection(uint width, uint height)
+    public static Matrix4x4 GetProjection(UPoint size)
+    {
+        return GetProjection(size.X, size.Y);
+    }
+
+    public static Matrix4x4 GetProjection(uint width, uint height)
     {
         return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
     }
@@ -402,23 +428,11 @@ public class Camera
         return vFov;
     }
 
-    private static Matrix4x4 GetProjection3D(float horizontalFovDegrees, uint width, uint height)
+    public static Matrix4x4 GetProjection3D(float horizontalFovDegrees, uint width, uint height)
     {
         var aspectRatio = width / (float)height;
         var vFov = GetVerticalFovDegrees(horizontalFovDegrees, aspectRatio);
         return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
-    }
-
-    public Matrix4x4 GetViewProjection(uint width, uint height, double alpha)
-    {
-        var cameraView = GetView(alpha).ToMatrix4x4();
-        cameraView.M43 = -1000;
-        var cameraView3D = GetView3D();
-
-        var projection = GetProjection(width, height);
-        var projection3D = GetProjection3D(_horizontalFovDegrees, width, height);
-
-        return Matrix4x4.Lerp(cameraView * projection, cameraView3D * projection3D, Easing.InOutCubic(0, 1.0f, _lerpT, 1.0f));
     }
 
     public void UpdateLastPosition()

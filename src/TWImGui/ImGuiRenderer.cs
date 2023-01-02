@@ -31,11 +31,12 @@ public unsafe class ImGuiRenderer : IDisposable
     private readonly Sampler _linearSampler;
     private readonly Sampler _pointSampler;
 
-    public bool UsePointSampler = false;
-
     private readonly Num.Vector2 _scaleFactor = Num.Vector2.One;
-    private readonly Dictionary<IntPtr, Texture> _textures = new();
-    private IntPtr? _fontAtlasTextureId;
+
+    private record struct TextureEntry(Texture Texture, bool UsePointFiltering);
+
+    private readonly Dictionary<IntPtr, TextureEntry> _textures = new();
+    private Texture? _fontAtlasTexture;
     private GCHandle _handle;
 
     private Buffer? _indexBuffer;
@@ -84,7 +85,7 @@ public unsafe class ImGuiRenderer : IDisposable
         io->SetClipboardTextFn = &SetClipboardText;
 
         io->HoverDelayNormal = 2.0f;
-        
+
         // Set the backend name
         {
             var name = "MoonWorks.SDL";
@@ -278,13 +279,14 @@ public unsafe class ImGuiRenderer : IDisposable
         commandBuffer.SetTextureData(fontAtlasTexture, pixels);
         _game.GraphicsDevice.Submit(commandBuffer);
 
-        if (_fontAtlasTextureId.HasValue)
+        if (_fontAtlasTexture != null)
         {
-            UnbindTexture(_fontAtlasTextureId.Value);
+            UnbindTexture(_fontAtlasTexture);
         }
 
-        _fontAtlasTextureId = BindTexture(fontAtlasTexture);
-        io->Fonts->SetTexID((void*)_fontAtlasTextureId.Value);
+        BindTexture(fontAtlasTexture, false);
+        _fontAtlasTexture = fontAtlasTexture;
+        io->Fonts->SetTexID((void*)_fontAtlasTexture.Handle);
         io->Fonts->ClearTexData();
 
         // io.NativePtr->FontDefault = _fonts[ImGuiFont.Default];
@@ -321,9 +323,9 @@ public unsafe class ImGuiRenderer : IDisposable
             io->BackendPlatformUserData = null;
             _handle.Free();
 
-            foreach (var texture in _textures)
+            foreach (var (_, texture) in _textures)
             {
-                texture.Value.Dispose();
+                texture.Texture.Dispose();
             }
 
             _textures.Clear();
@@ -507,16 +509,17 @@ public unsafe class ImGuiRenderer : IDisposable
                     );
                 }
 
-                var sampler = UsePointSampler ? _pointSampler : _linearSampler;
-                var textureSamplerBindings = new TextureSamplerBinding(_textures[(IntPtr)drawCmd.TextureId], sampler);
+                var textureEntry = _textures[(IntPtr)drawCmd.TextureId];
+                var sampler = textureEntry.UsePointFiltering ? _pointSampler : _linearSampler;
+                var textureSamplerBindings = new TextureSamplerBinding(textureEntry.Texture, sampler);
                 commandBuffer.BindFragmentSamplers(textureSamplerBindings);
 
                 // Project scissor/clipping rectangles into framebuffer space
-                var clipMin = new MoonWorks.Math.Float.Vector2(
+                var clipMin = new Vector2(
                     (drawCmd.ClipRect.X - clipOffset.X) * clipScale.X,
                     (drawCmd.ClipRect.Y - clipOffset.Y) * clipScale.Y
                 );
-                var clipMax = new MoonWorks.Math.Float.Vector2(
+                var clipMax = new Vector2(
                     (drawCmd.ClipRect.Z - clipOffset.X) * clipScale.X,
                     (drawCmd.ClipRect.W - clipOffset.Y) * clipScale.Y
                 );
@@ -739,24 +742,18 @@ public unsafe class ImGuiRenderer : IDisposable
         return _fonts[font];
     }
 
-    public IntPtr BindTexture(Texture texture)
+    public void BindTexture(Texture texture, bool usePointFiltering)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-
-        if (_textures.TryGetValue(texture.Handle, out var boundTexture))
-            return boundTexture.Handle;
-        
-        _textures.Add(texture.Handle, texture);
-        return texture.Handle;
+        _textures[texture.Handle] = new TextureEntry(texture, usePointFiltering);
     }
 
-    public void UnbindTexture(IntPtr textureId)
+    public void UnbindTexture(Texture texture)
     {
         if (IsDisposed)
             throw new ObjectDisposedException(nameof(ImGuiRenderer));
-
-        _textures.Remove(textureId);
+        _textures.Remove(texture.Handle);
     }
 
     #endregion

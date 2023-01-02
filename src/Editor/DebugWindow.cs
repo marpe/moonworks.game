@@ -95,8 +95,6 @@ public unsafe class DebugWindow : ImGuiEditorWindow
 {
     private MyEditorMain _editor;
     private float _peakImGuiRenderDurationMs;
-    private float _peakRenderGameDurationMs;
-    private float _peakUpdateDurationMs;
     private float _peakNumAddedSprites;
     private float _peakRenderDurationMs;
     public const string WindowTitle = "Debug";
@@ -111,9 +109,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
     private void UpdateMetrics()
     {
         _peakImGuiRenderDurationMs = StopwatchExt.SmoothValue(_peakImGuiRenderDurationMs, _editor._imGuiRenderDurationMs);
-        _peakRenderGameDurationMs = StopwatchExt.SmoothValue(_peakRenderGameDurationMs, _editor._renderGameDurationMs);
         _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _editor._renderDurationMs);
-        _peakUpdateDurationMs = StopwatchExt.SmoothValue(_peakUpdateDurationMs, _editor._gameUpdateDurationMs);
         _peakNumAddedSprites = StopwatchExt.SmoothValue(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites);
     }
 
@@ -127,19 +123,16 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         {
             var io = ImGui.GetIO();
 
-            if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 300)))
+            if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 0)))
             {
                 UpdateMetrics();
                 ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
                 ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
                 ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
                 ImGui.TextUnformatted($"ImGuiRenderDuration: {_peakImGuiRenderDurationMs:0.0} ms");
-                ImGui.TextUnformatted($"RenderGameDuration: {_peakRenderGameDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"RenderDuration: {_peakRenderDurationMs:0.0} ms");
-                ImGui.TextUnformatted($"UpdateDuration: {_peakUpdateDurationMs:0.0} ms");
                 ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}");
                 ImGui.TextUnformatted($"AddedSprites: {_peakNumAddedSprites:0}");
-                SimpleTypeInspector.InspectInt("UpdateRate", ref _editor.UpdateRate, new RangeSettings { MinValue = 1, MaxValue = 10 });
             }
 
             ImGui.EndChild();

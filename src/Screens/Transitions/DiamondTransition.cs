@@ -19,6 +19,7 @@ public class DiamondTransition : SceneTransition
         if (compositeOldCopy != null && isLoading)
         {
             renderer.DrawSprite(new Sprite(compositeOldCopy), Matrix4x4.Identity, Color.White);
+            // TODO (marpe): Check if this is required
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true);
         }
 

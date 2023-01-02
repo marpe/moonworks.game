@@ -203,7 +203,7 @@ public unsafe class SimpleTypeInspector : Inspector
         else if (type == typeof(Color))
         {
             var tmpValue = (Color)value;
-            result |= InspectColor(name, ref tmpValue);
+            result |= InspectColor(name, ref tmpValue, "");
             if (result)
             {
                 value = tmpValue;
@@ -222,7 +222,7 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             ImGui.TextColored(Color.Red.ToNumerics(), $"No inspector defined for type: {type.Name}");
         }
-        
+
         if (isReadOnly)
         {
             ImGui.EndDisabled();
@@ -256,6 +256,7 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             result = true;
         }
+
         return result;
     }
 
@@ -297,9 +298,17 @@ public unsafe class SimpleTypeInspector : Inspector
         return result;
     }
 
-    public static bool InspectColor(string name, ref Color color, Color? refColor = null, ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
+    public static bool InspectColor(string name, ref Color color, string tooltip = "", Color? refColor = null,
+        ImGuiColorEditFlags flags = ImGuiColorEditFlags.None)
     {
-        var result = ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(name, true), ref color, refColor, flags);
+        var result = ImGuiExt.ColorEdit(ImGuiExt.LabelPrefix(name), ref color, refColor, flags);
+        if (tooltip != "" && ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text(tooltip);
+            ImGui.EndTooltip();
+        }
+
         return result;
     }
 
@@ -307,7 +316,7 @@ public unsafe class SimpleTypeInspector : Inspector
     public static bool InspectPercentage(string name, ref float value)
     {
         var tmpValue = value * 100f;
-        
+
         var result = ImGui.SliderFloat(
             ImGuiExt.LabelPrefix(name),
             ImGuiExt.RefPtr(ref tmpValue),
@@ -316,7 +325,7 @@ public unsafe class SimpleTypeInspector : Inspector
             "%.1f%%",
             ImGuiSliderFlags.AlwaysClamp
         );
-        
+
         if (result)
         {
             value = tmpValue / 100f;
@@ -352,10 +361,12 @@ public unsafe class SimpleTypeInspector : Inspector
                 flags
             );
         }
+
         return result;
     }
-    
-    public static bool InspectInputUint(string name, ref uint value, int* step = null, int* stepFast = null, ImGuiInputTextFlags flags = ImGuiInputTextFlags.CharsDecimal)
+
+    public static bool InspectInputUint(string name, ref uint value, int* step = null, int* stepFast = null,
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags.CharsDecimal)
     {
         var data = (void*)ImGuiExt.RefPtr(ref value);
         var stepPtr = (void*)step;
@@ -396,6 +407,7 @@ public unsafe class SimpleTypeInspector : Inspector
                 ImGuiSliderFlags.AlwaysClamp
             );
         }
+
         return result;
     }
 
@@ -421,6 +433,7 @@ public unsafe class SimpleTypeInspector : Inspector
         {
             result |= ImGui.SliderScalar(ImGuiExt.LabelPrefix(name), ImGuiDataType.U32, valuePtr, minValuePtr, maxValuePtr, "%u", flags);
         }
+
         return result;
     }
 
@@ -496,9 +509,18 @@ public unsafe class SimpleTypeInspector : Inspector
         return result;
     }
 
-    public static bool InspectBool(string name, ref bool value)
+    public static bool InspectBool(string name, ref bool value, int labelWidth = -1)
     {
-        var result = ImGuiExt.DrawCheckbox(ImGuiExt.LabelPrefix(name), ref value);
+        var label = ImGuiExt.LabelPrefix(name, labelWidth);
+        var result = false;
+
+        if (ImGui.IsItemClicked())
+        {
+            result = true;
+            value = !value;
+        }
+
+        result |= ImGuiExt.DrawCheckbox(label, ref value);
         return result;
     }
 
@@ -513,6 +535,7 @@ public unsafe class SimpleTypeInspector : Inspector
             value = new Point(xy->Item1, xy->Item2);
             result = true;
         }
+
         return result;
     }
 
@@ -528,9 +551,9 @@ public unsafe class SimpleTypeInspector : Inspector
             value = new UPoint(xy->Item1, xy->Item2);
             result = true;
         }
+
         return result;
     }
 
     #endregion
 }
-

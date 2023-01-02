@@ -65,9 +65,6 @@ public class MyGameMain : Game
         World = new World();
 
         Camera = new Camera(RenderTargets.GameSize.X, RenderTargets.GameSize.Y);
-        // only floor when rendering at a different scale than composite
-        Camera.FloorViewPosition = !(RenderTargets.GameRender.Width == RenderTargets.CompositeRender.Width &&
-                                    RenderTargets.GameRender.Height == RenderTargets.CompositeRender.Height);
 
         Shared.LoadingScreen.LoadImmediate(() =>
         {
@@ -103,9 +100,9 @@ public class MyGameMain : Game
             GraphicsDevice.UnclaimWindow(MainWindow);
             GraphicsDevice.ClaimWindow(MainWindow, PresentMode.Mailbox);
         }
-        
+
         ConsoleToast.Update((float)dt.TotalSeconds);
-        
+
         UpdateScreens();
 
         Shared.AudioManager.Update((float)dt.TotalSeconds);
@@ -154,10 +151,6 @@ public class MyGameMain : Game
 
         _fpsDisplay.BeginRender();
         {
-            RenderGame(alpha, RenderTargets.CompositeRender);
-        }
-
-        {
             var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
 
             if (swapTexture == null)
@@ -168,32 +161,26 @@ public class MyGameMain : Game
 
             _swapSize = swapTexture.Size();
 
-            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
-            var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-            var projection = Matrix4x4.CreateOrthographicOffCenter(0, swapTexture.Width, swapTexture.Height, 0, 0.0001f, 10000f);
-
-            // TODO (marpe): Render at int scale ?
+            RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
             
+            var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
+            // TODO (marpe): Render at int scale ?
             Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None);
-            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, view * projection, false, PipelineType.Sprite); // PipelineType.PixelArt);
+            Renderer.RunRenderPass(ref commandBuffer, swapTexture, Color.Black, null, true, PipelineType.Sprite);
             Renderer.Submit(ref commandBuffer);
         }
         _fpsDisplay.EndRender();
     }
 
-    protected void RenderGame(double alpha, Texture renderDestination)
+    protected void RenderGame(ref CommandBuffer commandBuffer, double alpha, Texture renderDestination)
     {
         _fpsDisplay.BeginRenderGame();
         Time.UpdateDrawCount();
-
-        var commandBuffer = GraphicsDevice.AcquireCommandBuffer();
 
         for (var i = 0; i < _renderPasses.Count; i++)
         {
             _renderPasses[i].Draw(Renderer, ref commandBuffer, renderDestination, alpha);
         }
-
-        Renderer.Submit(ref commandBuffer);
 
         _fpsDisplay.EndRenderGame();
     }
@@ -421,6 +408,7 @@ public class MyGameMain : Game
     #endregion
 
     #region Helpers
+
     protected void UpdateWindowTitle()
     {
         if (Time.TotalElapsedTime >= _nextWindowTitleUpdate)
@@ -429,5 +417,6 @@ public class MyGameMain : Game
             _nextWindowTitleUpdate += 1f;
         }
     }
+
     #endregion
 }

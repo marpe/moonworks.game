@@ -55,7 +55,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
 
     private void DrawWindowContent()
     {
-        GameRenderView.Draw(_editor.RenderTargets.CompositeRender.Target);
+        GameRenderView.Draw("GameRender", _editor.RenderTargets.CompositeRender.Target);
 
         if (ImGui.BeginPopupContextWindow("GameContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
         {
@@ -134,7 +134,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var mousePosition = editor.InputHandler.MousePosition;
             ImGuiExt.PrintVector("Pos", mousePosition);
             var view = editor.Camera.GetView(0);
-            Matrix3x2.Invert(view, out var invertedView);
+            Matrix4x4.Invert(ref view, out var invertedView);
             var mouseInWorld = MoonWorks.Math.Float.Vector2.Transform(mousePosition, invertedView);
             ImGuiExt.PrintVector("World", mouseInWorld);
             var mouseCell = Entity.ToCell(mouseInWorld);

@@ -18,7 +18,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
             Inspector = InspectorExt.GetGroupInspectorForTarget(entity);
         }
     }
-    
+
     public const string WindowTitle = "World";
     private IInspector? _cameraInspector;
     private IInspector? _worldInspector;
@@ -34,7 +34,6 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     private string[] _entityNames = Array.Empty<string>();
     private Entity[] _entities = Array.Empty<Entity>();
     private EntityInspector? _selectedEntity;
-    private bool _isPickingEntity;
 
     public WorldWindow() : base(WindowTitle)
     {
@@ -46,6 +45,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         var editor = (MyEditorMain)Shared.Game;
         var view = editor.Camera.GetView(0);
         var posInGameWindow = Vector2.Transform(position, view);
+        var renderScale = Shared.Game.RenderTargets.CompositeRender.Size / Shared.Game.Camera.ZoomedSize;
+        posInGameWindow *= renderScale;
         var viewportTransform = editor.GameWindow.GameRenderView.GameRenderViewportTransform;
         var posInScreen = Vector2.Transform(posInGameWindow, viewportTransform) + ImGui.GetMainViewport()->Pos.ToXNA();
         return posInScreen.ToNumerics();
@@ -53,9 +54,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
     private static Vector2 GetMouseInWorld()
     {
-        var mousePosition = Shared.Game.InputHandler.MousePosition;
+        var renderScale = Shared.Game.RenderTargets.CompositeRender.Size / Shared.Game.Camera.ZoomedSize;
+        var mousePosition = Shared.Game.InputHandler.MousePosition / renderScale;
         var view = Shared.Game.Camera.GetView(0);
-        Matrix3x2.Invert(view, out var invertedView);
+        Matrix4x4.Invert(ref view, out var invertedView);
         return Vector2.Transform(mousePosition, invertedView);
     }
 
@@ -74,6 +76,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
             return;
         }
 
+        var labelWidthRatio = 0.4f;
+        var labelWidth = (int)(ImGui.GetContentRegionAvail().X * labelWidthRatio);
+        ImGuiExt.PushLabelWidth(labelWidth);
+        
         if (ImGui.BeginTabBar("Tabs"))
         {
             if (ImGui.BeginTabItem("Rendering"))
@@ -118,7 +124,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
                 _prevRoot = Shared.Game.World.Root;
                 _prevLevel = Shared.Game.World.Level;
-                
+
                 _worldInspector.Draw();
 
                 DrawPickEntityButton(world);
@@ -140,6 +146,8 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
             ImGui.EndTabBar();
         }
+        
+        ImGuiExt.PopLabelWidth();
 
         ImGui.End();
     }
@@ -188,13 +196,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     {
         if (ImGuiExt.ColoredButton(FontAwesome6.EyeDropper + " Pick Entity", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
-            _isPickingEntity = true;
+            ImGui.OpenPopup("PickEntityOverlay");
         }
 
-        if (_isPickingEntity)
-        {
-            DrawPickEntityOverlay(world);
-        }
+        DrawPickEntityOverlay(world);
     }
 
     private void DrawPickEntityOverlay(World world)
@@ -214,7 +219,9 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         var gameRenderSize = gameRenderMax - gameRenderMin;
         ImGui.SetNextWindowPos(gameRenderMin, ImGuiCond.Always, Num.Vector2.Zero);
         ImGui.SetNextWindowSize(gameRenderSize, ImGuiCond.Always);
-        if (GameWindow.BeginOverlay("PickEntityOverlay", ref _isPickingEntity, windowFlags, false))
+        ImGui.SetNextWindowBgAlpha(0);
+        ImGui.SetNextWindowViewport(ImGui.GetMainViewport()->ID);
+        if (ImGui.BeginPopup("PickEntityOverlay", windowFlags))
         {
             // if (ImGui.IsWindowHovered())
             MyEditorMain.ActiveInput = ActiveInput.GameWindow;
@@ -248,14 +255,14 @@ public unsafe class WorldWindow : ImGuiEditorWindow
                 if (ImGui.InvisibleButton("Entity" + i, size, (ImGuiButtonFlags)ImGuiButtonFlagsPrivate_.ImGuiButtonFlags_AllowItemOverlap))
                 {
                     _selectedEntity = new EntityInspector(entity);
-                    _isPickingEntity = false;
+                    ImGui.CloseCurrentPopup();
                     break;
                 }
 
                 ImGui.SetItemAllowOverlap();
             }
-        }
 
-        ImGui.End();
+            ImGui.EndPopup();
+        }
     }
 }

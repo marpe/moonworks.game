@@ -39,9 +39,10 @@ public class DrawComponent
     private Entity Parent => _parent ?? throw new Exception();
 
     public Dictionary<string, SpriteAnimation> Animations = new(StringComparer.OrdinalIgnoreCase);
-    
+
     [HideInInspector]
     public SpriteAnimation? CurrentAnimation;
+
     private SpriteAnimation? _previousAnimation;
 
     public Vector2 Squash = Vector2.One;
@@ -127,7 +128,7 @@ public class DrawComponent
         var spriteOrigin = Vector2.Zero;
         if (CurrentAnimation != null)
             spriteOrigin = CurrentAnimation.Frames[FrameIndex].Origin;
-        
+
         if (spriteOrigin == Vector2.Zero)
             spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
@@ -137,9 +138,18 @@ public class DrawComponent
                      Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
                      Matrix3x2.CreateTranslation(origin);
 
+        /*
+        var position = new Vector2(
+            Snap(Parent.Position.Current.X, 0.25f, 0),
+            Snap(Parent.Position.Current.Y, 0.25f, 0)
+        );
+        */
+
+        var position = Parent.Position.Current;
+
         var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *
-                    Matrix3x2.CreateTranslation(Parent.Position.Current);
+                    Matrix3x2.CreateTranslation(position); /* .Floor() */
 
         return xform.ToMatrix4x4();
     }

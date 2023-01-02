@@ -23,73 +23,7 @@ public static unsafe class BlendStateEditor
                a.DestinationColorBlendFactor == b.DestinationColorBlendFactor &&
                a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor;
     }
-
-    public static bool ComboStep(string label, bool showPrevNextButtons, ref int currentIndex, string[] items)
-    {
-        var result = false;
-
-        ImGui.BeginGroup();
-
-        ImGuiExt.LabelPrefix(label);
-        
-        if (showPrevNextButtons)
-        {
-            ImGui.BeginGroup();
-            {
-                ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
-                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
-                ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
-
-                if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label, default))
-                {
-                    currentIndex = (items.Length + currentIndex - 1) % items.Length;
-                    result = true;
-                }
-
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Previous");
-
-                ImGui.SameLine();
-                if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label, default))
-                {
-                    currentIndex = (items.Length + currentIndex + 1) % items.Length;
-                    result = true;
-                }
-
-                if (ImGui.IsItemHovered())
-                    ImGui.SetTooltip("Next");
-
-                ImGui.PopStyleColor(3);
-            }
-            
-            ImGui.EndGroup();
-            ImGui.SameLine();
-        }
-
-        ImGui.SetNextItemWidth(-1);
-        if (ImGui.BeginCombo("##" + label, items[currentIndex]))
-        {
-            for (var i = 0; i < items.Length; i++)
-            {
-                var isSelected = i == currentIndex;
-                if (ImGui.Selectable(items[i], isSelected, ImGuiSelectableFlags.None, default))
-                {
-                    currentIndex = i;
-                    result = true;
-                }
-
-                if (isSelected)
-                    ImGui.SetItemDefaultFocus();
-            }
-
-            ImGui.EndCombo();
-        }
-
-        ImGui.EndGroup();
-
-        return result;
-    }
-
+    
     public static bool Draw(string name, ref ColorAttachmentBlendState state)
     {
         ImGui.PushID(name);
@@ -102,12 +36,12 @@ public static unsafe class BlendStateEditor
         var blendEnabled = state.BlendEnable;
         var prevState = state;
         ImGui.Checkbox("Enabled", ImGuiExt.RefPtr(ref blendEnabled));
-        ComboStep("AlphaOp", true, ref alphaBlendOpIndex, _blendOpNames);
-        ComboStep("ColorOp", true, ref colorBlendOpIndex, _blendOpNames);
-        ComboStep("SourceColor", true, ref sourceColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("SourceAlpha", true, ref sourceAlphaBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestColor", true, ref destColorBlendFactorIndex, _blendFactorNames);
-        ComboStep("DestAlpha", true, ref destAlphaBlendFactorIndex, _blendFactorNames);
+        ImGuiExt.ComboStep("AlphaOp", true, ref alphaBlendOpIndex, _blendOpNames);
+        ImGuiExt.ComboStep("ColorOp", true, ref colorBlendOpIndex, _blendOpNames);
+        ImGuiExt.ComboStep("SourceColor", true, ref sourceColorBlendFactorIndex, _blendFactorNames);
+        ImGuiExt.ComboStep("SourceAlpha", true, ref sourceAlphaBlendFactorIndex, _blendFactorNames);
+        ImGuiExt.ComboStep("DestColor", true, ref destColorBlendFactorIndex, _blendFactorNames);
+        ImGuiExt.ComboStep("DestAlpha", true, ref destAlphaBlendFactorIndex, _blendFactorNames);
         state.BlendEnable = blendEnabled;
         state.AlphaBlendOp = (BlendOp)alphaBlendOpIndex;
         state.ColorBlendOp = (BlendOp)colorBlendOpIndex;
@@ -115,7 +49,7 @@ public static unsafe class BlendStateEditor
         state.SourceAlphaBlendFactor = (BlendFactor)sourceAlphaBlendFactorIndex;
         state.DestinationColorBlendFactor = (BlendFactor)destColorBlendFactorIndex;
         state.DestinationAlphaBlendFactor = (BlendFactor)destAlphaBlendFactorIndex;
-        /// Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
+        // Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
         ImGui.Text($"sourceColor * {state.SourceColorBlendFactor.ToString()} + destColor * {state.DestinationColorBlendFactor.ToString()}");
         ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor.ToString()} + destAlpha * {state.DestinationAlphaBlendFactor.ToString()}");
         if (ImGui.Button("AlphaBlend", default))

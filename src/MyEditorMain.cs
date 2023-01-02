@@ -26,7 +26,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     private ulong _imGuiDrawCount;
     private readonly List<ImGuiMenu> _menuItems = new();
-    public int UpdateRate = 1;
+    public int ImGuiDrawRate = 1;
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private Texture _imGuiRenderTarget;
 
@@ -46,9 +46,7 @@ public unsafe class MyEditorMain : MyGameMain
     private Stopwatch _imguiRenderStopwatch = new();
     private Stopwatch _renderStopwatch = new();
     public float _imGuiRenderDurationMs;
-    public float _renderGameDurationMs;
     public float _renderDurationMs;
-    public float _gameUpdateDurationMs;
 
     public EditorWindow EditorWindow;
 
@@ -65,7 +63,10 @@ public unsafe class MyEditorMain : MyGameMain
         var sw = Stopwatch.StartNew();
         var windowSize = MainWindow.Size;
         _imGuiRenderTarget = Texture.CreateTexture2D(
-            GraphicsDevice, (uint)windowSize.X, (uint)windowSize.Y, TextureFormat.B8G8R8A8,
+            GraphicsDevice, 
+            (uint)windowSize.X,
+            (uint)windowSize.Y,
+            TextureFormat.B8G8R8A8,
             TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget
         );
 
@@ -119,7 +120,7 @@ public unsafe class MyEditorMain : MyGameMain
         foreach (var path in iconPaths)
         {
             var texture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
-            renderer.BindTexture(texture);
+            renderer.BindTexture(texture, true);
         }
     }
 
@@ -226,8 +227,6 @@ public unsafe class MyEditorMain : MyGameMain
         var imgui = new ImGuiMenu("ImGui")
             .AddChild(new ImGuiMenu("Debug Inspectors", null, () => { ImGuiExt.DebugInspectors = !ImGuiExt.DebugInspectors; }, null,
                 () => ImGuiExt.DebugInspectors))
-            .AddChild(new ImGuiMenu("Use Point Sampler", null, () => { ImGuiRenderer.UsePointSampler = !ImGuiRenderer.UsePointSampler; }, null,
-                () => ImGuiRenderer.UsePointSampler))
             .AddChild(new ImGuiMenu("Borderless Window", null, () => SetWindowBorder(), null, () => MainWindow.IsBorderless))
             .AddChild(new ImGuiMenu("Show ImGui Demo Window", "^F2", () => _demoWindow.IsOpen = !_demoWindow.IsOpen, null, () => _demoWindow.IsOpen));
         _menuItems.Add(imgui);
@@ -390,6 +389,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
         InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
+                                    ActiveInput == ActiveInput.RenderTargetsWindow ||
                                     ActiveInput == ActiveInput.Game;
 
         base.Update(dt);
@@ -430,9 +430,11 @@ public unsafe class MyEditorMain : MyGameMain
             return;
 
         _renderStopwatch.Restart();
-        RenderGame(alpha, RenderTargets.CompositeRender);
+        var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
+        
+        RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
 
-        if (((int)Time.UpdateCount % UpdateRate == 0) && _imGuiUpdateCount > 0)
+        if ((int)Time.UpdateCount % ImGuiDrawRate == 0 && _imGuiUpdateCount > 0)
         {
             _imguiRenderStopwatch.Restart();
             _imGuiDrawCount++;
@@ -449,8 +451,6 @@ public unsafe class MyEditorMain : MyGameMain
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
         }
 
-        var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
-
         if (swapTexture == null)
         {
             Logs.LogError("Could not acquire swapchain texture");
@@ -461,7 +461,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         if (_screenshot)
         {
-            commandBuffer.CopyTextureToBuffer(RenderTargets.RimLights.Target, _screenshotBuffer);
+            commandBuffer.CopyTextureToBuffer(RenderTargets.CompositeRender.Target, _screenshotBuffer);
         }
 
         if (_imGuiDrawCount > 0)

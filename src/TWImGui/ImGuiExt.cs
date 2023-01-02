@@ -11,6 +11,7 @@ public static unsafe class ImGuiExt
 {
     public const float FLT_MIN = 1.175494351e-38F;
     public const float FLT_MAX = 3.402823466e+38F;
+    public const float FLT_EPSILON = 1.192092896e-07F;
 
     public const ImGuiTableFlags DefaultTableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter |
                                                      ImGuiTableFlags.Hideable | ImGuiTableFlags.Resizable |
@@ -25,6 +26,7 @@ public static unsafe class ImGuiExt
     public static readonly Dictionary<uint, bool> OpenFoldouts = new();
 
     private static readonly Stack<Color> _colorStack = new();
+    private static readonly Stack<int> _labelWidthStack = new();
     public static Num.Vector2 ButtonPadding => new(6f, 4f);
 
     public static Color[] Colors =
@@ -47,9 +49,21 @@ public static unsafe class ImGuiExt
         Color.OliveDrab,
     };
 
+    private static Num.Vector2 CollapsingHeaderFramePadding = new(6, 4);
+
     public static Color GetColor(int i = 0)
     {
         return Colors[i % Colors.Length];
+    }
+
+    public static void PushLabelWidth(int width)
+    {
+        _labelWidthStack.Push(width);
+    }
+
+    public static void PopLabelWidth()
+    {
+        _labelWidthStack.Pop();
     }
 
     public static bool Begin(string name, ref bool isOpen, ImGuiWindowFlags flags = ImGuiWindowFlags.None)
@@ -359,7 +373,7 @@ public static unsafe class ImGuiExt
         ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, frameBgHoveredColor);
         ImGui.PushStyleColor(ImGuiCol.FrameBgActive, frameBgActiveColor);
         ImGui.PushStyleColor(ImGuiCol.CheckMark, checkColor);
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Num.Vector2.Zero);
+        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Num.Vector2(2, 2));
         ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
         var result = ImGui.Checkbox(label, RefPtr(ref value));
         ImGui.PopStyleVar(2);
@@ -606,13 +620,6 @@ public static unsafe class ImGuiExt
         borderMax.X = MathF.Floor(borderMax.X);
         if (borderMax.X - borderMin.X > 0 && borderMax.Y - borderMin.Y > 0)
         {
-            var yAdjust = new Num.Vector2(0, ImGui.GetFrameHeightWithSpacing() - 6);
-            drawList->AddLine(
-                borderMin + yAdjust,
-                new Num.Vector2(borderMax.X, borderMin.Y) + yAdjust,
-                ColorExt.MultiplyAlpha(color, 0.8f).PackedValue,
-                1f
-            );
             drawList->AddRect(
                 borderMin,
                 borderMax,
@@ -682,28 +689,69 @@ public static unsafe class ImGuiExt
         return new Num.Vector2(Math.Max(value.X, minValue), Math.Max(value.Y, minValue));
     }
 
-    public static string LabelPrefix(string label, bool preserveLabel = false)
+    public static ReadOnlySpan<char> GetLabel(ReadOnlySpan<char> label)
     {
-        // label
-        var textSize = ImGui.CalcTextSize(label, true);
-
-        if (textSize.X <= 0)
+        for (var i = 0; i < label.Length; i++)
         {
-            // ImGui.SetNextItemWidth(-1); // TODO (marpe): Investigate what I broke when this got commented out
-            return label;
+            if (label[i] == '\0' || (i < label.Length - 1 && label[i] == '#' && label[i + 1] == '#'))
+                return label.Slice(0, i);
         }
 
+        return label;
+    }
+
+    public static string LabelPrefix(string label, int labelMaxWidth = -1)
+    {
+        var strippedLabel = GetLabel(label);
+        if (strippedLabel.Length == 0)
+            return label;
+
+        // label
+        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
+        var textSize = ImGui.CalcTextSize(label, true);
+
         var itemWidth = ImGui.CalcItemWidth();
+        var nextItemWidth = itemWidth;
+
+        var defaultWidth = ImGui.GetCurrentContext()->CurrentWindow->ItemWidthDefault;
+        if (Math.Abs(itemWidth - defaultWidth) < FLT_EPSILON)
+            nextItemWidth = -FLT_MIN;
+
+        if ((ImGui.GetCurrentContext()->NextItemData.Flags & ImGuiNextItemDataFlags.HasWidth) != 0)
+        {
+            nextItemWidth = ImGui.GetCurrentContext()->NextItemData.Width;
+        }
+
+        if (!_labelWidthStack.TryPeek(out var offset))
+            offset = 0;
+
         var x = ImGui.GetCursorPosX();
         ImGui.PushStyleColor(ImGuiCol.Text, ImGui.GetStyle()->Colors[(int)ImGuiCol.TextDisabled]);
-        ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(ImGuiFont.MediumBold));
 
         var frameHeight = ImGui.GetFrameHeight();
         var min = ImGui.GetCursorScreenPos();
         var itemInnerSpacingX = ImGui.GetStyle()->ItemInnerSpacing.X;
-        var labelWidthRatio = 0.4f;
-        var labelWidth = itemWidth * labelWidthRatio + itemInnerSpacingX;
-        var max = min + new Num.Vector2(Math.Min(textSize.X + itemInnerSpacingX, labelWidth), frameHeight);
+        float maxWidth;
+        if (labelMaxWidth == -1)
+        {
+            if (offset != 0)
+            {
+                maxWidth = offset;
+            }
+            else
+            {
+                maxWidth = itemWidth;
+            }
+        }
+        else
+        {
+            maxWidth = labelMaxWidth;
+        }
+
+        maxWidth -= itemInnerSpacingX;
+
+        var labelWidth = Math.Min(textSize.X, maxWidth);
+        var max = min + new Num.Vector2(labelWidth, frameHeight);
         ImGuiInternal.RenderTextClipped(min, max, label, &textSize, new Num.Vector2(0, 0.5f));
 
         ImGui.PopFont();
@@ -713,7 +761,7 @@ public static unsafe class ImGuiExt
         var buttonSize = max - min;
         ImGui.InvisibleButton(label, buttonSize.EnsureNotZero());
 
-        if (labelWidth < textSize.X && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+        if (textSize.X > maxWidth && ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
         {
             ImGui.SetTooltip(label);
         }
@@ -723,29 +771,23 @@ public static unsafe class ImGuiExt
             ImGui.SetKeyboardFocusHere();
         }
 
-        ImGui.SameLine();
+        ImGui.SameLine(offset, itemInnerSpacingX);
+        ImGui.SetNextItemWidth(nextItemWidth);
 
-        ImGui.SetCursorPosX(x + itemWidth * labelWidthRatio + itemInnerSpacingX);
-
-        // TODO (marpe): This was an attempt at making this respect ImGui.SetNextItemWidth
-        /*var cursorX = ImGui.GetCursorPosX();
-        var availX = ImGui.GetContentRegionAvail().X;
-        var calcItemWidth = ImGui.CalcItemWidth();
-        // ImGui.SetNextItemWidth(calcItemWidth);*/
-        ImGui.SetNextItemWidth(-1);
-
-        return preserveLabel ? label : "##" + label;
+        return "##" + label;
     }
 
     public static bool BeginCollapsingHeader(string header, Color color,
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.DefaultOpen, ImGuiFont font = ImGuiFont.Medium, string labelRight = "", bool hideHeader = false)
     {
+        var labelWidthRatio = 0.4f;
+        var labelWidth = (int)(ImGui.GetContentRegionAvail().X * labelWidthRatio);
         if (hideHeader)
         {
             ImGui.BeginGroup();
             ImGui.Spacing();
             Indent();
-            ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
+            PushLabelWidth(labelWidth);
             _colorStack.Push(Color.Transparent);
             return true;
         }
@@ -759,17 +801,15 @@ public static unsafe class ImGuiExt
             ColorExt.HsvToRgb(h, s * 1f, v * 0.8f)
         );
 
-        var framePadding = new Num.Vector2(6, 4);
-
         void PushStyles()
         {
             PushStyleColor(ImGuiCol.Header, normal);
             PushStyleColor(ImGuiCol.HeaderHovered, hovered);
             PushStyleColor(ImGuiCol.HeaderActive, active);
             PushStyleColor(ImGuiCol.Border, border);
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, framePadding);
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, CollapsingHeaderFramePadding);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
-            ImGui.PushFont(((MyEditorMain)Shared.Game).ImGuiRenderer.GetFont(font));
+            ImGui.PushFont(GetFont(font));
         }
 
         void PopStyles()
@@ -783,24 +823,25 @@ public static unsafe class ImGuiExt
         ImGui.BeginGroup();
 
         PushStyles();
-        ImGui.BeginGroup();
-        {
-            result = ImGui.CollapsingHeader(header, flags);
 
-            if (labelRight != "")
+        result = ImGui.CollapsingHeader(header, flags);
+
+        var min = ImGui.GetItemRectMin();
+        var max = ImGui.GetItemRectMax();
+        
+        if (labelRight != "")
+        {
+            var labelRightSize = ImGui.CalcTextSize(labelRight);
+            ImGui.SameLine();
+            var cursorX = ImGui.GetCursorPosX();
+            var labelRightX = ImGui.GetContentRegionMax().X - labelRightSize.X - ImGui.GetStyle()->FramePadding.X;
+            if (labelRightX >= cursorX)
             {
-                var labelRightSize = ImGui.CalcTextSize(labelRight);
-                ImGui.SameLine();
-                var cursorX = ImGui.GetCursorPosX();
-                var labelRightX = ImGui.GetContentRegionMax().X - labelRightSize.X - ImGui.GetStyle()->FramePadding.X;
-                if (labelRightX >= cursorX)
-                {
-                    ImGui.SetCursorPosX(labelRightX);
-                    ImGui.Text(labelRight);
-                }
+                ImGui.SetCursorPosX(labelRightX);
+                ImGui.Text(labelRight);
             }
         }
-        ImGui.EndGroup();
+
         PopStyles();
 
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
@@ -814,14 +855,21 @@ public static unsafe class ImGuiExt
 
         if (result)
         {
+            var dl = ImGui.GetWindowDrawList();
+            dl->AddLine(
+                new Num.Vector2(min.X, max.Y - 1),
+                new Num.Vector2(max.X, max.Y - 1),
+                border.PackedValue,
+                1f
+            );
             Indent();
-            ImGui.PushItemWidth(ImGui.GetWindowWidth() * 0.6f);
+            PushLabelWidth(labelWidth);
             _colorStack.Push(border);
         }
         else
         {
             ImGui.EndGroup();
-            // DrawCollapsingHeaderBorder(border);
+            DrawCollapsingHeaderBorder(border);
         }
 
         return result;
@@ -841,7 +889,7 @@ public static unsafe class ImGuiExt
 
     public static void EndCollapsingHeader()
     {
-        ImGui.PopItemWidth();
+        PopLabelWidth();
         Unindent();
         ImGui.Spacing();
         ImGui.EndGroup();
@@ -883,13 +931,13 @@ public static unsafe class ImGuiExt
         ImGui.NewLine();
     }
 
-    public static void ItemTooltip(ReadOnlySpan<char> tooltip)
+    public static void ItemTooltip(string tooltip)
     {
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Num.Vector2(4, 4));
         if (ImGui.IsItemHovered())
         {
             ImGui.BeginTooltip();
-            ImGui.TextUnformatted(tooltip.ToString());
+            ImGui.TextUnformatted(tooltip);
             ImGui.EndTooltip();
         }
 
@@ -1239,7 +1287,7 @@ public static unsafe class ImGuiExt
         }
 
         dockSpaceFlags |= /*ImGuiDockNodeFlags.NoSplit |*/
-                          (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton;
+            (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_NoWindowMenuButton;
         // ImGuiDockNodeFlags.AutoHideTabBar |
         // (ImGuiDockNodeFlags)ImGuiDockNodeFlagsPrivate_.ImGuiDockNodeFlags_HiddenTabBar;
 
@@ -1508,7 +1556,7 @@ public static unsafe class ImGuiExt
             }
 
             ImGui.Spacing();
-            
+
             result |= ColoredButton(
                 buttonLabel,
                 Color.White,
@@ -1517,7 +1565,7 @@ public static unsafe class ImGuiExt
                 new Num.Vector2(-FLT_MIN, 0),
                 new Num.Vector2(12, 8)
             );
-            
+
             if (ImGui.IsKeyPressed(ImGuiKey.Escape))
             {
                 isOpen = false;
@@ -1532,7 +1580,7 @@ public static unsafe class ImGuiExt
 
         return result;
     }
-    
+
     private static void DrawComboButton(string popupLabel, int currentIdx, ReadOnlySpan<string> items, bool openOnAppear)
     {
         var style = ImGui.GetStyle();
@@ -1541,14 +1589,15 @@ public static unsafe class ImGuiExt
         var buttonAlign = style->ButtonTextAlign.X;
         style->ButtonTextAlign.X = 0;
         var buttonSize = new Num.Vector2(ImGui.GetContentRegionAvail().X, ImGui.GetFrameHeightWithSpacing());
-        var bgColor = new Color(121, 121, 121, 255);  // ImGui.GetStyle()->Colors[(int)ImGuiCol.FrameBgActive];
+        var bgColor = new Color(121, 121, 121, 255); // ImGui.GetStyle()->Colors[(int)ImGuiCol.FrameBgActive];
         if (ImGuiExt.ColoredButton(buttonLabel, Color.White, bgColor, buttonSize) || (openOnAppear && ImGui.IsWindowAppearing()))
         {
             ImGui.OpenPopup(popupLabel);
         }
+
         style->ButtonTextAlign.X = buttonAlign;
     }
-    
+
     public static bool ComboWithFilter(string label, ref int currentItemIndex, ref string searchPattern, ReadOnlySpan<string> items,
         bool openOnAppear = true)
     {
@@ -1591,7 +1640,7 @@ public static unsafe class ImGuiExt
     private static bool FuzzySearchFilter(ref int currentItemIndex, ref string searchPattern, ReadOnlySpan<string> items)
     {
         var result = false;
-        
+
         if (ImGui.IsWindowAppearing())
         {
             ImGui.SetKeyboardFocusHere();
@@ -1725,6 +1774,75 @@ public static unsafe class ImGuiExt
         }
 
         ImGui.PopItemWidth();
+        return result;
+    }
+
+    public static bool ComboStep(string label, bool showPrevNextButtons, ref int currentIndex, string[] items)
+    {
+        var result = false;
+
+        ImGui.BeginGroup();
+
+        var comboWidth = ImGui.CalcItemWidth();
+
+        ImGuiExt.LabelPrefix(label);
+
+        if (showPrevNextButtons)
+        {
+            ImGui.BeginGroup();
+            {
+                ImGui.PushStyleColor(ImGuiCol.Button, Color.Transparent.PackedValue);
+                ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Color.Transparent.PackedValue);
+                ImGui.PushStyleColor(ImGuiCol.ButtonActive, Color.Transparent.PackedValue);
+
+                if (ImGui.Button(FontAwesome6.AngleLeft + "##Left" + label, default))
+                {
+                    currentIndex = (items.Length + currentIndex - 1) % items.Length;
+                    result = true;
+                }
+
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+                    ImGui.SetTooltip("Previous");
+
+                ImGui.SameLine();
+                if (ImGui.Button(FontAwesome6.AngleRight + "##Right" + label, default))
+                {
+                    currentIndex = (items.Length + currentIndex + 1) % items.Length;
+                    result = true;
+                }
+
+                if (ImGui.IsItemHovered(ImGuiHoveredFlags.DelayNormal))
+                    ImGui.SetTooltip("Next");
+
+                ImGui.PopStyleColor(3);
+            }
+
+            ImGui.EndGroup();
+            comboWidth -= (ImGui.GetItemRectSize().X + ImGui.GetStyle()->ItemInnerSpacing.X);
+            ImGui.SameLine();
+        }
+
+        ImGui.SetNextItemWidth(comboWidth);
+        if (ImGui.BeginCombo("##" + label, items[currentIndex]))
+        {
+            for (var i = 0; i < items.Length; i++)
+            {
+                var isSelected = i == currentIndex;
+                if (ImGui.Selectable(items[i], isSelected, ImGuiSelectableFlags.None, default))
+                {
+                    currentIndex = i;
+                    result = true;
+                }
+
+                if (isSelected)
+                    ImGui.SetItemDefaultFocus();
+            }
+
+            ImGui.EndCombo();
+        }
+
+        ImGui.EndGroup();
+
         return result;
     }
 }

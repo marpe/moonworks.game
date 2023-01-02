@@ -18,6 +18,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
     public readonly GameRenderView GameRenderView;
 
     private bool _syncWithGame;
+    private Color _borderColor = Color.Red;
 
     public RenderTargetsWindow(MyEditorMain editor) : base(WindowTitle)
     {
@@ -41,30 +42,18 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
     private void DrawToolbar()
     {
         ImGui.SetNextItemWidth(200);
-        if (ImGui.BeginCombo("##RenderTarget", _renderTargetNames[_selectedTargetIdx]))
-        {
-            for (var i = 0; i < _renderTargetNames.Length; i++)
-            {
-                var isSelected = i == _selectedTargetIdx;
-                if (ImGui.Selectable(_renderTargetNames[i], isSelected, ImGuiSelectableFlags.None, default))
-                {
-                    _selectedTargetIdx = i;
-                }
-
-                if (isSelected)
-                    ImGui.SetItemDefaultFocus();
-            }
-
-            ImGui.EndCombo();
-        }
+        
+        ImGuiExt.ComboStep("##RenderTarget", true, ref _selectedTargetIdx, _renderTargetNames);
+        ImGui.SameLine();
 
         ImGui.SameLine();
-        SimpleTypeInspector.InspectColor("##BackgroundColor", ref _backgroundColor);
-        ImGuiExt.ItemTooltip("BackgroundColor");
+        SimpleTypeInspector.InspectColor("##BackgroundColor", ref _backgroundColor, "Background Color");
 
         ImGui.SameLine();
-        SimpleTypeInspector.InspectColor("##StripesColor", ref _stripesColor);
-        ImGuiExt.ItemTooltip("StripeColor");
+        SimpleTypeInspector.InspectColor("##StripesColor", ref _stripesColor, "Stripes Color");
+        
+        ImGui.SameLine();
+        SimpleTypeInspector.InspectColor("##BorderColor", ref _borderColor, "Border Color");
 
         ImGui.SameLine();
         ImGui.SetNextItemWidth(100);
@@ -105,7 +94,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
         var min = GameRenderView.GameRenderMin;
         var max = GameRenderView.GameRenderMax;
         dl->AddRectFilled(min, max, _backgroundColor.PackedValue);
-        ImGuiExt.FillWithStripes(ImGui.GetWindowDrawList(), new ImRect(min, max), _stripesColor.PackedValue);
+        ImGuiExt.FillWithStripes(dl, new ImRect(min, max), _stripesColor.PackedValue);
 
         if (_syncWithGame)
         {
@@ -114,13 +103,17 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             GameRenderView.Offset = editor.GameWindow.GameRenderView.Offset;
         }
 
-        ImGui.BeginGroup();
-        GameRenderView.Draw(_renderTargets[_selectedTargetIdx]);
-        ImGui.EndGroup();
+        var label = $"{_renderTargets[_selectedTargetIdx].Size.X}x{_renderTargets[_selectedTargetIdx].Size.Y}";
+        var labelSize = ImGui.CalcTextSize(label);
+        var x = min.X + ((max.X - min.X) - labelSize.X) * 0.5f;
+        var y = min.Y - labelSize.Y - 10;
+        dl->AddText(ImGuiExt.GetFont(ImGuiFont.MediumBold), 16, new Vector2(x, y), Color.White.PackedValue, label, 0, default);
+        
+        GameRenderView.Draw("RenderTarget", _renderTargets[_selectedTargetIdx]);
         if (ImGui.IsItemHovered())
         {
             MyEditorMain.ActiveInput = ActiveInput.RenderTargetsWindow;
-        }
+        } ;
 
         if (ImGui.BeginPopupContextWindow("WindowContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
         {

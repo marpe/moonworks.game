@@ -308,7 +308,8 @@ public unsafe class LayerDefWindow : SplitWindow
                 ImGui.PushID(i);
                 ImGui.TableNextRow(ImGuiTableRowFlags.None, rowHeight);
                 ImGui.TableNextColumn();
-                DrawIntValue((i + 1).ToString(), new Vector2(rowHeight, rowHeight) * 0.6f, layerDef.IntGridValues[i].Color);
+                DrawIntValue(layerDef.IntGridValues[i].Value.ToString(), new Vector2(rowHeight, rowHeight) * 0.6f, layerDef.IntGridValues[i].Color);
+                // SimpleTypeInspector.InspectInt("Value", ref layerDef.IntGridValues[i].Value, SimpleTypeInspector.UnsignedDefaultRangeSettings);
                 ImGui.TableNextColumn();
                 ImGui.SetNextItemWidth(-1);
                 ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(8f, 5f));

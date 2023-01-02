@@ -193,6 +193,11 @@ public class Renderer
         }
     }
 
+    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    {
+        SpriteBatch.Draw(sprite, color, depth, transform.ToMatrix4x4(), flip);
+    }
+    
     public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
         SpriteBatch.Draw(sprite, color, depth, transform, flip);

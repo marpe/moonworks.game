@@ -178,7 +178,7 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
         if (File.Exists(path))
         {
             tileSetTexture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
-            editor.ImGuiRenderer.BindTexture(tileSetTexture);
+            editor.ImGuiRenderer.BindTexture(tileSetTexture, true);
             return true;
         }
 

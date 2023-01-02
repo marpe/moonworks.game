@@ -11,7 +11,7 @@ public static class MouseDebug
     {
         var mousePosition = Shared.Game.InputHandler.MousePosition;
         var view = Shared.Game.Camera.GetView(0);
-        Matrix3x2.Invert(view, out var invertedView);
+        Matrix4x4.Invert(ref view, out var invertedView);
         var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
         var mouseCell = Entity.ToCell(mouseInWorld);
 

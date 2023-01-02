@@ -6,25 +6,9 @@ namespace MyGame.Editor;
 
 public static unsafe class ImGuiUtils
 {
-    private static void EnsureTextureIsBound([NotNull] ref nint? ptr, Texture texture, ImGuiRenderer renderer)
-    {
-        if (texture.IsDisposed)
-            throw new Exception("Attempted to bind a disposed texture");
-
-        if (ptr != null && ptr != texture.Handle)
-        {
-            renderer.UnbindTexture(ptr.Value);
-            ptr = null;
-        }
-
-        ptr ??= renderer.BindTexture(texture);
-    }
-    
-    public static void DrawGame(Texture texture, Vector2 size, float scale, Vector2 offset, out Vector2 min, out Vector2 max, out Vector2 viewportSize, out Matrix4x4 viewportInvTransform)
+    public static void DrawGame(Texture texture, Vector2 size, float scale, Vector2 offset, bool usePointFiltering, out Vector2 min, out Vector2 max, out Vector2 viewportSize, out Matrix4x4 viewportInvTransform)
     {
         var editor = ((MyEditorMain)Shared.Game);
-        nint? textureId = null;
-        EnsureTextureIsBound(ref textureId, texture, editor.ImGuiRenderer);
         
         var (viewportTransform, viewport) = Renderer.GetViewportTransform(size.ToXNA().ToPoint(), texture.Size());
 
@@ -41,8 +25,9 @@ public static unsafe class ImGuiUtils
 
         var dl = ImGui.GetWindowDrawList();
         
+        editor.ImGuiRenderer.BindTexture(texture, usePointFiltering);
         dl->AddImage(
-            (void*)textureId,
+            (void*)texture.Handle,
             min,
             max,
             Vector2.Zero,
@@ -50,30 +35,6 @@ public static unsafe class ImGuiUtils
             Color.White.PackedValue
         );
 
-        ImGui.SetCursorScreenPos(min);
-
-        var gameRenderSize = viewportSize * scale;
-        ImGui.InvisibleButton(
-            "GameRender",
-            gameRenderSize.EnsureNotZero(),
-            ImGuiButtonFlags.MouseButtonMiddle
-        );
-        
-        // draw border
-        /*var isFocused = ImGui.IsItemFocused();
-        var borderColor = (isActive, isFocused, isHovered) switch
-        {
-            (true, _, _) => Color.Green,
-            (_, true, _) => Color.Blue,
-            (_, _, true) => Color.Yellow,
-            _ => Color.Gray
-        };
-        dl->AddRect(gameRenderMin, gameRenderMax, borderColor.PackedValue, 0, ImDrawFlags.None, 1f);*/
-        
-        // reset cursor position, otherwise imgui will complain since v1.89
-        // where a check was added to prevent the window from being resized by just setting the cursor position 
-        ImGui.SetCursorScreenPos(imGuiCursor);
-        
         var viewportScale = Math.Min(
             size.X / texture.Width,
             size.Y / texture.Height

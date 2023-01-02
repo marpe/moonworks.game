@@ -28,30 +28,64 @@ public unsafe class GameRenderView
     public Vector2 Offset { get; set; } = Vector2.Zero;
 
     public Action? DrawToolbarCallback;
-    
-    public void Draw(Texture texture)
+
+    private bool _usePointFiltering = true;
+    private Vector2 _contentSize;
+    private Vector2 _viewportSize;
+
+    public void Draw(string id, Texture texture)
     {
         var imGuiCursor = ImGui.GetCursorScreenPos();
 
         var contentMin = ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowContentRegionMax();
-        var contentSize = contentMax - contentMin;
+        _contentSize = contentMax - contentMin;
+        
+        DrawToolbar();
 
-        ImGuiUtils.DrawGame(texture, contentSize, Zoom, Offset, out var min, out var max, out var viewportSize, out var viewportInvTransform);
+        ImGui.SetCursorScreenPos(imGuiCursor);
+
+        ImGuiUtils.DrawGame(texture, _contentSize, Zoom, Offset, _usePointFiltering, out var min, out var max, out var viewportSize,
+            out var viewportInvTransform);
+
+        _viewportSize = viewportSize;
+
+        ImGui.SetCursorScreenPos(min);
+        ImGui.InvisibleButton(
+            id,
+            (max - min).EnsureNotZero() /*,
+            ImGuiButtonFlags.MouseButtonMiddle*/
+        );
 
         var isActive = ImGui.IsItemActive();
         var isHovered = ImGui.IsItemHovered();
+
+        if (isHovered)
+        {
+            var dl = ImGui.GetWindowDrawList();
+            var thickness = 2f;
+            var borderColor = Color.Green;
+            var borderPadding = new Vector2(-thickness, thickness) * 0.5f;
+            borderPadding.X = MathF.Ceil(borderPadding.X);
+            borderPadding.Y = MathF.Ceil(borderPadding.Y);
+            var borderMin = min - borderPadding;
+            var borderMax = max + borderPadding;
+
+            var contentRect = ImGui.GetCurrentContext()->CurrentWindow->ContentRegionRect;
+            
+            borderMin.X = MathF.Max(borderMin.X, contentRect.Min.X + thickness * 0.5f);
+            borderMin.Y = MathF.Max(borderMin.Y, contentRect.Min.Y + thickness * 0.5f);
+            borderMax.X = MathF.Min(borderMax.X, contentRect.Max.X - thickness * 0.5f);
+            borderMax.Y = MathF.Min(borderMax.Y, contentRect.Max.Y - thickness * 0.5f);
+            
+            dl->AddRect(borderMin, borderMax, borderColor.PackedValue, 0, ImDrawFlags.None, thickness);
+        }
 
         GameRenderMin = min;
         GameRenderMax = max;
         GameRenderViewportTransform = viewportInvTransform;
 
         HandleInput(isActive, isHovered);
-        
-        ImGui.SetCursorScreenPos(imGuiCursor);
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(10, 10));
-        DrawToolbar(contentSize, viewportSize);
-        ImGui.PopStyleVar();
     }
 
     private void HandleInput(bool isActive, bool isHovered)
@@ -91,12 +125,11 @@ public unsafe class GameRenderView
              ImGui.IsMouseDown(ImGuiMouseButton.Right)))
         {
             ImGui.SetWindowFocus();
-            // ImGui.SetWindowFocus(GameWindowTitle);
             ImGui.SetNextFrameWantCaptureKeyboard(false);
         }
     }
 
-    private void DrawToolbar(Vector2 renderSize, Vector2 viewportSize)
+    public void DrawToolbar()
     {
         var toolbarHeight = ImGui.GetStyle()->WindowPadding.Y * 2 + ImGui.GetFrameHeightWithSpacing();
         if (ImGui.BeginChild("Toolbar", new Vector2(ImGui.GetContentRegionAvail().X, toolbarHeight), false,
@@ -113,15 +146,16 @@ public unsafe class GameRenderView
 
             if (ImGuiExt.ColoredButton(FontAwesome6.MagnifyingGlassPlus, ImGuiExt.Colors[0], "Fill height"))
             {
-                Zoom = renderSize.Y / viewportSize.Y;
+                Zoom = _contentSize.Y / _viewportSize.Y;
             }
 
             ImGui.SameLine();
 
             //////////////////
 
-            ImGui.BeginChild("ZoomChild", new Vector2(60, 30));
+            // ImGui.BeginChild("ZoomChild", new Vector2(60, 30));
             var tmpZoom = Zoom * 100 + 0.01f;
+            ImGui.SetNextItemWidth(40);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(ImGui.GetStyle()->FramePadding.X, ImGui.GetStyle()->FramePadding.Y + 2));
             if (SimpleTypeInspector.InspectFloat("##Zoom", ref tmpZoom, new RangeSettings(50, 1000, 1, true), "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
             {
@@ -129,13 +163,13 @@ public unsafe class GameRenderView
             }
 
             ImGui.PopStyleVar();
-            ImGui.EndChild();
+            // ImGui.EndChild();
 
             ImGui.SameLine();
 
             //////////////////
 
-            ImGui.SetNextItemWidth(100);
+            ImGui.SetNextItemWidth(50);
             DrawScaleCombo();
 
             ImGui.SameLine();
@@ -151,6 +185,12 @@ public unsafe class GameRenderView
             {
                 IsMousePanAndZoomEnabled = !IsMousePanAndZoomEnabled;
             }
+
+            ImGui.SameLine();
+
+            //////////////////
+
+            SimpleTypeInspector.InspectBool("Point Filtering", ref _usePointFiltering, -1);
 
             ImGui.SameLine();
 

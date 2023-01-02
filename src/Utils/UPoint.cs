@@ -13,6 +13,21 @@ public record struct UPoint(uint X, uint Y)
     {
         return new UPoint(a.X + b.X, a.Y + b.Y);
     }
+    
+    public static UPoint operator +(UPoint a, uint b)
+    {
+        return new UPoint(a.X + b, a.Y + b);
+    }
+    
+    public static UPoint operator -(UPoint a, uint b)
+    {
+        return new UPoint(a.X - b, a.Y - b);
+    }
+    
+    public static UPoint operator *(UPoint a, uint b)
+    {
+        return new UPoint(a.X * b, a.Y * b);
+    }
 
     public static UPoint operator /(UPoint p, int n)
     {

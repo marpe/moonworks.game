@@ -394,4 +394,10 @@ public static class MathF
     {
         return (float)Math.Log(value);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static float Snap(float value, float increment, float offset = 0)
+    {
+        return Round((value - offset) / increment) * increment + offset;
+    }
 }
