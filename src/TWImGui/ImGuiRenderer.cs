@@ -26,7 +26,7 @@ public unsafe class ImGuiRenderer : IDisposable
 
     private readonly MyGameMain _game;
 
-    private readonly Dictionary<ImGuiMouseCursor, IntPtr> _mouseCursors = new();
+    private readonly Dictionary<ImGuiMouseCursor, nint> _mouseCursors = new();
 
     private readonly Sampler _linearSampler;
     private readonly Sampler _pointSampler;
@@ -35,18 +35,20 @@ public unsafe class ImGuiRenderer : IDisposable
 
     private record struct TextureEntry(Texture Texture, bool UsePointFiltering);
 
-    private readonly Dictionary<IntPtr, TextureEntry> _textures = new();
+    private readonly Dictionary<nint, TextureEntry> _textures = new();
     private Texture? _fontAtlasTexture;
     private GCHandle _handle;
 
     private ImGuiMouseCursor _lastCursor = ImGuiMouseCursor.None;
     private GraphicsPipeline _pipeline;
-    
+
+    private static nint _clipboardTextData = nint.Zero;
+
     public class ImGuiRenderData
     {
         public Buffer? VertexBuffer;
         public uint VertexBufferSize;
-        
+
         public Buffer? IndexBuffer;
         public uint IndexBufferSize;
     }
@@ -70,14 +72,19 @@ public unsafe class ImGuiRenderer : IDisposable
     private static byte* GetClipboardText(void* userData)
     {
         var text = SDL.SDL_GetClipboardText();
-        // NB (marpe): Should probably be freed by calling FreeCoTaskMem, see: https://learn.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal.stringtocotaskmemutf8?view=net-7.0
-        return (byte*)Marshal.StringToCoTaskMemUTF8(text);
+
+        if (_clipboardTextData != nint.Zero)
+            Marshal.FreeCoTaskMem(nint.Zero);
+
+        _clipboardTextData = Marshal.StringToCoTaskMemUTF8(text);
+
+        return (byte*)_clipboardTextData;
     }
 
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void SetClipboardText(void* userData, byte* text)
     {
-        var str = Marshal.PtrToStringUTF8((IntPtr)text);
+        var str = Marshal.PtrToStringUTF8((nint)text);
         SDL.SDL_SetClipboardText(str);
     }
 
@@ -192,7 +199,7 @@ public unsafe class ImGuiRenderer : IDisposable
         var mainViewport = ImGui.GetMainViewport();
         var viewportData = new ViewportData(mainWindow, false);
         var gcHandle = GCHandle.Alloc(viewportData);
-        mainViewport->PlatformUserData = (void*)(IntPtr)gcHandle;
+        mainViewport->PlatformUserData = (void*)(nint)gcHandle;
         mainViewport->PlatformHandle = (void*)mainWindow.Handle;
 
         SDL.SDL_SysWMinfo info = new();
@@ -291,7 +298,7 @@ public unsafe class ImGuiRenderer : IDisposable
         io->Fonts->GetTexDataAsRGBA32(&pixelData, &width, &height, &bytesPerPixel);
 
         var pixels = new byte[width * height * bytesPerPixel];
-        Marshal.Copy(new IntPtr(pixelData), pixels, 0, pixels.Length);
+        Marshal.Copy(new nint(pixelData), pixels, 0, pixels.Length);
 
         var fontAtlasTexture = Texture.CreateTexture2D(_game.GraphicsDevice, (uint)width, (uint)height, TextureFormat.R8G8B8A8,
             TextureUsageFlags.Sampler);
@@ -467,8 +474,8 @@ public unsafe class ImGuiRenderer : IDisposable
             var cmdList = drawData->CmdLists[n];
             var imVtxBufferSize = (uint)(cmdList->VtxBuffer.Size * vtxStride);
             var imIdxBufferSize = (uint)(cmdList->IdxBuffer.Size * idxStride);
-            commandBuffer.SetBufferData(vpData.RenderData.VertexBuffer, (IntPtr)cmdList->VtxBuffer.Data, vtxOffset, imVtxBufferSize);
-            commandBuffer.SetBufferData(vpData.RenderData.IndexBuffer, (IntPtr)cmdList->IdxBuffer.Data, idxOffset, imIdxBufferSize);
+            commandBuffer.SetBufferData(vpData.RenderData.VertexBuffer, (nint)cmdList->VtxBuffer.Data, vtxOffset, imVtxBufferSize);
+            commandBuffer.SetBufferData(vpData.RenderData.IndexBuffer, (nint)cmdList->IdxBuffer.Data, idxOffset, imIdxBufferSize);
             vtxOffset += imVtxBufferSize;
             idxOffset += imIdxBufferSize;
         }
@@ -494,13 +501,13 @@ public unsafe class ImGuiRenderer : IDisposable
         });
 
         var viewProjectionMatrix = Matrix4x4.CreateOrthographicOffCenter(
-                                       drawData->DisplayPos.X,
-                                       drawData->DisplayPos.X + drawData->DisplaySize.X,
-                                       drawData->DisplayPos.Y + drawData->DisplaySize.Y,
-                                       drawData->DisplayPos.Y,
-                                       -1f,
-                                       1f
-                                   );
+            drawData->DisplayPos.X,
+            drawData->DisplayPos.X + drawData->DisplaySize.X,
+            drawData->DisplayPos.Y + drawData->DisplaySize.Y,
+            drawData->DisplayPos.Y,
+            -1f,
+            1f
+        );
         var vtxUniformsOffset = commandBuffer.PushVertexShaderUniforms(viewProjectionMatrix);
 
         commandBuffer.BindVertexBuffers(vpData.RenderData.VertexBuffer);
@@ -521,14 +528,14 @@ public unsafe class ImGuiRenderer : IDisposable
             {
                 var drawCmd = cmdList->CmdBuffer[cmdi];
 
-                if (!_textures.ContainsKey((IntPtr)drawCmd.TextureId))
+                if (!_textures.ContainsKey((nint)drawCmd.TextureId))
                 {
                     throw new InvalidOperationException(
-                        $"Could not find a texture with id '{(IntPtr)drawCmd.TextureId}', check your bindings"
+                        $"Could not find a texture with id '{(nint)drawCmd.TextureId}', check your bindings"
                     );
                 }
 
-                var textureEntry = _textures[(IntPtr)drawCmd.TextureId];
+                var textureEntry = _textures[(nint)drawCmd.TextureId];
                 var sampler = textureEntry.UsePointFiltering ? _pointSampler : _linearSampler;
                 var textureSamplerBindings = new TextureSamplerBinding(textureEntry.Texture, sampler);
                 commandBuffer.BindFragmentSamplers(textureSamplerBindings);
@@ -649,8 +656,8 @@ public unsafe class ImGuiRenderer : IDisposable
 
     private static ImGuiRenderer GetPlatformBackend()
     {
-        var userData = (IntPtr)ImGui.GetIO()->BackendPlatformUserData;
-        if (userData == IntPtr.Zero)
+        var userData = (nint)ImGui.GetIO()->BackendPlatformUserData;
+        if (userData == nint.Zero)
             throw new InvalidOperationException("The current ImGui context has no associated platform backend");
 
         var backend = (ImGuiRenderer)(GCHandle.FromIntPtr(userData).Target ?? throw new InvalidOperationException("Platform backend target was null"));
@@ -818,7 +825,7 @@ public unsafe class ImGuiRenderer : IDisposable
         var viewportData = new ViewportData(window, true);
         var gcHandle = GCHandle.Alloc(viewportData);
         viewport->PlatformHandle = (void*)window.Handle;
-        viewport->PlatformUserData = (void*)(IntPtr)gcHandle;
+        viewport->PlatformUserData = (void*)(nint)gcHandle;
 
         SDL.SDL_SysWMinfo info = new();
         SDL.SDL_VERSION(out info.version);
@@ -831,7 +838,7 @@ public unsafe class ImGuiRenderer : IDisposable
     [UnmanagedCallersOnly(CallConvs = new[] { typeof(CallConvCdecl) })]
     private static void DestroyWindow(ImGuiViewport* viewport)
     {
-        var gcHandle = GCHandle.FromIntPtr((IntPtr)viewport->PlatformUserData);
+        var gcHandle = GCHandle.FromIntPtr((nint)viewport->PlatformUserData);
         if (gcHandle.Target != null)
         {
             var viewportData = (ViewportData)gcHandle.Target;
@@ -839,9 +846,11 @@ public unsafe class ImGuiRenderer : IDisposable
             Logs.LogVerbose($"ImGui destroying window: {window.Title}");
             window.WindowEvent -= HandleWindowEvent;
             window.Dispose();
-            
+
             viewportData.RenderData.IndexBuffer?.Dispose();
+            viewportData.RenderData.IndexBufferSize = 0;
             viewportData.RenderData.VertexBuffer?.Dispose();
+            viewportData.RenderData.VertexBufferSize = 0;
         }
 
         gcHandle.Free();
@@ -1047,6 +1056,7 @@ public static unsafe class ImGuiViewportPtrExt
 {
     public static ImGuiRenderer.ViewportData ViewportData(this ImGuiViewport vp)
     {
-        return (ImGuiRenderer.ViewportData)(GCHandle.FromIntPtr((IntPtr)vp.PlatformUserData).Target ?? throw new InvalidOperationException("UserData was null"));
+        return (ImGuiRenderer.ViewportData)(GCHandle.FromIntPtr((nint)vp.PlatformUserData).Target ??
+                                            throw new InvalidOperationException("UserData was null"));
     }
 }
