@@ -5,7 +5,7 @@ public class Player : Entity
 {
     public float JumpMaxHoldTime = 0.3f;
     public float JumpSpeed = -300f;
-    public float Speed = 20f;
+    public float Speed = 2400f;
     private static Vector2 _savedPos;
 
     public Velocity Velocity = new()

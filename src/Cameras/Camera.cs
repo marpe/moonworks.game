@@ -197,7 +197,7 @@ public class Camera
 
         Position.Current += Velocity * deltaSeconds;
 
-        Velocity.ApplyFriction(Velocity);
+        Velocity.ApplyFriction(Velocity, deltaSeconds);
 
         if (ClampToLevelBounds && !LevelBounds.IsEmpty)
         {

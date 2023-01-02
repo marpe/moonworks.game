@@ -40,7 +40,6 @@ public class Entity
     [HideInInspector]
     public World World => _world ?? throw new InvalidOperationException();
 
-    [HideInInspector]
     public CoroutineManager CoroutineManager = new();
 
     [CustomDrawInspector(nameof(DrawPosition))]

@@ -8,9 +8,12 @@ public class Coroutine
     private Coroutine? _waitForCoroutine;
     private float _waitTimer;
     private bool _isCancelled;
+    private float _elapsedTime = 0;
+    public float ElapsedTime => _elapsedTime;
     public int NumUpdates { get; private set; }
 
     public bool IsDone { get; set; }
+    public int NumEnumerators => _enumerators.Count;
 
     public Coroutine(IEnumerator enumerator, string name)
     {
@@ -29,7 +32,11 @@ public class Coroutine
         {
             if (IsDone) return;
 
-            if (isUpdate) NumUpdates++;
+            if (isUpdate)
+            {
+                NumUpdates++;
+                _elapsedTime += deltaSeconds;
+            }
 
             if (_waitForCoroutine != null)
             {
@@ -89,6 +96,7 @@ public class Coroutine
         NumUpdates = 0;
         _waitTimer = 0;
         _waitForCoroutine = null;
+        _elapsedTime = 0;
         _enumerators.Clear();
         _enumerators.Push(func);
     }

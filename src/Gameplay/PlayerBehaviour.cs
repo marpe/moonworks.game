@@ -26,7 +26,7 @@ public class PlayerBehaviour
 
     public Player Player => _player ?? throw new InvalidOperationException();
 
-    private float dt => Shared.Game.Time.ElapsedTime;
+    private float _dt;
 
     public void Initialize(Player player)
     {
@@ -46,7 +46,7 @@ public class PlayerBehaviour
         while (true)
         {
             if (_command.IsJumpDown)
-                _jumpHeldTimer += dt;
+                _jumpHeldTimer += _dt;
             else
                 _jumpHeldTimer = 0;
 
@@ -93,8 +93,8 @@ public class PlayerBehaviour
                 var mouseInWorld = World.GetMouseInWorld();
 
                 var offset = mouseInWorld - Player.Center;
-                Player.Velocity.Delta = offset * dt * 1000f;
-                Player.Mover.PerformMove(Player.Velocity, dt);
+                Player.Velocity.Delta = offset * _dt * 1000f;
+                Player.Mover.PerformMove(Player.Velocity, _dt);
             }
 
             yield return null;
@@ -135,7 +135,7 @@ public class PlayerBehaviour
             // horizontal movement
             if (_command.MovementX != 0)
             {
-                Player.Velocity.X += _command.MovementX * Player.Speed;
+                Player.Velocity.X += _command.MovementX * Player.Speed * _dt;
 
                 Player.Draw.PlayAnimation("Run");
                 Player.Draw.IsAnimating = true;
@@ -149,7 +149,7 @@ public class PlayerBehaviour
                 Player.Draw.FrameIndex = 0;
             }
 
-            Player.Mover.PerformMove(Player.Velocity, dt);
+            Player.Mover.PerformMove(Player.Velocity, _dt);
 
             yield return null;
         }
@@ -167,7 +167,6 @@ public class PlayerBehaviour
 
     private IEnumerator AirMove()
     {
-
         while (true)
         {
             Player.Draw.PlayAnimation("Run");
@@ -176,7 +175,7 @@ public class PlayerBehaviour
             if ((_command.IsJumpPressed || _command.IsJumpDown && _jumpHeldTimer < 0.1f) && _fallDuration < 0.1f && !_hasJumped)
             {
                 _hasJumped = true;
-                Player.Draw.Squash = new Vector2(0.6f, 1.4f);
+                Player.Draw.Squash = new Vector2(0.2f, 1.4f);
 
                 // vertical movement
                 Player.Velocity.Y = Player.JumpSpeed;
@@ -184,22 +183,22 @@ public class PlayerBehaviour
                 var jumpTime = 0f;
                 while (true)
                 {
-                    jumpTime += dt;
+                    jumpTime += _dt;
 
                     if (!_command.IsJumpDown)
                         break;
 
                     if (jumpTime > Player.JumpMaxHoldTime)
-                        break;
+                         break;
 
                     // horizontal movement
                     if (_command.MovementX != 0)
                     {
-                        Player.Velocity.X += _command.MovementX * Player.Speed;
+                        Player.Velocity.X += _command.MovementX * Player.Speed * _dt;
                         UpdateSpriteFlip();
                     }
 
-                    Player.Mover.PerformMove(Player.Velocity, dt);
+                    Player.Mover.PerformMove(Player.Velocity, _dt);
 
                     if (Mover.HasCollisionInDirection(CollisionDir.Up, Player.Mover.MoveCollisions))
                     {
@@ -211,19 +210,19 @@ public class PlayerBehaviour
                 }
             }
 
-            _fallDuration += dt;
+            _fallDuration += _dt;
 
             // vertical movement
-            Player.Velocity.Y += Player.World.Gravity * dt;
+            Player.Velocity.Y += Player.World.Gravity * _dt;
 
             // horizontal movement
             if (_command.MovementX != 0)
             {
-                Player.Velocity.X += _command.MovementX * Player.Speed;
+                Player.Velocity.X += _command.MovementX * Player.Speed * _dt;
                 UpdateSpriteFlip();
             }
 
-            Player.Mover.PerformMove(Player.Velocity, dt);
+            Player.Mover.PerformMove(Player.Velocity, _dt);
 
             // land on ground
             if (Mover.HasCollisionInDirection(CollisionDir.Down, Player.Mover.MoveCollisions))
@@ -240,6 +239,7 @@ public class PlayerBehaviour
 
     public void Update(float deltaSeconds, PlayerCommand command)
     {
+        _dt = deltaSeconds;
         _command = command;
     }
 }

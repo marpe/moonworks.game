@@ -244,6 +244,7 @@ public static class Binds
             ("f12", "screenshot"),
             ("page_up", "speed_up"),
             ("page_down", "speed_down"),
+            ("home", "speed_reset"),
             ("p", "pause"),
             ("mb_left", "+fire1"),
             ("1", "save_pos"),

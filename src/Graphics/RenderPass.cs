@@ -96,7 +96,7 @@ public class WorldRenderPass : RenderPass
         world.DrawEntities(renderer, alpha);
         var entitiesViewProjection = view.ToMatrix4x4() *
                                      projection;
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection, false, PipelineType.PixelArt);
 
         LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         world.DrawDebug(renderer, camera, alpha);

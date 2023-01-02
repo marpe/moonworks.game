@@ -9,7 +9,7 @@ public class Velocity
     public Vector2 Friction = new(0.84f, 0.94f);
 
     [HideInInspector]
-    public string DebugDisplayString => string.Concat(X.ToString(), " ", Y.ToString());
+    public string DebugDisplayString => $"dX: {Delta.X}, dY: {Delta.Y}, fX: {Friction.X}, fY: {Friction.Y}";
 
     [HideInInspector]
     public float X
@@ -25,9 +25,10 @@ public class Velocity
         set => Delta.Y = value;
     }
 
-    public static void ApplyFriction(Velocity velocity)
+    public static void ApplyFriction(Velocity velocity, float deltaSeconds)
     {
-        velocity.Delta *= velocity.Friction;
+        velocity.Delta = Vector2.Lerp(velocity.Delta, velocity.Delta * velocity.Friction, deltaSeconds * 120f);
+        
         if (MathF.IsNearZero(velocity.X, KillThreshold))
         {
             velocity.X = 0;

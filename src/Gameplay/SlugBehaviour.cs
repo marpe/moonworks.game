@@ -73,7 +73,7 @@ public class SlugBehaviour : EnemyBehaviour
             Parent.Velocity.X = -_speed;
         }
 
-        Velocity.ApplyFriction(Parent.Velocity);
+        Velocity.ApplyFriction(Parent.Velocity, deltaSeconds);
 
         Parent.FacingDirection = Parent.Velocity.X > 0 ? FacingDirection.Right : FacingDirection.Left;
         Parent.Draw.Flip = Parent.FacingDirection == FacingDirection.Right ? SpriteFlip.None : SpriteFlip.FlipHorizontally;

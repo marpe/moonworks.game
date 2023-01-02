@@ -189,7 +189,7 @@ public class Mover
         SanityCheck(Parent.Position.Current,
             "Post x/y update resulted in moving into a collision tile"); // one last check, because I don't trust anyone, including myself
 
-        Velocity.ApplyFriction(velocity);
+        Velocity.ApplyFriction(velocity, deltaSeconds);
 
         for (var i = 0; i < PreviousMoveCollisions.Count; i++)
         {

@@ -156,6 +156,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
     private void DrawSelectEntityButton(World world)
     {
+        ImGui.SameLine();
         if (ImGuiExt.ColoredButton(FontAwesome6.HandPointer + " Select Entity", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
         {
             var entityNames = new List<string>();
@@ -182,7 +183,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
     private void DrawPickEntityButton(World world)
     {
-        if (ImGuiExt.ColoredButton(FontAwesome6.EyeDropper + " Pick Entity", new Num.Vector2(-ImGuiExt.FLT_MIN, 0)))
+        if (ImGuiExt.ColoredButton(FontAwesome6.EyeDropper + " Pick Entity", new Num.Vector2(ImGui.GetContentRegionAvail().X * 0.5f, 0)))
         {
             ImGui.OpenPopup("PickEntityOverlay");
         }

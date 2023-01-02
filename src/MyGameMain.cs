@@ -326,14 +326,21 @@ public class MyGameMain : Game
     [ConsoleHandler("speed_up")]
     public static void IncreaseTimeScale()
     {
-        World.TimeScale += 0.25f;
+        World.TimeScale += 0.0625F;
+        Logs.LogInfo($"TimeScale: {World.TimeScale}");
+    }
+
+    [ConsoleHandler("speed_reset")]
+    public static void ResetTimeScale()
+    {
+        World.TimeScale = 1.0f;
         Logs.LogInfo($"TimeScale: {World.TimeScale}");
     }
 
     [ConsoleHandler("speed_down")]
     public static void DecreaseTimeScale()
     {
-        World.TimeScale -= -0.25f;
+        World.TimeScale -= 0.0625F;
         if (World.TimeScale < 0)
             World.TimeScale = 0;
         Logs.LogInfo($"TimeScale: {World.TimeScale}");
