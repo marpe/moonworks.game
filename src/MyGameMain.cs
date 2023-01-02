@@ -163,6 +163,8 @@ public class MyGameMain : Game
 
             RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
             
+            // TestFunctions.DrawPixelArtShaderTestSkull(Renderer, ref commandBuffer, RenderTargets.CompositeRender);
+
             var (viewportTransform, viewport) = Renderer.GetViewportTransform(swapTexture.Size(), RenderTargets.CompositeRender.Size);
             // TODO (marpe): Render at int scale ?
             Renderer.DrawSprite(RenderTargets.CompositeRender.Target, viewportTransform, Color.White, 0, SpriteFlip.None);

@@ -5,25 +5,31 @@ public class TestFunctions
     /// <summary>
     /// https://gist.github.com/d7samurai/9f17966ba6130a75d1bfb0f1894ed377
     /// </summary>
-    private static void DrawPixelArtShaderTestSkull(Renderer renderer, Vector2 prevPosition, Vector2 position, double alpha)
+    public static void DrawPixelArtShaderTestSkull(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, Vector2 position)
     {
-        Matrix4x4 GetTransform(Point size, Vector2 pivot, Vector2 prevPosition, Vector2 position, Vector2 squash, double alpha)
-        {
-            var ssquash = Matrix3x2.CreateTranslation(-size * pivot) *
-                          Matrix3x2.CreateScale(squash) *
-                          Matrix3x2.CreateTranslation(size * pivot);
+        var texture = Shared.Content.Load<TextureAsset>(ContentPaths.animations.skull_aseprite).TextureSlice.Texture;
 
-            var xform = Matrix3x2.CreateTranslation(pivot * (size - World.DefaultGridSize)) *
-                        ssquash *
-                        Matrix3x2.CreateTranslation(Vector2.Lerp(prevPosition, position, (float)alpha));
+        var minScale = 4f;
+        var maxScale = 30f;
+        var texScaleT = ((MathF.Sin(Shared.Game.World.WorldTotalElapsedTime * 0.5f) + 1.0f) * 0.5f);
+        var texScale = MathF.Lerp(minScale, maxScale, texScaleT);
+        var texSize = texture.Size().ToVec2() * texScale;
+        var min = position - texSize * 0.5f;
+        var max = position + texSize * 0.5f;
+        var size = max - min;
 
-            return xform.ToMatrix4x4();
-        }
+        var dstRect1 = new Bounds(min.X, min.Y, size.X * 0.5f, size.Y);
+        var dstRect2 = new Bounds(min.X + size.X * 0.5f, min.Y, size.X * 0.5f, size.Y);
+
+        var srcRect1 = new Bounds(0, 0, texture.Width * 0.5f, texture.Height);
+        var srcRect2 = new Bounds(texture.Width * 0.5f, 0, texture.Width * 0.5f, texture.Height);
         
-        var ts = ((MathF.Sin(Shared.Game.Time.TotalElapsedTime) + 1.0f) * 0.5f) * 5f + 5.0f;
-        var xform = GetTransform(new Point(16, 16), new Vector2(0.5f, 0.5f), position, prevPosition, new Vector2(ts), alpha);
-        var sprite = ContentPaths.animations.skull_aseprite;
-        var texture = Shared.Content.Load<TextureAsset>(sprite).TextureSlice.Texture;
-        renderer.DrawSprite(texture, xform, Color.White, 0, SpriteFlip.None);
+        // renderer.DrawRect((Rectangle)dstRect1, Color.Blue);
+        renderer.DrawSprite(texture, srcRect1, dstRect1, Color.White, 0, SpriteFlip.None);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
+
+        // renderer.DrawRect((Rectangle)dstRect2, Color.Green);
+        renderer.DrawSprite(texture, srcRect2, dstRect2, Color.White, 0, SpriteFlip.None);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.PixelArt);
     }
 }

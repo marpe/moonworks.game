@@ -10,7 +10,7 @@ public unsafe class GameRenderView
 
     public bool IsPanZoomDirty => MathF.NotApprox(Zoom, 1.0f) || Offset != Vector2.Zero;
 
-    public Matrix4x4 GameRenderViewportTransform;
+    public Matrix3x2 GameRenderViewportTransform;
 
     public Vector2 GameRenderMin;
     public Vector2 GameRenderMax;

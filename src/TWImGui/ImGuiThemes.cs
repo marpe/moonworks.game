@@ -55,10 +55,10 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.ResizeGripHovered] = new Num.Vector4(0.44f, 0.44f, 0.44f, 0.29f);
         style->Colors[(int)ImGuiCol.ResizeGripActive] = new Num.Vector4(0.40f, 0.44f, 0.47f, 1.00f);
         style->Colors[(int)ImGuiCol.Tab] = new Num.Vector4(0.161f, 0.161f, 0.161f, 1.000f); //new Num.Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
-        style->Colors[(int)ImGuiCol.TabHovered] = new Num.Vector4(0.094f, 0.094f, 0.094f, 1.000f); //new Num.Num.Vector4(0.1f, 0.2f, 0.25f, 1.00f);
+        style->Colors[(int)ImGuiCol.TabHovered] = new Num.Vector4(0.16f, 0.38f, 0.68f, 1.00f); //new Num.Num.Vector4(0.1f, 0.2f, 0.25f, 1.00f);
         style->Colors[(int)ImGuiCol.TabActive] = new Num.Vector4(0.07f, 0.28f, 0.55f, 1.00f); //new Num.Num.Vector4(0.19f, 0.38f, 0.5f, 1.00f);
         style->Colors[(int)ImGuiCol.TabUnfocused] = new Num.Vector4(0.094f, 0.094f, 0.094f, 1.000f); //new Num.Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
-        style->Colors[(int)ImGuiCol.TabUnfocusedActive] = new Num.Vector4(0.19f, 0.20f, 0.22f, 1.00f); //new Num.Num.Vector4(0.14f, 0.14f, 0.14f, 1.00f);
+        style->Colors[(int)ImGuiCol.TabUnfocusedActive] = new Num.Vector4(0.07f, 0.23f, 0.43f, 1.00f); //new Num.Num.Vector4(0.14f, 0.14f, 0.14f, 1.00f);
         style->Colors[(int)ImGuiCol.DockingPreview] = new Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
         style->Colors[(int)ImGuiCol.DockingEmptyBg] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotLines] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);

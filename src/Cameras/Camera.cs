@@ -300,7 +300,8 @@ public class Camera
         {
             if (Binds.GetAction(Binds.InputAction.Pan).Active)
             {
-                Position.Current -= new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
+                var panDelta = new Vector2(input.MouseDelta.X, input.MouseDelta.Y) * _cameraMouseSensitivity * deltaSeconds;
+                Position.Current -= panDelta;
             }
 
             var moveDelta = _cameraSpeed * deltaSeconds;
@@ -376,29 +377,24 @@ public class Camera
         return flooredViewPosition;
     }
 
-    public Matrix4x4 GetViewFloored(double alpha, out Vector2 floorRemainder)
+    public Matrix3x2 GetViewFloored(double alpha, out Vector2 floorRemainder)
     {
         var flooredViewPosition = GetFlooredViewPosition(alpha, out floorRemainder);
         return GetView(flooredViewPosition);
     }
 
-    public Matrix4x4 GetView(double alpha)
+    public Matrix3x2 GetView(double alpha)
     {
         var viewPosition = GetViewPosition(alpha);
         return GetView(viewPosition);
     }
 
-    private Matrix4x4 GetView(Vector2 position)
+    private Matrix3x2 GetView(Vector2 position)
     {
-        var view = (
-                Matrix3x2.CreateTranslation(-position.X, -position.Y) *
-                Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
-                Matrix3x2.CreateScale(_zoom) *
-                Matrix3x2.CreateTranslation(_size.X * 0.5f, _size.Y * 0.5f)
-            )
-            .ToMatrix4x4();
-        view.M43 = -1000;
-        return view;
+        return Matrix3x2.CreateTranslation(-position.X, -position.Y) *
+               Matrix3x2.CreateRotation(RotationDegrees * MathF.Deg2Rad) *
+               Matrix3x2.CreateScale(_zoom) *
+               Matrix3x2.CreateTranslation(_size.X * 0.5f, _size.Y * 0.5f);
     }
 
     private Matrix4x4 GetView3D()
@@ -409,16 +405,6 @@ public class Camera
             position + Vector3.Transform(Vector3.Forward, Rotation3D),
             Vector3.Down
         );
-    }
-
-    public static Matrix4x4 GetProjection(UPoint size)
-    {
-        return GetProjection(size.X, size.Y);
-    }
-
-    public static Matrix4x4 GetProjection(uint width, uint height)
-    {
-        return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
     }
 
     private static float GetVerticalFovDegrees(float horizontalFovDegrees, float aspectRatio)

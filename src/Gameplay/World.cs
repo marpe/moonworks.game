@@ -500,7 +500,7 @@ public class World
     public static Vector2 GetScreenPosInWorld(Vector2 position)
     {
         var view = Shared.Game.Camera.GetView(0);
-        Matrix4x4.Invert(ref view, out var invertedView);
+        Matrix3x2.Invert(view, out var invertedView);
         return Vector2.Transform(position / Shared.Game.RenderTargets.RenderScale, invertedView);
     }
     

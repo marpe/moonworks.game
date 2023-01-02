@@ -59,7 +59,7 @@ public class DrawComponent
     private float _timer = 0;
 
     public bool IsAnimating = true;
-    private Matrix4x4 _lastUpdateTransform = Matrix4x4.Identity;
+    private Matrix3x2 _lastUpdateTransform = Matrix3x2.Identity;
 
     public void Initialize(Entity parent)
     {
@@ -116,14 +116,14 @@ public class DrawComponent
     {
         if (CurrentAnimation == null)
             return;
-        var xform = Matrix4x4.Lerp(_lastUpdateTransform, GetTransform(), (float)alpha);
+        var xform = Matrix3x2.Lerp(_lastUpdateTransform, GetTransform(), (float)alpha);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
         renderer.DrawSprite(sprite, xform, Color.White, 0, Flip);
     }
 
-    private Matrix4x4 GetTransform()
+    private Matrix3x2 GetTransform()
     {
         var spriteOrigin = Vector2.Zero;
         if (CurrentAnimation != null)
@@ -138,20 +138,13 @@ public class DrawComponent
                      Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
                      Matrix3x2.CreateTranslation(origin);
 
-        /*
-        var position = new Vector2(
-            Snap(Parent.Position.Current.X, 0.25f, 0),
-            Snap(Parent.Position.Current.Y, 0.25f, 0)
-        );
-        */
-
         var position = Parent.Position.Current;
 
         var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *
-                    Matrix3x2.CreateTranslation(position); /* .Floor() */
+                    Matrix3x2.CreateTranslation(position);
 
-        return xform.ToMatrix4x4();
+        return xform;
     }
 
     #region Aseprite Loading

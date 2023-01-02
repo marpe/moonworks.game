@@ -26,12 +26,17 @@ public struct Bounds
         Size = new Vector2(w, h);
     }
     
-    internal string DebugDisplayString => $"{X} {Y} {Width} {Height}";
+    internal string DebugDisplayString => $"X: {X} Y: {Y} W: {Width} H: {Height}";
 
     public Bounds(Vector2 min, Vector2 max) : this(min.X, min.Y, max.X - min.X, max.Y - min.Y)
     {
     }
 
+    public static implicit operator Bounds(Rect r)
+    {
+        return new Bounds(r.X, r.Y, r.W, r.H);
+    }
+    
     public static implicit operator Bounds(Rectangle r)
     {
         return new Bounds(r.X, r.Y, r.Width, r.Height);

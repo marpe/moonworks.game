@@ -6,29 +6,11 @@ public struct Sprite
     public Bounds SrcRect;
     public UV UV;
     
-    public Sprite(Texture texture) : this(texture, new Rectangle(0, 0, (int)texture.Width, (int)texture.Height))
-    {
-    }
-
-    public Sprite(TextureSlice textureSlice) : this(textureSlice.Texture, textureSlice.Rectangle)
-    {
-    }
-
-    public Sprite(Texture texture, Rectangle srcRect) : this(texture, (Bounds)srcRect)
-    {
-    }
-    
-    
-    public Sprite(TextureSlice textureSlice, Rectangle srcRect) : this(textureSlice, (Bounds)srcRect)
-    {
-    }
-
-    public Sprite(TextureSlice textureSlice, Bounds srcRect)
+    public Sprite(TextureSlice textureSlice, Bounds? srcRect = null)
     {
         TextureSlice = textureSlice;
-        SrcRect = srcRect;
-        UV = new UV();
-        GenerateUVs(ref UV, textureSlice, srcRect);
+        SrcRect = srcRect ?? textureSlice.Rectangle;
+        GenerateUVs(ref UV, TextureSlice, SrcRect);
     }
 
     public static void GenerateUVs(ref UV uv, in TextureSlice texture, in Bounds srcRect)

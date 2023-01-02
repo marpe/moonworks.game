@@ -7,6 +7,11 @@ public static class TextureExt
         return new UPoint(t.Width, t.Height);
     }
     
+    public static Vector2 SizeVec(this Texture t)
+    {
+        return new Vector2(t.Width, t.Height);
+    }
+    
     public static Rectangle Bounds(this Texture t)
     {
         return new Rectangle(0,  0, (int)t.Width, (int)t.Height);

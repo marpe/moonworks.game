@@ -1249,25 +1249,6 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         DrawHoveredEntitiesMenu();
 
         DrawMouse(btnState);
-
-        /*foreach (var ((groupUid, ruleUid), ruleCache) in _autoTileCache)
-            {
-                foreach (var ((x, y), tile) in ruleCache)
-                {
-                    if (!GetTileSetDef((uint)tile.TileSetDefId, out var tileSetDef))
-                        continue;
-                    var texture = SplitWindow.GetTileSetTexture(tileSetDef.Path);
-                    var sprite = GetTileSprite(texture, (uint)tile.TileId);
-                    var transform = (
-                        Matrix3x2.CreateScale(1f, 1f) *
-                        Matrix3x2.CreateTranslation(
-                            tile.LevelWorldPos.X + x * tile.LayerGridSize,
-                            tile.LevelWorldPos.Y + y * tile.LayerGridSize
-                        )
-                    ).ToMatrix4x4();
-                    renderer.DrawSprite(sprite, transform, Color.White);
-                }
-            }*/
     }
 
     private static void DrawHoveredEntitiesMenu()

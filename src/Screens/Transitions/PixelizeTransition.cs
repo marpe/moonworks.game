@@ -34,7 +34,7 @@ public class PixelizeTransition : SceneTransition
 
         FragUniform.Progress = progress;
 
-        var vertUniform = Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
+        var vertUniform = Renderer.GetOrthographicProjection(renderDestination.Width, renderDestination.Height);
         var fragmentBindings = new[]
         {
             new TextureSamplerBinding(), // dummy entry, will be replaced with whatever texture was supplied to DrawSprite, which is horribly ugly I know...

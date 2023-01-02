@@ -111,7 +111,7 @@ public class FreeTypeFontAtlas : IDisposable
                             Matrix3x2.CreateScale(1, 1) *
                             Matrix3x2.CreateTranslation(offset);
             
-            renderer.DrawSprite(new Sprite(_texture!, glyph.Bounds), transform.ToMatrix4x4(), color);
+            renderer.DrawSprite(new Sprite(_texture!, glyph.Bounds), transform, color);
             offset.X += glyph.XAdvance;
             prevGlyph = glyph;
         }

@@ -49,10 +49,10 @@ public class InputHandler
 
     public bool KeyboardEnabled = true;
     public bool MouseEnabled = true;
-    private Matrix4x4 _viewportInvInvert = Matrix4x4.Identity;
-    private Matrix4x4 _viewportTransform = Matrix4x4.Identity;
-    public Matrix4x4 ViewportInvInvert => _viewportInvInvert;
-    public Matrix4x4 ViewportTransform => _viewportTransform;
+    private Matrix3x2 _viewportInvInvert = Matrix3x2.Identity;
+    private Matrix3x2 _viewportTransform = Matrix3x2.Identity;
+    public Matrix3x2 ViewportInvInvert => _viewportInvInvert;
+    public Matrix3x2 ViewportTransform => _viewportTransform;
 
     public InputHandler(Inputs inputs)
     {
@@ -230,9 +230,9 @@ public class InputHandler
         };
     }
 
-    public void SetViewportTransform(Matrix4x4 viewportTransform)
+    public void SetViewportTransform(Matrix3x2 viewportTransform)
     {
         _viewportTransform = viewportTransform;
-        Matrix4x4.Invert(ref viewportTransform, out _viewportInvInvert);
+        Matrix3x2.Invert(viewportTransform, out _viewportInvInvert);
     }
 }

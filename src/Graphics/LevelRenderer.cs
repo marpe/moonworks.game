@@ -48,13 +48,11 @@ public class LevelRenderer
                 continue;
 
             var sprite = GetTileSprite(texture, tile.TileId, tileSetDef);
-            var transform = (
-                Matrix3x2.CreateScale(1f, 1f) *
-                Matrix3x2.CreateTranslation(
-                    level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
-                    level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
-                )
-            ).ToMatrix4x4();
+            var transform = Matrix3x2.CreateScale(1f, 1f) *
+                            Matrix3x2.CreateTranslation(
+                                level.WorldPos.X + tile.Cell.X * layerDef.GridSize,
+                                level.WorldPos.Y + tile.Cell.Y * layerDef.GridSize
+                            );
             renderer.DrawSprite(sprite, transform, Color.White, 0f, SpriteFlip.None);
         }
     }

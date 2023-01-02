@@ -6,7 +6,7 @@ namespace MyGame.Editor;
 
 public static unsafe class ImGuiUtils
 {
-    public static void DrawGame(Texture texture, Vector2 size, float scale, Vector2 offset, bool usePointFiltering, out Vector2 min, out Vector2 max, out Vector2 viewportSize, out Matrix4x4 viewportInvTransform)
+    public static void DrawGame(Texture texture, Vector2 size, float scale, Vector2 offset, bool usePointFiltering, out Vector2 min, out Vector2 max, out Vector2 viewportSize, out Matrix3x2 viewportInvTransform)
     {
         var editor = ((MyEditorMain)Shared.Game);
         
@@ -44,6 +44,6 @@ public static unsafe class ImGuiUtils
         viewportInvTransform = (
             Matrix3x2.CreateScale(viewportScale * scale) *
             Matrix3x2.CreateTranslation(gameRenderOffset.X, gameRenderOffset.Y)
-        ).ToMatrix4x4();
+        );
     }
 }

@@ -42,7 +42,7 @@ public class Renderer
         var createRendererTimer = Stopwatch.StartNew();
         _game = game;
         _device = game.GraphicsDevice;
-        
+
         SpriteBatch = new SpriteBatch(_device);
 
         _blankTexture = TextureUtils.CreateColoredTexture(game.GraphicsDevice, 1, 1, Color.White);
@@ -55,7 +55,7 @@ public class Renderer
         var freeTypeTimer = Stopwatch.StartNew();
         FreeTypeFontAtlas = new FreeTypeFontAtlas(game.GraphicsDevice, 512, 512, ContentPaths.fonts.consola_ttf, 18u, true);
         freeTypeTimer.StopAndLog("FreeType");
-        
+
         _depthStencilAttachmentInfo = new DepthStencilAttachmentInfo()
         {
             DepthStencilClearValue = new DepthStencilValue(0, 0),
@@ -193,26 +193,34 @@ public class Renderer
         }
     }
 
+    public void DrawSprite(Texture texture, Bounds? srcRect, Bounds dstRect, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    {
+        var sprite = new Sprite(texture, srcRect);
+        var transform = Matrix3x2.CreateScale(dstRect.Width / sprite.SrcRect.Width, dstRect.Height / sprite.SrcRect.Height) *
+                        Matrix3x2.CreateTranslation(dstRect.X, dstRect.Y);
+        SpriteBatch.Draw(sprite, color, depth, transform.ToMatrix4x4(), flip);
+    }
+
     public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
         SpriteBatch.Draw(sprite, color, depth, transform.ToMatrix4x4(), flip);
     }
-    
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+
+    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, color, depth, transform, flip);
+        SpriteBatch.Draw(sprite, color, 0, transform, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
-        SpriteBatch.Draw(sprite, colors, depth, transform, flip);
+        SpriteBatch.Draw(sprite, colors, depth, transform.ToMatrix4x4(), flip);
     }
-    
+
     public void DrawFTText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Color color)
     {
         FreeTypeFontAtlas.DrawText(this, text, position, color);
     }
-    
+
     public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
         Color color)
     {
@@ -224,7 +232,7 @@ public class Renderer
     {
         BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth);
     }
-    
+
     public Vector2 MeasureString(BMFontType fontType, ReadOnlySpan<char> text)
     {
         // TODO (marpe): Replace with FreeType
@@ -270,7 +278,8 @@ public class Renderer
         commandBuffer.BindGraphicsPipeline(pipeline.Pipeline);
     }
 
-    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection, bool usePointFiltering, PipelineType pipeline = PipelineType.Sprite)
+    public void RunRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, Matrix4x4? viewProjection, bool usePointFiltering,
+        PipelineType pipeline = PipelineType.Sprite)
     {
         UpdateBuffers(ref commandBuffer);
         BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipeline);
@@ -292,7 +301,7 @@ public class Renderer
 
     public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection, bool usePointFiltering)
     {
-        var vertUniforms = viewProjection ?? GetViewProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height);
+        var vertUniforms = viewProjection ?? GetOrthographicProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height);
         SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, usePointFiltering);
     }
 
@@ -325,7 +334,7 @@ public class Renderer
         _depthTextureCache.Clear();
     }
 
-    public static (Matrix4x4, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)
+    public static (Matrix3x2, Rectangle) GetViewportTransform(Point screenResolution, Point designResolution)
     {
         var scaleUniform = Math.Min(
             screenResolution.X / (float)designResolution.X,
@@ -345,14 +354,12 @@ public class Renderer
         var transform = Matrix3x2.CreateScale(scaleUniform, scaleUniform) *
                         Matrix3x2.CreateTranslation(offset.X, offset.Y);
 
-        return (transform.ToMatrix4x4(), new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
+        return (transform, new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
     }
 
-    public static Matrix4x4 GetViewProjection(uint width, uint height)
+    public static Matrix4x4 GetOrthographicProjection(uint width, uint height)
     {
-        var view = Matrix4x4.CreateTranslation(0, 0, -1000);
-        var projection = Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0.0001f, 10000f);
-        return view * projection;
+        return Matrix4x4.CreateOrthographicOffCenter(0, width, height, 0, 0, 10000f);
     }
 
     private static void DrawLetterAndPillarBoxes(Renderer renderer, Point screenSize, Rectangle viewport, Color color)

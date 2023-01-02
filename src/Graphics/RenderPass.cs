@@ -54,88 +54,54 @@ public class WorldRenderPass : RenderPass
     {
         var renderTargets = Shared.Game.RenderTargets;
         DrawWorld(renderer, ref commandBuffer, renderTargets.GameRender, alpha);
-        var isSameSize = (renderTargets.GameRender.Width - renderTargets.RenderScale == renderTargets.CompositeRender.Width &&
-                          renderTargets.GameRender.Height - renderTargets.RenderScale == renderTargets.CompositeRender.Height);
-        if (!isSameSize)
-        {
-            var camera = Shared.Game.Camera;
-            var srcSize = renderTargets.GameRender.Size - UPoint.One;
-            var renderScale = renderTargets.RenderScale;
-            // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
-            camera.GetViewFloored(alpha, out var floorRemainder);
-            var srcRect = new Bounds(floorRemainder.X, floorRemainder.Y, srcSize.X, srcSize.Y);
-            var gameRenderSprite = new Sprite(renderTargets.GameRender.Target, srcRect);
-            var dstSize = renderTargets.CompositeRender.Size + (uint)renderScale;
-            var scale = new Vector2((float)dstSize.X / srcSize.X, (float)dstSize.Y / srcSize.Y);
-            var t = Matrix3x2.CreateScale(scale.X, scale.Y).ToMatrix4x4();
-            renderer.DrawSprite(gameRenderSprite, t, Color.White, 0, SpriteFlip.None);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false, PipelineType.PixelArt);
-        }
-        else
-        {
-            var camera = Shared.Game.Camera;
-            camera.GetViewFloored(alpha, out var floorRemainder);
-            /*var renderScale = renderTargets.RenderScale;
-            // var srcSize = new UPoint((uint)(renderTargets.GameSize.X * renderScale), (uint)(renderTargets.GameSize.Y * renderScale));
-            var srcSize = renderTargets.GameRender.Size - (uint)renderScale; 
-            var srcRect = new Bounds(floorRemainder.X, floorRemainder.Y, renderTargets.GameSize.X * renderScale, renderTargets.GameSize.Y * renderScale);
-            var gameRenderSprite = new Sprite(renderTargets.GameRender.Target, srcRect);
-            var dstSize = renderTargets.CompositeRender.Size + (uint)renderScale;
-            var scale = new Vector2((float)dstSize.X / srcSize.X, (float)dstSize.Y / srcSize.Y);
-            var t = Matrix3x2.CreateScale(scale.X, scale.Y).ToMatrix4x4();*/
-            var transform = (
-                Matrix3x2.CreateTranslation(-floorRemainder * renderTargets.RenderScale) //* Matrix3x2.CreateTranslation(-0.5f, -0.5f)
-            );
-            renderer.DrawSprite(renderTargets.GameRender, transform, Color.White, 0, SpriteFlip.None);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, true, PipelineType.Sprite);
-        }
+
+        var camera = Shared.Game.Camera;
+        // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
+        camera.GetViewFloored(alpha, out var floorRemainder);
+
+        var srcPos = floorRemainder * renderTargets.RenderScale;
+        var srcSize = renderTargets.GameRender.Size - UPoint.One * (uint)renderTargets.RenderScale;
+        var srcRect = new Bounds(srcPos.X, srcPos.Y, srcSize.X, srcSize.Y);
+        var dstSize = renderDestination.Size();
+        var dstRect = new Bounds(0, 0, dstSize.X, dstSize.Y);
+
+        renderer.DrawSprite(renderTargets.GameRender, srcRect, dstRect, Color.White, 0, SpriteFlip.None);
+
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false, PipelineType.Sprite);
     }
 
     private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
+        renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
+
         var world = Shared.Game.World;
         if (!world.IsLoaded)
         {
-            renderer.Clear(ref commandBuffer, renderDestination, Color.Black);
             return;
         }
 
         var camera = Shared.Game.Camera;
         var renderTargets = Shared.Game.RenderTargets;
 
-        var flooredView = camera.GetViewFloored(alpha, out var floorRemainder);
+        var view = camera.GetViewFloored(alpha, out _) *
+                   Matrix3x2.CreateScale(renderTargets.RenderScale);
+        var projection = Renderer.GetOrthographicProjection(renderTargets.GameRender.Width, renderTargets.GameRender.Height);
+        var viewProjection = view.ToMatrix4x4() * projection;
 
         LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         world.DrawEntities(renderer, alpha);
-
-
-        var view = flooredView *
-                   Matrix3x2.CreateScale(renderTargets.RenderScale).ToMatrix4x4();
-        var viewProjection = view * Renderer.GetViewProjection(renderTargets.LevelBase.Width, renderTargets.LevelBase.Height);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection, true, PipelineType.Sprite);
+
+        LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
+        world.DrawDebug(renderer, camera, alpha);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.Background, Color.Transparent, viewProjection, true, PipelineType.Sprite);
+
+        renderer.DrawSprite(renderTargets.Background, Matrix4x4.Identity, Color.White);
+        renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
 
         renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LightBase, Color.Transparent, null, true, PipelineType.Sprite);
-
-
-        LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
-        var backgroundTransform = view *
-                                  Matrix3x2.CreateTranslation(-0.5f, -0.5f).ToMatrix4x4() *
-                                  Renderer.GetViewProjection(renderDestination.Width, renderDestination.Height);
-        world.DrawDebug(renderer, camera, alpha);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Transparent, backgroundTransform, true, PipelineType.Sprite);
-
-        // var levelBaseSprite = new Sprite(renderTargets.LevelBase.Target, new Bounds(floorRemainder.X, floorRemainder.Y, projectionSize.X, projectionSize.Y));
-        renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.Sprite);
-
-        var flooredMin = camera.ZoomedBounds.Min.Floor();
-        var flooredBounds = new Bounds(
-            flooredMin.X,
-            flooredMin.Y,
-            camera.ZoomedBounds.Width,
-            camera.ZoomedBounds.Height
-        );
 
         if (World.LightsEnabled)
         {
@@ -150,13 +116,13 @@ public class WorldRenderPass : RenderPass
                 world,
                 ref commandBuffer,
                 renderDestination.Size(),
-                flooredBounds,
+                camera.ZoomedBounds,
                 _lightTextureSamplerBindings
             );
 
             // render light to game
             renderer.DrawSprite(renderTargets.NormalLights, Matrix4x4.Identity, Color.White);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.Multiply);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Multiply);
         }
 
         if (World.RimLightsEnabled)
@@ -172,13 +138,13 @@ public class WorldRenderPass : RenderPass
                 world,
                 ref commandBuffer,
                 renderDestination.Size(),
-                flooredBounds,
+                camera.ZoomedBounds,
                 _rimLightTextureSamplerBindings
             );
 
             // render rim light to game
             renderer.DrawSprite(renderTargets.RimLights, Matrix4x4.Identity, Color.White);
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.Additive);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Additive);
         }
     }
 
@@ -196,13 +162,13 @@ public class WorldRenderPass : RenderPass
 
             renderer.DrawSprite(
                 lightTexture,
-                Matrix4x4.Identity,
+                Matrix3x2.Identity,
                 Color.White,
                 0,
                 SpriteFlip.None
             );
 
-            var vertUniform = Renderer.GetViewProjection(renderDestinationSize.X, renderDestinationSize.Y);
+            var vertUniform = Renderer.GetOrthographicProjection(renderDestinationSize.X, renderDestinationSize.Y);
             var fragUniform = new Pipelines.RimLightUniforms()
             {
                 LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
@@ -221,8 +187,8 @@ public class WorldRenderPass : RenderPass
                     renderDestinationSize.Y
                 ),
                 Bounds = new Vector4(
-                    cameraBounds.Min.X,
-                    cameraBounds.Min.Y,
+                    MathF.Floor(cameraBounds.Min.X),
+                    MathF.Floor(cameraBounds.Min.Y),
                     cameraBounds.Width,
                     cameraBounds.Height
                 ),
@@ -244,7 +210,7 @@ public class MenuRenderPass : RenderPass
         renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
         Shared.Menus.Draw(renderer, alpha);
         renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent, null, true);
-        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix4x4.Identity, Color.White, 0, SpriteFlip.None);
+        renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White, 0, SpriteFlip.None);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Sprite);
     }
 }
