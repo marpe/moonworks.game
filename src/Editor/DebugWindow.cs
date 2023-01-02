@@ -123,6 +123,8 @@ public unsafe class DebugWindow : ImGuiEditorWindow
         {
             var io = ImGui.GetIO();
 
+            EnumInspector.InspectEnum("ActiveInput", ref MyEditorMain.PrevActiveInput);
+            
             if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 0)))
             {
                 UpdateMetrics();

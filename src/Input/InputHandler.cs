@@ -4,7 +4,7 @@ public class InputHandler
 {
     public static KeyCode[] KeyCodes = Enum.GetValues<KeyCode>();
     public static MouseButtonCode[] MouseButtonCodes = Enum.GetValues<MouseButtonCode>();
-    
+
     /// <summary>Number of seconds between each registered keypress when a key is being held down</summary>
     public const float REPEAT_DELAY = 0.03f;
 
@@ -94,7 +94,7 @@ public class InputHandler
             key.Update(isHeld, deltaSeconds);
         }
     }
-   
+
     public void EndFrame()
     {
         _numTextInputChars = 0;

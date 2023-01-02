@@ -9,10 +9,9 @@ public static class MouseDebug
 
     public static void DrawMousePosition(Renderer renderer)
     {
-        var mousePosition = Shared.Game.InputHandler.MousePosition;
-        var view = Shared.Game.Camera.GetView(0);
-        Matrix4x4.Invert(ref view, out var invertedView);
-        var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+        var mouseInWorld = World.GetMouseInWorld();
+        if (!Shared.Game.Camera.ZoomedBounds.Contains(mouseInWorld))
+            return;
         var mouseCell = Entity.ToCell(mouseInWorld);
 
         var mouseCellRect = new Rectangle(

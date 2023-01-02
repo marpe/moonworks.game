@@ -113,7 +113,7 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
         if (ImGui.IsItemHovered())
         {
             MyEditorMain.ActiveInput = ActiveInput.RenderTargetsWindow;
-        } ;
+        }
 
         if (ImGui.BeginPopupContextWindow("WindowContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
         {

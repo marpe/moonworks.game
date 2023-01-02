@@ -43,22 +43,10 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     private static Num.Vector2 GetWorldPosInScreen(Vector2 position)
     {
         var editor = (MyEditorMain)Shared.Game;
-        var view = editor.Camera.GetView(0);
-        var posInGameWindow = Vector2.Transform(position, view);
-        var renderScale = Shared.Game.RenderTargets.CompositeRender.Size / Shared.Game.Camera.ZoomedSize;
-        posInGameWindow *= renderScale;
+        var posInGameWindow = World.GetWorldPosInScreen(position);
         var viewportTransform = editor.GameWindow.GameRenderView.GameRenderViewportTransform;
         var posInScreen = Vector2.Transform(posInGameWindow, viewportTransform) + ImGui.GetMainViewport()->Pos.ToXNA();
         return posInScreen.ToNumerics();
-    }
-
-    private static Vector2 GetMouseInWorld()
-    {
-        var renderScale = Shared.Game.RenderTargets.CompositeRender.Size / Shared.Game.Camera.ZoomedSize;
-        var mousePosition = Shared.Game.InputHandler.MousePosition / renderScale;
-        var view = Shared.Game.Camera.GetView(0);
-        Matrix4x4.Invert(ref view, out var invertedView);
-        return Vector2.Transform(mousePosition, invertedView);
     }
 
     public override void Draw()
@@ -225,7 +213,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         {
             // if (ImGui.IsWindowHovered())
             MyEditorMain.ActiveInput = ActiveInput.GameWindow;
-            var mouseInWorld = GetMouseInWorld();
+            var mouseInWorld = World.GetMouseInWorld();
             var mouseInScreen = GetWorldPosInScreen(mouseInWorld);
 
             var dl = ImGui.GetWindowDrawList();

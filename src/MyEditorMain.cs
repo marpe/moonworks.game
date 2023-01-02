@@ -53,6 +53,7 @@ public unsafe class MyEditorMain : MyGameMain
     public WorldsRoot.RootJson RootJson = new();
     public uint ViewportDockSpaceId;
 
+    public static ActiveInput PrevActiveInput = ActiveInput.None;
     public static ActiveInput ActiveInput = ActiveInput.None;
     public string Filepath = "";
 
@@ -63,7 +64,7 @@ public unsafe class MyEditorMain : MyGameMain
         var sw = Stopwatch.StartNew();
         var windowSize = MainWindow.Size;
         _imGuiRenderTarget = Texture.CreateTexture2D(
-            GraphicsDevice, 
+            GraphicsDevice,
             (uint)windowSize.X,
             (uint)windowSize.Y,
             TextureFormat.B8G8R8A8,
@@ -262,7 +263,6 @@ public unsafe class MyEditorMain : MyGameMain
         switch (ActiveInput)
         {
             case ActiveInput.None:
-                InputHandler.SetViewportTransform(Matrix4x4.Identity);
                 break;
             case ActiveInput.Game:
                 base.SetInputViewport();
@@ -274,7 +274,6 @@ public unsafe class MyEditorMain : MyGameMain
                 InputHandler.SetViewportTransform(_renderTargetsWindow.GameRenderView.GameRenderViewportTransform);
                 break;
             case ActiveInput.EditorWindow:
-                InputHandler.SetViewportTransform(EditorWindow.PreviewRenderViewportTransform);
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -388,10 +387,12 @@ public unsafe class MyEditorMain : MyGameMain
         var wasHidden = IsHidden;
 
         InputHandler.KeyboardEnabled = !ImGui.GetIO()->WantCaptureKeyboard;
-        InputHandler.MouseEnabled = ActiveInput == ActiveInput.GameWindow ||
-                                    ActiveInput == ActiveInput.RenderTargetsWindow ||
-                                    ActiveInput == ActiveInput.Game;
-
+        InputHandler.MouseEnabled = ActiveInput is
+            ActiveInput.GameWindow or
+            ActiveInput.RenderTargetsWindow or
+            ActiveInput.Game;
+        var wasMouseEnabled = InputHandler.MouseEnabled;
+        var wasKeyboardEnabled = InputHandler.KeyboardEnabled;
         base.Update(dt);
 
         ShowOrHideChildWindows(wasHidden);
@@ -417,6 +418,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     protected override void Draw(double alpha)
     {
+        PrevActiveInput = ActiveInput;
         ActiveInput = ActiveInput.None;
 
         if (IsHidden)
@@ -431,7 +433,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         _renderStopwatch.Restart();
         var (commandBuffer, swapTexture) = Renderer.AcquireSwapchainTexture();
-        
+
         RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
 
         if ((int)Time.UpdateCount % ImGuiDrawRate == 0 && _imGuiUpdateCount > 0)

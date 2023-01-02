@@ -133,9 +133,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             ImGuiExt.SeparatorText("Mouse", Color.White);
             var mousePosition = editor.InputHandler.MousePosition;
             ImGuiExt.PrintVector("Pos", mousePosition);
-            var view = editor.Camera.GetView(0);
-            Matrix4x4.Invert(ref view, out var invertedView);
-            var mouseInWorld = MoonWorks.Math.Float.Vector2.Transform(mousePosition, invertedView);
+            var mouseInWorld = World.GetMouseInWorld();
             ImGuiExt.PrintVector("World", mouseInWorld);
             var mouseCell = Entity.ToCell(mouseInWorld);
             ImGuiExt.PrintVector("Cel", mouseCell);

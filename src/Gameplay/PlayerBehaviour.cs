@@ -90,11 +90,7 @@ public class PlayerBehaviour
         {
             if (_command.MoveToMouse)
             {
-                var renderScale = Shared.Game.RenderTargets.CompositeRender.Size / Shared.Game.Camera.ZoomedSize;
-                var mousePosition = Shared.Game.InputHandler.MousePosition / renderScale;
-                var view = Shared.Game.Camera.GetView(0);
-                Matrix4x4.Invert(ref view, out var invertedView);
-                var mouseInWorld = Vector2.Transform(mousePosition, invertedView);
+                var mouseInWorld = World.GetMouseInWorld();
 
                 var offset = mouseInWorld - Player.Center;
                 Player.Velocity.Delta = offset * dt * 1000f;

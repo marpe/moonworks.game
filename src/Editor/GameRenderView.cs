@@ -53,8 +53,8 @@ public unsafe class GameRenderView
         ImGui.SetCursorScreenPos(min);
         ImGui.InvisibleButton(
             id,
-            (max - min).EnsureNotZero() /*,
-            ImGuiButtonFlags.MouseButtonMiddle*/
+            (max - min).EnsureNotZero(),
+            ImGuiButtonFlags.MouseButtonMiddle
         );
 
         var isActive = ImGui.IsItemActive();

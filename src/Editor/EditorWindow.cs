@@ -38,18 +38,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static float _cameraMinZoom = 0.1f;
 
-    /// <summary>User panning offset</summary>
-    private static Num.Vector2 _gameRenderPosition = Num.Vector2.Zero;
+    private static Num.Vector2 _cameraPan = Num.Vector2.Zero;
 
-    /// <summary>User zoom</summary>
-    public static float _gameRenderScale = 1f;
+    public static float _cameraZoom = 1f;
 
     private static int _selectedEntityDefinitionIndex;
     private static int _selectedEntityInstanceIndex = -1;
     private static int _selectedIntGridValueIndex;
     private static int _selectedLayerInstanceIndex;
-
-    public static Matrix4x4 PreviewRenderViewportTransform = Matrix4x4.Identity;
 
     [CVar("editor.grid_color", "")]
     public static Color GridColor = new(0, 0, 0, 0.04f);
@@ -63,8 +59,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
     [CVar("editor.stripe_color", "")]
     public static Color StripeColor = new(1.0f, 1.0f, 1.0f, 0.1f);
 
-    private static Num.Vector2 _renderSize;
-    private static Num.Vector2 _renderPos;
+    private static Num.Vector2 _contentAvail;
+    private static Num.Vector2 _cursorScreenPos;
     private static uint _selectedEntityPopupId;
     private static bool _isAdding;
     private static ButtonState btnState = new();
@@ -364,8 +360,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         SimpleTypeInspector.InspectColor("StripeColor", ref StripeColor);
         SimpleTypeInspector.InspectColor("GridColor", ref GridColor);
         SimpleTypeInspector.InspectFloat("GridThickness", ref GridThickness, new RangeSettings(0, 10, 0.25f, false));
-        SimpleTypeInspector.InspectFloat("CameraScale", ref _gameRenderScale, new RangeSettings(0.001f, 10, 0.25f, false));
-        SimpleTypeInspector.InspectNumVector2("CameraPos", ref _gameRenderPosition);
+        SimpleTypeInspector.InspectFloat("CameraScale", ref _cameraZoom, new RangeSettings(0.001f, 10, 0.25f, false));
+        SimpleTypeInspector.InspectNumVector2("CameraPos", ref _cameraPan);
 
         ImGui.End();
     }
@@ -760,8 +756,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, System.Numerics.Vector2.Zero);
         var result = ImGui.Begin(EditorWindowTitle, default, ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoScrollbar);
 
-        _renderPos = ImGui.GetCursorScreenPos();
-        _renderSize = ImGui.GetContentRegionAvail();
+        _cursorScreenPos = ImGui.GetCursorScreenPos();
+        _contentAvail = ImGui.GetContentRegionAvail();
 
         if (!result)
         {
@@ -778,30 +774,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         var dl = ImGui.GetWindowDrawList();
-        dl->AddRectFilled(_renderPos, _renderPos + _renderSize, BackgroundColor.PackedValue);
-        ImGuiExt.FillWithStripes(dl, new ImRect(_renderPos, _renderPos + _renderSize), StripeColor.PackedValue);
+        dl->AddRectFilled(_cursorScreenPos, _cursorScreenPos + _contentAvail, BackgroundColor.PackedValue);
+        ImGuiExt.FillWithStripes(dl, new ImRect(_cursorScreenPos, _cursorScreenPos + _contentAvail), StripeColor.PackedValue);
 
         if (_selectedEntityPopupId == 0)
             _selectedEntityPopupId = ImGui.GetID(SelectedEntityPopupName);
 
         DrawWorld();
 
-        var t = _renderPos - ImGui.GetWindowViewport()->Pos;
-        PreviewRenderViewportTransform = (
-            Matrix3x2.CreateScale(_gameRenderScale, _gameRenderScale) *
-            Matrix3x2.CreateTranslation(t.X, t.Y)
-        ).ToMatrix4x4();
-
         if (ImGui.IsWindowHovered() && ImGui.IsMouseDown(ImGuiMouseButton.Middle))
         {
-            _gameRenderPosition += -ImGui.GetIO()->MouseDelta * 1.0f / _gameRenderScale;
+            _cameraPan += -ImGui.GetIO()->MouseDelta * 1.0f / _cameraZoom;
         }
 
         if (ImGui.IsWindowHovered() && ImGui.GetIO()->MouseWheel != 0)
         {
-            _gameRenderScale += ImGui.GetIO()->MouseWheel * 0.1f * _gameRenderScale;
-            if (_gameRenderScale < _cameraMinZoom)
-                _gameRenderScale = _cameraMinZoom;
+            _cameraZoom += ImGui.GetIO()->MouseWheel * 0.1f * _cameraZoom;
+            if (_cameraZoom < _cameraMinZoom)
+                _cameraZoom = _cameraMinZoom;
         }
 
         DrawMouseInfoOverlay();
@@ -828,7 +818,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (GameWindow.BeginOverlay("MouseOverlay", ref showOverlay))
         {
             ImGui.PushFont(ImGuiExt.GetFont(ImGuiFont.MediumBold));
-            ImGuiExt.PrintVector("MousePosInWorld", GetScreenPosInWorld(ImGui.GetMousePos()));
+            ImGuiExt.PrintVector("ImGui.GetMousePos()", ImGui.GetMousePos().ToXNA());
             if (GetSelectedLevel(out var level))
             {
                 var (mouseSnappedToGrid, mouseCell, mouseInLevel) = GetMouseInLevel(level);
@@ -853,32 +843,24 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         ImGui.End();
     }
 
-    public static Vector2 GetMouseInWorld()
-    {
-        var editor = (MyEditorMain)Shared.Game;
-        var mousePos = editor.InputHandler.MousePosition.ToNumerics();
-        var center = _renderSize * 0.5f / _gameRenderScale;
-        return (mousePos - center + _gameRenderPosition).ToXNA();
-    }
-
     private static Vector2 GetScreenPosInWorld(Num.Vector2 position)
     {
-        var center = _renderSize * 0.5f;
-        var posRelativeToRenderCenter = position - _renderPos - center;
-        var result = posRelativeToRenderCenter / _gameRenderScale + _gameRenderPosition;
+        var center = _contentAvail * 0.5f;
+        var posRelativeToRenderCenter = position - _cursorScreenPos - center;
+        var result = posRelativeToRenderCenter / _cameraZoom + _cameraPan;
         return result.ToXNA();
     }
 
     public static Num.Vector2 GetWorldPosInScreen(Vector2 position)
     {
-        return _renderPos + _renderSize * 0.5f +
-               -_gameRenderPosition * _gameRenderScale +
-               position.ToNumerics() * _gameRenderScale;
+        return _cursorScreenPos + _contentAvail * 0.5f +
+               -_cameraPan * _cameraZoom +
+               position.ToNumerics() * _cameraZoom;
     }
 
     private static Num.Vector2 GetWorldPosInWindow(Vector2 position)
     {
-        return GetWorldPosInScreen(position) - _renderPos;
+        return GetWorldPosInScreen(position) - _cursorScreenPos;
     }
 
     private void DrawLayerInstances(List<LayerInstance> layerInstances, List<LayerDef> layerDefs)
@@ -1325,7 +1307,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                 {
                     var boundsMin = GetWorldPosInScreen(level.WorldPos + instance.Position);
                     var boundsMax = GetWorldPosInScreen(level.WorldPos + instance.Position + instance.Size.ToPoint());
-                    dl->AddRect(boundsMin, boundsMax, Color.Red.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 4f);
+                    dl->AddRect(boundsMin, boundsMax, Color.Red.PackedValue, 0, ImDrawFlags.None, _cameraZoom * 4f);
                 }
 
                 ImGui.PopID();
@@ -1355,11 +1337,11 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var editor = (MyEditorMain)Shared.Game;
         var gridSize = editor.RootJson.DefaultGridSize;
 
-        if (isSelectedLevel && _gameRenderScale >= 0.5f)
+        if (isSelectedLevel && _cameraZoom >= 0.5f)
         {
             var gridMin = GetWorldPosInScreen(level.WorldPos);
             var gridMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2());
-            DrawGrid(dl, gridMin, gridMax, gridSize * _gameRenderScale, GridColor, _gameRenderScale * GridThickness);
+            DrawGrid(dl, gridMin, gridMax, gridSize * _cameraZoom, GridColor, _cameraZoom * GridThickness);
         }
 
         // draw outer level border
@@ -1367,8 +1349,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         {
             var color = isSelectedLevel ? Color.CornflowerBlue : Color.Purple.MultiplyAlpha(0.5f);
 
-            var thickness = 2f * _gameRenderScale;
-            var padding = new Vector2(thickness * 0.5f / _gameRenderScale);
+            var thickness = 2f * _cameraZoom;
+            var padding = new Vector2(thickness * 0.5f / _cameraZoom);
             var rectMin = GetWorldPosInScreen(level.WorldPos - padding);
             var rectMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2() + padding);
             dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, thickness);
@@ -1433,7 +1415,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static void HandleLevelResize(Level level, Num.Vector2 min, Num.Vector2 max, uint gridSize)
     {
-        var state = _resizeEditorLevel.Draw(min, max, _gameRenderScale * 5f, true, true);
+        var state = _resizeEditorLevel.Draw(min, max, _cameraZoom * 5f, true, true);
 
         if (state == ToolState.Started)
         {
@@ -1446,7 +1428,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
              state == ToolState.Ended) &&
             ImGui.GetMouseDragDelta().LengthSquared() >= 4 * 4)
         {
-            var sizeDelta = _resizeEditorLevel.TotSizeDelta.ToVec2() / _gameRenderScale;
+            var sizeDelta = _resizeEditorLevel.TotSizeDelta.ToVec2() / _cameraZoom;
             var gridSizeDelta = (sizeDelta / gridSize).Round();
 
             var newSize = (_resizeStartSize + gridSizeDelta * gridSize).ToUPoint();
@@ -1654,8 +1636,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         }
 
         // - new Num.Vector2(layerDef.GridSize, layerDef.GridSize) * 0.5f * _gameRenderScale
-        var entitySize = entityInstance.Size.ToVec2() * _gameRenderScale;
-        var gridSize = new Vector2(layerDef.GridSize, layerDef.GridSize) * _gameRenderScale;
+        var entitySize = entityInstance.Size.ToVec2() * _cameraZoom;
+        var gridSize = new Vector2(layerDef.GridSize, layerDef.GridSize) * _cameraZoom;
         var iconSize = gridSize;
         var iconMin = boundsMin - ((gridSize - entitySize) * entityDef.Pivot).ToNumerics();
         var iconMax = iconMin + iconSize.ToNumerics();
@@ -1707,7 +1689,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             if (ImGui.IsItemActive() && ImGui.GetMouseDragDelta().LengthSquared() >= 2f * 2f)
             {
-                var gridDelta = ImGui.GetMouseDragDelta() / _gameRenderScale / layerDef.GridSize;
+                var gridDelta = ImGui.GetMouseDragDelta() / _cameraZoom / layerDef.GridSize;
                 var snapped = new Point(
                     (int)(Math.Round(gridDelta.X) * layerDef.GridSize),
                     (int)(Math.Round(gridDelta.Y) * layerDef.GridSize)
@@ -1719,13 +1701,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 // dl->AddRect(boundsMin, boundsMax, Color.CornflowerBlue.PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 2f);
                 var t = 0; //((MathF.Sin(Shared.Game.Time.TotalElapsedTime) + 1.0f) * 0.5f);
-                var rectOffset = new Num.Vector2(t * _gameRenderScale * 2f);
+                var rectOffset = new Num.Vector2(t * _cameraZoom * 2f);
                 ImGuiExt.AddRectDashed(
                     dl,
                     boundsMin - rectOffset, boundsMax + rectOffset,
                     ImGuiExt.Colors[0].PackedValue,
-                    _gameRenderScale * 1f,
-                    (int)(_gameRenderScale * 10f),
+                    _cameraZoom * 1f,
+                    (int)(_cameraZoom * 10f),
                     0.5f,
                     true
                 );
@@ -1735,7 +1717,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             }
             else if (ImGui.IsItemHovered())
             {
-                dl->AddRect(boundsMin, boundsMax, ImGuiExt.Colors[0].MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 1f);
+                dl->AddRect(boundsMin, boundsMax, ImGuiExt.Colors[0].MultiplyAlpha(0.66f).PackedValue, 0, ImDrawFlags.None, _cameraZoom * 1f);
             }
 
             /*if (ImGui.BeginPopupContextItem("EntityInstanceContextMenu", ImGuiPopupFlags.NoOpenOverItems | ImGuiPopupFlags.MouseButtonRight))
@@ -1791,7 +1773,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var intensity = (float)intensityInstance.Value!;
 
                     var center = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToVec2() * 0.5f);
-                    var radius = entityInstance.Size.X * 0.5f * _gameRenderScale;
+                    var radius = entityInstance.Size.X * 0.5f * _cameraZoom;
 
                     ImGuiExt.DrawCone(dl, center, coneAngle, angle, radius, fillColor.MultiplyAlpha(intensity));
                 }
@@ -1810,7 +1792,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static void DrawMoveLevelButton(Level level, Num.Vector2 boundsMin, Num.Vector2 boundsMax)
     {
-        var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
+        var moveButtonSize = new Num.Vector2(10, 10) * _cameraZoom;
         ImGui.SetCursorScreenPos(
             boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 3 * moveButtonSize.Y));
 
@@ -1826,7 +1808,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         var dl = ImGui.GetWindowDrawList();
         var iconText = FontAwesome6.ArrowsUpDownLeftRight;
-        var iconSize = ImGui.GetFontSize() * _gameRenderScale * 0.33f;
+        var iconSize = ImGui.GetFontSize() * _cameraZoom * 0.33f;
         var iconPos = ImGui.GetItemRectMin() + ImGui.GetItemRectSize() * 0.5f - new Num.Vector2(iconSize * 0.45f, iconSize * 0.5f);
         dl->AddText(ImGuiExt.GetFont(ImGuiFont.Medium), iconSize, iconPos, Color.White.PackedValue, iconText, 0, default);
 
@@ -1838,14 +1820,14 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (ImGui.IsItemActive())
         {
             var gridSize = ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize;
-            var (newPos, _) = SnapToGrid(_moveLevelStart + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint(), gridSize);
+            var (newPos, _) = SnapToGrid(_moveLevelStart + (ImGui.GetMouseDragDelta() / _cameraZoom).ToPoint(), gridSize);
             level.WorldPos = newPos.ToPoint();
         }
     }
 
     private static void DrawMoveEntityButton(EntityInstance entity, Num.Vector2 boundsMin, Num.Vector2 boundsMax)
     {
-        var moveButtonSize = new Num.Vector2(10, 10) * _gameRenderScale;
+        var moveButtonSize = new Num.Vector2(10, 10) * _cameraZoom;
         ImGui.SetCursorScreenPos(
             boundsMin + new Num.Vector2((boundsMax.X - boundsMin.X) * 0.5f, 0) - new Num.Vector2(moveButtonSize.X * 0.5f, 2 * moveButtonSize.Y));
         if (ImGuiExt.ColoredButton(FontAwesome6.ArrowsUpDownLeftRight, Color.White, Color.Black, moveButtonSize, "Move"))
@@ -1860,7 +1842,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         if (ImGui.IsItemActive())
         {
             var gridSize = ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize;
-            var (newPos, _) = SnapToGrid(_moveEntityStart + (ImGui.GetMouseDragDelta() / _gameRenderScale).ToPoint(), gridSize);
+            var (newPos, _) = SnapToGrid(_moveEntityStart + (ImGui.GetMouseDragDelta() / _cameraZoom).ToPoint(), gridSize);
             entity.Position = newPos.ToPoint();
         }
     }
@@ -1899,7 +1881,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     totSizeDelta.X = totSizeDelta.Y / ar;
             }
 
-            var sizeDelta = totSizeDelta / _gameRenderScale;
+            var sizeDelta = totSizeDelta / _cameraZoom;
             var gridSizeDelta = (sizeDelta / gridSize).Round();
             var newSize = _resizeEntityStartSize + gridSizeDelta * gridSize;
 
@@ -1941,7 +1923,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var center = levelPos + position + size * 0.5f;
         var min = GetWorldPosInScreen(center - size * 0.5f * rectScale);
         var max = GetWorldPosInScreen(center + size * 0.5f * rectScale);
-        dl->AddRect(min, max, Color.Red.MultiplyAlpha(0.1f).PackedValue, 0, ImDrawFlags.None, _gameRenderScale * 10f);
+        dl->AddRect(min, max, Color.Red.MultiplyAlpha(0.1f).PackedValue, 0, ImDrawFlags.None, _cameraZoom * 10f);
     }
 
     private static void DrawIntGridLayer(ImDrawList* dl, Level level, LayerDef layerDef, LayerInstance layer, bool isSelected)
@@ -1981,11 +1963,9 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static (Vector2 snapped, Point cell, Vector2 mouseInLevel) GetMouseInLevel(Level level)
     {
-        var mouseInWorld = GetMouseInWorld();
-        var mouseInLevel = mouseInWorld - level.WorldPos;
-        var editor = (MyEditorMain)Shared.Game;
-        var root = editor.RootJson;
-        var (snapped, cell) = SnapToGrid(mouseInLevel, root.DefaultGridSize);
+        var mouseInWorld = GetScreenPosInWorld(ImGui.GetMousePos()) - level.WorldPos;
+        var mouseInLevel = mouseInWorld;
+        var (snapped, cell) = SnapToGrid(mouseInLevel, ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize);
         return (snapped, cell, mouseInLevel);
     }
 

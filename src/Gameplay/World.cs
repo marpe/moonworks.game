@@ -490,4 +490,22 @@ public class World
     {
         return _tileSetTextures[uid];
     }
+
+    public static Vector2 GetWorldPosInScreen(Vector2 position)
+    {
+        var view = Shared.Game.Camera.GetView(0);
+        return Vector2.Transform(position, view) * Shared.Game.RenderTargets.RenderScale;
+    }
+
+    public static Vector2 GetScreenPosInWorld(Vector2 position)
+    {
+        var view = Shared.Game.Camera.GetView(0);
+        Matrix4x4.Invert(ref view, out var invertedView);
+        return Vector2.Transform(position / Shared.Game.RenderTargets.RenderScale, invertedView);
+    }
+    
+    public static Vector2 GetMouseInWorld()
+    {
+        return GetScreenPosInWorld(Shared.Game.InputHandler.MousePosition);
+    }
 }
