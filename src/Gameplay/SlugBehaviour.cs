@@ -7,7 +7,7 @@ public class SlugBehaviour : EnemyBehaviour
     private Enemy? _parent;
     public Enemy Parent => _parent ?? throw new InvalidOperationException();
 
-    private float _speed = 50f;
+    private float _speed = 25f;
     private Coroutine? _destroyRoutine;
 
     public override void Initialize(Enemy parent)

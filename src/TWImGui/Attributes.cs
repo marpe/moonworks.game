@@ -34,7 +34,7 @@ public class ReadOnlyAttribute : Attribute
 {
 }
 
-public readonly record struct RangeSettings(float MinValue, float MaxValue, float StepSize, bool UseDragVersion);
+public record struct RangeSettings(float MinValue, float MaxValue, float StepSize, bool UseDragVersion);
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
 public class RangeAttribute : Attribute

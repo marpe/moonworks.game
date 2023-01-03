@@ -183,13 +183,10 @@ public unsafe class GameRenderView
             // ImGui.BeginChild("ZoomChild", new Vector2(60, 30));
             var tmpZoom = Zoom * 100 + 0.01f;
             ImGui.SetNextItemWidth(40);
-            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(ImGui.GetStyle()->FramePadding.X, ImGui.GetStyle()->FramePadding.Y + 2));
             if (SimpleTypeInspector.InspectFloat("##Zoom", ref tmpZoom, new RangeSettings(50, 1000, 1, true), "%.0f%%", ImGuiSliderFlags.AlwaysClamp))
             {
                 Zoom = MathF.Exp(MathF.Lerp(MathF.Log(Zoom), MathF.Log(tmpZoom / 100f), 0.1f));
             }
-
-            ImGui.PopStyleVar();
             // ImGui.EndChild();
 
             ImGui.SameLine();

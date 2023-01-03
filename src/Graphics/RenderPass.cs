@@ -16,12 +16,13 @@ public class RenderPass
 public class ConsoleRenderPass : RenderPass
 {
     private bool _hasRenderedConsole;
-    private float _nextRender;
+    private ulong _lastUpdateCount;
 
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
-        if (Shared.Game.Time.TotalElapsedTime >= _nextRender)
+        if (_lastUpdateCount < Shared.Game.Time.UpdateCount)
         {
+            _lastUpdateCount = Shared.Game.Time.UpdateCount;
             _hasRenderedConsole = true;
             renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, Color.Transparent);
             renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
@@ -35,8 +36,6 @@ public class ConsoleRenderPass : RenderPass
 
             Shared.Game._fpsDisplay.DrawFPS(renderer, Shared.Game.RenderTargets.ConsoleRender.Size);
             renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, null, null);
-
-            _nextRender = Shared.Game.Time.TotalElapsedTime + 1.0f / ConsoleSettings.RenderFPS;
         }
 
         if (_hasRenderedConsole)
@@ -155,7 +154,7 @@ public class WorldRenderPass : RenderPass
     }
 
     private LightUniform _lightUniform = new();
-    private GCHandle? _handle;
+    private nint _lightUniformPtr = nint.Zero;
 
     private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
@@ -235,21 +234,29 @@ public class WorldRenderPass : RenderPass
         renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
 
-        // _handle ??= GCHandle.Alloc(_lightUniform);
-        
-        var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(LightUniform)));
-        Marshal.StructureToPtr(_lightUniform, ptr, false);
+        if (_lightUniformPtr == nint.Zero)
+            _lightUniformPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(LightUniform)));
+
+        Marshal.StructureToPtr(_lightUniform, _lightUniformPtr, false);
         var fragmentParamOffset = Refresh.Refresh_PushFragmentShaderUniforms(
             commandBuffer.Device.Handle,
             commandBuffer.Handle,
-            // _handle.Value.AddrOfPinnedObject(),
-            ptr,
+            _lightUniformPtr,
             (uint)Marshal.SizeOf<LightUniform>()
         );
-        Marshal.FreeHGlobal(ptr);
+        Marshal.DestroyStructure(_lightUniformPtr, typeof(LightUniform));
 
         renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentBindings, false);
         renderer.EndRenderPass(ref commandBuffer);
+    }
+
+    private void Unload()
+    {
+        if (_lightUniformPtr != nint.Zero)
+        {
+            Marshal.FreeHGlobal(_lightUniformPtr);
+            _lightUniformPtr = nint.Zero;
+        }
     }
 }
 

@@ -179,7 +179,7 @@ public unsafe class EntityDefWindow : SplitWindow
             SimpleTypeInspector.InspectBool("ShowName", ref entityDef.ShowName);
 
             var (pivotX, pivotY) = (entityDef.PivotX, entityDef.PivotY);
-            if (ImGuiExt.PivotPointEditor("Pivot Point", ref pivotX, ref pivotY, 40, entityDef.Color.PackedValue))
+            if (ImGuiExt.PivotPointEditor("Pivot Point", ref pivotX, ref pivotY, 60, entityDef.Color.PackedValue))
             {
                 entityDef.PivotX = pivotX;
                 entityDef.PivotY = pivotY;

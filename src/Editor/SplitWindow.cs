@@ -32,18 +32,14 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
     protected virtual void PushStyles()
     {
-        var origFramePadding = ImGui.GetStyle()->FramePadding;
-        var origItemSpacing = ImGui.GetStyle()->ItemSpacing;
-        ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, origFramePadding * 3f);
-        ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, origItemSpacing * 2f);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 1);
-        ImGui.PushItemWidth(ImGui.GetWindowWidth());
+        ImGuiExt.PushLabelWidth((int)(ImGui.GetWindowWidth() * 0.4f));
     }
 
     protected virtual void PopStyles()
     {
-        ImGui.PopStyleVar(3);
-        ImGui.PopItemWidth();
+        ImGui.PopStyleVar(1);
+        ImGuiExt.PopLabelWidth();
     }
 
     protected SplitWindow(string title, MyEditorMain editor) : base(title)

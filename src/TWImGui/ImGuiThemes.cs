@@ -59,7 +59,7 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.TabActive] = new Num.Vector4(0.07f, 0.28f, 0.55f, 1.00f); //new Num.Num.Vector4(0.19f, 0.38f, 0.5f, 1.00f);
         style->Colors[(int)ImGuiCol.TabUnfocused] = new Num.Vector4(0.094f, 0.094f, 0.094f, 1.000f); //new Num.Num.Vector4(0.00f, 0.00f, 0.00f, 0.52f);
         style->Colors[(int)ImGuiCol.TabUnfocusedActive] = new Num.Vector4(0.07f, 0.23f, 0.43f, 1.00f); //new Num.Num.Vector4(0.14f, 0.14f, 0.14f, 1.00f);
-        style->Colors[(int)ImGuiCol.DockingPreview] = new Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
+        style->Colors[(int)ImGuiCol.DockingPreview] = new Num.Vector4(0.00f, 0.46f, 0.92f, 0.35f);
         style->Colors[(int)ImGuiCol.DockingEmptyBg] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotLines] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
         style->Colors[(int)ImGuiCol.PlotLinesHovered] = new Num.Vector4(1.00f, 0.00f, 0.00f, 1.00f);
@@ -71,14 +71,14 @@ public static unsafe class ImGuiThemes
         style->Colors[(int)ImGuiCol.TableRowBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.00f);
         style->Colors[(int)ImGuiCol.TableRowBgAlt] = new Num.Vector4(1.00f, 1.00f, 1.00f, 0.06f);
         style->Colors[(int)ImGuiCol.TextSelectedBg] = new Num.Vector4(0.20f, 0.22f, 0.23f, 1.00f);
-        style->Colors[(int)ImGuiCol.DragDropTarget] = new Num.Vector4(0.33f, 0.67f, 0.86f, 1.00f);
-        style->Colors[(int)ImGuiCol.NavHighlight] = new Num.Vector4(0.26f, 0.59f, 0.98f, 1.00f);
-        style->Colors[(int)ImGuiCol.NavWindowingHighlight] = new Num.Vector4(1.00f, 1.00f, 1.00f, 0.70f);
-        style->Colors[(int)ImGuiCol.NavWindowingDimBg] = new Num.Vector4(0.80f, 0.80f, 0.80f, 0.20f);
-        style->Colors[(int)ImGuiCol.ModalWindowDimBg] = new Num.Vector4(0.80f, 0.80f, 0.80f, 0.35f);
+        style->Colors[(int)ImGuiCol.DragDropTarget] = new Num.Vector4(0.00f, 0.45f, 0.92f, 1.00f);
+        style->Colors[(int)ImGuiCol.NavHighlight] = new Num.Vector4(0.00f, 0.46f, 0.92f, 0.43f);
+        style->Colors[(int)ImGuiCol.NavWindowingHighlight] = new Num.Vector4(0.00f, 0.45f, 0.92f, 1.00f);
+        style->Colors[(int)ImGuiCol.NavWindowingDimBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.45f);
+        style->Colors[(int)ImGuiCol.ModalWindowDimBg] = new Num.Vector4(0.00f, 0.00f, 0.00f, 0.45f);
 
         style->WindowPadding = new Num.Vector2(8.00f, 8.00f);
-        style->FramePadding = new Num.Vector2(5.00f, 2.00f);
+        style->FramePadding = new Num.Vector2(5.00f, 4.00f);
         style->CellPadding = new Num.Vector2(6.00f, 6.00f);
         style->ItemSpacing = new Num.Vector2(6.00f, 6.00f);
         style->ItemInnerSpacing = new Num.Vector2(6.00f, 6.00f);

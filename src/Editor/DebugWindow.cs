@@ -119,27 +119,35 @@ public unsafe class DebugWindow : ImGuiEditorWindow
             return;
 
         ImGui.SetNextWindowSizeConstraints(new Vector2(200, 200), new Vector2(800, 850));
+        var labelWidth = (int)(ImGui.GetContentRegionAvail().X * 0.4f);
+        ImGuiExt.PushLabelWidth(labelWidth);
         if (ImGuiExt.Begin(WindowTitle, ref IsOpen))
         {
             var io = ImGui.GetIO();
 
             EnumInspector.InspectEnum("ActiveInput", ref MyEditorMain.PrevActiveInput);
             
-            if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 0)))
+            if (ImGui.BeginChild("PerformanceMetrics", new Vector2(0, 200)))
             {
                 UpdateMetrics();
-                ImGui.TextUnformatted($"DrawFps: {_editor.Time.DrawFps}");
-                ImGui.TextUnformatted($"UpdateFps: {_editor.Time.UpdateFps}");
-                ImGui.TextUnformatted($"Framerate: {(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
-                ImGui.TextUnformatted($"ImGuiRenderDuration: {_peakImGuiRenderDurationMs:0.0} ms");
-                ImGui.TextUnformatted($"RenderDuration: {_peakRenderDurationMs:0.0} ms");
-                ImGui.TextUnformatted($"NumDrawCalls: {_editor.Renderer.SpriteBatch.MaxDrawCalls}");
-                ImGui.TextUnformatted($"AddedSprites: {_peakNumAddedSprites:0}");
+                ImGui.TextDisabled($"DrawFps"); ImGui.SameLine(labelWidth); ImGui.Text($"{_editor.Time.DrawFps}");
+                ImGui.TextDisabled($"UpdateFps");ImGui.SameLine(labelWidth); ImGui.Text($"{_editor.Time.UpdateFps}");
+                ImGui.TextDisabled($"Framerate");ImGui.SameLine(labelWidth); ImGui.Text($"{(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
+                ImGui.TextDisabled($"ImGuiRenderDuration");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakImGuiRenderDurationMs:0.0} ms");
+                ImGui.TextDisabled($"RenderDuration");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakRenderDurationMs:0.0} ms");
+                ImGui.TextDisabled($"NumDrawCalls");ImGui.SameLine(labelWidth); ImGui.Text($"{_editor.Renderer.SpriteBatch.MaxDrawCalls:0.0}");
+                ImGui.TextDisabled($"AddedSprites");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakNumAddedSprites:0}");
             }
 
             ImGui.EndChild();
+
+            /*var rangeSettings = SimpleTypeInspector.UnsignedDefaultRangeSettings;
+            rangeSettings.MinValue = 10;
+            rangeSettings.MaxValue = 1000;
+            rangeSettings.UseDragVersion = false;*/
         }
 
         ImGui.End();
+        ImGuiExt.PopLabelWidth();
     }
 }

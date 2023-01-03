@@ -283,8 +283,8 @@ public unsafe class ImGuiRenderer : IDisposable
 
         _fonts.Clear();
 
-        _fonts[ImGuiFont.Medium] = CreateFont(ContentPaths.fonts.Roboto_Regular_ttf, 16, 14);
-        _fonts[ImGuiFont.MediumBold] = CreateFont(ContentPaths.fonts.Roboto_Bold_ttf, 16, 14);
+        _fonts[ImGuiFont.Medium] = CreateFont(ContentPaths.fonts.Roboto_Regular_ttf, 16, 16);
+        _fonts[ImGuiFont.MediumBold] = CreateFont(ContentPaths.fonts.Roboto_Bold_ttf, 16, 16);
         _fonts[ImGuiFont.Tiny] = CreateFont(ContentPaths.fonts.Roboto_Bold_ttf, 13, 12);
         /*_fonts[ImGuiFont.Default] = ImGui.GetIO().Fonts.AddFontDefault();
         _fonts[ImGuiFont.Small] = CreateFont(fontPath, 14, 12);

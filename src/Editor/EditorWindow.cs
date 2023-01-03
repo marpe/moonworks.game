@@ -353,6 +353,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         DrawCleanButton();
 
+        ImGuiExt.PushLabelWidth((int)(0.4f * ImGui.GetContentRegionAvail().X));
         SimpleTypeInspector.InspectPercentage("Deselected Auto Layer Alpha", ref DeselectedAutoLayerAlpha);
         SimpleTypeInspector.InspectPercentage("Deselected Layer Alpha", ref DeselectedLayerAlpha);
         SimpleTypeInspector.InspectPercentage("IntGrid Alpha", ref IntGridAlpha);
@@ -362,6 +363,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         SimpleTypeInspector.InspectFloat("GridThickness", ref GridThickness, new RangeSettings(0, 10, 0.25f, false));
         SimpleTypeInspector.InspectFloat("CameraScale", ref _cameraZoom, new RangeSettings(0.001f, 10, 0.25f, false));
         SimpleTypeInspector.InspectNumVector2("CameraPos", ref _cameraPan);
+        ImGuiExt.PopLabelWidth();
 
         ImGui.End();
     }

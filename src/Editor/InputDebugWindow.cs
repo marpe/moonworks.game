@@ -36,7 +36,8 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
         if (ImGui.Begin(WindowTitle, ImGuiExt.RefPtr(ref IsOpen), flags))
         {
             var i = 0;
-            void DrawBind(string label, Binds.ActionState bind)
+
+            void DrawBind(string label, Binds.InputAction action)
             {
                 ImGui.PushID(i);
                 i++;
@@ -45,15 +46,26 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
                 ImGui.TableNextColumn();
                 ImGui.Text(label);
-                ImGui.TableNextColumn();
-                SimpleTypeInspector.InspectBool("##Active", ref bind.Active);
-                ImGui.TableNextColumn();
-                SimpleTypeInspector.InspectString("##Source0", ref bind.Sources[0]);
-                SimpleTypeInspector.InspectString("##Source1", ref bind.Sources[1]);
+
+                if (Binds.GetAction(action, out var bind))
+                {
+                    ImGui.TableNextColumn();
+                    SimpleTypeInspector.InspectBool("##Active", ref bind.Active);
+                    ImGui.TableNextColumn();
+                    SimpleTypeInspector.InspectString("##Source0", ref bind.Sources[0]);
+                    SimpleTypeInspector.InspectString("##Source1", ref bind.Sources[1]);
+                }
+                else
+                {
+                    ImGui.TableNextColumn();
+                    ImGui.Text("Unbound");
+                    ImGui.TableNextColumn();
+                    ImGui.Text("-");
+                }
 
                 ImGui.PopID();
             }
-            
+
             var tableFlags = ImGuiTableFlags.Borders | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.Hideable |
                              ImGuiTableFlags.Resizable | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY;
 
@@ -63,32 +75,32 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
 
                 ImGui.TableHeadersRow();
 
-                DrawBind("ZoomIn", Binds.GetAction(Binds.InputAction.ZoomIn));
-                DrawBind("ZoomOut", Binds.GetAction(Binds.InputAction.ZoomOut));
-                DrawBind("Up", Binds.GetAction(Binds.InputAction.Up));
-                DrawBind("Down", Binds.GetAction(Binds.InputAction.Down));
-                DrawBind("Forward", Binds.GetAction(Binds.InputAction.Forward));
-                DrawBind("Back", Binds.GetAction(Binds.InputAction.Back));
-                DrawBind("Right", Binds.GetAction(Binds.InputAction.Right));
-                DrawBind("Left", Binds.GetAction(Binds.InputAction.Left));
-                DrawBind("Pan", Binds.GetAction(Binds.InputAction.Pan));
-                DrawBind("Reset", Binds.GetAction(Binds.InputAction.Reset));
+                DrawBind("ZoomIn", Binds.InputAction.ZoomIn);
+                DrawBind("ZoomOut", Binds.InputAction.ZoomOut);
+                DrawBind("Up", Binds.InputAction.Up);
+                DrawBind("Down", Binds.InputAction.Down);
+                DrawBind("Forward", Binds.InputAction.Forward);
+                DrawBind("Back", Binds.InputAction.Back);
+                DrawBind("Right", Binds.InputAction.Right);
+                DrawBind("Left", Binds.InputAction.Left);
+                DrawBind("Pan", Binds.InputAction.Pan);
+                DrawBind("Reset", Binds.InputAction.Reset);
 
                 ImGui.EndTable();
             }
-            
+
             if (ImGui.BeginTable("Player", 3, tableFlags, new Vector2(0, 0)))
             {
                 DrawTableHeaders();
 
                 ImGui.TableHeadersRow();
 
-                DrawBind("Right", Binds.GetAction(Binds.InputAction.Right));
-                DrawBind("Left", Binds.GetAction(Binds.InputAction.Left));
-                DrawBind("Jump", Binds.GetAction(Binds.InputAction.Jump));
-                DrawBind("Fire1", Binds.GetAction(Binds.InputAction.Fire1));
-                DrawBind("Respawn", Binds.GetAction(Binds.InputAction.Respawn));
-                DrawBind("MoveToMouse", Binds.GetAction(Binds.InputAction.MoveToMouse));
+                DrawBind("Right", Binds.InputAction.Right);
+                DrawBind("Left", Binds.InputAction.Left);
+                DrawBind("Jump", Binds.InputAction.Jump);
+                DrawBind("Fire1", Binds.InputAction.Fire1);
+                DrawBind("Respawn", Binds.InputAction.Respawn);
+                DrawBind("MoveToMouse", Binds.InputAction.MoveToMouse);
 
                 ImGui.EndTable();
             }
@@ -119,6 +131,7 @@ public unsafe class InputDebugWindow : ImGuiEditorWindow
             if (ImGui.BeginChild("Child2", new Vector2(contentAvail.X - (child1DefaultWidth + _sz1) - 5, 0), true))
             {
             }
+
             ImGui.EndChild();
         }
 

@@ -26,8 +26,6 @@ public unsafe class MyEditorMain : MyGameMain
 
     private ulong _imGuiDrawCount;
     private readonly List<ImGuiMenu> _menuItems = new();
-    public int ImGuiRenderFPS = 60;
-    private float _nextRenderTime;
     private SortedList<string, ImGuiEditorWindow> _imGuiWindows = new();
     private Texture _imGuiRenderTarget;
 
@@ -110,6 +108,7 @@ public unsafe class MyEditorMain : MyGameMain
 
     public static bool ResetDock = true;
     private RenderTargetsWindow _renderTargetsWindow;
+    private int _lastUpdateCount;
 
     private static void LoadIcons(ImGuiRenderer renderer)
     {
@@ -436,8 +435,9 @@ public unsafe class MyEditorMain : MyGameMain
 
         RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
 
-        if (Time.TotalElapsedTime >= _nextRenderTime && _imGuiUpdateCount > 0)
+        if (_lastUpdateCount < _imGuiUpdateCount)
         {
+            _lastUpdateCount = _imGuiUpdateCount;
             PrevActiveInput = ActiveInput;
             ActiveInput = ActiveInput.None;
 
@@ -454,7 +454,6 @@ public unsafe class MyEditorMain : MyGameMain
             ImGuiRenderer.End(_imGuiRenderTarget);
             _imguiRenderStopwatch.Stop();
             _imGuiRenderDurationMs = _imguiRenderStopwatch.GetElapsedMilliseconds();
-            _nextRenderTime = Time.TotalElapsedTime + 1.0f / ImGuiRenderFPS;
         }
 
         if (swapTexture == null)

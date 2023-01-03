@@ -57,7 +57,4 @@ public static class ConsoleSettings
 
     [CVar("con.bmfont", "Use BMFont to render console")]
     public static bool UseBMFont;
-
-    [CVar("con.render_rate", "Controls the console render rate")]
-    public static int RenderFPS = 30;
 }

@@ -39,6 +39,8 @@ public abstract class Enemy : Entity
         TimeOffset = Position.Current.X;
 
         _light = World.CreateEntity<Light>();
+        _light.Size *= 4;
+        _light.Color = new Color(Random.Shared.Next(255), Random.Shared.Next(255), Random.Shared.Next(255));
         world.Entities.Add(_light);
     }
 

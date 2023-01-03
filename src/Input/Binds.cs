@@ -46,42 +46,37 @@ public static class Binds
         {
             var cmd = new PlayerCommand();
 
-            var right = GetAction(InputAction.Right);
-            var left = GetAction(InputAction.Left);
-            var fire1 = GetAction(InputAction.Fire1);
-            var respawn = GetAction(InputAction.Respawn);
-            var jump = GetAction(InputAction.Jump);
-            var moveToMouse = GetAction(InputAction.MoveToMouse);
-
-            if (right.Active)
+            if (GetAction(InputAction.Right, out var right) && right.Active)
                 cmd.MovementX += 1;
 
-            if (left.Active)
+            if (GetAction(InputAction.Left, out var left) && left.Active)
                 cmd.MovementX += -1;
 
-            if (!fire1.Active)
+            if (GetAction(InputAction.Fire1, out var fire1) && !fire1.Active)
                 _fireHeld = false;
 
-            if (!jump.Active)
+            if (GetAction(InputAction.Jump, out var jump) && !jump.Active)
                 _jumpHeld = false;
 
-            if (!respawn.Active)
+            if (GetAction(InputAction.MoveToMouse, out var respawn) && !respawn.Active)
                 _respawnHeld = false;
 
-            cmd.IsFiring = fire1.Active && !_fireHeld;
-            if (fire1.Active)
+            var isFire1Active = fire1 is { Active: true };
+            cmd.IsFiring = isFire1Active && !_fireHeld;
+            if (isFire1Active)
                 _fireHeld = true;
 
-            cmd.Respawn = respawn.Active && !_respawnHeld;
-            if (respawn.Active)
+            cmd.Respawn = respawn != null && respawn.Active && !_respawnHeld;
+            if (respawn != null && respawn.Active)
                 _respawnHeld = true;
 
-            cmd.IsJumpDown = jump.Active;
-            cmd.IsJumpPressed = jump.Active && !_jumpHeld;
-            if (jump.Active)
+            var isJumpActive = jump is { Active: true };
+            cmd.IsJumpDown = isJumpActive;
+            cmd.IsJumpPressed = isJumpActive && !_jumpHeld;
+            if (isJumpActive)
                 _jumpHeld = true;
 
-            cmd.MoveToMouse = moveToMouse.Active;
+            cmd.MoveToMouse = GetAction(InputAction.MoveToMouse, out var moveToMouse) && moveToMouse.Active;
 
             return cmd;
         }
@@ -525,8 +520,8 @@ public static class Binds
         return sb;
     }
 
-    public static ActionState GetAction(InputAction action)
+    public static bool GetAction(InputAction action, [NotNullWhen(true)] out ActionState? state)
     {
-        return _actions[action];
+        return _actions.TryGetValue(action, out state);
     }
 }

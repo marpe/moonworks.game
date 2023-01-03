@@ -145,8 +145,6 @@ public class LevelsWindow : SplitWindow
             return;
         }
 
-        ImGui.PushItemWidth(ImGui.GetWindowWidth());
-
         var level = world.Levels[SelectedLevelIndex];
 
         SimpleTypeInspector.InspectString("Identifier", ref level.Identifier);
@@ -183,8 +181,6 @@ public class LevelsWindow : SplitWindow
         ImGuiExt.SeparatorText("Custom Level Fields");
 
         FieldInstanceInspector.DrawFieldInstances(level.FieldInstances, RootJson.LevelFieldDefinitions);
-
-        ImGui.PopItemWidth();
     }
 
     private static void ResizeLayers(Level level, UPoint oldSize, List<LayerDef> layerDefs)
