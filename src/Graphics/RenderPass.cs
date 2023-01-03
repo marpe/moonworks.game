@@ -1,8 +1,5 @@
-﻿using System.Reflection.Metadata;
-using MyGame.Cameras;
-using MyGame.Debug;
+﻿using MyGame.Debug;
 using MyGame.Entities;
-using RefreshCS;
 
 namespace MyGame.Graphics;
 
@@ -154,9 +151,8 @@ public class WorldRenderPass : RenderPass
     }
 
     private LightUniform _lightUniform = new();
-    private nint _lightUniformPtr = nint.Zero;
 
-    private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
         world.Entities.FindAll(_lights);
@@ -197,8 +193,13 @@ public class WorldRenderPass : RenderPass
                 Angle = light.Angle,
                 ConeAngle = light.ConeAngle,
             };
+            
+            fixed (byte* lights = _lightUniform.Lights)
+            {
+                var lightsPtr = (LightU*)lights;
+                lightsPtr[_lightUniform.NumLights] = lightUniform;
+            }
 
-            _lightUniform.Lights[_lightUniform.NumLights] = lightUniform;
             _lightUniform.NumLights++;
 
             if (_lightUniform.NumLights == LightUniform.MaxNumLights)
@@ -233,30 +234,9 @@ public class WorldRenderPass : RenderPass
         renderer.UpdateBuffers(ref commandBuffer);
         renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
-
-        if (_lightUniformPtr == nint.Zero)
-            _lightUniformPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(LightUniform)));
-
-        Marshal.StructureToPtr(_lightUniform, _lightUniformPtr, false);
-        var fragmentParamOffset = Refresh.Refresh_PushFragmentShaderUniforms(
-            commandBuffer.Device.Handle,
-            commandBuffer.Handle,
-            _lightUniformPtr,
-            (uint)Marshal.SizeOf<LightUniform>()
-        );
-        Marshal.DestroyStructure(_lightUniformPtr, typeof(LightUniform));
-
-        renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentBindings, false);
+        var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(_lightUniform);
+        renderer.DrawIndexedSprites(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentBindings, false);
         renderer.EndRenderPass(ref commandBuffer);
-    }
-
-    private void Unload()
-    {
-        if (_lightUniformPtr != nint.Zero)
-        {
-            Marshal.FreeHGlobal(_lightUniformPtr);
-            _lightUniformPtr = nint.Zero;
-        }
     }
 }
 

@@ -34,12 +34,11 @@ public struct LightU
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniform
+public unsafe struct LightUniform
 {
     public const int MaxNumLights = 128;
 
-    [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = MaxNumLights)]
-    public LightU[] Lights = new LightU[MaxNumLights];
+    public fixed byte Lights[MaxNumLights *  12 * 4]; 
 
     public Vector4 TexelSize = default;
 
