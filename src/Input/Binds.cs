@@ -288,8 +288,6 @@ public static class Binds
             ("mousemove", "Move to mouse", InputAction.MoveToMouse),
 
             // camera
-            ("cam_zoom_in", "Increase camera zoom", InputAction.ZoomIn),
-            ("cam_zoom_out", "Decrease camera zoom", InputAction.ZoomOut),
             ("cam_up", "Move camera up", InputAction.Up),
             ("cam_down", "Move camera down", InputAction.Down),
             ("cam_forward", "Move camera forward", InputAction.Forward),
