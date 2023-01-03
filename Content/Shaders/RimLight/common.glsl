@@ -1,4 +1,4 @@
-#define MAX_NUM_TOTAL_LIGHTS 12
+#define MAX_NUM_TOTAL_LIGHTS 128
 
 struct Light
 {

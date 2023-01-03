@@ -1,6 +1,8 @@
-﻿using MyGame.Cameras;
+﻿using System.Reflection.Metadata;
+using MyGame.Cameras;
 using MyGame.Debug;
 using MyGame.Entities;
+using RefreshCS;
 
 namespace MyGame.Graphics;
 
@@ -152,9 +154,10 @@ public class WorldRenderPass : RenderPass
         }
     }
 
-    private static LightUniform _lightUniform = new();
+    private LightUniform _lightUniform = new();
+    private GCHandle? _handle;
 
-    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
         world.Entities.FindAll(_lights);
@@ -196,12 +199,12 @@ public class WorldRenderPass : RenderPass
                 ConeAngle = light.ConeAngle,
             };
 
-            _lightUniform[_lightUniform.NumLights] = lightUniform;
+            _lightUniform.Lights[_lightUniform.NumLights] = lightUniform;
             _lightUniform.NumLights++;
 
             if (_lightUniform.NumLights == LightUniform.MaxNumLights)
             {
-                DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, _lightUniform, pipelineType,
+                DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, pipelineType,
                     fragmentBindings);
                 renderTargetHasBeenCleared = true;
                 _lightUniform.NumLights = 0;
@@ -210,14 +213,13 @@ public class WorldRenderPass : RenderPass
 
         if (_lightUniform.NumLights > 0)
         {
-            DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, _lightUniform, pipelineType,
+            DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, pipelineType,
                 fragmentBindings);
             _lightUniform.NumLights = 0;
         }
     }
 
     private void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture lightTexture, Texture renderTarget, Color? clearColor,
-        LightUniform fragUniform,
         PipelineType pipelineType,
         TextureSamplerBinding[] fragmentBindings)
     {
@@ -231,7 +233,22 @@ public class WorldRenderPass : RenderPass
         var vertUniform = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
         renderer.UpdateBuffers(ref commandBuffer);
         renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
-        renderer.DrawIndexedSprites(ref commandBuffer, vertUniform, fragUniform, fragmentBindings, true);
+        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
+
+        // _handle ??= GCHandle.Alloc(_lightUniform);
+        
+        var ptr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(LightUniform)));
+        Marshal.StructureToPtr(_lightUniform, ptr, false);
+        var fragmentParamOffset = Refresh.Refresh_PushFragmentShaderUniforms(
+            commandBuffer.Device.Handle,
+            commandBuffer.Handle,
+            // _handle.Value.AddrOfPinnedObject(),
+            ptr,
+            (uint)Marshal.SizeOf<LightUniform>()
+        );
+        Marshal.FreeHGlobal(ptr);
+
+        renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentBindings, false);
         renderer.EndRenderPass(ref commandBuffer);
     }
 }

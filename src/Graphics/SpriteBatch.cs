@@ -138,7 +138,7 @@ public class SpriteBatch
         _numSprites = 0;
     }
 
-    private void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering)
+    public void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering)
     {
         MaxDrawCalls = MaxDrawCalls > DrawCalls ? MathF.Lerp(MaxDrawCalls, DrawCalls, 0.05f) : DrawCalls;
         DrawCalls = 0;

@@ -36,95 +36,23 @@ public struct LightU
 [StructLayout(LayoutKind.Sequential)]
 public struct LightUniform
 {
-    public const int MaxNumLights = 12;
+    public const int MaxNumLights = 128;
 
-    public LightU Light0;
-    public LightU Light1;
-    public LightU Light2;
-    public LightU Light3;
-    public LightU Light4;
-    public LightU Light5;
-    public LightU Light6;
-    public LightU Light7;
-    public LightU Light8;
-    public LightU Light9;
-    public LightU Light10;
-    public LightU Light11;
+    [MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.Struct, SizeConst = MaxNumLights)]
+    public LightU[] Lights = new LightU[MaxNumLights];
 
-    public Vector4 TexelSize;
+    public Vector4 TexelSize = default;
 
-    public Vector4 Bounds;
+    public Vector4 Bounds = default;
 
-    public int Scale;
+    public int Scale = 0;
 
-    public int NumLights;
+    public int NumLights = 0;
 
-    public Vector2 Padding;
+    public Vector2 Padding = default;
 
-    
-    public LightU this[int index]
+    public LightUniform()
     {
-        get
-        {
-            return index switch
-            {
-                0 => Light0,
-                1 => Light1,
-                2 => Light2,
-                3 => Light3,
-                4 => Light4,
-                5 => Light5,
-                6 => Light6,
-                7 => Light7,
-                8 => Light8,
-                9 => Light9,
-                10 => Light10,
-                11 => Light11,
-                _ => throw new ArgumentOutOfRangeException(nameof(index), index, null),
-            };
-        }
-        set
-        {
-            switch (index)
-            {
-                case 0:
-                    Light0 = value;
-                    break;
-                case 1:
-                    Light1 = value;
-                    break;
-                case 2:
-                    Light2 = value;
-                    break;
-                case 3:
-                    Light3 = value;
-                    break;
-                case 4:
-                    Light4 = value;
-                    break;
-                case 5:
-                    Light5 = value;
-                    break;
-                case 6:
-                    Light6 = value;
-                    break;
-                case 7:
-                    Light7 = value;
-                    break;
-                case 8:
-                    Light8 = value;
-                    break;
-                case 9:
-                    Light9 = value;
-                    break;
-                case 10:
-                    Light10 = value;
-                    break;
-                case 11:
-                    Light11 = value;
-                    break;
-            }
-        }
     }
 }
 
