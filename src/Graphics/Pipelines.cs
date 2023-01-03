@@ -17,6 +17,35 @@ public enum PipelineType
     PixelArt,
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct LightU
+{
+    public float LightIntensity;
+    public float LightRadius;
+    public Vector2 LightPos;
+    
+    public Vector3 LightColor;
+    public float VolumetricIntensity;
+    
+    public float RimIntensity;
+    public float Angle;
+    public float ConeAngle;
+    public float Padding;
+}
+
+[StructLayout(LayoutKind.Sequential)]
+public struct LightUniform
+{
+    public LightU Light1;
+    public LightU Light2;
+    public LightU Light3;
+    public LightU Light4;
+    public Vector4 TexelSize;
+    public Vector4 Bounds;
+    public int Scale;
+    public Vector3 Padding;
+}
+
 public class Pipelines
 {
     public static readonly ColorAttachmentBlendState CustomBlendState = new()
@@ -42,23 +71,6 @@ public class Pipelines
         DestinationColorBlendFactor = BlendFactor.Zero,
         DestinationAlphaBlendFactor = BlendFactor.Zero,
     };
-
-
-    [StructLayout(LayoutKind.Sequential)]
-    public struct RimLightUniforms
-    {
-        public float LightIntensity;
-        public float LightRadius;
-        public Vector2 LightPos;
-        public Vector4 TexelSize;
-        public Vector4 Bounds;
-        public Vector3 LightColor;
-        public float VolumetricIntensity;
-        public float RimIntensity;
-        public float Angle;
-        public float ConeAngle;
-        public int Scale;
-    }
 
     [StructLayout(LayoutKind.Sequential)]
     public struct CircleCropUniforms
@@ -120,7 +132,7 @@ public class Pipelines
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.light_frag_spv);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create<RimLightUniforms>(fragmentShader, "main", 1);
+        var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 1);
 
         var createInfo = new GraphicsPipelineCreateInfo
         {
@@ -151,7 +163,7 @@ public class Pipelines
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_frag_spv);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create<RimLightUniforms>(fragmentShader, "main", 2);
+        var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 2);
 
         var createInfo = new GraphicsPipelineCreateInfo
         {

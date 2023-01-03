@@ -50938,7 +50938,247 @@
               "AutoLayerTiles": [],
               "EntityInstances": [
                 {
+                  "Iid": "ac155359-d523-42e8-bbc0-cc61be63e930",
+                  "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 0,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.45
+                    },
+                    {
+                      "FieldDefId": 1,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 2,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": "#1CFF00"
+                    },
+                    {
+                      "FieldDefId": 3,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 4,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.25
+                    }
+                  ],
+                  "Position": {
+                    "X": 64,
+                    "Y": 16
+                  },
+                  "Width": 112,
+                  "Height": 112
+                },
+                {
                   "Iid": "972a0521-5244-472d-bc22-13c9f2d2d7b6",
+                  "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 0,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.45
+                    },
+                    {
+                      "FieldDefId": 1,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 2,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": "#FF9E31"
+                    },
+                    {
+                      "FieldDefId": 3,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 4,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.25
+                    }
+                  ],
+                  "Position": {
+                    "X": 112,
+                    "Y": 32
+                  },
+                  "Width": 112,
+                  "Height": 112
+                },
+                {
+                  "Iid": "597d9471-6973-4508-87a7-af92a41dcb58",
+                  "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 0,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.45
+                    },
+                    {
+                      "FieldDefId": 1,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 2,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": "#FF123A"
+                    },
+                    {
+                      "FieldDefId": 3,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 4,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.25
+                    }
+                  ],
+                  "Position": {
+                    "X": 112,
+                    "Y": -32
+                  },
+                  "Width": 112,
+                  "Height": 112
+                },
+                {
+                  "Iid": "d3524af3-f537-4eab-8c40-43865bd3c6a7",
+                  "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 0,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.45
+                    },
+                    {
+                      "FieldDefId": 1,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 2,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": "#1D00FF"
+                    },
+                    {
+                      "FieldDefId": 3,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 4,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.25
+                    }
+                  ],
+                  "Position": {
+                    "X": 160,
+                    "Y": 16
+                  },
+                  "Width": 112,
+                  "Height": 112
+                },
+                {
+                  "Iid": "d899277c-b906-4893-865b-f327b2fa6da1",
+                  "EntityDefId": 9,
+                  "EntityDefIdentifier": "Light",
+                  "FieldInstances": [
+                    {
+                      "FieldDefId": 0,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.45
+                    },
+                    {
+                      "FieldDefId": 1,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": true
+                    },
+                    {
+                      "FieldDefId": 2,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": "#FFFFFF"
+                    },
+                    {
+                      "FieldDefId": 3,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.0
+                    },
+                    {
+                      "FieldDefId": 4,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 360.0
+                    },
+                    {
+                      "FieldDefId": 5,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.3
+                    },
+                    {
+                      "FieldDefId": 6,
+                      "FieldDefIdentifier": "FieldDefIdentifier",
+                      "Value": 0.25
+                    }
+                  ],
+                  "Position": {
+                    "X": 32,
+                    "Y": 16
+                  },
+                  "Width": 224,
+                  "Height": 224
+                },
+                {
+                  "Iid": "d0059543-cfb5-4cfa-91e4-1df9e8b38d12",
                   "EntityDefId": 9,
                   "EntityDefIdentifier": "Light",
                   "FieldInstances": [
