@@ -57,6 +57,7 @@ public class Pipelines
         public float RimIntensity;
         public float Angle;
         public float ConeAngle;
+        public int Scale;
     }
 
     [StructLayout(LayoutKind.Sequential)]

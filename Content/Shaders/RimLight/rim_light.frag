@@ -15,6 +15,7 @@ layout (set = 3, binding = 0) uniform UniformBlock
 	float rimIntensity;
 	float angle;
 	float coneAngle;
+	int scale;
 } Uniforms;
 
 layout (location = 0) in vec2 texCoord;
@@ -37,8 +38,8 @@ void main()
 	vec2 rim = vec2(0, 0);
 	float value = 0;
     float inFrontOf = 0;
-    vec2 dx = vec2(Uniforms.texelSize.x * 4, 0);
-	vec2 dy = vec2(0, Uniforms.texelSize.y * 4);
+    vec2 dx = vec2(Uniforms.texelSize.x * Uniforms.scale, 0);
+	vec2 dy = vec2(0, Uniforms.texelSize.y * Uniforms.scale);
 
 	// negative values = we're behind, 0 = we're same depth, positive = we're in front
 	value = int(texture(depthMap, texCoord + dx).a == 0);

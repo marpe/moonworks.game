@@ -4,7 +4,8 @@ public class RenderTargets
 {
     public UPoint GameSize => new(480, 270);
     public UPoint CompositeSize => new(1920, 1080);
-    public int RenderScale => (int)(CompositeSize / GameSize).X;
+
+    public int GameScale => MathF.RoundToInt((float)Shared.Game.RenderTargets.GameRender.Width / Shared.Game.RenderTargets.GameSize.X);
 
     public RenderTarget CompositeRender;
     public RenderTarget MenuRender;
@@ -23,7 +24,7 @@ public class RenderTargets
         CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, CompositeSize.X, CompositeSize.Y, TextureFormat.B8G8R8A8, textureFlags));
 
         // increase game render target size with 1 pixel to enable smooth camera panning by offsetting the upscaled render
-        var gameRenderSize = (GameSize + UPoint.One) * (uint)RenderScale;
+        var gameRenderSize = (GameSize + UPoint.One) * 4;
 
         GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
         NormalLights = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));

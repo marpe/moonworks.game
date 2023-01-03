@@ -60,6 +60,7 @@ public class DrawComponent
 
     public bool IsAnimating = true;
     private Matrix3x2 _lastUpdateTransform = Matrix3x2.Identity;
+    public static bool ShouldRoundPositions;
 
     public void Initialize(Entity parent)
     {
@@ -126,7 +127,7 @@ public class DrawComponent
     {
         if (CurrentAnimation == null)
             return;
-        var xform = Matrix3x2.Lerp(_lastUpdateTransform, GetTransform(), (float)alpha);
+        var xform = Matrix3x2.Lerp(_lastUpdateTransform, GetTransform(), (float)1f);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
@@ -149,6 +150,9 @@ public class DrawComponent
                      Matrix3x2.CreateTranslation(origin);
 
         var position = Parent.Position.Current;
+
+        if (ShouldRoundPositions)
+            position = position.Floor();
 
         var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
                     squash *

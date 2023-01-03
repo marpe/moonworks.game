@@ -498,14 +498,14 @@ public class World
     public static Vector2 GetWorldPosInScreen(Vector2 position)
     {
         var view = Shared.Game.Camera.GetView(0);
-        return Vector2.Transform(position, view) * Shared.Game.RenderTargets.RenderScale;
+        return Vector2.Transform(position, view) * Shared.Game.RenderTargets.GameScale;
     }
 
     public static Vector2 GetScreenPosInWorld(Vector2 position)
     {
         var view = Shared.Game.Camera.GetView(0);
         Matrix3x2.Invert(view, out var invertedView);
-        return Vector2.Transform(position / Shared.Game.RenderTargets.RenderScale, invertedView);
+        return Vector2.Transform(position / Shared.Game.RenderTargets.GameScale, invertedView);
     }
     
     public static Vector2 GetMouseInWorld()

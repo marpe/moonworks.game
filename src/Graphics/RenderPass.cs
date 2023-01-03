@@ -59,17 +59,16 @@ public class WorldRenderPass : RenderPass
         var camera = Shared.Game.Camera;
         // offset the uvs with whatever fraction the camera was at so that camera panning looks smooth
         camera.GetViewFloored(alpha, out var floorRemainder);
-        TestFunctions.DrawPixelArtShaderTestSkull(renderer, ref commandBuffer, renderTargets.GameRender,
-            renderTargets.GameRender.Size / (2 * 4) + floorRemainder * renderTargets.RenderScale);
-        var srcPos = floorRemainder * renderTargets.RenderScale;
-        var srcSize = renderTargets.GameRender.Size - UPoint.One * (uint)renderTargets.RenderScale;
+
+        var srcPos = floorRemainder * renderTargets.GameScale;
+        var srcSize = renderTargets.GameRender.Size - UPoint.One * (uint)renderTargets.GameScale;
         var srcRect = new Bounds(srcPos.X, srcPos.Y, srcSize.X, srcSize.Y);
         var dstSize = renderDestination.Size();
         var dstRect = new Bounds(0, 0, dstSize.X, dstSize.Y);
 
         renderer.DrawSprite(renderTargets.GameRender, srcRect, dstRect, Color.White);
 
-        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false);
+        renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false, PipelineType.PixelArt);
     }
 
     private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
@@ -86,17 +85,15 @@ public class WorldRenderPass : RenderPass
         var renderTargets = Shared.Game.RenderTargets;
 
         var view = camera.GetViewFloored(alpha, out _) *
-                   Matrix3x2.CreateScale(renderTargets.RenderScale);
+                   Matrix3x2.CreateScale(renderTargets.GameScale);
         var projection = Renderer.GetOrthographicProjection(renderTargets.GameRender.Width, renderTargets.GameRender.Height);
         var viewProjection = view.ToMatrix4x4() * projection;
 
         LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection);
-        
+
         world.DrawEntities(renderer, alpha);
-        var entitiesViewProjection = view.ToMatrix4x4() *
-                                     projection;
-        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, entitiesViewProjection, false, PipelineType.PixelArt);
+        renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, viewProjection, false, PipelineType.PixelArt);
 
         LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         world.DrawDebug(renderer, camera, alpha);
@@ -183,7 +180,7 @@ public class WorldRenderPass : RenderPass
                 RimIntensity = light.RimIntensity,
                 Angle = light.Angle,
                 ConeAngle = light.ConeAngle,
-
+                Scale = Shared.Game.RenderTargets.GameScale,
                 TexelSize = new Vector4(
                     1.0f / renderDestinationSize.X,
                     1.0f / renderDestinationSize.Y,
