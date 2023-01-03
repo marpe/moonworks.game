@@ -23,10 +23,10 @@ public struct LightU
     public float LightIntensity;
     public float LightRadius;
     public Vector2 LightPos;
-    
+
     public Vector3 LightColor;
     public float VolumetricIntensity;
-    
+
     public float RimIntensity;
     public float Angle;
     public float ConeAngle;
@@ -36,14 +36,96 @@ public struct LightU
 [StructLayout(LayoutKind.Sequential)]
 public struct LightUniform
 {
+    public const int MaxNumLights = 12;
+
+    public LightU Light0;
     public LightU Light1;
     public LightU Light2;
     public LightU Light3;
     public LightU Light4;
+    public LightU Light5;
+    public LightU Light6;
+    public LightU Light7;
+    public LightU Light8;
+    public LightU Light9;
+    public LightU Light10;
+    public LightU Light11;
+
     public Vector4 TexelSize;
+
     public Vector4 Bounds;
+
     public int Scale;
-    public Vector3 Padding;
+
+    public int NumLights;
+
+    public Vector2 Padding;
+
+    
+    public LightU this[int index]
+    {
+        get
+        {
+            return index switch
+            {
+                0 => Light0,
+                1 => Light1,
+                2 => Light2,
+                3 => Light3,
+                4 => Light4,
+                5 => Light5,
+                6 => Light6,
+                7 => Light7,
+                8 => Light8,
+                9 => Light9,
+                10 => Light10,
+                11 => Light11,
+                _ => throw new ArgumentOutOfRangeException(nameof(index), index, null),
+            };
+        }
+        set
+        {
+            switch (index)
+            {
+                case 0:
+                    Light0 = value;
+                    break;
+                case 1:
+                    Light1 = value;
+                    break;
+                case 2:
+                    Light2 = value;
+                    break;
+                case 3:
+                    Light3 = value;
+                    break;
+                case 4:
+                    Light4 = value;
+                    break;
+                case 5:
+                    Light5 = value;
+                    break;
+                case 6:
+                    Light6 = value;
+                    break;
+                case 7:
+                    Light7 = value;
+                    break;
+                case 8:
+                    Light8 = value;
+                    break;
+                case 9:
+                    Light9 = value;
+                    break;
+                case 10:
+                    Light10 = value;
+                    break;
+                case 11:
+                    Light11 = value;
+                    break;
+            }
+        }
+    }
 }
 
 public class Pipelines
@@ -100,7 +182,7 @@ public class Pipelines
     }
 
     public static Dictionary<PipelineType, Func<GfxPipeline>> Factories = new();
-    
+
     public static Dictionary<PipelineType, GfxPipeline> CreatePipelines(GraphicsDevice device)
     {
         Factories = new Dictionary<PipelineType, Func<GfxPipeline>>
@@ -115,7 +197,7 @@ public class Pipelines
             { PipelineType.RimLight, () => CreateRimLightPipeline(device, ColorAttachmentBlendState.Additive) },
             { PipelineType.Sprite, () => CreateSpritePipeline(device, ColorAttachmentBlendState.AlphaBlend) },
             { PipelineType.CircleCropTransition, () => CreateCircleCropTransition(device) },
-            { PipelineType.PixelizeTransition, () =>  CreatePixelize(device) },
+            { PipelineType.PixelizeTransition, () => CreatePixelize(device) },
             { PipelineType.DiamondTransition, () => CreateDiamondTransition(device) },
             { PipelineType.PixelArt, () => CreatePixelArt(device) },
         };
@@ -132,8 +214,14 @@ public class Pipelines
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.light_frag_spv);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 1);
-
+        // var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 1);
+        var fragmentShaderInfo = new GraphicsShaderInfo()
+        {
+            ShaderModule = fragmentShader,
+            EntryPointName = "main",
+            SamplerBindingCount = 1,
+            UniformBufferSize = (uint)Marshal.SizeOf<LightUniform>(),
+        };
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
@@ -163,8 +251,14 @@ public class Pipelines
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_frag_spv);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
-        var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 2);
-
+        // var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 2);
+        var fragmentShaderInfo = new GraphicsShaderInfo()
+        {
+            ShaderModule = fragmentShader,
+            EntryPointName = "main",
+            SamplerBindingCount = 2,
+            UniformBufferSize = (uint)Marshal.SizeOf<LightUniform>(),
+        };
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
@@ -219,7 +313,7 @@ public class Pipelines
             FragmentShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_spv
         };
     }
-    
+
     public static GfxPipeline CreatePixelArt(GraphicsDevice device)
 
     {

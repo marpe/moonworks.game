@@ -436,7 +436,7 @@ public unsafe class MyEditorMain : MyGameMain
 
         RenderGame(ref commandBuffer, alpha, RenderTargets.CompositeRender);
 
-        if (Time.TotalElapsedTime >= _nextRenderTime)
+        if (Time.TotalElapsedTime >= _nextRenderTime && _imGuiUpdateCount > 0)
         {
             PrevActiveInput = ActiveInput;
             ActiveInput = ActiveInput.None;

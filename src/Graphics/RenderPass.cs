@@ -126,7 +126,7 @@ public class WorldRenderPass : RenderPass
             // render light to game
             renderer.DrawSprite(renderTargets.NormalLights, Matrix4x4.Identity, Color.White);
             // TODO (marpe): Experiment with sampling for light layers
-            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, false, PipelineType.Multiply);
+            renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Multiply);
         }
 
         if (World.RimLightsEnabled)
@@ -135,7 +135,7 @@ public class WorldRenderPass : RenderPass
             renderer.Clear(ref commandBuffer, renderTargets.RimLights, Color.Transparent);
             DrawAllLights(
                 renderer,
-                renderTargets.LightBase, // not used by rim light shader
+                renderer.BlankSprite.TextureSlice.Texture, // not used by rim light shader
                 renderTargets.RimLights,
                 null,
                 PipelineType.RimLight,
@@ -153,9 +153,8 @@ public class WorldRenderPass : RenderPass
     }
 
     private static LightUniform _lightUniform = new();
-    private const int MaxNumLights = 4;
 
-    private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
         world.Entities.FindAll(_lights);
@@ -173,11 +172,10 @@ public class WorldRenderPass : RenderPass
             cameraBounds.Width,
             cameraBounds.Height
         );
-        
-        ClearLights();
 
-        var hasBeenCleared = false;
-        var numAddedLights = 0;
+        _lightUniform.NumLights = 0;
+        var renderTargetHasBeenCleared = false;
+
         for (var i = 0; i < _lights.Count; i++)
         {
             var light = _lights[i];
@@ -185,12 +183,6 @@ public class WorldRenderPass : RenderPass
                 continue;
             if (!light.Bounds.Intersects(cameraBounds))
                 continue;
-
-            renderer.DrawSprite(
-                lightTexture,
-                Matrix3x2.Identity,
-                Color.White
-            );
 
             var lightUniform = new LightU
             {
@@ -204,56 +196,38 @@ public class WorldRenderPass : RenderPass
                 ConeAngle = light.ConeAngle,
             };
 
-            switch (numAddedLights)
-            {
-                case 0:
-                    _lightUniform.Light1 = lightUniform;
-                    break;
-                case 1:
-                    _lightUniform.Light2 = lightUniform;
-                    break;
-                case 2:
-                    _lightUniform.Light3 = lightUniform;
-                    break;
-                default:
-                    _lightUniform.Light4 = lightUniform;
-                    break;
-            }
+            _lightUniform[_lightUniform.NumLights] = lightUniform;
+            _lightUniform.NumLights++;
 
-            numAddedLights++;
-
-            if (numAddedLights == MaxNumLights)
+            if (_lightUniform.NumLights == LightUniform.MaxNumLights)
             {
-                DrawLights(renderer, ref commandBuffer, renderTarget, hasBeenCleared ? null : clearColor, _lightUniform, pipelineType, fragmentBindings);
-                hasBeenCleared = true;
-                numAddedLights = 0;
-                ClearLights();
+                DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, _lightUniform, pipelineType,
+                    fragmentBindings);
+                renderTargetHasBeenCleared = true;
+                _lightUniform.NumLights = 0;
             }
         }
 
-        if (numAddedLights > 0)
+        if (_lightUniform.NumLights > 0)
         {
-            DrawLights(renderer, ref commandBuffer, renderTarget, hasBeenCleared ? null : clearColor, _lightUniform, pipelineType, fragmentBindings);
-            ClearLights();
+            DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, _lightUniform, pipelineType,
+                fragmentBindings);
+            _lightUniform.NumLights = 0;
         }
     }
 
-    private void ClearLights()
-    {
-        _lightUniform.Light1.LightPos = new Vector2(50000, 50000);
-        _lightUniform.Light1.LightIntensity = 0;
-        _lightUniform.Light2.LightPos = new Vector2(50000, 50000);
-        _lightUniform.Light2.LightIntensity = 0;
-        _lightUniform.Light3.LightPos = new Vector2(50000, 50000);
-        _lightUniform.Light3.LightIntensity = 0;
-        _lightUniform.Light4.LightPos = new Vector2(50000, 50000);
-        _lightUniform.Light4.LightIntensity = 0;
-    }
-
-    private void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, LightUniform fragUniform,
+    private void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture lightTexture, Texture renderTarget, Color? clearColor,
+        LightUniform fragUniform,
         PipelineType pipelineType,
         TextureSamplerBinding[] fragmentBindings)
     {
+        renderer.DrawSprite(
+            lightTexture,
+            null,
+            renderTarget.Bounds(),
+            Color.White
+        );
+
         var vertUniform = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
         renderer.UpdateBuffers(ref commandBuffer);
         renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
