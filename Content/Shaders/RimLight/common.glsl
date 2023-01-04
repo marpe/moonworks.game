@@ -34,7 +34,7 @@ vec3 CalculateLight(vec3 baseColor, Light light, vec2 worldPos) {
 
     float finalIntensity = clamp(light.lightIntensity * radialFalloff * angularFalloff, 0, 1);
     vec3 lightColor = light.lightColor * finalIntensity;
-    vec3 shadedColor = baseColor.rgb * lightColor;
+    vec3 shadedColor = baseColor.rgb * lightColor; // TODO (marpe): just return lightColor
     shadedColor += lightColor * light.volumetricIntensity;
 
     return shadedColor;
