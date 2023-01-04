@@ -111,7 +111,7 @@ public class WorldRenderPass : RenderPass
         {
             renderer.Clear(ref commandBuffer, renderTargets.NormalLights, world.AmbientColor);
 
-            DrawAllLights3(
+            DrawAllLights(
                 renderer,
                 renderTargets.LightBase,
                 renderTargets.NormalLights,
@@ -134,7 +134,7 @@ public class WorldRenderPass : RenderPass
         {
             _rimLightTextureSamplerBindings[1] = new TextureSamplerBinding(renderTargets.LightBase, SpriteBatch.LinearClamp);
             renderer.Clear(ref commandBuffer, renderTargets.RimLights, Color.Transparent);
-            DrawAllLights3(
+            DrawAllLights(
                 renderer,
                 renderer.BlankSprite.TextureSlice.Texture, // not used by rim light shader
                 renderTargets.RimLights,
@@ -152,76 +152,7 @@ public class WorldRenderPass : RenderPass
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.Additive);
         }
     }
-
-    private unsafe void DrawAllLights2(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
-        ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
-    {
-        world.Entities.FindAll(_lights);
-
-        _lightUniform.Scale = Shared.Game.RenderTargets.GameScale;
-        _lightUniform.TexelSize = new Vector4(
-            1.0f / renderDestinationSize.X,
-            1.0f / renderDestinationSize.Y,
-            renderDestinationSize.X,
-            renderDestinationSize.Y
-        );
-        _lightUniform.Bounds = new Vector4(
-            MathF.Floor(cameraBounds.Min.X),
-            MathF.Floor(cameraBounds.Min.Y),
-            cameraBounds.Width,
-            cameraBounds.Height
-        );
-
-        _lightUniforms.Clear();
-
-        for (var i = 0; i < _lights.Count; i++)
-        {
-            var light = _lights[i];
-            if (!light.IsEnabled)
-                continue;
-            if (!light.Bounds.Intersects(cameraBounds))
-                continue;
-
-            var lightUniform = new LightU
-            {
-                LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
-                LightIntensity = light.Intensity,
-                LightRadius = Math.Max(light.Width, light.Height) * 0.5f,
-                LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
-                VolumetricIntensity = light.VolumetricIntensity,
-                RimIntensity = light.RimIntensity,
-                Angle = light.Angle,
-                ConeAngle = light.ConeAngle,
-            };
-
-            _lightUniforms.Add(lightUniform);
-
-            renderer.DrawSprite(lightTexture, Matrix4x4.Identity, Color.White);
-        }
-
-        renderer.UpdateBuffers(ref commandBuffer);
-
-        renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
-        for (var i = 0; i < _lightUniforms.Count; i++)
-        {
-            var lightUniform = _lightUniforms[i];
-            fixed (byte* lights = _lightUniform.Lights)
-            {
-                var lightsPtr = (LightU*)lights;
-                lightsPtr[0] = lightUniform;
-            }
-
-            _lightUniform.NumLights = 1;
-            var vertUniform = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
-            var fragUniform = _lightUniform;
-            renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertUniform, fragUniform, fragmentBindings, false, i, 1);
-        }
-
-        renderer.SpriteBatch.Discard();
-        renderer.EndRenderPass(ref commandBuffer);
-    }
-
-    private unsafe void DrawAllLights3(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
         world.Entities.FindAll(_lights);
@@ -294,94 +225,6 @@ public class WorldRenderPass : RenderPass
             _lightUniform.NumLights = numLights;
             renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertUniform, _lightUniform, fragmentBindings, false, 0, renderer.SpriteBatch.NumSprites);
         }
-        renderer.SpriteBatch.Discard();
-        renderer.EndRenderPass(ref commandBuffer);
-    }
-    
-    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
-        ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
-    {
-        world.Entities.FindAll(_lights);
-
-        _lightUniform.Scale = Shared.Game.RenderTargets.GameScale;
-        _lightUniform.TexelSize = new Vector4(
-            1.0f / renderDestinationSize.X,
-            1.0f / renderDestinationSize.Y,
-            renderDestinationSize.X,
-            renderDestinationSize.Y
-        );
-        _lightUniform.Bounds = new Vector4(
-            MathF.Floor(cameraBounds.Min.X),
-            MathF.Floor(cameraBounds.Min.Y),
-            cameraBounds.Width,
-            cameraBounds.Height
-        );
-
-        _lightUniform.NumLights = 0;
-        var renderTargetHasBeenCleared = false;
-
-        for (var i = 0; i < _lights.Count; i++)
-        {
-            var light = _lights[i];
-            if (!light.IsEnabled)
-                continue;
-            if (!light.Bounds.Intersects(cameraBounds))
-                continue;
-
-            var lightUniform = new LightU
-            {
-                LightColor = new Vector3(light.Color.R / 255f, light.Color.G / 255f, light.Color.B / 255f),
-                LightIntensity = light.Intensity,
-                LightRadius = Math.Max(light.Width, light.Height) * 0.5f,
-                LightPos = light.Position + light.Size.ToVec2() * light.Pivot,
-                VolumetricIntensity = light.VolumetricIntensity,
-                RimIntensity = light.RimIntensity,
-                Angle = light.Angle,
-                ConeAngle = light.ConeAngle,
-            };
-            
-            fixed (byte* lights = _lightUniform.Lights)
-            {
-                var lightsPtr = (LightU*)lights;
-                lightsPtr[_lightUniform.NumLights] = lightUniform;
-            }
-
-            _lightUniform.NumLights++;
-
-            if (_lightUniform.NumLights == LightUniform.MaxNumLights)
-            {
-                DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, pipelineType,
-                    fragmentBindings);
-                renderTargetHasBeenCleared = true;
-                _lightUniform.NumLights = 0;
-            }
-        }
-
-        if (_lightUniform.NumLights > 0)
-        {
-            DrawLights(renderer, ref commandBuffer, lightTexture, renderTarget, renderTargetHasBeenCleared ? null : clearColor, pipelineType,
-                fragmentBindings);
-            _lightUniform.NumLights = 0;
-        }
-    }
-
-    private void DrawLights(Renderer renderer, ref CommandBuffer commandBuffer, Texture lightTexture, Texture renderTarget, Color? clearColor,
-        PipelineType pipelineType,
-        TextureSamplerBinding[] fragmentBindings)
-    {
-        renderer.DrawSprite(
-            lightTexture,
-            null,
-            renderTarget.Bounds(),
-            Color.White
-        );
-
-        var vertUniform = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
-        renderer.UpdateBuffers(ref commandBuffer);
-        renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
-        var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniform);
-        var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(_lightUniform);
-        renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentBindings, false, 0,  1);
         renderer.SpriteBatch.Discard();
         renderer.EndRenderPass(ref commandBuffer);
     }
