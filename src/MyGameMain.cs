@@ -177,6 +177,8 @@ public class MyGameMain : Game
     protected void RenderGame(ref CommandBuffer commandBuffer, double alpha, Texture renderDestination)
     {
         _fpsDisplay.BeginRenderGame();
+        Renderer.RenderPasses = 0;
+        SpriteBatch.DrawCalls = 0;
         Time.UpdateDrawCount();
 
         for (var i = 0; i < _renderPasses.Count; i++)

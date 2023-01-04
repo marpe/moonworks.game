@@ -95,7 +95,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
 {
     private MyEditorMain _editor;
     private float _peakImGuiRenderDurationMs;
-    private float _peakNumAddedSprites;
+    // private float _peakNumAddedSprites;
     private float _peakRenderDurationMs;
     public const string WindowTitle = "Debug";
 
@@ -110,7 +110,7 @@ public unsafe class DebugWindow : ImGuiEditorWindow
     {
         _peakImGuiRenderDurationMs = StopwatchExt.SmoothValue(_peakImGuiRenderDurationMs, _editor._imGuiRenderDurationMs);
         _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _editor._renderDurationMs);
-        _peakNumAddedSprites = StopwatchExt.SmoothValue(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites);
+        // _peakNumAddedSprites = StopwatchExt.SmoothValue(_peakNumAddedSprites, _editor.Renderer.SpriteBatch.LastNumAddedSprites);
     }
 
     public override void Draw()
@@ -135,8 +135,8 @@ public unsafe class DebugWindow : ImGuiEditorWindow
                 ImGui.TextDisabled($"Framerate");ImGui.SameLine(labelWidth); ImGui.Text($"{(1000f / io->Framerate):0.##} ms/frame, FPS: {io->Framerate:0.##}");
                 ImGui.TextDisabled($"ImGuiRenderDuration");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakImGuiRenderDurationMs:0.0} ms");
                 ImGui.TextDisabled($"RenderDuration");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakRenderDurationMs:0.0} ms");
-                ImGui.TextDisabled($"NumDrawCalls");ImGui.SameLine(labelWidth); ImGui.Text($"{_editor.Renderer.SpriteBatch.MaxDrawCalls:0.0}");
-                ImGui.TextDisabled($"AddedSprites");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakNumAddedSprites:0}");
+                // ImGui.TextDisabled($"NumDrawCalls");ImGui.SameLine(labelWidth); ImGui.Text($"{_editor.Renderer.SpriteBatch.MaxDrawCalls:0.0}");
+                // ImGui.TextDisabled($"AddedSprites");ImGui.SameLine(labelWidth); ImGui.Text($"{_peakNumAddedSprites:0}");
             }
 
             ImGui.EndChild();

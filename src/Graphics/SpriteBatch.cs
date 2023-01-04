@@ -12,11 +12,9 @@ public class SpriteBatch
 {
     public static Sampler PointClamp = null!;
     public static Sampler LinearClamp = null!;
-    
+
     [CVar("batch_round", "Toggle rounding of destinations when rendering with SpriteBatch")]
     public static bool ShouldRoundPositions;
-
-    private static Color[] _tempColors = new Color[4];
 
     // Used to calculate texture coordinates
     public static readonly float[] CornerOffsetX = { 0.0f, 0.0f, 1.0f, 1.0f };
@@ -25,28 +23,22 @@ public class SpriteBatch
     private Buffer _indexBuffer;
 
     private uint[] _indices;
-    private uint _numSprites = 0;
-
-    public uint LastNumAddedSprites { get; private set; }
+    public int NumSprites { get; private set; }
 
     private Texture[] _spriteInfo;
     private Buffer _vertexBuffer;
 
     private Position3DTextureColorVertex[] _vertices;
 
-    public uint DrawCalls { get; private set; }
-
-    public float MaxDrawCalls { get; private set; }
-    public uint MaxNumAddedSprites { get; private set; }
-
     private TextureSamplerBinding[] _fragmentSamplerBindings;
     private bool _indicesNeedsUpdate = true;
+    public static int DrawCalls;
 
     public SpriteBatch(GraphicsDevice device)
     {
         PointClamp = new Sampler(device, SamplerCreateInfo.PointClamp);
         LinearClamp = new Sampler(device, SamplerCreateInfo.LinearClamp);
-        
+
         _device = device;
         var maxSprites = 8192u;
         _spriteInfo = new Texture[maxSprites];
@@ -68,10 +60,10 @@ public class SpriteBatch
 
     public void Draw(Texture texture, in Bounds srcRect, in Bounds dstRect, Color[] colors, float depth, SpriteFlip flip = SpriteFlip.None)
     {
-        if (_numSprites == _spriteInfo.Length)
+        if (NumSprites == _spriteInfo.Length)
         {
-            var maxNumSprites = (int)(_numSprites + 2048);
-            Logs.LogInfo($"Max number of sprites reached, resizing buffers ({_numSprites} -> {maxNumSprites})");
+            var maxNumSprites = (int)(NumSprites + 2048);
+            Logs.LogInfo($"Max number of sprites reached, resizing buffers ({NumSprites} -> {maxNumSprites})");
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
 
@@ -85,14 +77,14 @@ public class SpriteBatch
             _indicesNeedsUpdate = true;
         }
 
-        _spriteInfo[_numSprites] = texture;
+        _spriteInfo[NumSprites] = texture;
 
         var uvs = new UV();
         Sprite.GenerateUVs(ref uvs, texture, srcRect);
-        
-        PushSpriteVertices(_vertices, _numSprites * 4, uvs, dstRect, depth, colors, flip);
 
-        _numSprites += 1;
+        PushSpriteVertices(_vertices, NumSprites * 4, uvs, dstRect, depth, colors, flip);
+
+        NumSprites += 1;
     }
 
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
@@ -104,7 +96,7 @@ public class SpriteBatch
 
     public void UpdateBuffers(ref CommandBuffer commandBuffer)
     {
-        if (_numSprites == 0)
+        if (NumSprites == 0)
         {
             Logs.LogWarn("Buffers are empty");
             return;
@@ -115,35 +107,36 @@ public class SpriteBatch
             commandBuffer.SetBufferData(_indexBuffer, _indices, 0, 0, (uint)(_spriteInfo.Length * 6));
             _indicesNeedsUpdate = false;
         }
-        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, _numSprites * 4);
+
+        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, (uint)(NumSprites * 4));
     }
 
     /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
     public void DrawIndexed<TVertUniform, TFragmentUniform>(ref CommandBuffer commandBuffer, TVertUniform vertUniforms, TFragmentUniform fragmentUniforms,
-        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering) where TVertUniform : unmanaged where TFragmentUniform : unmanaged
+        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering, int offset, int numSprites)
+        where TVertUniform : unmanaged where TFragmentUniform : unmanaged
     {
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(vertUniforms);
         var fragmentParamOffset = commandBuffer.PushFragmentShaderUniforms(fragmentUniforms);
-        DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentSamplerBindings, usePointFiltering);
+        DrawIndexed(ref commandBuffer, vertexParamOffset, fragmentParamOffset, fragmentSamplerBindings, usePointFiltering, offset, numSprites);
     }
 
     public void DrawIndexed(ref CommandBuffer commandBuffer, Matrix4x4 viewProjection, bool usePointFiltering)
     {
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
-        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings, usePointFiltering);
+        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings, usePointFiltering, 0, NumSprites);
+        NumSprites = 0;
     }
 
     public void Discard()
     {
-        _numSprites = 0;
+        NumSprites = 0;
     }
 
-    public void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset, TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering)
+    public void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset,
+        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering, int offset, int numSprites)
     {
-        MaxDrawCalls = MaxDrawCalls > DrawCalls ? MathF.Lerp(MaxDrawCalls, DrawCalls, 0.05f) : DrawCalls;
-        DrawCalls = 0;
-
-        if (_numSprites == 0)
+        if (numSprites == 0)
         {
             Logs.LogWarn("Flushing empty SpriteBatch");
             return;
@@ -153,11 +146,12 @@ public class SpriteBatch
         commandBuffer.BindIndexBuffer(_indexBuffer, IndexElementSize.ThirtyTwo);
 
         var textureBinding = new TextureSamplerBinding(_spriteInfo[0], usePointFiltering ? PointClamp : LinearClamp);
-        
-        fragmentSamplerBindings[0] = textureBinding;
-        var offset = 0u;
 
-        for (var i = 1u; i < _numSprites; i += 1)
+        fragmentSamplerBindings[0] = textureBinding;
+
+        var startOffset = offset;
+
+        for (var i = 1; i < numSprites; i += 1)
         {
             var spriteInfo = _spriteInfo[i];
 
@@ -165,19 +159,13 @@ public class SpriteBatch
             {
                 commandBuffer.BindFragmentSamplers(fragmentSamplerBindings);
                 DrawIndexedQuads(ref commandBuffer, offset, i - offset, vertexUniformOffset, fragmentUniformOffset);
-                DrawCalls++;
                 fragmentSamplerBindings[0].Texture = spriteInfo;
                 offset = i;
             }
         }
 
         commandBuffer.BindFragmentSamplers(fragmentSamplerBindings);
-        DrawIndexedQuads(ref commandBuffer, offset, _numSprites - offset, vertexUniformOffset, fragmentUniformOffset);
-        DrawCalls++;
-
-        MaxNumAddedSprites = Math.Max(MaxNumAddedSprites, _numSprites);
-        LastNumAddedSprites = _numSprites;
-        _numSprites = 0;
+        DrawIndexedQuads(ref commandBuffer, offset, numSprites - (offset - startOffset), vertexUniformOffset, fragmentUniformOffset);
     }
 
     public static uint[] GenerateIndexArray(uint maxIndices)
@@ -196,14 +184,14 @@ public class SpriteBatch
         return result;
     }
 
-    public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, uint vertexOffset, in UV uvs, in Bounds dstRect, float depth,
+    public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, int vertexOffset, in UV uvs, in Bounds dstRect, float depth,
         Color[] colors, SpriteFlip flip)
     {
         var topLeft = dstRect.Min;
         var bottomLeft = dstRect.BottomLeft;
         var topRight = dstRect.TopRight;
         var bottomRight = dstRect.Max;
-  
+
         if (ShouldRoundPositions)
         {
             topLeft = topLeft.Floor();
@@ -238,8 +226,9 @@ public class SpriteBatch
         vertices[vertexOffset + 3].Color = colors[3];
     }
 
-    public static void DrawIndexedQuads(ref CommandBuffer commandBuffer, uint offset, uint numSprites, uint vertexParamOffset, uint fragmentParamOffset)
+    public static void DrawIndexedQuads(ref CommandBuffer commandBuffer, int offset, int numSprites, uint vertexParamOffset, uint fragmentParamOffset)
     {
-        commandBuffer.DrawIndexedPrimitives(offset * 4u, 0u, numSprites * 2u, vertexParamOffset, fragmentParamOffset);
+        DrawCalls++;
+        commandBuffer.DrawIndexedPrimitives((uint)(offset * 4), 0u, (uint)(numSprites * 2), vertexParamOffset, fragmentParamOffset);
     }
 }

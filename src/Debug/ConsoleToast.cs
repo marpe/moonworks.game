@@ -19,13 +19,9 @@ public static class ConsoleToast
             var linesLeft = Shared.Console.ScreenBuffer.Height - _numLinesToDraw;
             var linesToAdd = Math.Min(linesLeft, numNewLines);
             if (_numLinesToDraw == 0)
-                _nextRemoveTime = _elapsedTime + /*linesToAdd **/ _lineDisplayDuration;
+                _nextRemoveTime = _elapsedTime + _lineDisplayDuration;
             _numLinesToDraw += linesToAdd;
             _speed = Math.Max(_numLinesToDraw / 5.0f, 1.0f);
-            if (_numLinesToDraw < 0)
-            {
-                Logs.LogInfo("numLinesToDrawBug");
-            }
         }
 
         _lastCursorY = Shared.Console.ScreenBuffer.CursorY;
@@ -41,7 +37,7 @@ public static class ConsoleToast
         _lineRemovePercentage = MathF.Clamp01((_nextRemoveTime - _elapsedTime) / _lineDisplayDuration);
     }
 
-    public static void Draw(Renderer renderer, Texture renderDestination)
+    public static void Draw(Renderer renderer, int maxHeight)
     {
         if (_numLinesToDraw == 0 || Shared.Console.ScreenBuffer.CursorY == 0)
             return;
@@ -59,11 +55,11 @@ public static class ConsoleToast
             var lineWidth = GetLineWidth(lineIndex);
 
             var lineRect = new Rectangle(0, (int)(displayPosition.Y + charSize.Y * (_numLinesToDraw - 1 - i)), lineWidth * charSize.X, charSize.Y);
-            
+
             // skip line if it's outside the render target
-            if (lineRect.Y >= renderDestination.Height)
+            if (lineRect.Y >= maxHeight)
                 continue;
-            
+
             var lineAlpha = 1.0f; // i == numLinesToDraw - 1 ? _lineRemovePercentage : 1.0f;
 
             renderer.DrawRect(lineRect, Color.Black * 0.66f * lineAlpha);

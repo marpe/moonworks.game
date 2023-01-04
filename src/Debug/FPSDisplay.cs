@@ -73,7 +73,7 @@ public class FPSDisplay
         var updateFps = Shared.Game.Time.UpdateFps;
         var drawFps = Shared.Game.Time.DrawFps;
         
-        var str = $"Update: {updateFps:0.##} FPS ({_peakUpdateDurationMs:00.00} ms), Draw: {drawFps:0.##} FPS (Game: {_peakRenderGameDurationMs:00.00} ms, Total: {_peakRenderDurationMs:00.00} ms)";
+        var str = $"RenderPasses: {renderer.RenderPasses}, DrawCalls: {SpriteBatch.DrawCalls}, Update: {updateFps:0.##} FPS ({_peakUpdateDurationMs:00.00} ms), Draw: {drawFps:0.##} FPS (Game: {_peakRenderGameDurationMs:00.00} ms, Total: {_peakRenderDurationMs:00.00} ms)";
         var strSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, str);
         var min = position - strSize * origin;
         var max = min + strSize;

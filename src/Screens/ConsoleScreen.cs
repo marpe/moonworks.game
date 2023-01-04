@@ -512,8 +512,9 @@ public class ConsoleScreen
             renderer.DrawRect(new Rectangle((int)scrollLinesPos.X, 0, lineLength, CharSize.Y), Color.Black, 0);
             DrawText(renderer, scrolledLinesStr, scrollLinesPos, 0, Color.Yellow);
         }
-        
-        _drawCalls = renderer.SpriteBatch.DrawCalls;
+
+        // TODO (marpe): Readd
+        _drawCalls = 0; // renderer.SpriteBatch.DrawCalls;
         _renderStopwatch.Stop();
         _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
     }

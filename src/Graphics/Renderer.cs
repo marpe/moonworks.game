@@ -36,7 +36,8 @@ public class Renderer
     public Dictionary<PipelineType, GfxPipeline> Pipelines;
 
     public FreeTypeFontAtlas FreeTypeFontAtlas;
-    private static Color[] _tempColors = new Color[4]; 
+    private static Color[] _tempColors = new Color[4];
+    public int RenderPasses;
 
     public Renderer(MyGameMain game)
     {
@@ -277,6 +278,7 @@ public class Renderer
 
     public void BeginRenderPass(ref CommandBuffer commandBuffer, Texture renderTarget, Color? clearColor, PipelineType pipelineType)
     {
+        RenderPasses++;
         _colorAttachmentInfo.Texture = renderTarget;
         _colorAttachmentInfo.LoadOp = clearColor == null ? LoadOp.Load : LoadOp.Clear;
         _colorAttachmentInfo.ClearColor = clearColor ?? DefaultClearColor;
@@ -303,13 +305,7 @@ public class Renderer
     {
         commandBuffer.EndRenderPass();
     }
-
-    public void DrawIndexedSprites<TVert, TFrag>(ref CommandBuffer commandBuffer, TVert vertUniforms, TFrag fragUniforms,
-        TextureSamplerBinding[] fragmentSamplerBindings, bool usePointFiltering) where TVert : unmanaged where TFrag : unmanaged
-    {
-        SpriteBatch.DrawIndexed(ref commandBuffer, vertUniforms, fragUniforms, fragmentSamplerBindings, usePointFiltering);
-    }
-
+    
     public void DrawIndexedSprites(ref CommandBuffer commandBuffer, Matrix4x4? viewProjection, bool usePointFiltering)
     {
         var vertUniforms = viewProjection ?? GetOrthographicProjection(_colorAttachmentInfo.Texture.Width, _colorAttachmentInfo.Texture.Height);

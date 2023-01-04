@@ -58,7 +58,7 @@ public static class Binds
             if (GetAction(InputAction.Jump, out var jump) && !jump.Active)
                 _jumpHeld = false;
 
-            if (GetAction(InputAction.MoveToMouse, out var respawn) && !respawn.Active)
+            if (GetAction(InputAction.Respawn, out var respawn) && !respawn.Active)
                 _respawnHeld = false;
 
             var isFire1Active = fire1 is { Active: true };
