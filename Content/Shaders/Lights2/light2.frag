@@ -16,10 +16,8 @@ layout (location = 0) out vec4 fragColor;
 
 void main()
 {
-    fragColor.rgba = vec4(1.0, 0, 0, 1);
-    return;
-    vec3 baseColor = texture(uniformTexture, texCoord).rgb;
-    vec4 finalColor = CalculateLight(Uniforms.light, texCoord);
-    fragColor.rgba = finalColor;
+    vec3 lightColor = CalculateLight(Uniforms.light, texCoord);
+    lightColor += lightColor * Uniforms.light.volumetricIntensity;
+    fragColor = vec4(lightColor, 1);
 }
 

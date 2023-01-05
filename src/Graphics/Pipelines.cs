@@ -53,9 +53,14 @@ public unsafe struct LightUniform
 }
 
 [StructLayout(LayoutKind.Sequential)]
-public struct LightUniform2
+public struct LightU2
 {
-    public LightU Light;
+    public Vector3 LightColor;
+    public float LightIntensity;
+    public float VolumetricIntensity;
+    public float Angle;
+    public float ConeAngle;   
+    public float Padding;   
 }
 
 public class Pipelines
@@ -155,7 +160,7 @@ public class Pipelines
             ShaderModule = fragmentShader,
             EntryPointName = "main",
             SamplerBindingCount = 1,
-            UniformBufferSize = (uint)Marshal.SizeOf<LightUniform2>(),
+            UniformBufferSize = (uint)Marshal.SizeOf<LightU2>(),
         };
 
         var createInfo = new GraphicsPipelineCreateInfo

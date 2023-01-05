@@ -48,6 +48,7 @@ public class WorldRenderPass : RenderPass
     private List<Light> _lights = new();
     private LightUniform _lightUniform = new();
     private List<LightU> _lightUniforms = new();
+    private List<LightU2> _lightUniforms2 = new();
 
     private TextureSamplerBinding[] _lightTextureSamplerBindings = new TextureSamplerBinding[1];
     private TextureSamplerBinding[] _rimLightTextureSamplerBindings = new TextureSamplerBinding[2];
@@ -158,6 +159,7 @@ public class WorldRenderPass : RenderPass
     {
         world.Entities.FindAll(_lights);
 
+        _lightUniforms2.Clear();
         for (var i = 0; i < _lights.Count; i++)
         {
             var light = _lights[i];
@@ -165,7 +167,14 @@ public class WorldRenderPass : RenderPass
                 continue;
             if (!light.Bounds.Intersects(cameraBounds))
                 continue;
-            
+            _lightUniforms2.Add(new LightU2()
+            {
+                LightColor = light.Color.ToVector3(),
+                LightIntensity = light.Intensity,
+                VolumetricIntensity = light.VolumetricIntensity,
+                Angle = light.Angle,
+                ConeAngle = light.ConeAngle,
+            });
             renderer.DrawSprite(renderer.BlankSprite.TextureSlice.Texture, null, light.Bounds, Color.White);
         }
 
@@ -173,10 +182,20 @@ public class WorldRenderPass : RenderPass
         var renderTargets = Shared.Game.RenderTargets;
         var view = camera.GetViewFloored(0, out _) *
                    Matrix3x2.CreateScale(renderTargets.GameScale);
-        var projection = Renderer.GetOrthographicProjection(renderTargets.GameRender.Width, renderTargets.GameRender.Height);
+        var projection = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
         var viewProjection = view.ToMatrix4x4() * projection;
-        
-        renderer.RunRenderPass(ref commandBuffer, renderTarget, null, viewProjection, false, pipelineType);
+
+        renderer.UpdateBuffers(ref commandBuffer);
+        renderer.BeginRenderPass(ref commandBuffer, renderTarget, clearColor, pipelineType);
+        for (var i = 0; i < renderer.SpriteBatch.NumSprites; i++)
+        {
+            var vertUniform = viewProjection;
+            var fragUniform = _lightUniforms2[i];
+            renderer.SpriteBatch.DrawIndexed(ref commandBuffer, vertUniform, fragUniform, fragmentBindings, false, i, 1);
+        }
+
+        renderer.SpriteBatch.Discard();
+        renderer.EndRenderPass(ref commandBuffer);
     }
 
     private unsafe void DrawAllLights2(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
