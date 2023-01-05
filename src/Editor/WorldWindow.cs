@@ -25,15 +25,15 @@ public unsafe class WorldWindow : ImGuiEditorWindow
     private RootJson? _prevRoot;
     private Level? _prevLevel;
 
-    private ColorAttachmentBlendState _rimBlendState = ColorAttachmentBlendState.Additive;
-    private ColorAttachmentBlendState _lightBlendState = ColorAttachmentBlendState.Additive;
-    private ColorAttachmentBlendState _customBlendState = ColorAttachmentBlendState.AlphaBlend;
     private bool _isSelectEntityDialogOpen;
     private int _selectedEntityIndex;
     private string _searchPattern = "";
     private string[] _entityNames = Array.Empty<string>();
     private Entity[] _entities = Array.Empty<Entity>();
     private EntityInspector? _selectedEntity;
+
+    private string[] _pipelineNames = Enum.GetNames<PipelineType>();
+    private PipelineType[] _pipelines = Enum.GetValues<PipelineType>();
 
     public WorldWindow() : base(WindowTitle)
     {
@@ -67,34 +67,27 @@ public unsafe class WorldWindow : ImGuiEditorWindow
         var labelWidthRatio = 0.4f;
         var labelWidth = (int)(ImGui.GetContentRegionAvail().X * labelWidthRatio);
         ImGuiExt.PushLabelWidth(labelWidth);
-        
+
         if (ImGui.BeginTabBar("Tabs"))
         {
             if (ImGui.BeginTabItem("Rendering"))
             {
                 ImGuiExt.SeparatorText("Main");
-                if (BlendStateEditor.Draw("MainRimLightBlendState", ref _lightBlendState))
-                {
-                    Shared.Game.Renderer.Pipelines[PipelineType.Light].Pipeline.Dispose();
-                    Shared.Game.Renderer.Pipelines[PipelineType.Light] = Pipelines.CreateLightPipeline(Shared.Game.GraphicsDevice, _lightBlendState);
-                    Logs.LogInfo("Recreated main pipeline");
-                }
 
-                ImGuiExt.SeparatorText("Rim");
-                if (BlendStateEditor.Draw("RimLightBlendState", ref _rimBlendState))
+                for (var i = 0; i < Shared.Game.Renderer.Pipelines.Count; i++)
                 {
-                    Shared.Game.Renderer.Pipelines[PipelineType.RimLight].Pipeline.Dispose();
-                    Shared.Game.Renderer.Pipelines[PipelineType.RimLight] = Pipelines.CreateRimLightPipeline(Shared.Game.GraphicsDevice, _rimBlendState);
-                    Logs.LogInfo("Recreated rim pipeline");
-                }
+                    ImGui.PushID(i);
+                    ImGuiExt.SeparatorText(_pipelineNames[i]);
 
-                ImGuiExt.SeparatorText("Custom");
-                if (BlendStateEditor.Draw("CustomBlendState", ref _customBlendState))
-                {
-                    Shared.Game.Renderer.Pipelines[PipelineType.CustomBlendState].Pipeline.Dispose();
-                    Shared.Game.Renderer.Pipelines[PipelineType.CustomBlendState] =
-                        Pipelines.CreateSpritePipeline(Shared.Game.GraphicsDevice, _customBlendState);
-                    Logs.LogInfo("Recreated rim pipeline");
+                    var pipelineType = _pipelines[i];
+                    var blendState = Shared.Game.Renderer.Pipelines[pipelineType].CreateInfo.AttachmentInfo.ColorAttachmentDescriptions[0].BlendState;
+                    if (BlendStateEditor.Draw("BlendState", ref blendState))
+                    {
+                        Shared.Game.Renderer.Pipelines[pipelineType].Pipeline.Dispose();
+                        Shared.Game.Renderer.Pipelines[pipelineType] = Pipelines.Factories[pipelineType].Invoke(Shared.Game.GraphicsDevice, blendState);
+                    }
+
+                    ImGui.PopID();
                 }
 
                 ImGui.EndTabItem();
@@ -134,7 +127,7 @@ public unsafe class WorldWindow : ImGuiEditorWindow
 
             ImGui.EndTabBar();
         }
-        
+
         ImGuiExt.PopLabelWidth();
 
         ImGui.End();

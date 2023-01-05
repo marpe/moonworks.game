@@ -2,12 +2,8 @@
 
 public enum PipelineType
 {
-    Additive,
-    AlphaBlend,
-    NonPremultiplied,
-    Opaque,
-    Multiply,
-    CustomBlendState,
+    LightsToMain,
+    RimLightsToMain,
     Sprite,
     Light,
     RimLight,
@@ -15,6 +11,7 @@ public enum PipelineType
     PixelizeTransition,
     DiamondTransition,
     PixelArt,
+    Light2,
 }
 
 [StructLayout(LayoutKind.Sequential)]
@@ -38,7 +35,7 @@ public unsafe struct LightUniform
 {
     public const int MaxNumLights = 128;
 
-    public fixed byte Lights[MaxNumLights *  12 * 4]; 
+    public fixed byte Lights[MaxNumLights * 12 * 4];
 
     public Vector4 TexelSize = default;
 
@@ -55,9 +52,15 @@ public unsafe struct LightUniform
     }
 }
 
+[StructLayout(LayoutKind.Sequential)]
+public struct LightUniform2
+{
+    public LightU Light;
+}
+
 public class Pipelines
 {
-    public static readonly ColorAttachmentBlendState CustomBlendState = new()
+    public static readonly ColorAttachmentBlendState MultiplyBlendState = new()
     {
         BlendEnable = true,
         AlphaBlendOp = BlendOp.Add,
@@ -69,16 +72,16 @@ public class Pipelines
         DestinationAlphaBlendFactor = BlendFactor.Zero,
     };
 
-    public static readonly ColorAttachmentBlendState MultiplyBlendState = new()
+    public static readonly ColorAttachmentBlendState CombineBlendState = new()
     {
         BlendEnable = true,
         AlphaBlendOp = BlendOp.Add,
         ColorBlendOp = BlendOp.Add,
         ColorWriteMask = ColorComponentFlags.RGBA,
-        SourceColorBlendFactor = BlendFactor.DestinationColor,
-        SourceAlphaBlendFactor = BlendFactor.DestinationAlpha,
-        DestinationColorBlendFactor = BlendFactor.Zero,
-        DestinationAlphaBlendFactor = BlendFactor.Zero,
+        SourceColorBlendFactor = BlendFactor.SourceAlpha,
+        SourceAlphaBlendFactor = BlendFactor.One,
+        DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
+        DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha,
     };
 
     [StructLayout(LayoutKind.Sequential)]
@@ -108,31 +111,74 @@ public class Pipelines
         public float DiamondPixelSize;
     }
 
-    public static Dictionary<PipelineType, Func<GfxPipeline>> Factories = new();
+    public delegate GfxPipeline CreatePipelineDelegate(GraphicsDevice device, ColorAttachmentBlendState blendState);
+
+    public static Dictionary<PipelineType, CreatePipelineDelegate> Factories = new()
+    {
+        { PipelineType.LightsToMain, CreateSpritePipeline },
+        { PipelineType.RimLightsToMain, CreateSpritePipeline },
+        { PipelineType.Light, CreateLightPipeline },
+        { PipelineType.RimLight, CreateRimLightPipeline },
+        { PipelineType.Sprite, CreateSpritePipeline },
+        { PipelineType.CircleCropTransition, CreateCircleCropTransition },
+        { PipelineType.PixelizeTransition, CreatePixelize },
+        { PipelineType.DiamondTransition, CreateDiamondTransition },
+        { PipelineType.PixelArt, CreatePixelArt },
+        { PipelineType.Light2, CreateLight2 },
+    };
 
     public static Dictionary<PipelineType, GfxPipeline> CreatePipelines(GraphicsDevice device)
     {
-        Factories = new Dictionary<PipelineType, Func<GfxPipeline>>
+        return new()
         {
-            { PipelineType.Additive, () => CreateSpritePipeline(device, ColorAttachmentBlendState.Additive) },
-            { PipelineType.AlphaBlend, () => CreateSpritePipeline(device, ColorAttachmentBlendState.AlphaBlend) },
-            { PipelineType.NonPremultiplied, () => CreateSpritePipeline(device, ColorAttachmentBlendState.NonPremultiplied) },
-            { PipelineType.Opaque, () => CreateSpritePipeline(device, ColorAttachmentBlendState.Opaque) },
-            { PipelineType.Multiply, () => CreateSpritePipeline(device, MultiplyBlendState) },
-            { PipelineType.CustomBlendState, () => CreateSpritePipeline(device, CustomBlendState) },
-            { PipelineType.Light, () => CreateLightPipeline(device, ColorAttachmentBlendState.Additive) },
-            { PipelineType.RimLight, () => CreateRimLightPipeline(device, ColorAttachmentBlendState.Additive) },
-            { PipelineType.Sprite, () => CreateSpritePipeline(device, ColorAttachmentBlendState.AlphaBlend) },
-            { PipelineType.CircleCropTransition, () => CreateCircleCropTransition(device) },
-            { PipelineType.PixelizeTransition, () => CreatePixelize(device) },
-            { PipelineType.DiamondTransition, () => CreateDiamondTransition(device) },
-            { PipelineType.PixelArt, () => CreatePixelArt(device) },
+            { PipelineType.LightsToMain, CreateSpritePipeline(device, MultiplyBlendState) },
+            { PipelineType.RimLightsToMain, CreateSpritePipeline(device, ColorAttachmentBlendState.Additive) },
+            { PipelineType.Light, CreateLightPipeline(device, ColorAttachmentBlendState.Additive) },
+            { PipelineType.RimLight, CreateRimLightPipeline(device, ColorAttachmentBlendState.Additive) },
+            { PipelineType.Sprite, CreateSpritePipeline(device, ColorAttachmentBlendState.AlphaBlend) },
+            { PipelineType.CircleCropTransition, CreateCircleCropTransition(device, CombineBlendState) },
+            { PipelineType.PixelizeTransition, CreatePixelize(device, ColorAttachmentBlendState.AlphaBlend) },
+            { PipelineType.DiamondTransition, CreateDiamondTransition(device, ColorAttachmentBlendState.AlphaBlend) },
+            { PipelineType.PixelArt, CreatePixelArt(device, ColorAttachmentBlendState.AlphaBlend) },
+            { PipelineType.Light2, CreateLight2(device, ColorAttachmentBlendState.AlphaBlend) },
+        };
+    }
+
+    public static GfxPipeline CreateLight2(GraphicsDevice device, ColorAttachmentBlendState blendState)
+    {
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_vert_spv);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_frag_spv);
+
+        var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
+        var fragmentShaderInfo = new GraphicsShaderInfo()
+        {
+            ShaderModule = fragmentShader,
+            EntryPointName = "main",
+            SamplerBindingCount = 1,
+            UniformBufferSize = (uint)Marshal.SizeOf<LightUniform2>(),
         };
 
-        var pipelines = new Dictionary<PipelineType, GfxPipeline>();
-        foreach (var (key, factory) in Factories)
-            pipelines.Add(key, factory());
-        return pipelines;
+        var createInfo = new GraphicsPipelineCreateInfo
+        {
+            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+            ),
+            DepthStencilState = DepthStencilState.Disable,
+            VertexShaderInfo = vertexShaderInfo,
+            FragmentShaderInfo = fragmentShaderInfo,
+            MultisampleState = MultisampleState.None,
+            RasterizerState = RasterizerState.CCW_CullNone,
+            PrimitiveType = PrimitiveType.TriangleList,
+            VertexInputState = GetVertexInputState(),
+        };
+
+        return new GfxPipeline
+        {
+            Pipeline = new GraphicsPipeline(device, createInfo),
+            CreateInfo = createInfo,
+            VertexShaderPath = ContentPaths.Shaders.Lights2.light2_vert_spv,
+            FragmentShaderPath = ContentPaths.Shaders.Lights2.light2_frag_spv,
+        };
     }
 
     public static GfxPipeline CreateLightPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
@@ -186,6 +232,7 @@ public class Pipelines
             SamplerBindingCount = 2,
             UniformBufferSize = (uint)Marshal.SizeOf<LightUniform>(),
         };
+
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
@@ -209,7 +256,7 @@ public class Pipelines
         };
     }
 
-    public static GfxPipeline CreateDiamondTransition(GraphicsDevice device)
+    public static GfxPipeline CreateDiamondTransition(GraphicsDevice device, ColorAttachmentBlendState blendState)
 
     {
         var vertexShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_spv);
@@ -221,7 +268,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -241,7 +288,7 @@ public class Pipelines
         };
     }
 
-    public static GfxPipeline CreatePixelArt(GraphicsDevice device)
+    public static GfxPipeline CreatePixelArt(GraphicsDevice device, ColorAttachmentBlendState blendState)
 
     {
         var vertexShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_vert_spv);
@@ -253,7 +300,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -304,7 +351,7 @@ public class Pipelines
         };
     }
 
-    public static GfxPipeline CreateCircleCropTransition(GraphicsDevice device)
+    public static GfxPipeline CreateCircleCropTransition(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
         var vertexShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_vert_spv);
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_frag_spv);
@@ -312,21 +359,12 @@ public class Pipelines
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<CircleCropUniforms>(fragmentShader, "main", 1);
 
-        var blendState = new ColorAttachmentBlendState
-        {
-            BlendEnable = true,
-            AlphaBlendOp = BlendOp.Add,
-            ColorBlendOp = BlendOp.Add,
-            ColorWriteMask = ColorComponentFlags.RGBA,
-            SourceColorBlendFactor = BlendFactor.SourceAlpha,
-            SourceAlphaBlendFactor = BlendFactor.One,
-            DestinationColorBlendFactor = BlendFactor.OneMinusSourceAlpha,
-            DestinationAlphaBlendFactor = BlendFactor.OneMinusSourceAlpha,
-        };
 
         var createInfo = new GraphicsPipelineCreateInfo
         {
-            AttachmentInfo = new GraphicsPipelineAttachmentInfo(new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)),
+            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+            ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
             FragmentShaderInfo = fragmentShaderInfo,
@@ -345,7 +383,7 @@ public class Pipelines
         };
     }
 
-    public static GfxPipeline CreatePixelize(GraphicsDevice device)
+    public static GfxPipeline CreatePixelize(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
         var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_vert_spv);
         var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_frag_spv);
@@ -355,8 +393,9 @@ public class Pipelines
 
         var createInfo = new GraphicsPipelineCreateInfo()
         {
-            AttachmentInfo =
-                new GraphicsPipelineAttachmentInfo(new ColorAttachmentDescription(TextureFormat.B8G8R8A8, ColorAttachmentBlendState.AlphaBlend)),
+            AttachmentInfo = new GraphicsPipelineAttachmentInfo(
+                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+            ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
             FragmentShaderInfo = fragmentShaderInfo,

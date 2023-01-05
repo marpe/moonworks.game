@@ -1775,6 +1775,30 @@ public static unsafe class ImGuiExt
         return result;
     }
 
+    public static bool Combo(string label, ref int index, string[] labels)
+    {
+        var result = false;
+        if (ImGui.BeginCombo(LabelPrefix(label), labels[index]))
+        {
+            for (var i = 0; i < labels.Length; i++)
+            {
+                var isSelected = i == index;
+                if (ImGui.Selectable(labels[i], isSelected, ImGuiSelectableFlags.None, default))
+                {
+                    index = i;
+                    result = true;
+                }
+
+                if (isSelected)
+                    ImGui.SetItemDefaultFocus();
+            }
+
+            ImGui.EndCombo();
+        }
+
+        return result;
+    }
+
     public static bool ComboStep(string label, bool showPrevNextButtons, ref int currentIndex, string[] items)
     {
         var result = false;

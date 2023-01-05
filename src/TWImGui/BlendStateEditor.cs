@@ -2,15 +2,27 @@
 
 namespace MyGame.TWImGui;
 
+public enum BlendMode
+{
+    AlphaBlend,
+    NonPremultiplied,
+    Opaque,
+    Additive,
+    Multiply,
+    Combine,
+}
+
 public static unsafe class BlendStateEditor
 {
     private static readonly string[] _blendOpNames;
     private static readonly string[] _blendFactorNames;
+    private static readonly string[] _defaultBlendModeNames;
 
     static BlendStateEditor()
     {
         _blendOpNames = Enum.GetNames<BlendOp>();
         _blendFactorNames = Enum.GetNames<BlendFactor>();
+        _defaultBlendModeNames = Enum.GetNames<BlendMode>();
     }
 
     private static bool AreEqual(ColorAttachmentBlendState a, ColorAttachmentBlendState b)
@@ -21,12 +33,34 @@ public static unsafe class BlendStateEditor
                a.SourceColorBlendFactor == b.SourceColorBlendFactor &&
                a.SourceAlphaBlendFactor == b.SourceAlphaBlendFactor &&
                a.DestinationColorBlendFactor == b.DestinationColorBlendFactor &&
-               a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor;
+               a.DestinationAlphaBlendFactor == b.DestinationAlphaBlendFactor &&
+               a.ColorWriteMask == b.ColorWriteMask;
     }
-    
+
+    private static string BuildBlendString(ColorAttachmentBlendState state)
+    {
+        string GetOpString(BlendOp op, BlendFactor srcBlend, BlendFactor destBlend)
+        {
+            return op switch
+            {
+                BlendOp.Add => $"Source * {srcBlend} + Dest * {destBlend}",
+                BlendOp.Subtract => $"Source * {srcBlend} - Dest * {destBlend}",
+                BlendOp.ReverseSubtract => $"Dest * {destBlend} - Source * {srcBlend}",
+                BlendOp.Min => $"Min(Source * {srcBlend}, Dest * {destBlend})",
+                BlendOp.Max => $"Max(Source * {srcBlend}, Dest * {destBlend})",
+                _ => throw new ArgumentOutOfRangeException(),
+            };
+        }
+
+        return
+            $"RGB: {GetOpString(state.ColorBlendOp, state.SourceColorBlendFactor, state.DestinationColorBlendFactor)}\n" +
+            $"A: {GetOpString(state.AlphaBlendOp, state.SourceAlphaBlendFactor, state.DestinationAlphaBlendFactor)}";
+    }
+
     public static bool Draw(string name, ref ColorAttachmentBlendState state)
     {
         ImGui.PushID(name);
+
         var alphaBlendOpIndex = (int)state.AlphaBlendOp;
         var colorBlendOpIndex = (int)state.ColorBlendOp;
         var destColorBlendFactorIndex = (int)state.DestinationColorBlendFactor;
@@ -35,6 +69,7 @@ public static unsafe class BlendStateEditor
         var sourceAlphaBlendFactorIndex = (int)state.SourceAlphaBlendFactor;
         var blendEnabled = state.BlendEnable;
         var prevState = state;
+
         ImGui.Checkbox("Enabled", ImGuiExt.RefPtr(ref blendEnabled));
         ImGuiExt.ComboStep("AlphaOp", true, ref alphaBlendOpIndex, _blendOpNames);
         ImGuiExt.ComboStep("ColorOp", true, ref colorBlendOpIndex, _blendOpNames);
@@ -42,6 +77,7 @@ public static unsafe class BlendStateEditor
         ImGuiExt.ComboStep("SourceAlpha", true, ref sourceAlphaBlendFactorIndex, _blendFactorNames);
         ImGuiExt.ComboStep("DestColor", true, ref destColorBlendFactorIndex, _blendFactorNames);
         ImGuiExt.ComboStep("DestAlpha", true, ref destAlphaBlendFactorIndex, _blendFactorNames);
+
         state.BlendEnable = blendEnabled;
         state.AlphaBlendOp = (BlendOp)alphaBlendOpIndex;
         state.ColorBlendOp = (BlendOp)colorBlendOpIndex;
@@ -49,32 +85,28 @@ public static unsafe class BlendStateEditor
         state.SourceAlphaBlendFactor = (BlendFactor)sourceAlphaBlendFactorIndex;
         state.DestinationColorBlendFactor = (BlendFactor)destColorBlendFactorIndex;
         state.DestinationAlphaBlendFactor = (BlendFactor)destAlphaBlendFactorIndex;
-        // Blend equation is sourceColor * sourceBlend + destinationColor * destinationBlend
-        ImGui.Text($"sourceColor * {state.SourceColorBlendFactor.ToString()} + destColor * {state.DestinationColorBlendFactor.ToString()}");
-        ImGui.Text($"sourceAlpha * {state.SourceAlphaBlendFactor.ToString()} + destAlpha * {state.DestinationAlphaBlendFactor.ToString()}");
-        if (ImGui.Button("AlphaBlend", default))
+
+        var blendStateIdx = 0;
+        if (ImGuiExt.Combo("Load Default", ref blendStateIdx, _defaultBlendModeNames))
         {
-            state = ColorAttachmentBlendState.AlphaBlend;
+            var blendState = (BlendMode)blendStateIdx;
+            state = blendState switch
+            {
+                BlendMode.AlphaBlend => ColorAttachmentBlendState.AlphaBlend,
+                BlendMode.NonPremultiplied => ColorAttachmentBlendState.NonPremultiplied,
+                BlendMode.Opaque => ColorAttachmentBlendState.Opaque,
+                BlendMode.Additive => ColorAttachmentBlendState.Additive,
+                BlendMode.Multiply => Pipelines.MultiplyBlendState,
+                BlendMode.Combine => Pipelines.CombineBlendState,
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
-        ImGui.SameLine();
-        if (ImGui.Button("NonPremultiplied", default))
-        {
-            state = ColorAttachmentBlendState.NonPremultiplied;
-        }
+        var blendStr = BuildBlendString(state);
+        ImGui.PushTextWrapPos();
+        ImGui.Text(blendStr);
+        ImGui.PopTextWrapPos();
 
-        ImGui.SameLine();
-        if (ImGui.Button("Opaque", default))
-        {
-            state = ColorAttachmentBlendState.Opaque;
-        }
-        
-        ImGui.SameLine();
-        if (ImGui.Button("Additive", default))
-        {
-            state = ColorAttachmentBlendState.Additive;
-        }
-        
         ImGui.PopID();
         return !AreEqual(prevState, state);
     }

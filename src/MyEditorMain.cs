@@ -189,7 +189,7 @@ public unsafe class MyEditorMain : MyGameMain
 
                     if (isMatch)
                     {
-                        Renderer.Pipelines[type] = Pipelines.Factories[type].Invoke();
+                        Renderer.Pipelines[type] = Pipelines.Factories[type].Invoke(GraphicsDevice, Renderer.Pipelines[type].CreateInfo.AttachmentInfo.ColorAttachmentDescriptions[0].BlendState);
                         Logs.LogInfo($"Reloaded Pipeline: {type.ToString()}");
                     }
                 }

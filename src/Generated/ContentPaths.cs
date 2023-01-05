@@ -61,6 +61,7 @@ public static class ContentPaths
         public static class Example
         {
             public const string Characters_png = @"Content\ldtk\Example\Characters.png";
+            public const string tilemap_aseprite = @"Content\ldtk\Example\tilemap.aseprite";
             public const string Tilemap_png = @"Content\ldtk\Example\Tilemap.png";
             public const string World_ldtk = @"Content\ldtk\Example\World.ldtk";
         }
@@ -89,6 +90,12 @@ public static class ContentPaths
             public const string sprite_frag_spv = @"Content\Shaders\imgui\sprite.frag.spv";
             public const string sprite_vert_spv = @"Content\Shaders\imgui\sprite.vert.spv";
         }
+        public static class Lights2
+        {
+            public const string common_glsl = @"Content\Shaders\Lights2\common.glsl";
+            public const string light2_frag_spv = @"Content\Shaders\Lights2\light2.frag.spv";
+            public const string light2_vert_spv = @"Content\Shaders\Lights2\light2.vert.spv";
+        }
         public static class PixelArtShader
         {
             public const string from_godot_txt = @"Content\Shaders\PixelArtShader\from_godot.txt";
@@ -103,6 +110,7 @@ public static class ContentPaths
         }
         public static class RimLight
         {
+            public const string common_glsl = @"Content\Shaders\RimLight\common.glsl";
             public const string light_frag_spv = @"Content\Shaders\RimLight\light.frag.spv";
             public const string rim_light_frag_spv = @"Content\Shaders\RimLight\rim_light.frag.spv";
             public const string rim_light_vert_spv = @"Content\Shaders\RimLight\rim_light.vert.spv";
@@ -122,6 +130,7 @@ public static class ContentPaths
         public const string Characters_png = @"Content\worlds\Characters.png";
         public const string finalbossblues_icons_full_16_aseprite = @"Content\worlds\finalbossblues-icons_full_16.aseprite";
         public const string finalbossblues_icons_full_16_png = @"Content\worlds\finalbossblues-icons_full_16.png";
+        public const string tilemap_aseprite = @"Content\worlds\tilemap.aseprite";
         public const string Tilemap_png = @"Content\worlds\Tilemap.png";
         public const string worlds_json = @"Content\worlds\worlds.json";
     }
