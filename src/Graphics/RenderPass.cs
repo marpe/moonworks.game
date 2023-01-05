@@ -112,12 +112,12 @@ public class WorldRenderPass : RenderPass
         {
             renderer.Clear(ref commandBuffer, renderTargets.NormalLights, world.AmbientColor);
 
-            DrawAllLights(
+            DrawAllLights2(
                 renderer,
                 renderTargets.LightBase,
                 renderTargets.NormalLights,
                 null,
-                PipelineType.Light2,
+                PipelineType.Light,
                 world,
                 ref commandBuffer,
                 renderDestination.Size(),
@@ -131,11 +131,11 @@ public class WorldRenderPass : RenderPass
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.LightsToMain);
         }
 
-        /*if (World.RimLightsEnabled)
+        if (World.RimLightsEnabled)
         {
             _rimLightTextureSamplerBindings[1] = new TextureSamplerBinding(renderTargets.LightBase, SpriteBatch.LinearClamp);
             renderer.Clear(ref commandBuffer, renderTargets.RimLights, Color.Transparent);
-            DrawAllLights(
+            DrawAllLights2(
                 renderer,
                 renderer.BlankSprite.TextureSlice.Texture, // not used by rim light shader
                 renderTargets.RimLights,
@@ -151,7 +151,7 @@ public class WorldRenderPass : RenderPass
             // render rim light to game
             renderer.DrawSprite(renderTargets.RimLights, Matrix4x4.Identity, Color.White);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.RimLightsToMain);
-        }*/
+        }
     }
 
     private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
