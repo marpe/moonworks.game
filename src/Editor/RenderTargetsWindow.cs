@@ -26,6 +26,8 @@ public unsafe class RenderTargetsWindow : ImGuiEditorWindow
             .GetFields(BindingFlags.Instance | BindingFlags.Public);
         var renderTargetFields = fields.Where(x => x.FieldType == typeof(RenderTarget)).ToList();
 
+        KeyboardShortcut = "^R";
+        
         _renderTargets = new RenderTarget[renderTargetFields.Count];
         _renderTargetNames = new string[renderTargetFields.Count];
         for (var i = 0; i < renderTargetFields.Count; i++)
