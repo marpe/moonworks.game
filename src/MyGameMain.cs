@@ -120,7 +120,7 @@ public class MyGameMain : Game
     {
         ExecuteQueuedActions();
 
-        UpdateLastPositions();
+        PreUpdate();
 
         Shared.LoadingScreen.Update(Time.ElapsedTime);
         if (Shared.LoadingScreen.IsLoading)
@@ -220,12 +220,12 @@ public class MyGameMain : Game
         }
     }
 
-    private void UpdateLastPositions()
+    private void PreUpdate()
     {
         if (!World.IsLoaded)
             return;
-        World.UpdateLastPositions();
-        Camera.UpdateLastPosition();
+        World.PreUpdate();
+        Camera.PreUpdate();
     }
 
     private void UpdateWorld(float deltaSeconds)

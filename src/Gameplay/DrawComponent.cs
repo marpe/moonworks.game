@@ -58,9 +58,16 @@ public class DrawComponent
 
     private float _timer = 0;
 
+    public bool IsEnabled = true;
     public bool IsAnimating = true;
+    public bool IsVisible = false;
+    
     private Matrix3x2 _lastUpdateTransform = Matrix3x2.Identity;
+    private Matrix3x2 _transform = Matrix3x2.Identity;
+    private bool _isDirty;
+    
     public static bool ShouldRoundPositions;
+
 
     public void Initialize(Entity parent)
     {
@@ -77,7 +84,8 @@ public class DrawComponent
             CurrentAnimation = Animations.FirstOrDefault().Value;
         }
 
-        _lastUpdateTransform = GetTransform();
+        _transform = GetTransform();
+        _lastUpdateTransform = _transform;
     }
 
     public void PlayAnimation(string animationName)
@@ -95,26 +103,31 @@ public class DrawComponent
 
     public void Update(float deltaSeconds)
     {
+        if (!IsEnabled)
+            return;
+
         if (CurrentAnimation == null)
             return;
 
         Squash = Vector2.SmoothStep(Squash, Vector2.One, deltaSeconds * 20f);
-        
+
         if (MathF.Approx(Squash.X, 1.0f, 0.0005f))
         {
             Squash.X = 1.0f;
         }
-        
+
         if (MathF.Approx(Squash.Y, 1.0f, 0.0005f))
         {
             Squash.Y = 1.0f;
         }
-        
+
+        _transform = GetTransform();
+
         if (!IsAnimating)
             return;
 
         _timer += deltaSeconds;
-        if (_timer > CurrentAnimation.FrameDurations[FrameIndex])
+        if (_timer >= CurrentAnimation.FrameDurations[FrameIndex])
         {
             _timer -= CurrentAnimation.FrameDurations[FrameIndex];
             FrameIndex++;
@@ -125,9 +138,13 @@ public class DrawComponent
 
     public void Draw(Renderer renderer, double alpha)
     {
+        if (!IsEnabled)
+            return;
+
         if (CurrentAnimation == null)
             return;
-        var xform = Matrix3x2.Lerp(_lastUpdateTransform, GetTransform(), (float)1f);
+
+        var xform = Matrix3x2.Lerp(_lastUpdateTransform, _transform, (float)alpha);
         var currentFrame = CurrentAnimation.Frames[FrameIndex];
         var texture = Shared.Content.Load<TextureAsset>(TexturePath).TextureSlice;
         var sprite = new Sprite(texture, currentFrame.SrcRect);
@@ -136,29 +153,34 @@ public class DrawComponent
 
     private Matrix3x2 GetTransform()
     {
-        var spriteOrigin = Vector2.Zero;
-        if (CurrentAnimation != null)
-            spriteOrigin = CurrentAnimation.Frames[FrameIndex].Origin;
+        if (_isDirty)
+        {
+            var spriteOrigin = Vector2.Zero;
+            if (CurrentAnimation != null)
+                spriteOrigin = CurrentAnimation.Frames[FrameIndex].Origin;
 
-        if (spriteOrigin == Vector2.Zero)
-            spriteOrigin = Parent.Pivot * World.DefaultGridSize;
+            if (spriteOrigin == Vector2.Zero)
+                spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
-        var origin = Parent.Size * Parent.Pivot;
+            var origin = Parent.Size * Parent.Pivot;
 
-        var squash = Matrix3x2.CreateTranslation(-origin) *
-                     Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
-                     Matrix3x2.CreateTranslation(origin);
+            var squash = Matrix3x2.CreateTranslation(-origin) *
+                         Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
+                         Matrix3x2.CreateTranslation(origin);
 
-        var position = Parent.Position.Current;
+            var position = Parent.Position.Current;
 
-        if (ShouldRoundPositions)
-            position = position.Floor();
+            if (ShouldRoundPositions)
+                position = position.Floor();
 
-        var xform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
-                    squash *
-                    Matrix3x2.CreateTranslation(position);
+            _transform = Matrix3x2.CreateTranslation(origin - spriteOrigin) *
+                         squash *
+                         Matrix3x2.CreateTranslation(position);
 
-        return xform;
+            _isDirty = false;
+        }
+
+        return _transform;
     }
 
     #region Aseprite Loading
@@ -297,8 +319,9 @@ public class DrawComponent
 
     #endregion
 
-    public void SetLastUpdateTransform()
+    public void PreUpdate()
     {
-        _lastUpdateTransform = GetTransform();
+        _lastUpdateTransform = _transform;
+        _isDirty = true;
     }
 }

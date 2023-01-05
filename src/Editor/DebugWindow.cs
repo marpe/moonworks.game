@@ -33,17 +33,6 @@ public static class CollisionDebug
                     }
                 }
 
-                ImGui.Text("ContinuedGroundCollisions");
-
-                foreach (var collision in player.Mover.ContinuedGroundCollisions)
-                {
-                    if (ImGuiExt.BeginPropTable("ContinuedGroundCollisions"))
-                    {
-                        DrawCollision(collision);
-                        ImGui.EndTable();
-                    }
-                }
-
                 ImGuiExt.EndCollapsingHeader();
             }
 

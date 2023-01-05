@@ -421,7 +421,7 @@ public class Camera
         return Matrix4x4.CreatePerspectiveFieldOfView(vFov, aspectRatio, 0.0001f, 10000f);
     }
 
-    public void UpdateLastPosition()
+    public void PreUpdate()
     {
         Position.SetLastUpdatePosition();
     }

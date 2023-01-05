@@ -7,6 +7,7 @@ public class EntityList
 {
     [Inspectable]
     private List<Entity> _entities = new();
+
     private List<Entity> _entitiesToRemove = new();
     private List<Entity> _tempList = new();
     private List<Entity> _entitiesToAdd = new();
@@ -47,7 +48,7 @@ public class EntityList
         result.Clear();
         for (var i = 0; i < _entities.Count; i++)
         {
-            if(_entities[i] is T entity)
+            if (_entities[i] is T entity)
                 result.Add(entity);
         }
     }
@@ -98,11 +99,19 @@ public class EntityList
         _tempList.Clear();
     }
 
-    public void Draw(Renderer renderer, double alpha)
+    public void Draw(Renderer renderer, Bounds cameraBounds, double alpha)
     {
         for (var i = 0; i < _entities.Count; i++)
         {
             var entity = _entities[i];
+            if (!entity.Draw.IsEnabled)
+                continue;
+
+            entity.Draw.IsVisible = cameraBounds.Intersects(entity.Bounds);
+
+            if (!entity.Draw.IsVisible)
+                continue;
+
             entity.Draw.Draw(renderer, alpha);
         }
     }

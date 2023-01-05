@@ -207,18 +207,18 @@ public class Renderer
         SpriteBatch.Draw(texture, sprite.SrcRect, dstRect, colors, depth, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix3x2 transform, Color color, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(in Sprite sprite, Matrix3x2 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
         DrawSprite(sprite, transform.ToMatrix4x4(), color, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(in Sprite sprite, Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
         _tempColors.AsSpan().Fill(color);
         DrawSprite(sprite, transform, _tempColors, 0, flip);
     }
 
-    public void DrawSprite(Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(in Sprite sprite, Matrix4x4 transform, Color[] colors, float depth = 0, SpriteFlip flip = SpriteFlip.None)
     {
         var min = new Vector2(0, 0);
         var max = new Vector2(sprite.SrcRect.Width, sprite.SrcRect.Height);

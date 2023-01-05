@@ -6,7 +6,7 @@ public struct Sprite
     public Bounds SrcRect;
     public UV UV;
     
-    public Sprite(TextureSlice textureSlice, Bounds? srcRect = null)
+    public Sprite(in TextureSlice textureSlice, in Bounds? srcRect = null)
     {
         TextureSlice = textureSlice;
         SrcRect = srcRect ?? textureSlice.Rectangle;
@@ -15,11 +15,13 @@ public struct Sprite
 
     public static void GenerateUVs(ref UV uv, in TextureSlice texture, in Bounds srcRect)
     {
-        var posX = srcRect.X / texture.Rectangle.W;
-        var posY = srcRect.Y / texture.Rectangle.H;
+        var textureRect = texture.Rectangle;
+        
+        var posX = srcRect.X / textureRect.W;
+        var posY = srcRect.Y / textureRect.H;
 
-        var dimX = srcRect.Width / texture.Rectangle.W;
-        var dimY = srcRect.Height / texture.Rectangle.H;
+        var dimX = srcRect.Width / textureRect.W;
+        var dimY = srcRect.Height / textureRect.H;
 
         uv.Position.X = posX;
         uv.Position.Y = posY;

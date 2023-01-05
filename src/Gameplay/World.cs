@@ -301,12 +301,12 @@ public class World
             FreezeFrameTimer = MathF.Max(0, FreezeFrameTimer - deltaSeconds);
     }
 
-    public void UpdateLastPositions()
+    public void PreUpdate()
     {
         Entities.ForEach((entity) =>
         {
             entity.Position.SetLastUpdatePosition();
-            entity.Draw.SetLastUpdateTransform();
+            entity.Draw.PreUpdate();
         });
     }
 
@@ -341,9 +341,9 @@ public class World
         Entities.Update(this, scaledTime);
     }
     
-    public void DrawEntities(Renderer renderer, double alpha)
+    public void DrawEntities(Renderer renderer, Bounds cameraBounds, double alpha)
     {
-        Entities.Draw(renderer, alpha);
+        Entities.Draw(renderer, cameraBounds, alpha);
     }
 
     public void Unload()

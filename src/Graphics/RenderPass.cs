@@ -94,7 +94,8 @@ public class WorldRenderPass : RenderPass
         LevelRenderer.DrawLevel(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, Color.Transparent, viewProjection);
 
-        world.DrawEntities(renderer, alpha);
+        renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
+        world.DrawEntities(renderer, camera.ZoomedBounds, alpha);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LevelBase, null, viewProjection, false, PipelineType.PixelArt);
 
         LevelRenderer.DrawBackground(renderer, world, world.Root, world.Level, camera.ZoomedBounds);
@@ -108,11 +109,13 @@ public class WorldRenderPass : RenderPass
         renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LightBase, Color.Transparent, null);
 
+        world.Entities.FindAll(_lights);
+
         if (World.LightsEnabled)
         {
             renderer.Clear(ref commandBuffer, renderTargets.NormalLights, world.AmbientColor);
 
-            DrawAllLights2(
+            DrawAllLights(
                 renderer,
                 renderTargets.LightBase,
                 renderTargets.NormalLights,
@@ -131,11 +134,11 @@ public class WorldRenderPass : RenderPass
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.LightsToMain);
         }
 
-        if (World.RimLightsEnabled)
+        /*if (World.RimLightsEnabled)
         {
             _rimLightTextureSamplerBindings[1] = new TextureSamplerBinding(renderTargets.LightBase, SpriteBatch.LinearClamp);
             renderer.Clear(ref commandBuffer, renderTargets.RimLights, Color.Transparent);
-            DrawAllLights2(
+            DrawAllLights3(
                 renderer,
                 renderer.BlankSprite.TextureSlice.Texture, // not used by rim light shader
                 renderTargets.RimLights,
@@ -151,14 +154,33 @@ public class WorldRenderPass : RenderPass
             // render rim light to game
             renderer.DrawSprite(renderTargets.RimLights, Matrix4x4.Identity, Color.White);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.RimLightsToMain);
-        }
+        }*/
     }
 
-    private void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private void DrawAllLights3(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
-        world.Entities.FindAll(_lights);
+        for (var i = 0; i < _lights.Count; i++)
+        {
+            var light = _lights[i];
+            if (!light.IsEnabled)
+                continue;
+            if (!light.Bounds.Intersects(cameraBounds))
+                continue;
+            renderer.DrawSprite(renderer.BlankSprite.TextureSlice.Texture, null, light.Bounds, Color.White);
+        }
+        var camera = Shared.Game.Camera;
+        var renderTargets = Shared.Game.RenderTargets;
+        var view = camera.GetViewFloored(0, out _) *
+                   Matrix3x2.CreateScale(renderTargets.GameScale);
+        var projection = Renderer.GetOrthographicProjection(renderTarget.Width, renderTarget.Height);
+        var viewProjection = view.ToMatrix4x4() * projection;
+        renderer.RunRenderPass(ref commandBuffer, renderTarget, clearColor, viewProjection, true, PipelineType.Sprite);
+    }
 
+    private void DrawAllLights2(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+        ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
+    {
         _lightUniforms2.Clear();
         for (var i = 0; i < _lights.Count; i++)
         {
@@ -198,11 +220,9 @@ public class WorldRenderPass : RenderPass
         renderer.EndRenderPass(ref commandBuffer);
     }
 
-    private unsafe void DrawAllLights2(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
+    private unsafe void DrawAllLights(Renderer renderer, Texture lightTexture, Texture renderTarget, Color? clearColor, PipelineType pipelineType, World world,
         ref CommandBuffer commandBuffer, UPoint renderDestinationSize, in Bounds cameraBounds, TextureSamplerBinding[] fragmentBindings)
     {
-        world.Entities.FindAll(_lights);
-
         _lightUniform.Scale = Shared.Game.RenderTargets.GameScale;
         _lightUniform.TexelSize = new Vector4(
             1.0f / renderDestinationSize.X,

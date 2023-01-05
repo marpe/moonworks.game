@@ -11,9 +11,7 @@ public class Mover
     public List<CollisionResult> MoveCollisions = new();
     public List<CollisionResult> ContinuedMoveCollisions = new();
 
-    public List<CollisionResult> PreviousGroundCollisions = new();
     public List<CollisionResult> GroundCollisions = new();
-    public List<CollisionResult> ContinuedGroundCollisions = new();
 
     public void Initialize(Entity parent)
     {
@@ -33,10 +31,7 @@ public class Mover
 
     public bool IsGrounded(Velocity velocity)
     {
-        PreviousGroundCollisions.Clear();
-        PreviousGroundCollisions.AddRange(GroundCollisions);
         GroundCollisions.Clear();
-        ContinuedGroundCollisions.Clear();
 
         if (velocity.Y != 0)
             return false;
@@ -44,20 +39,6 @@ public class Mover
         var position = Parent.Position + Vector2.UnitY;
         if (Parent.HasCollision(position, Parent.Size))
             GroundCollisions.Add(new CollisionResult(CollisionDir.Down, Parent.Position, position, Vector2.UnitY, position));
-
-        for (var i = 0; i < PreviousGroundCollisions.Count; i++)
-        {
-            var prev = PreviousGroundCollisions[i];
-            for (var j = 0; j < GroundCollisions.Count; j++)
-            {
-                var curr = GroundCollisions[j];
-                if (prev == curr)
-                {
-                    ContinuedGroundCollisions.Add(prev);
-                    break;
-                }
-            }
-        }
 
         return GroundCollisions.Count > 0;
     }
@@ -91,6 +72,7 @@ public class Mover
         return false;
     }
 
+#if ENABLE_SANITY_CHECK
     private bool SanityCheck(Vector2 position, string message)
     {
         if (Parent.HasCollision(position, Parent.Size))
@@ -101,6 +83,7 @@ public class Mover
 
         return false;
     }
+#endif
 
     public void Unstuck()
     {
@@ -125,11 +108,13 @@ public class Mover
         if (velocity.Delta.LengthSquared() == 0)
             return;
 
+#if ENABLE_SANITY_CHECK
         if (SanityCheck(Parent.Position.Current, "Already colliding!"))
         {
             velocity.X = velocity.Y = 0;
             return;
         }
+#endif
 
         var deltaMove = velocity * deltaSeconds;
         var steps = MathF.Ceil((MathF.Abs(deltaMove.X) + MathF.Abs(deltaMove.Y)) / World.DefaultGridSize / 0.33f);
@@ -155,7 +140,9 @@ public class Mover
                     var resolved = position;
                     resolved.X -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(intersection, 0), resolved));
+#if ENABLE_SANITY_CHECK
                     SanityCheck(resolved, "Moving along x-axis resulted in moving into a collision tile!");
+#endif
                     position = resolved;
                     velocity.X = deltaMove.X = 0;
                 }
@@ -178,7 +165,9 @@ public class Mover
                     var resolved = position;
                     resolved.Y -= intersection;
                     MoveCollisions.Add(new CollisionResult(direction, prev, position, new Vector2(0, intersection), resolved));
+#if ENABLE_SANITY_CHECK
                     SanityCheck(resolved, "Moving along y-axis resulted in moving into a collision tile!");
+#endif
                     position = resolved;
                     velocity.Y = deltaMove.Y = 0;
                 }
@@ -186,8 +175,11 @@ public class Mover
         }
 
         Parent.Position.Current = position;
+
+#if ENABLE_SANITY_CHECK
         SanityCheck(Parent.Position.Current,
             "Post x/y update resulted in moving into a collision tile"); // one last check, because I don't trust anyone, including myself
+#endif
 
         Velocity.ApplyFriction(velocity, deltaSeconds);
 
