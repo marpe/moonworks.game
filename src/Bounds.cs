@@ -5,7 +5,37 @@ public struct Bounds
 {
     public Vector2 Min;
     public Vector2 Size;
-    public Vector2 Max => Min + Size;
+    public Vector2 Max
+    {
+        get
+        {
+            Vector2 max;
+            max.X = Min.X + Size.X;
+            max.Y = Min.Y + Size.Y;
+            return max;
+        }
+    }
+    public Vector2 BottomLeft
+    {
+        get
+        {
+            Vector2 bottomLeft;
+            bottomLeft.X = Min.X;
+            bottomLeft.Y = Min.Y + Size.Y;
+            return bottomLeft;
+        }
+    }
+
+    public Vector2 TopRight
+    {
+        get
+        {
+            Vector2 topRight;
+            topRight.X = Min.X + Size.X;
+            topRight.Y = Min.Y;
+            return topRight;
+        }
+    }
 
     public Vector2 Center => Min + Size * 0.5f;
 
@@ -19,9 +49,6 @@ public struct Bounds
 
     public float X => Min.X;
     public float Y => Min.Y;
-
-    public Vector2 BottomLeft => new(X, Y + Height);
-    public Vector2 TopRight => new(X + Width, Y);
 
     public Bounds(float x, float y, float w, float h)
     {

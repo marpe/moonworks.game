@@ -16,21 +16,23 @@ public class FontGlyph
 public class FreeTypeFontAtlas : IDisposable
 {
     private static FreeTypeLibrary? _freeTypeLibrary;
-    
+
     private FreeTypeFont? _font;
     private int _lineHeight;
     private int _ascent;
     private Dictionary<(int, int), int> _kernings = new();
 
     private Dictionary<int, FontGlyph> _glyphs = new();
+    private Dictionary<int, Sprite> _sprites = new();
     private Texture? _texture;
 
-    public FreeTypeFontAtlas(GraphicsDevice graphicsDevice, int width, int height, string fileName, uint fontSize, bool premultiplyAlpha)
+    public FreeTypeFontAtlas(GraphicsDevice graphicsDevice, int width, int height, string fileName, uint fontSize,
+        bool premultiplyAlpha)
     {
         var sw = Stopwatch.StartNew();
         _freeTypeLibrary ??= new FreeTypeLibrary();
         var packer = new RectPacker(width, height);
-   
+
         var fontBytes = File.ReadAllBytes(fileName);
         _font = new FreeTypeFont(_freeTypeLibrary, fontBytes);
 
@@ -38,12 +40,12 @@ public class FreeTypeFontAtlas : IDisposable
         var glyphList = GetGlyphList(_font);
 
         var atlasBuffer = new byte[packer.Width * packer.Height * 4];
-        
+
         _font.GetMetricsForSize(fontSize, out var ascent, out var descent, out var lineHeight);
 
-        _ascent = ascent; 
+        _ascent = ascent;
         _lineHeight = lineHeight;
-        
+
         foreach (var (charIndex, charcode) in glyphList)
         {
             if (!ProcessGlyph(fontSize, premultiplyAlpha, _font, charIndex, out var info, out var colorBuffer))
@@ -76,7 +78,8 @@ public class FreeTypeFontAtlas : IDisposable
             _glyphs.Add((int)charcode, glyph);
         }
 
-        _texture = Texture.CreateTexture2D(graphicsDevice, (uint)packer.Width, (uint)packer.Height, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        _texture = Texture.CreateTexture2D(graphicsDevice, (uint)packer.Width, (uint)packer.Height,
+            TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
         SetTextureData(graphicsDevice, new TextureSlice(_texture), atlasBuffer);
 
         sw.StopAndLog("FontAtlas.AddFont");
@@ -90,7 +93,7 @@ public class FreeTypeFontAtlas : IDisposable
         foreach (var rune in str.EnumerateRunes())
         {
             var codepoint = rune.Value;
-            
+
             if (!_glyphs.TryGetValue(codepoint, out var glyph))
             {
                 offset.X += _glyphs['?'].XAdvance;
@@ -104,14 +107,20 @@ public class FreeTypeFontAtlas : IDisposable
                     kerning = _font!.GetGlyphKernAdvance(prevGlyph.Index, glyph.Index);
                     _kernings.Add((prevGlyph.Index, glyph.Index), kerning);
                 }
+
                 offset.X += kerning;
             }
 
             var transform = Matrix3x2.CreateTranslation(glyph.XOffset, glyph.YOffset) *
                             Matrix3x2.CreateScale(1, 1) *
                             Matrix3x2.CreateTranslation(offset);
-            
-            renderer.DrawSprite(new Sprite(_texture!, glyph.Bounds), transform, color);
+
+            if (!_sprites.ContainsKey(codepoint))
+            {
+                _sprites.Add(codepoint, new Sprite(_texture!, glyph.Bounds));
+            }
+
+            renderer.DrawSprite(_sprites[codepoint], transform, color);
             offset.X += glyph.XAdvance;
             prevGlyph = glyph;
         }
@@ -154,7 +163,8 @@ public class FreeTypeFontAtlas : IDisposable
         return glyphList;
     }
 
-    private static bool ProcessGlyph(uint fontSize, bool premultiplyAlpha, FreeTypeFont font, uint glyphIndex, out FreeTypeFont.GlyphInfo info,
+    private static bool ProcessGlyph(uint fontSize, bool premultiplyAlpha, FreeTypeFont font, uint glyphIndex,
+        out FreeTypeFont.GlyphInfo info,
         out byte[] colorBuffer)
     {
         // font.GetGlyphMetrics(glyphIndex, fontSize, out var metrics);

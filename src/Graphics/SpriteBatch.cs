@@ -60,9 +60,16 @@ public class SpriteBatch
 
     public void Draw(Texture texture, in Bounds srcRect, in Bounds dstRect, Color[] colors, float depth, SpriteFlip flip = SpriteFlip.None)
     {
+        var uvs = new UV();
+        Sprite.GenerateUVs(ref uvs, texture, srcRect);
+        Draw(texture, uvs, dstRect, colors, depth, flip);
+    }
+
+    public void Draw(Texture texture, in UV uvs, in Bounds dstRect, Color[] colors, float depth, SpriteFlip flip = SpriteFlip.None)
+    {
         if (NumSprites == _spriteInfo.Length)
         {
-            var maxNumSprites = (int)(NumSprites + 2048);
+            var maxNumSprites = NumSprites + 2048;
             Logs.LogInfo($"Max number of sprites reached, resizing buffers ({NumSprites} -> {maxNumSprites})");
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
@@ -78,12 +85,7 @@ public class SpriteBatch
         }
 
         _spriteInfo[NumSprites] = texture;
-
-        var uvs = new UV();
-        Sprite.GenerateUVs(ref uvs, texture, srcRect);
-
         PushSpriteVertices(_vertices, NumSprites * 4, uvs, dstRect, depth, colors, flip);
-
         NumSprites += 1;
     }
 
@@ -187,24 +189,35 @@ public class SpriteBatch
     public static void PushSpriteVertices(Position3DTextureColorVertex[] vertices, int vertexOffset, in UV uvs, in Bounds dstRect, float depth,
         Color[] colors, SpriteFlip flip)
     {
-        var topLeft = dstRect.Min;
-        var bottomLeft = dstRect.BottomLeft;
-        var topRight = dstRect.TopRight;
-        var bottomRight = dstRect.Max;
+        var minX = dstRect.Min.X;
+        var minY = dstRect.Min.Y;
+        var maxX = minX + dstRect.Size.X;
+        var maxY = minY + dstRect.Size.Y;
 
         if (ShouldRoundPositions)
         {
-            topLeft = topLeft.Floor();
-            bottomLeft = bottomLeft.Floor();
-            topRight = topRight.Floor();
-            bottomRight = bottomRight.Floor();
+            minX = MathF.Floor(minX);
+            minY = MathF.Floor(minY);
+            maxX = MathF.Floor(maxX);
+            maxY = MathF.Floor(maxY);
         }
 
-        SetVector(ref vertices[vertexOffset].Position, topLeft, depth);
-        SetVector(ref vertices[vertexOffset + 1].Position, bottomLeft, depth);
-        SetVector(ref vertices[vertexOffset + 2].Position, topRight, depth);
-        SetVector(ref vertices[vertexOffset + 3].Position, bottomRight, depth);
+        vertices[vertexOffset].Position.X = minX;
+        vertices[vertexOffset].Position.Y = minY;
+        vertices[vertexOffset].Position.Z = depth;
 
+        vertices[vertexOffset + 1].Position.X = minX;
+        vertices[vertexOffset + 1].Position.Y = maxY;
+        vertices[vertexOffset + 1].Position.Z = depth;
+
+        vertices[vertexOffset + 2].Position.X = maxX;
+        vertices[vertexOffset + 2].Position.Y = minY;
+        vertices[vertexOffset + 2].Position.Z = depth;
+        
+        vertices[vertexOffset + 3].Position.X = maxX;
+        vertices[vertexOffset + 3].Position.Y = maxY;
+        vertices[vertexOffset + 3].Position.Z = depth;
+            
         vertices[vertexOffset].TexCoord = uvs.TopLeft;
         vertices[vertexOffset + 1].TexCoord = uvs.BottomLeft;
         vertices[vertexOffset + 2].TexCoord = uvs.TopRight;

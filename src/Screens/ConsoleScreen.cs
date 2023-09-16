@@ -55,7 +55,7 @@ public class ConsoleScreen
     private Stopwatch _renderStopwatch = new();
     private float _renderDurationMs;
     private float _peakRenderDurationMs;
-    private uint _drawCalls;
+    private int _drawCalls;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -513,10 +513,13 @@ public class ConsoleScreen
             DrawText(renderer, scrolledLinesStr, scrollLinesPos, 0, Color.Yellow);
         }
 
-        // TODO (marpe): Readd
-        _drawCalls = 0; // renderer.SpriteBatch.DrawCalls;
         _renderStopwatch.Stop();
         _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
+    }
+
+    public void PostRender()
+    {
+        _drawCalls = SpriteBatch.DrawCalls;
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)

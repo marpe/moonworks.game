@@ -33,6 +33,7 @@ public class ConsoleRenderPass : RenderPass
 
             Shared.Game._fpsDisplay.DrawFPS(renderer, Shared.Game.RenderTargets.ConsoleRender.Size);
             renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, null, null);
+            Shared.Game.ConsoleScreen.PostRender();
         }
 
         if (_hasRenderedConsole)
