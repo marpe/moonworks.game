@@ -5,7 +5,7 @@ public class TWConsole
     private const string DEFAULT_CONFIG_FILENAME = "config.cfg";
     private const int MAX_COMMAND_HISTORY_COUNT = 48;
     public const int BUFFER_WIDTH = 186;
-    public const int BUFFER_HEIGHT = 180;
+    public const int BUFFER_HEIGHT = 1000;
     public readonly SortedDictionary<string, ConsoleCommand> Aliases = new(StringComparer.InvariantCultureIgnoreCase);
     public readonly RingBuffer<string> CommandHistory = new(MAX_COMMAND_HISTORY_COUNT);
     public readonly SortedDictionary<string, ConsoleCommand> Commands = new(StringComparer.InvariantCultureIgnoreCase);

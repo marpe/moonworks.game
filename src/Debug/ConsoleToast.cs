@@ -10,6 +10,7 @@ public static class ConsoleToast
     private static float _elapsedTime;
     private static float _lineRemovePercentage = 1.0f;
     private static float _speed = 2.0f;
+    private static Point _charSize = new Point(10, 18);
 
     public static void Update(float deltaSeconds)
     {
@@ -42,9 +43,38 @@ public static class ConsoleToast
         if (_numLinesToDraw == 0 || Shared.Console.ScreenBuffer.CursorY == 0)
             return;
 
-        var charSize = new Point(10, 18);
+        IterateLines(renderer, maxHeight, DrawContainer);
+        IterateLines(renderer, maxHeight, DrawLine);
+    }
+
+    private static void DrawContainer(Renderer renderer, Rectangle lineRect, int lineIndex)
+    {
+        var lineAlpha = 1.0f; // i == numLinesToDraw - 1 ? _lineRemovePercentage : 1.0f;
+        renderer.DrawRect(lineRect, Color.Black * 0.66f * lineAlpha);
+    }
+
+    private static void DrawLine(Renderer renderer, Rectangle lineRect, int lineIndex)
+    {
+        for (var j = 0; j < Shared.Console.ScreenBuffer.Width; j++)
+        {
+            Shared.Console.ScreenBuffer.GetChar(j, lineIndex, out var c, out var color);
+            if (c == '\0')
+                break;
+            if (ConsoleScreen.CanSkipChar(c))
+                continue;
+            var charColor = ConsoleSettings.Colors[color];
+            var position = new Vector2(lineRect.X + j * _charSize.X, lineRect.Y);
+            _tmp[0] = c;
+            renderer.DrawFTText(BMFontType.ConsolasMonoSmall, _tmp, position, charColor);
+        }
+    }
+
+    private static void IterateLines(Renderer renderer, int maxHeight, Action<Renderer, Rectangle, int> drawCallback)
+    {
         var displayPosition = new Vector2(0, 0);
-        displayPosition.Y = _lineRemovePercentage < 0.2f ? charSize.Y * (MathF.Map(_lineRemovePercentage, 0f, 0.2f, 0f, 1f) - 1.0f) : 0;
+        displayPosition.Y = _lineRemovePercentage < 0.2f
+            ? _charSize.Y * (MathF.Map(_lineRemovePercentage, 0f, 0.2f, 0f, 1f) - 1.0f)
+            : 0;
 
         for (var i = 0; i < _numLinesToDraw; i++)
         {
@@ -53,29 +83,18 @@ public static class ConsoleToast
                 break;
 
             var lineWidth = GetLineWidth(lineIndex);
-
-            var lineRect = new Rectangle(0, (int)(displayPosition.Y + charSize.Y * (_numLinesToDraw - 1 - i)), lineWidth * charSize.X, charSize.Y);
+            var lineRect = new Rectangle(
+                0,
+                (int)(displayPosition.Y + _charSize.Y * (_numLinesToDraw - 1 - i)),
+                lineWidth * _charSize.X,
+                _charSize.Y
+            );
 
             // skip line if it's outside the render target
             if (lineRect.Y >= maxHeight)
                 continue;
 
-            var lineAlpha = 1.0f; // i == numLinesToDraw - 1 ? _lineRemovePercentage : 1.0f;
-
-            renderer.DrawRect(lineRect, Color.Black * 0.66f * lineAlpha);
-
-            for (var j = 0; j < Shared.Console.ScreenBuffer.Width; j++)
-            {
-                Shared.Console.ScreenBuffer.GetChar(j, lineIndex, out var c, out var color);
-                if (c == '\0')
-                    break;
-                if (ConsoleScreen.CanSkipChar(c))
-                    continue;
-                var charColor = ConsoleSettings.Colors[color] * lineAlpha;
-                var position = new Vector2(lineRect.X + j * charSize.X, lineRect.Y);
-                _tmp[0] = c;
-                renderer.DrawFTText(BMFontType.ConsolasMonoSmall, _tmp, position, charColor);
-            }
+            drawCallback(renderer, lineRect, lineIndex);
         }
     }
 

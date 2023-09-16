@@ -21,6 +21,7 @@ public class ConsoleRenderPass : RenderPass
         {
             _lastUpdateCount = Shared.Game.Time.UpdateCount;
             _hasRenderedConsole = true;
+            Shared.Game.ConsoleScreen.PreRender();
             renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, Color.Transparent);
             renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
 
