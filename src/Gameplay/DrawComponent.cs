@@ -64,7 +64,7 @@ public class DrawComponent
     
     private Matrix3x2 _lastUpdateTransform = Matrix3x2.Identity;
     private Matrix3x2 _transform = Matrix3x2.Identity;
-    private bool _isDirty;
+    private bool _isDirty = true;
     
     public static bool ShouldRoundPositions;
 

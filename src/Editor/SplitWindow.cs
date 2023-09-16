@@ -171,15 +171,18 @@ public abstract unsafe class SplitWindow : ImGuiEditorWindow
 
         var path = GetPathRelativeToCwd(tileSetPath);
 
-        if (File.Exists(path))
+        try
         {
             tileSetTexture = Shared.Content.Load<TextureAsset>(path).TextureSlice.Texture;
             editor.ImGuiRenderer.BindTexture(tileSetTexture, true);
             return true;
         }
-
-        tileSetTexture = editor.Renderer.BlankSprite.TextureSlice.Texture;
-        return false;
+        catch (Exception e)
+        {
+            Logger.LogError($"Could not load texture \"{path}\" ({e.Message})");
+            tileSetTexture = editor.Renderer.BlankSprite.TextureSlice.Texture;
+            return false;
+        }
     }
 
     public static bool GiantButton(string label, bool isSelected, Color color, int rowMinHeight)

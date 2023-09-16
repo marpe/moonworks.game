@@ -1629,7 +1629,13 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         fillColor = isSelectedLayer ? fillColor : fillColor.MultiplyAlpha(DeselectedLayerAlpha);
         iconTint = isSelectedLayer ? iconTint : iconTint.MultiplyAlpha(DeselectedLayerAlpha);
         if (entityDef.Identifier != "Light")
-            dl->AddRectFilled(boundsMin, boundsMax, fillColor.PackedValue);
+        {
+            // TODO: Add draw commands to a list and sort by texture before issuing them to prevent texture changes
+            var blankTextureUvMin = new Num.Vector2(0f / 112f, 32f / 48f);
+            var blankTextureUvMax = new Num.Vector2(16f / 112f, 48f / 48f);
+            dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, boundsMin, boundsMax, blankTextureUvMin, blankTextureUvMax, fillColor.PackedValue);
+        }
+
         dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, iconTint.PackedValue);
 
         if (isSelectedLayer)
