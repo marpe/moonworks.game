@@ -224,7 +224,7 @@ public abstract class MenuScreen
 
             if (!_game.InputHandler.IsMouseButtonPressed(MouseButtonCode.Left))
                 continue;
-            
+
             _menuItems[i].Callback?.Invoke();
 
             return true;
@@ -281,7 +281,8 @@ public abstract class MenuScreen
             var isFancy = menuItem is FancyTextMenuItem;
             var color = (isSelected, isEnabled, isFancy) switch
             {
-                (true, _, _) => ColorExt.PulseColor(HighlightColor1, HighlightColor2, Shared.Game.Time.TotalElapsedTime),
+                (true, _, _) => ColorExt.PulseColor(HighlightColor1, HighlightColor2,
+                    Shared.Game.Time.TotalElapsedTime),
                 (_, false, false) => DisabledColor,
                 (_, _, true) => Color.White,
                 (_, _, _) => NormalColor

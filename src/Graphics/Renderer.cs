@@ -240,15 +240,15 @@ public class Renderer
     }
 
     public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
-        Color color)
+        Color color, BMFont.DrawCall[] buffer, ref int startIndex)
     {
-        BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth);
+        BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, color, depth, buffer, ref startIndex);
     }
 
     public void DrawBMText(BMFontType fontType, ReadOnlySpan<char> text, Vector2 position, Vector2 origin, Vector2 scale, float rotation, float depth,
-        Color[] colors)
+        Color[] colors, BMFont.DrawCall[] buffer, ref int startIndex)
     {
-        BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth);
+        BMFont.DrawInto(this, BMFonts[(int)fontType], text, position, origin, rotation, scale, colors, depth, buffer, ref startIndex);
     }
 
     public Vector2 MeasureString(BMFontType fontType, ReadOnlySpan<char> text)

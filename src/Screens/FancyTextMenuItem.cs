@@ -20,7 +20,7 @@ public class FancyTextMenuItem : MenuItem
             );
         }
     }
-    
+
     public Vector2 ShadowOffset = Vector2.One * 5f;
 
     public FancyTextMenuItem(ReadOnlySpan<char> text, Action? callback = null)
@@ -44,7 +44,10 @@ public class FancyTextMenuItem : MenuItem
         if (!IsVisible)
             return;
 
-        TextComponent.Render(FontType, renderer, position + ShadowOffset , Color.Black * Alpha, 1.0f);
+        if (Alpha < 0.01f)
+            return;
+
+        TextComponent.Render(FontType, renderer, position + ShadowOffset, Color.Black * Alpha, 1.0f);
         TextComponent.Render(FontType, renderer, position, color * Alpha, 1.0f);
     }
 }

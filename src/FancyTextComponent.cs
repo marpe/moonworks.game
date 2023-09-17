@@ -231,6 +231,8 @@ public class FancyTextComponent
         var previousChar = ' ';
         var prevLine = 0;
 
+        var numDrawCalls = 0;
+        
         for (var i = 0; i < Parts.Length; i++)
         {
             var part = Parts[i];
@@ -256,12 +258,20 @@ public class FancyTextComponent
                 var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
                 renderer.DrawBMText(fontType, part.Character, new Vector2((int)finalPos.X, (int)finalPos.Y), partOrigin, Scale * part.Scale,
-                    Rotation + part.Rotation, 0, finalColors);
+                    Rotation + part.Rotation, 0, finalColors, TextMenuItem.DrawBuffer, ref numDrawCalls);
             }
 
             partOffset.X += charSize.X;
             previousChar = part.Character[0];
             prevLine = part.Offset.Y;
+        }
+        
+        TextMenuItem.DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
+            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
+        for (var i = 0; i < numDrawCalls; i++)
+        {
+            var drawCall = TextMenuItem.DrawBuffer[i];
+            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
         }
     }
 

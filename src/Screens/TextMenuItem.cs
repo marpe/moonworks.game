@@ -38,6 +38,19 @@ public abstract class MenuItem
 
 public class TextMenuItem : MenuItem
 {
+    public static BMFont.DrawCall[] DrawBuffer = new BMFont.DrawCall[1024];
+
+    static TextMenuItem()
+    {
+        for (var i = 0; i < DrawBuffer.Length; i++)
+        {
+            DrawBuffer[i] = new BMFont.DrawCall
+            {
+                Colors = new Color[4],
+            };
+        }
+    }
+    
     private string _text;
     public string Text
     {
@@ -89,9 +102,31 @@ public class TextMenuItem : MenuItem
     {
         if (!IsVisible)
             return;
+        
+        if (Alpha < 0.01f)
+            return;
+        
         var (alignX, alignY) = GetAlignment(AlignH, AlignV);
         var offset = new Vector2(Width, Height) * new Vector2(alignX, alignY);
-        renderer.DrawBMText(FontType, Text, position + ShadowOffset, offset, Vector2.One, 0, 0, Color.Black * Alpha);
-        renderer.DrawBMText(FontType, Text, position, offset, Vector2.One, 0, 0, color * Alpha);
+        
+        var numDrawCalls = 0;
+        renderer.DrawBMText(FontType, Text, position + ShadowOffset, offset, Vector2.One, 0, 0, Color.Black * Alpha, DrawBuffer, ref numDrawCalls);
+        DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
+            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
+        for (var i = 0; i < numDrawCalls; i++)
+        {
+            var drawCall = DrawBuffer[i];
+            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
+        }
+
+        numDrawCalls = 0;
+        renderer.DrawBMText(FontType, Text, position, offset, Vector2.One, 0, 0, color * Alpha, DrawBuffer, ref numDrawCalls);
+        DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
+            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
+        for (var i = 0; i < numDrawCalls; i++)
+        {
+            var drawCall = DrawBuffer[i];
+            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
+        }
     }
 }

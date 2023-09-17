@@ -173,7 +173,8 @@ public class Entity
             var posText = $"{StringExt.TruncateNumber(Position.Current.X)}, {StringExt.TruncateNumber(Position.Current.Y)}";
             ReadOnlySpan<char> str = posText + " " + cellText;
             var textSize = renderer.MeasureString(BMFontType.ConsolasMonoSmall, str);
-            renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
+            // TODO (marpe): Fix
+            // renderer.DrawBMText(BMFontType.ConsolasMonoSmall, str, Position.Current, textSize * new Vector2(0.5f, 1), Vector2.One * 0.25f, 0, 0, Color.Black);
         }
     }
 }
