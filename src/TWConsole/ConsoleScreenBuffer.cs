@@ -6,37 +6,45 @@ public class ConsoleScreenBuffer
     private int _cursorX = 0;
 
     private int _displayY = 0;
+    private int _height;
+    private int _width;
 
     public ConsoleScreenBuffer(int width, int height)
     {
-        Height = height;
-        Width = width;
+        _height = height;
+        _width = width;
         _buffer = new short[width * height];
     }
 
-    private int _wrappedY => CursorY % Height * Width;
+    private int _wrappedY => CursorY % _height * _width;
 
     public int DisplayY
     {
         get => _displayY;
         set
         {
-            var minValue = Math.Max(0, CursorY - Height + 1); // show at least one line
+            var minValue = Math.Max(0, CursorY - _height + 1); // show at least one line
             _displayY = MathF.Clamp(value, minValue, CursorY);
         }
     }
 
-    public int Height { get; private set; }
+    public int Height
+    {
+        get => _height;
+    }
 
-    public int Width { get; private set; }
+    public int Width
+    {
+        get => _width;
+    }
 
     public int CursorY { get; private set; } = 0;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void GetChar(int x, int y, out char c, out byte color)
     {
-        var line = (Height + y) % Height;
-        var i = line * Width + x;
+        var line = (_height + y) % _height;
+        var i = line * _width + x;
         Unpack(_buffer[i], out c, out color);
     }
 
@@ -114,14 +122,14 @@ public class ConsoleScreenBuffer
 
     public void Resize(int width, int height)
     {
-        var (oldWidth, oldHeight) = (Width, Height);
-        Width = width;
-        Height = height;
+        var (oldWidth, oldHeight) = (_width, _height);
+        _width = width;
+        _height = height;
 
         var newBuffer = new short[width * height];
 
-        var numLines = Height < oldHeight ? Height : oldHeight;
-        var numChars = Width < oldWidth ? Width : oldWidth;
+        var numLines = _height < oldHeight ? _height : oldHeight;
+        var numChars = _width < oldWidth ? _width : oldWidth;
         for (var y = 0; y < numLines; y++)
         {
             for (var x = 0; x < numChars; x++)
@@ -131,7 +139,7 @@ public class ConsoleScreenBuffer
         }
 
         _buffer = newBuffer;
-        CursorY = Height - 1;
+        CursorY = _height - 1;
         _displayY = CursorY;
     }
 }

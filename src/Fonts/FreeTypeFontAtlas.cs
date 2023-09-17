@@ -22,8 +22,12 @@ public class FreeTypeFontAtlas : IDisposable
     private int _ascent;
     private Dictionary<(int, int), int> _kernings = new();
 
-    private Dictionary<int, FontGlyph> _glyphs = new();
-    private Dictionary<int, Sprite> _sprites = new();
+    // private Dictionary<int, FontGlyph> _glyphs = new();
+    private FontGlyph[] _glyphs = new FontGlyph[128];
+    private UV[] _uvs = new UV[128];
+
+    // private Dictionary<int, Sprite> _sprites = new();
+    // private Dictionary<int, UV> _uvs = new();
     private Texture? _texture;
 
     public FreeTypeFontAtlas(GraphicsDevice graphicsDevice, int width, int height, string fileName, uint fontSize,
@@ -75,7 +79,12 @@ public class FreeTypeFontAtlas : IDisposable
                 YOffset = info.OffsetY,
                 FontSize = (int)fontSize,
             };
-            _glyphs.Add((int)charcode, glyph);
+            // _glyphs.Add((int)charcode, glyph);
+            _glyphs[(int)charcode] = glyph;
+            var uv = new UV();
+            Sprite.GenerateUVs(ref uv, packer.Width, packer.Height, dstX, dstY, info.Width, info.Height);
+            _uvs[(int)charcode] = uv;
+            // _uvs.Add((int)charcode, uv);
         }
 
         _texture = Texture.CreateTexture2D(graphicsDevice, (uint)packer.Width, (uint)packer.Height,
@@ -94,12 +103,14 @@ public class FreeTypeFontAtlas : IDisposable
         {
             var codepoint = rune.Value;
 
-            if (!_glyphs.TryGetValue(codepoint, out var glyph))
+            if (codepoint == ' ') // || !_glyphs.TryGetValue(codepoint, out var glyph))
             {
                 offset.X += _glyphs['?'].XAdvance;
                 continue;
             }
-
+            
+            var glyph = _glyphs[codepoint];
+            
             if (prevGlyph != null)
             {
                 if (!_kernings.TryGetValue((prevGlyph.Index, glyph.Index), out var kerning))
@@ -111,16 +122,40 @@ public class FreeTypeFontAtlas : IDisposable
                 offset.X += kerning;
             }
 
-            var transform = Matrix3x2.CreateTranslation(glyph.XOffset, glyph.YOffset) *
+            /*var transform = Matrix3x2.CreateTranslation(glyph.XOffset, glyph.YOffset) *
                             Matrix3x2.CreateScale(1, 1) *
-                            Matrix3x2.CreateTranslation(offset);
+                            Matrix3x2.CreateTranslation(offset);*/
 
-            if (!_sprites.ContainsKey(codepoint))
+            /*if (!_sprites.ContainsKey(codepoint))
             {
                 _sprites.Add(codepoint, new Sprite(_texture!, glyph.Bounds));
-            }
+            }*/
 
-            renderer.DrawSprite(_sprites[codepoint], transform, color);
+            Vector2 dstMin;
+            dstMin.X = offset.X + glyph.XOffset;
+            dstMin.Y = offset.Y + glyph.YOffset;
+
+            Vector2 size;
+            size.X = glyph.Bounds.Width;
+            size.Y = glyph.Bounds.Height;
+
+            Bounds dstRect;
+            dstRect.Min = dstMin;
+            dstRect.Size = size;
+
+            /*if (!_uvs.TryGetValue(codepoint, out var uv))
+            {
+                Sprite.GenerateUVs(
+                    ref uv,
+                    _texture!.Width, _texture!.Height,
+                    glyph.Bounds.X, glyph.Bounds.Y, glyph.Bounds.Width, glyph.Bounds.Height
+                );
+                _uvs.Add(codepoint, uv);
+            }*/
+            
+            var uv = _uvs[codepoint];
+            
+            renderer.DrawSprite(_texture!, uv, dstRect, color);
             offset.X += glyph.XAdvance;
             prevGlyph = glyph;
         }

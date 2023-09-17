@@ -23,7 +23,12 @@ public class SpriteBatch
     private Buffer _indexBuffer;
 
     private uint[] _indices;
-    public int NumSprites { get; private set; }
+
+    private int _numSprites;
+    public int NumSprites
+    {
+        get => _numSprites;
+    }
 
     private Texture[] _spriteInfo;
     private Buffer _vertexBuffer;
@@ -67,10 +72,10 @@ public class SpriteBatch
 
     public void Draw(Texture texture, in UV uvs, in Bounds dstRect, Color[] colors, float depth, SpriteFlip flip = SpriteFlip.None)
     {
-        if (NumSprites == _spriteInfo.Length)
+        if (_numSprites == _spriteInfo.Length)
         {
-            var maxNumSprites = NumSprites + 2048;
-            Logs.LogInfo($"Max number of sprites reached, resizing buffers ({NumSprites} -> {maxNumSprites})");
+            var maxNumSprites = _numSprites + 2048;
+            Logs.LogInfo($"Max number of sprites reached, resizing buffers ({_numSprites} -> {maxNumSprites})");
             Array.Resize(ref _spriteInfo, maxNumSprites);
             Array.Resize(ref _vertices, _vertices.Length + _spriteInfo.Length * 4);
 
@@ -84,9 +89,14 @@ public class SpriteBatch
             _indicesNeedsUpdate = true;
         }
 
-        _spriteInfo[NumSprites] = texture;
-        PushSpriteVertices(_vertices, NumSprites * 4, uvs, dstRect, depth, colors, flip);
-        NumSprites += 1;
+        if (_numSprites > 0 && _spriteInfo[_numSprites - 1] != texture)
+        {
+            // this if statement is for debugging texture changes easily
+        }
+        
+        _spriteInfo[_numSprites] = texture;
+        PushSpriteVertices(_vertices, _numSprites * 4, uvs, dstRect, depth, colors, flip);
+        _numSprites += 1;
     }
 
     private static void SetVector(ref Vector3 dest, in Vector2 src, float z)
@@ -98,7 +108,7 @@ public class SpriteBatch
 
     public void UpdateBuffers(ref CommandBuffer commandBuffer)
     {
-        if (NumSprites == 0)
+        if (_numSprites == 0)
         {
             Logs.LogWarn("Buffers are empty");
             return;
@@ -110,7 +120,7 @@ public class SpriteBatch
             _indicesNeedsUpdate = false;
         }
 
-        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, (uint)(NumSprites * 4));
+        commandBuffer.SetBufferData(_vertexBuffer, _vertices, 0, 0, (uint)(_numSprites * 4));
     }
 
     /// Iterates the submitted sprites, binds uniforms, samplers and calls DrawIndexedPrimitives 
@@ -126,13 +136,13 @@ public class SpriteBatch
     public void DrawIndexed(ref CommandBuffer commandBuffer, Matrix4x4 viewProjection, bool usePointFiltering)
     {
         var vertexParamOffset = commandBuffer.PushVertexShaderUniforms(viewProjection);
-        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings, usePointFiltering, 0, NumSprites);
-        NumSprites = 0;
+        DrawIndexed(ref commandBuffer, vertexParamOffset, 0u, _fragmentSamplerBindings, usePointFiltering, 0, _numSprites);
+        _numSprites = 0;
     }
 
     public void Discard()
     {
-        NumSprites = 0;
+        _numSprites = 0;
     }
 
     public void DrawIndexed(ref CommandBuffer commandBuffer, uint vertexUniformOffset, uint fragmentUniformOffset,

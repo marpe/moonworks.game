@@ -196,12 +196,12 @@ public class Renderer
         }
     }
 
-    public void DrawSprite(in Sprite sprite, Matrix3x2 transform, Color color, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(in Sprite sprite, in Matrix3x2 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
         DrawSprite(sprite, ToMatrix4x4(transform), color, flip);
     }
 
-    public void DrawSprite(in Sprite sprite, Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
+    public void DrawSprite(in Sprite sprite, in Matrix4x4 transform, Color color, SpriteFlip flip = SpriteFlip.None)
     {
         SetColor(ref _tempColors, color);
         DrawSprite(sprite, transform, _tempColors, 0, flip);
@@ -215,6 +215,12 @@ public class Renderer
         Vector2.Transform(ref max, ref transform, out max);
         var dstRect = new Bounds(min, max);
         SpriteBatch.Draw(sprite.TextureSlice.Texture, sprite.UV, dstRect, colors, depth, flip);
+    }
+    
+    public void DrawSprite(Texture texture, in UV uvs, in Bounds dstRect, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)
+    {
+        SetColor(ref _tempColors, color);
+        SpriteBatch.Draw(texture, uvs, dstRect, _tempColors, depth, flip);
     }
 
     public void DrawSprite(Texture texture, in Bounds? srcRect, in Bounds dstRect, Color color, float depth = 0, SpriteFlip flip = SpriteFlip.None)

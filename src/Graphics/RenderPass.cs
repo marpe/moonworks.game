@@ -12,6 +12,8 @@ public class RenderPass
 
 public class ConsoleRenderPass : RenderPass
 {
+    public static int DrawCalls = 0;
+
     private bool _hasRenderedConsole;
     private ulong _lastUpdateCount;
 
@@ -21,8 +23,8 @@ public class ConsoleRenderPass : RenderPass
         {
             _lastUpdateCount = Shared.Game.Time.UpdateCount;
             _hasRenderedConsole = true;
-            Shared.Game.ConsoleScreen.PreRender();
             renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, Color.Transparent);
+            var initialDrawCalls = SpriteBatch.DrawCalls;
             renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
 
             ConsoleToast.Draw(renderer, (int)Shared.Game.RenderTargets.ConsoleRender.Target.Height);
@@ -34,7 +36,7 @@ public class ConsoleRenderPass : RenderPass
 
             Shared.Game._fpsDisplay.DrawFPS(renderer, Shared.Game.RenderTargets.ConsoleRender.Size);
             renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.ConsoleRender, null, null);
-            Shared.Game.ConsoleScreen.PostRender();
+            DrawCalls = SpriteBatch.DrawCalls - initialDrawCalls;
         }
 
         if (_hasRenderedConsole)
@@ -55,8 +57,14 @@ public class WorldRenderPass : RenderPass
     private TextureSamplerBinding[] _lightTextureSamplerBindings = new TextureSamplerBinding[1];
     private TextureSamplerBinding[] _rimLightTextureSamplerBindings = new TextureSamplerBinding[2];
 
+    public static int DrawCalls;
+    public static int LightDrawCalls;
+    public static int WorldDrawCalls;
+    public static int RimLightDrawCalls;
+
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
+        var initialDrawCalls = SpriteBatch.DrawCalls;
         var renderTargets = Shared.Game.RenderTargets;
         DrawWorld(renderer, ref commandBuffer, renderTargets.GameRender, alpha);
 
@@ -73,6 +81,7 @@ public class WorldRenderPass : RenderPass
         renderer.DrawSprite(renderTargets.GameRender, srcRect, dstRect, Color.White);
 
         renderer.RunRenderPass(ref commandBuffer, renderDestination, Color.Black, null, false, PipelineType.PixelArt);
+        DrawCalls = SpriteBatch.DrawCalls - initialDrawCalls;
     }
 
     private void DrawWorld(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
@@ -84,6 +93,8 @@ public class WorldRenderPass : RenderPass
         {
             return;
         }
+        
+        var initialWorldDrawCalls = SpriteBatch.DrawCalls;
 
         var camera = Shared.Game.Camera;
         var renderTargets = Shared.Game.RenderTargets;
@@ -111,10 +122,13 @@ public class WorldRenderPass : RenderPass
         renderer.DrawSprite(renderTargets.LevelBase, Matrix4x4.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderTargets.LightBase, Color.Transparent, null);
 
+        WorldDrawCalls = SpriteBatch.DrawCalls - initialWorldDrawCalls;
+        
         world.Entities.FindAll(_lights);
 
         if (World.LightsEnabled)
         {
+            var initialLightDrawCalls = SpriteBatch.DrawCalls;
             renderer.Clear(ref commandBuffer, renderTargets.NormalLights, world.AmbientColor);
 
             DrawAllLights(
@@ -134,12 +148,15 @@ public class WorldRenderPass : RenderPass
             renderer.DrawSprite(renderTargets.NormalLights, Matrix4x4.Identity, Color.White);
             // TODO (marpe): Experiment with sampling for light layers
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.LightsToMain);
+            LightDrawCalls = SpriteBatch.DrawCalls - initialLightDrawCalls; 
         }
 
         if (World.RimLightsEnabled)
         {
+            var initialRimLightDrawCalls = SpriteBatch.DrawCalls;
             _rimLightTextureSamplerBindings[1] = new TextureSamplerBinding(renderTargets.LightBase, SpriteBatch.LinearClamp);
             renderer.Clear(ref commandBuffer, renderTargets.RimLights, Color.Transparent);
+            
             DrawAllLights(
                 renderer,
                 renderer.BlankSprite.TextureSlice.Texture, // not used by rim light shader
@@ -156,6 +173,7 @@ public class WorldRenderPass : RenderPass
             // render rim light to game
             renderer.DrawSprite(renderTargets.RimLights, Matrix4x4.Identity, Color.White);
             renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null, true, PipelineType.RimLightsToMain);
+            RimLightDrawCalls = SpriteBatch.DrawCalls - initialRimLightDrawCalls; 
         }
     }
 
@@ -302,14 +320,18 @@ public class WorldRenderPass : RenderPass
 
 public class MenuRenderPass : RenderPass
 {
+    public static int DrawCalls = 0;
+    
     public override void Draw(Renderer renderer, ref CommandBuffer commandBuffer, Texture renderDestination, double alpha)
     {
         renderer.Clear(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent);
+        var initialDrawCalls = SpriteBatch.DrawCalls;
         renderer.DrawRect(new Vector2(0, 0), new Vector2(1, 1), Color.Black);
         Shared.Menus.Draw(renderer, alpha);
         renderer.RunRenderPass(ref commandBuffer, Shared.Game.RenderTargets.MenuRender.Target, Color.Transparent, null);
         renderer.DrawSprite(Shared.Game.RenderTargets.MenuRender.Target, Matrix3x2.Identity, Color.White);
         renderer.RunRenderPass(ref commandBuffer, renderDestination, null, null);
+        DrawCalls = SpriteBatch.DrawCalls - initialDrawCalls;
     }
 }
 

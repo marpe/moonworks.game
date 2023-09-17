@@ -55,8 +55,6 @@ public class ConsoleScreen
     private Stopwatch _renderStopwatch = new();
     private float _renderDurationMs;
     private float _peakRenderDurationMs;
-    private int _drawCalls;
-    private int _initialDrawCalls;
 
     public ConsoleScreen(MyGameMain game)
     {
@@ -502,7 +500,6 @@ public class ConsoleScreen
             _peakRenderDurationMs = StopwatchExt.SmoothValue(_peakRenderDurationMs, _renderDurationMs);
             var scrolledLinesStr =
                 $"CharsDrawn({_charsDrawn}) " +
-                $"DrawCalls({_drawCalls - _initialDrawCalls}) " +
                 $"Elapsed({_peakRenderDurationMs:00.00} ms) ";
             var lineLength = scrolledLinesStr.Length * CharSize.X;
             var scrollLinesPos = new Vector2(
@@ -516,16 +513,6 @@ public class ConsoleScreen
 
         _renderStopwatch.Stop();
         _renderDurationMs = _renderStopwatch.GetElapsedMilliseconds();
-    }
-
-    public void PreRender()
-    {
-        _initialDrawCalls = SpriteBatch.DrawCalls;
-    }
-    
-    public void PostRender()
-    {
-        _drawCalls = SpriteBatch.DrawCalls;
     }
 
     private void DrawInput(Renderer renderer, Rectangle textArea, Vector2 displayPosition)
