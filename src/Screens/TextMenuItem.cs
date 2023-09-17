@@ -51,6 +51,18 @@ public class TextMenuItem : MenuItem
         }
     }
     
+    public static void SortAndFlushBuffer(Renderer renderer, int numDrawCalls)
+    {
+        DrawBuffer.AsSpan(0, numDrawCalls)
+            .Sort((a, b) => a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
+        
+        for (var i = 0; i < numDrawCalls; i++)
+        {
+            ref var drawCall = ref DrawBuffer[i];
+            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
+        }
+    }
+    
     private string _text;
     public string Text
     {
@@ -111,22 +123,10 @@ public class TextMenuItem : MenuItem
         
         var numDrawCalls = 0;
         renderer.DrawBMText(FontType, Text, position + ShadowOffset, offset, Vector2.One, 0, 0, Color.Black * Alpha, DrawBuffer, ref numDrawCalls);
-        DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
-            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
-        for (var i = 0; i < numDrawCalls; i++)
-        {
-            var drawCall = DrawBuffer[i];
-            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
-        }
+        SortAndFlushBuffer(renderer, numDrawCalls);
 
         numDrawCalls = 0;
         renderer.DrawBMText(FontType, Text, position, offset, Vector2.One, 0, 0, color * Alpha, DrawBuffer, ref numDrawCalls);
-        DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
-            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
-        for (var i = 0; i < numDrawCalls; i++)
-        {
-            var drawCall = DrawBuffer[i];
-            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
-        }
+        SortAndFlushBuffer(renderer, numDrawCalls);
     }
 }

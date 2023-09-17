@@ -266,13 +266,7 @@ public class FancyTextComponent
             prevLine = part.Offset.Y;
         }
         
-        TextMenuItem.DrawBuffer.AsSpan(0, numDrawCalls).Sort((a, b) =>
-            a.Sprite.TextureSlice.Texture.Handle.CompareTo(b.Sprite.TextureSlice.Texture.Handle));
-        for (var i = 0; i < numDrawCalls; i++)
-        {
-            var drawCall = TextMenuItem.DrawBuffer[i];
-            renderer.DrawSprite(drawCall.Sprite, drawCall.Transform, drawCall.Colors, drawCall.Depth);
-        }
+        TextMenuItem.SortAndFlushBuffer(renderer, numDrawCalls);
     }
 
     private static int CountLines(ReadOnlySpan<char> text)
