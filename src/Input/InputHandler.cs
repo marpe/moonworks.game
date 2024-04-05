@@ -67,7 +67,7 @@ public class InputHandler
         get
         {
             var mousePosition = new Vector2(_inputs.Mouse.X, _inputs.Mouse.Y);
-            Vector2.Transform(ref mousePosition, ref _viewportInvInvert, out var mouseInViewport);
+            var mouseInViewport = Vector2.Transform(mousePosition, _viewportTransform);
             return mouseInViewport;
         }
     }

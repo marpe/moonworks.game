@@ -45,6 +45,7 @@ public static class ContentPaths
     {
         public const string consola_ttf = @"Content\fonts\consola.ttf";
         public const string fa_6_solid_900_ttf = @"Content\fonts\fa-6-solid-900.ttf";
+        public const string JetBrains_Mono_Medium_Nerd_Font_Complete_Mono_Windows_Compatible_ttf = @"Content\fonts\JetBrains Mono Medium Nerd Font Complete Mono Windows Compatible.ttf";
         public const string Pixellari_ttf = @"Content\fonts\Pixellari.ttf";
         public const string Roboto_Bold_ttf = @"Content\fonts\Roboto-Bold.ttf";
         public const string Roboto_Regular_ttf = @"Content\fonts\Roboto-Regular.ttf";
@@ -77,48 +78,50 @@ public static class ContentPaths
     {
         public static class CircleCrop
         {
-            public const string circle_crop_transition_frag_spv = @"Content\Shaders\CircleCrop\circle_crop_transition.frag.spv";
-            public const string circle_crop_transition_vert_spv = @"Content\Shaders\CircleCrop\circle_crop_transition.vert.spv";
+            public const string circle_crop_transition_frag_refresh = @"Content\Shaders\CircleCrop\circle_crop_transition.frag.refresh";
+            public const string circle_crop_transition_vert_refresh = @"Content\Shaders\CircleCrop\circle_crop_transition.vert.refresh";
         }
         public static class DiamondTransition
         {
-            public const string diamond_transition_frag_spv = @"Content\Shaders\DiamondTransition\diamond_transition.frag.spv";
-            public const string diamond_transition_vert_spv = @"Content\Shaders\DiamondTransition\diamond_transition.vert.spv";
+            public const string diamond_transition_frag_refresh = @"Content\Shaders\DiamondTransition\diamond_transition.frag.refresh";
+            public const string diamond_transition_vert_refresh = @"Content\Shaders\DiamondTransition\diamond_transition.vert.refresh";
         }
         public static class imgui
         {
-            public const string sprite_frag_spv = @"Content\Shaders\imgui\sprite.frag.spv";
-            public const string sprite_vert_spv = @"Content\Shaders\imgui\sprite.vert.spv";
+            public const string from_imgui_repo_frag_refresh = @"Content\Shaders\imgui\from_imgui_repo.frag.refresh";
+            public const string from_imgui_repo_vert_refresh = @"Content\Shaders\imgui\from_imgui_repo.vert.refresh";
+            public const string sprite_frag_refresh = @"Content\Shaders\imgui\sprite.frag.refresh";
+            public const string sprite_vert_refresh = @"Content\Shaders\imgui\sprite.vert.refresh";
         }
         public static class Lights2
         {
             public const string common_glsl = @"Content\Shaders\Lights2\common.glsl";
-            public const string light2_frag_spv = @"Content\Shaders\Lights2\light2.frag.spv";
-            public const string light2_vert_spv = @"Content\Shaders\Lights2\light2.vert.spv";
+            public const string light2_frag_refresh = @"Content\Shaders\Lights2\light2.frag.refresh";
+            public const string light2_vert_refresh = @"Content\Shaders\Lights2\light2.vert.refresh";
         }
         public static class PixelArtShader
         {
             public const string from_godot_txt = @"Content\Shaders\PixelArtShader\from_godot.txt";
-            public const string pixel_art_frag_spv = @"Content\Shaders\PixelArtShader\pixel_art.frag.spv";
-            public const string pixel_art_vert_spv = @"Content\Shaders\PixelArtShader\pixel_art.vert.spv";
+            public const string pixel_art_frag_refresh = @"Content\Shaders\PixelArtShader\pixel_art.frag.refresh";
+            public const string pixel_art_vert_refresh = @"Content\Shaders\PixelArtShader\pixel_art.vert.refresh";
             public const string shadertoy_txt = @"Content\Shaders\PixelArtShader\shadertoy.txt";
         }
         public static class Pixelize
         {
-            public const string pixelize_transition_frag_spv = @"Content\Shaders\Pixelize\pixelize_transition.frag.spv";
-            public const string pixelize_transition_vert_spv = @"Content\Shaders\Pixelize\pixelize_transition.vert.spv";
+            public const string pixelize_transition_frag_refresh = @"Content\Shaders\Pixelize\pixelize_transition.frag.refresh";
+            public const string pixelize_transition_vert_refresh = @"Content\Shaders\Pixelize\pixelize_transition.vert.refresh";
         }
         public static class RimLight
         {
-            public const string common_glsl = @"Content\Shaders\RimLight\common.glsl";
-            public const string light_frag_spv = @"Content\Shaders\RimLight\light.frag.spv";
-            public const string rim_light_frag_spv = @"Content\Shaders\RimLight\rim_light.frag.spv";
-            public const string rim_light_vert_spv = @"Content\Shaders\RimLight\rim_light.vert.spv";
+            public const string common_lib = @"Content\Shaders\RimLight\common.lib";
+            public const string light_frag_refresh = @"Content\Shaders\RimLight\light.frag.refresh";
+            public const string rim_light_frag_refresh = @"Content\Shaders\RimLight\rim_light.frag.refresh";
+            public const string rim_light_vert_refresh = @"Content\Shaders\RimLight\rim_light.vert.refresh";
         }
         public static class Sprite
         {
-            public const string sprite_frag_spv = @"Content\Shaders\Sprite\sprite.frag.spv";
-            public const string sprite_vert_spv = @"Content\Shaders\Sprite\sprite.vert.spv";
+            public const string sprite_frag_refresh = @"Content\Shaders\Sprite\sprite.frag.refresh";
+            public const string sprite_vert_refresh = @"Content\Shaders\Sprite\sprite.vert.refresh";
         }
     }
     public static class Textures

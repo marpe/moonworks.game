@@ -1,4 +1,6 @@
 ﻿using MoonWorks.Collision.Float;
+using MoonWorks.Math.Fixed;
+using Vector2 = MoonWorks.Math.Float.Vector2;
 
 namespace MyGame.Entities;
 
@@ -33,7 +35,7 @@ public class Bullet : Entity
     {
         if (entity is not Enemy enemy) return;
         if (enemy.IsDead || enemy.IsDestroyed) return;
-        var other = new MoonWorks.Collision.Float.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
+        var other = new MyGame.MathExtras.Rectangle(0, 0, enemy.Size.X, enemy.Size.Y);
         var radius = MathF.Min(Size.X, Size.Y) * 0.5f;
         var circle = new Circle(radius);
 

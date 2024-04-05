@@ -212,28 +212,12 @@ public unsafe class ImGuiRenderer : IDisposable
 
     private static GraphicsPipeline SetupPipeline(GraphicsDevice graphicsDevice, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_vert_spv);
+        var vertexShader = new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_vert_refresh);
         var fragmentShader =
-            new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_frag_spv);
+            new ShaderModule(graphicsDevice, ContentPaths.Shaders.imgui.sprite_frag_refresh);
 
-        var myVertexBindings = new[]
-        {
-            VertexBinding.Create<PositionTextureColorVertex>(),
-        };
-
-        var myVertexAttributes = new[]
-        {
-            VertexAttribute.Create<PositionTextureColorVertex>(nameof(PositionTextureColorVertex.Position), 0),
-            VertexAttribute.Create<PositionTextureColorVertex>(nameof(PositionTextureColorVertex.TexCoord), 1),
-            VertexAttribute.Create<PositionTextureColorVertex>(nameof(PositionTextureColorVertex.Color), 2),
-        };
-
-        var myVertexInputState = new VertexInputState
-        {
-            VertexBindings = myVertexBindings,
-            VertexAttributes = myVertexAttributes,
-        };
-
+        var vertexInputState = VertexInputState.CreateSingleBinding<Vertex>();
+        
         var pipelineCreateInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
@@ -245,7 +229,7 @@ public unsafe class ImGuiRenderer : IDisposable
             MultisampleState = MultisampleState.None,
             RasterizerState = RasterizerState.CCW_CullNone,
             PrimitiveType = PrimitiveType.TriangleList,
-            VertexInputState = myVertexInputState,
+            VertexInputState = vertexInputState,
         };
 
         return new GraphicsPipeline(

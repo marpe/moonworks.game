@@ -2,7 +2,7 @@
 
 #extension GL_GOOGLE_include_directive: require
 
-#include "common.glsl"
+#include "common.lib"
 
 layout (set = 1, binding = 0) uniform sampler2D uniformTexture;
 

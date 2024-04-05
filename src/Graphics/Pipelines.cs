@@ -151,8 +151,8 @@ public class Pipelines
 
     public static GfxPipeline CreateLight2(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Lights2.light2_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = new GraphicsShaderInfo()
@@ -166,7 +166,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -181,15 +181,15 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.Lights2.light2_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.Lights2.light2_frag_spv,
+            VertexShaderPath = ContentPaths.Shaders.Lights2.light2_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.Lights2.light2_frag_refresh,
         };
     }
 
     public static GfxPipeline CreateLightPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.light_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.light_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         // var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 1);
@@ -203,7 +203,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -218,15 +218,15 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.RimLight.rim_light_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.RimLight.light_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.RimLight.rim_light_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.RimLight.light_frag_refresh
         };
     }
 
     public static GfxPipeline CreateRimLightPipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.RimLight.rim_light_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         // var fragmentShaderInfo = GraphicsShaderInfo.Create<LightUniform>(fragmentShader, "main", 2);
@@ -241,7 +241,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -256,16 +256,16 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.RimLight.rim_light_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.RimLight.rim_light_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.RimLight.rim_light_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.RimLight.rim_light_frag_refresh
         };
     }
 
     public static GfxPipeline CreateDiamondTransition(GraphicsDevice device, ColorAttachmentBlendState blendState)
 
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<DiamondUniforms>(fragmentShader, "main", 1);
@@ -273,7 +273,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -288,16 +288,16 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.DiamondTransition.diamond_transition_frag_refresh
         };
     }
 
     public static GfxPipeline CreatePixelArt(GraphicsDevice device, ColorAttachmentBlendState blendState)
 
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.PixelArtShader.pixel_art_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create(fragmentShader, "main", 1);
@@ -305,7 +305,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -320,15 +320,15 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.PixelArtShader.pixel_art_frag_refresh
         };
     }
 
     public static GfxPipeline CreateSpritePipeline(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_vert_spv);
-        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_frag_spv);
+        var spriteVertexShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_vert_refresh);
+        var spriteFragmentShader = new ShaderModule(device, ContentPaths.Shaders.Sprite.sprite_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(spriteVertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create(spriteFragmentShader, "main", 1);
@@ -336,7 +336,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -351,15 +351,15 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.Sprite.sprite_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.Sprite.sprite_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.Sprite.sprite_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.Sprite.sprite_frag_refresh
         };
     }
 
     public static GfxPipeline CreateCircleCropTransition(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.CircleCrop.circle_crop_transition_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<CircleCropUniforms>(fragmentShader, "main", 1);
@@ -368,7 +368,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -383,15 +383,15 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.CircleCrop.circle_crop_transition_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.CircleCrop.circle_crop_transition_frag_spv
+            VertexShaderPath = ContentPaths.Shaders.CircleCrop.circle_crop_transition_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.CircleCrop.circle_crop_transition_frag_refresh
         };
     }
 
     public static GfxPipeline CreatePixelize(GraphicsDevice device, ColorAttachmentBlendState blendState)
     {
-        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_vert_spv);
-        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_frag_spv);
+        var vertexShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_vert_refresh);
+        var fragmentShader = new ShaderModule(device, ContentPaths.Shaders.Pixelize.pixelize_transition_frag_refresh);
 
         var vertexShaderInfo = GraphicsShaderInfo.Create<Matrix4x4>(vertexShader, "main", 0);
         var fragmentShaderInfo = GraphicsShaderInfo.Create<PixelizeUniforms>(fragmentShader, "main", 2);
@@ -399,7 +399,7 @@ public class Pipelines
         var createInfo = new GraphicsPipelineCreateInfo()
         {
             AttachmentInfo = new GraphicsPipelineAttachmentInfo(
-                new ColorAttachmentDescription(TextureFormat.B8G8R8A8, blendState)
+                new ColorAttachmentDescription(TextureFormat.R8G8B8A8, blendState)
             ),
             DepthStencilState = DepthStencilState.Disable,
             VertexShaderInfo = vertexShaderInfo,
@@ -414,29 +414,13 @@ public class Pipelines
         {
             Pipeline = new GraphicsPipeline(device, createInfo),
             CreateInfo = createInfo,
-            VertexShaderPath = ContentPaths.Shaders.Pixelize.pixelize_transition_vert_spv,
-            FragmentShaderPath = ContentPaths.Shaders.Pixelize.pixelize_transition_frag_spv,
+            VertexShaderPath = ContentPaths.Shaders.Pixelize.pixelize_transition_vert_refresh,
+            FragmentShaderPath = ContentPaths.Shaders.Pixelize.pixelize_transition_frag_refresh,
         };
     }
 
     public static VertexInputState GetVertexInputState()
     {
-        var myVertexBindings = new[]
-        {
-            VertexBinding.Create<Position3DTextureColorVertex>(),
-        };
-
-        var myVertexAttributes = new[]
-        {
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Position), 0),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.TexCoord), 1),
-            VertexAttribute.Create<Position3DTextureColorVertex>(nameof(Position3DTextureColorVertex.Color), 2),
-        };
-
-        return new VertexInputState
-        {
-            VertexBindings = myVertexBindings,
-            VertexAttributes = myVertexAttributes,
-        };
+        return VertexInputState.CreateSingleBinding<Vertex>();
     }
 }

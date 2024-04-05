@@ -23,8 +23,9 @@ public static class TextureUtils
         var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * pixelSize);
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
-        device.Submit(commandBuffer);
-        device.Wait();
+        var fence = device.SubmitAndAcquireFence(commandBuffer);
+        device.WaitForFences(fence);
+        device.ReleaseFence(fence);
         var pixels = new byte[buffer.Size];
         buffer.GetData(pixels, (uint)pixels.Length);
 
@@ -57,28 +58,41 @@ public static class TextureUtils
             commandBuffer.SetTextureData(texture, (IntPtr)p, (uint)pixels.Length);
             device.Submit(commandBuffer);
             device.Wait();
+            // var fence = device.SubmitAndAcquireFence(commandBuffer);
+            // device.WaitForFences(fence);
+            // device.ReleaseFence(fence);
         }
 
         return texture;
     }
 
-    public static Texture PremultiplyAlpha(GraphicsDevice device, Texture texture)
+    public static unsafe Texture PremultiplyAlpha(GraphicsDevice device, Texture texture)
     {
         var bytesPerPixel = (uint)Marshal.SizeOf<Color>();
-        var buffer = Buffer.Create<byte>(device, BufferUsageFlags.Index, texture.Width * texture.Height * bytesPerPixel);
+        var buffer = new Buffer(device, 0, texture.Width * texture.Height * bytesPerPixel);
 
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, buffer);
+        // var fence = device.SubmitAndAcquireFence(commandBuffer);
+
+        var byteCount = buffer.Size;
+
+        var pixelsPtr = NativeMemory.Alloc((nuint) byteCount);
+        var pixelsSpan = new Span<byte>(pixelsPtr, (int) byteCount);
+
+        // device.WaitForFences(fence); // make sure the data transfer is done...
+        // device.ReleaseFence(fence); // and then release the fence
         device.Submit(commandBuffer);
         device.Wait();
 
-        var pixels = new byte[buffer.Size];
-        buffer.GetData(pixels, (uint)pixels.Length);
+        buffer.GetData(pixelsSpan);
 
-        PremultiplyAlpha(pixels);
+        PremultiplyAlpha(pixelsSpan);
 
-        var newTexture = CreateTexture(device, texture.Width, texture.Height, pixels);
+        var newTexture = CreateTexture(device, texture.Width, texture.Height, pixelsSpan);
 
+        NativeMemory.Free(pixelsPtr);
+        
         return newTexture;
     }
 
@@ -106,8 +120,9 @@ public static class TextureUtils
         data.Fill(color);
         var command = device.AcquireCommandBuffer();
         command.SetTextureData(texture, data.ToArray());
-        device.Submit(command);
-        device.Wait();
+        var fence = device.SubmitAndAcquireFence(command);
+        device.WaitForFences(fence);
+        device.ReleaseFence(fence);
         return texture;
     }
 
@@ -120,8 +135,9 @@ public static class TextureUtils
 
         var commandBuffer = device.AcquireCommandBuffer();
         var texture = Texture.FromImageFile(device, commandBuffer, path);
-        device.Submit(commandBuffer);
-        device.Wait();
+        var fence = device.SubmitAndAcquireFence(commandBuffer);
+        device.WaitForFences(fence);
+        device.ReleaseFence(fence);
         return texture;
     }
     
@@ -158,8 +174,9 @@ public static class TextureUtils
 
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.CopyTextureToBuffer(texture, tempBuffer);
-        device.Submit(commandBuffer);
-        device.Wait();
+        var fence = device.SubmitAndAcquireFence(commandBuffer);
+        device.WaitForFences(fence);
+        device.ReleaseFence(fence);
 
         tempBuffer.GetData(tempPixels, tempBuffer.Size);
         //TODO: Save image

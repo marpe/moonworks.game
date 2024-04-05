@@ -21,12 +21,12 @@ public class RenderTargets
     {
         var createRtsTimer = Stopwatch.StartNew();
         var textureFlags = TextureUsageFlags.Sampler | TextureUsageFlags.ColorTarget;
-        CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, CompositeSize.X, CompositeSize.Y, TextureFormat.B8G8R8A8, textureFlags));
+        CompositeRender = new RenderTarget(Texture.CreateTexture2D(device, CompositeSize.X, CompositeSize.Y, TextureFormat.R8G8B8A8, textureFlags));
 
         // increase game render target size with 1 pixel to enable smooth camera panning by offsetting the upscaled render
         var gameRenderSize = (GameSize + UPoint.One) * 4;
 
-        GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.B8G8R8A8, textureFlags));
+        GameRender = new RenderTarget(Texture.CreateTexture2D(device, gameRenderSize.X, gameRenderSize.Y, TextureFormat.R8G8B8A8, textureFlags));
         NormalLights = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
         LightBase = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));
         LevelBase = new RenderTarget(TextureUtils.CreateTexture(device, GameRender));

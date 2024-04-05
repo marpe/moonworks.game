@@ -57,7 +57,7 @@ public class ContentManager
     public T Load<T>(string assetName, bool forceReload = false)
     {
         T? result;
-        
+
         lock (lockObject)
         {
             if (forceReload)
@@ -90,7 +90,8 @@ public class ContentManager
         var packer = new RectPacker(2048, 2048);
 
         var device = Shared.Content._game.GraphicsDevice;
-        var atlasTexture = Texture.CreateTexture2D(device, 2048, 2048, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
+        var atlasTexture =
+            Texture.CreateTexture2D(device, 2048, 2048, TextureFormat.R8G8B8A8, TextureUsageFlags.Sampler);
         var dstX = 0;
         var dstY = 0;
 
@@ -108,7 +109,8 @@ public class ContentManager
 
             if (packer.AddRect(textureSlice.Rectangle.W, textureSlice.Rectangle.H, ref dstX, ref dstY))
             {
-                var newSlice = new TextureSlice(atlasTexture, new Rect(dstX, dstY, textureSlice.Rectangle.W, textureSlice.Rectangle.H));
+                var newSlice = new TextureSlice(atlasTexture,
+                    new Rect(dstX, dstY, textureSlice.Rectangle.W, textureSlice.Rectangle.H));
                 _loadedAssets[key] = newSlice;
                 cb.CopyTextureToTexture(textureSlice, newSlice, Filter.Nearest);
             }
@@ -135,7 +137,8 @@ public class ContentManager
         if (t == typeof(RootJson))
         {
             var json = File.ReadAllText(assetName);
-            var root = JsonConvert.DeserializeObject<RootJson>(json, JsonSerializerSettings) ?? throw new InvalidOperationException();
+            var root = JsonConvert.DeserializeObject<RootJson>(json, JsonSerializerSettings) ??
+                       throw new InvalidOperationException();
             return root;
         }
 
@@ -148,10 +151,9 @@ public class ContentManager
             return LoadTexture(assetName, Shared.Content._game.GraphicsDevice);
         }
 
-
-        if (t == typeof(StaticSound))
+        if (t == typeof(AudioBuffer))
         {
-            return StaticSound.LoadWav(Shared.Content._game.AudioDevice, assetName);
+            return AudioDataWav.CreateBuffer(Shared.Content._game.AudioDevice, assetName);
         }
 
         if (t == typeof(BMFont))

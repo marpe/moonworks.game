@@ -241,8 +241,9 @@ public class FreeTypeFontAtlas : IDisposable
     {
         var commandBuffer = device.AcquireCommandBuffer();
         commandBuffer.SetTextureData(slice, data);
-        device.Submit(commandBuffer);
-        device.Wait();
+        var fence = device.SubmitAndAcquireFence(commandBuffer);
+        device.WaitForFences(fence);
+        device.ReleaseFence(fence);
     }
 
     public void Dispose()

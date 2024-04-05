@@ -11,22 +11,22 @@
         <RootNamespace>MyGame</RootNamespace>
         <TargetLatestRuntimePatch>true</TargetLatestRuntimePatch>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <ApplicationIcon />
+        <ApplicationIcon/>
         <Nullable>enable</Nullable>
         <Configurations>Debug;Release</Configurations>
         <Platforms>x64</Platforms>
     </PropertyGroup>
-    <!--<ItemGroup>
+    <ItemGroup>
         <Content Include="Content\**\*.*">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-    </ItemGroup>-->
+    </ItemGroup>
     <PropertyGroup>
         <DefaultItemExcludes>$(DefaultItemExcludes);lib\**\*;moonlibs\**\*</DefaultItemExcludes>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+        <PackageReference Include="JetBrains.Annotations" Version="2022.3.1"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2"/>
     </ItemGroup>
     <ItemGroup>
         <ContentWithTargetPath Include="lib\Mochi.DearImGui.Native\win-x64\Debug\Mochi.DearImGui.Native.dll">
@@ -40,14 +40,14 @@
     </ItemGroup>
     <ItemGroup>
         <Reference Include="FreeTypeSharp">
-          <HintPath>lib\FreeTypeSharp\Debug\net6.0\FreeTypeSharp.dll</HintPath>
+            <HintPath>lib\FreeTypeSharp\Debug\net6.0\FreeTypeSharp.dll</HintPath>
         </Reference>
         <Reference Include="Mochi.DearImGui">
             <HintPath>lib\Mochi.DearImGui\Debug-AnyCPU\Mochi.DearImGui.dll</HintPath>
         </Reference>
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj" />
+        <ProjectReference Include="lib\MoonWorks\MoonWorks.csproj"/>
     </ItemGroup>
-    <Import Project=".\CopyMoonlibs.targets" />
+    <Import Project=".\CopyMoonlibs.targets"/>
 </Project>
