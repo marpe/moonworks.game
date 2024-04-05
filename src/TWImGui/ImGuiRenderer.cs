@@ -818,7 +818,7 @@ public unsafe class ImGuiRenderer : IDisposable
             SystemResizable = true,
         };
         var game = GetPlatformBackend()._game;
-        var window = new Window(game.GraphicsDevice, windowCreateInfo, flags);
+        var window = new Window(windowCreateInfo, flags);
         window.WindowEvent += HandleWindowEvent;
         window.SetWindowPosition((int)viewport->Pos.X, (int)viewport->Pos.Y);
 

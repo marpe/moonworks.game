@@ -14,8 +14,8 @@ public static unsafe class ImGuiUtils
         var viewportPosition = new Vector2(viewport.X, viewport.Y);
         var imGuiCursor = ImGui.GetCursorScreenPos();
 
-        viewportSize = viewport.Size.ToNumerics();
-        var viewportHalfSize = (viewport.Size / 2).ToNumerics();
+        viewportSize = new Vector2(viewport.Width, viewport.Height);
+        var viewportHalfSize = new Vector2(viewport.Width * 0.5f, viewport.Height * 0.5f);
 
         min = imGuiCursor + viewportPosition + viewportHalfSize - // this gets us to the center
                             scale * viewportHalfSize +

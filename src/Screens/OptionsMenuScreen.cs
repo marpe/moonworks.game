@@ -44,7 +44,8 @@ public class OptionsMenuScreen : MenuScreen
         );
         _scale = new TextMenuItem($"Scale: {_maxScale}", ChangeScale);
         _windowMode = new TextMenuItem($"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}", CycleScreenMode);
-        _presentMode = new TextMenuItem($"Present mode: {PresentModeNames[_game.MainWindow.PresentMode]}", CyclePresentMode);
+        // TODO: Add back present mode?
+        // _presentMode = new TextMenuItem($"Present mode: {PresentModeNames[_game.MainWindow.PresentMode]}", CyclePresentMode);
 
         _menuItems.AddRange(new MenuItem[]
         {
@@ -52,7 +53,7 @@ public class OptionsMenuScreen : MenuScreen
             _volume,
             _scale,
             _windowMode,
-            _presentMode,
+            // _presentMode,
             new TextMenuItem("Back", OnCancelled)
         });
 
@@ -69,11 +70,12 @@ public class OptionsMenuScreen : MenuScreen
         _windowMode.Text = $"Window mode: {ScreenModeNames[_game.MainWindow.ScreenMode]}";
     }
 
-    private void CyclePresentMode()
+    // TODO: Add back present mode?
+    /*private void CyclePresentMode()
     {
         Shared.Game.MainWindow.SetPresentMode((PresentMode)(((int)Shared.Game.MainWindow.PresentMode + 1) % 4));
         _presentMode.Text = $"Present mode: {PresentModeNames[Shared.Game.MainWindow.PresentMode]}";
-    }
+    }*/
 
     public override void OnCancelled()
     {

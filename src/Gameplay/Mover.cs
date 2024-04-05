@@ -37,7 +37,7 @@ public class Mover
             return false;
 
         var position = Parent.Position + Vector2.UnitY;
-        if (Parent.HasCollision(position, Parent.Size))
+        if (Parent.HasCollision(position, Parent.Size.ToVec2()))
             GroundCollisions.Add(new CollisionResult(CollisionDir.Down, Parent.Position, position, Vector2.UnitY, position));
 
         return GroundCollisions.Count > 0;
@@ -61,7 +61,7 @@ public class Mover
                 if (x >= levelPos.X + levelSize.X)
                     x = startPosition.X - x % levelSize.X;
 
-                if (Parent.HasCollision(new Vector2(x, y), Parent.Size))
+                if (Parent.HasCollision(new Vector2(x, y), Parent.Size.ToVec2()))
                     continue;
 
                 position = new Vector2(x, y);
@@ -127,7 +127,7 @@ public class Mover
                 var dx = deltaMove.X / steps;
                 var prev = position;
                 position += new Vector2(dx, 0);
-                if (Parent.HasCollision(position, Parent.Size))
+                if (Parent.HasCollision(position, Parent.Size.ToVec2()))
                 {
                     float intersection;
 
@@ -153,7 +153,7 @@ public class Mover
                 var dy = deltaMove.Y / steps;
                 var prev = position;
                 position += new Vector2(0, dy);
-                if (Parent.HasCollision(position, Parent.Size))
+                if (Parent.HasCollision(position, Parent.Size.ToVec2()))
                 {
                     float intersection;
                     if (deltaMove.Y > 0)

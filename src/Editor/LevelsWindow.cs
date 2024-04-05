@@ -120,7 +120,8 @@ public class LevelsWindow : SplitWindow
 
         ImGuiExt.SeparatorText("Custom Level Field Definitions");
 
-        FieldDefEditor.DrawFieldEditor(RootJson.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex, fieldDefRemoved);
+        FieldDefEditor.DrawFieldEditor(RootJson.LevelFieldDefinitions, ref _selectedFieldDefinitionIndex,
+            fieldDefRemoved);
     }
 
     private int GetNextId(List<Level> levels)
@@ -168,8 +169,10 @@ public class LevelsWindow : SplitWindow
             var maxGridSize = (uint)(rangeSettings.MaxValue / layerDef.GridSize);
             if (SimpleTypeInspector.InspectUPoint("Cells", ref gridSize, 1.0f, (int)minGridSize, (int)maxGridSize))
             {
-                level.Width = Math.Clamp(gridSize.X * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
-                level.Height = Math.Clamp(gridSize.Y * layerDef.GridSize, (uint)rangeSettings.MinValue, (uint)rangeSettings.MaxValue);
+                level.Width = Math.Clamp(gridSize.X * layerDef.GridSize, (uint)rangeSettings.MinValue,
+                    (uint)rangeSettings.MaxValue);
+                level.Height = Math.Clamp(gridSize.Y * layerDef.GridSize, (uint)rangeSettings.MinValue,
+                    (uint)rangeSettings.MaxValue);
 
                 ResizeLayers(level, oldSize, RootJson.LayerDefinitions);
             }
@@ -270,7 +273,8 @@ public class LevelsWindow : SplitWindow
             for (var j = 0; j < layer.EntityInstances.Count; j++)
             {
                 var entity = layer.EntityInstances[j];
-                entity.Position += moveDelta * gridSize;
+                entity.Position = new Point(entity.Position.X + moveDelta.X * (int)gridSize,
+                    entity.Position.Y + moveDelta.Y * (int)gridSize);
             }
         }
     }

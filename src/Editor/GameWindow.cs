@@ -136,7 +136,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
             var mouseInWorld = World.GetMouseInWorld();
             ImGuiExt.PrintVector("World", mouseInWorld);
             var mouseCell = Entity.ToCell(mouseInWorld);
-            ImGuiExt.PrintVector("Cel", mouseCell);
+            ImGuiExt.PrintVector("Cel", mouseCell.ToVec2());
 
             var world = editor.World;
             if (world.IsLoaded)
@@ -144,7 +144,7 @@ public unsafe class GameWindow : ImGuiEditorWindow
                 var player = world.Entities.First<Player>();
                 var playerCell = player.Cell;
                 ImGuiExt.SeparatorText("Player", Color.White);
-                ImGuiExt.PrintVector("Cell", playerCell);
+                ImGuiExt.PrintVector("Cell", playerCell.ToVec2());
                 ImGuiExt.PrintVector("Pos", player.Position.Current);
             }
 

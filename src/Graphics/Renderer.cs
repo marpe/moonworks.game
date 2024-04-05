@@ -166,7 +166,7 @@ public class Renderer
 
     public void DrawRectOutline(in Rectangle rectangle, Color color, float thickness = 1.0f)
     {
-        DrawRectOutline(rectangle.Min(), rectangle.Max(), color, thickness);
+        DrawRectOutline(rectangle.Min().ToVec2(), rectangle.Max().ToVec2(), color, thickness);
     }
 
     public void DrawRectOutline(in Bounds bounds, Color color, float thickness = 1.0f)
@@ -367,7 +367,7 @@ public class Renderer
         var transform = Matrix3x2.CreateScale(scaleUniform, scaleUniform) *
                         Matrix3x2.CreateTranslation(offset.X, offset.Y);
 
-        return (transform, new Rect(offset.X, offset.Y, renderSize.X, renderSize.Y));
+        return (transform, new Rectangle(offset.X, offset.Y, renderSize.X, renderSize.Y));
     }
 
     public static Matrix4x4 GetOrthographicProjection(uint width, uint height)

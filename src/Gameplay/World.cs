@@ -102,7 +102,7 @@ public class World
 
         var level = FindLevel(levelIdentifier, Root);
 
-        LevelMin = level.WorldPos / DefaultGridSize;
+        LevelMin = new Point(level.WorldPos.X / DefaultGridSize, level.WorldPos.Y / DefaultGridSize);
         LevelGridSize = level.Size / DefaultGridSize;
         LevelMax = LevelMin + LevelGridSize;
 
@@ -206,7 +206,7 @@ public class World
             {
                 var entityDef = EntityDefinitions.ById[entityInstance.EntityDefId];
                 var entity = CreateEntity(entityDef, entityInstance);
-                entity.Position.SetPrevAndCurrent(level.WorldPos + entityInstance.Position);
+                entity.Position.SetPrevAndCurrent(new Vector2(level.WorldPos.X + entityInstance.Position.X, level.WorldPos.Y + entityInstance.Position.Y));
                 entities.Add(entity);
             }
         }
@@ -234,7 +234,7 @@ public class World
         var entity = (Entity)(Activator.CreateInstance(type) ?? throw new InvalidOperationException());
 
         entity.Iid = entityInstance.Iid;
-        entity.Pivot = new Vector2(entityDef.PivotX, entityDef.PivotY);
+        entity.Pivot = new Vector2((float)entityDef.PivotX, (float)entityDef.PivotY);
         entity.Size = entityInstance.Size;
         entity.SmartColor = entityDef.Color;
 
@@ -372,7 +372,7 @@ public class World
         bullet.Position.SetPrevAndCurrent(position + new Vector2(4 * direction, 0));
         bullet.Velocity.X = direction * 300f;
 
-        if (Entity.HasCollision(bullet.Position.Current, bullet.Size, this))
+        if (Entity.HasCollision(bullet.Position.Current, bullet.Size.ToVec2(), this))
         {
             Logs.LogInfo("Can't spawn bullet");
             return;

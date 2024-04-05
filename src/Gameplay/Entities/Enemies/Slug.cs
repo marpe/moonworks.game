@@ -16,7 +16,7 @@ public class Slug : Enemy
 
         base.Initialize(world);
         
-        if (HasCollision(Position, Size))
+        if (HasCollision(Position, Size.ToVec2()))
         {
             Logs.LogWarn("Colliding on spawn, destroying immediately");
             Destroy();

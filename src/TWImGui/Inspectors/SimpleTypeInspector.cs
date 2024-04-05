@@ -279,7 +279,7 @@ public unsafe class SimpleTypeInspector : Inspector
                 result = true;
             }
 
-            var size = value.Size.ToNumerics();
+            var size = new Num.Vector2(value.Width, value.Height);
             if (ImGuiExt.InspectNumVector2("##Size", ref size, "W", "Width", "H", "Height"))
             {
                 value.Width = (int)size.X;

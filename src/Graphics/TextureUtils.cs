@@ -119,7 +119,7 @@ public static class TextureUtils
         }
 
         var commandBuffer = device.AcquireCommandBuffer();
-        var texture = Texture.LoadPNG(device, commandBuffer, path);
+        var texture = Texture.FromImageFile(device, commandBuffer, path);
         device.Submit(commandBuffer);
         device.Wait();
         return texture;
@@ -162,6 +162,7 @@ public static class TextureUtils
         device.Wait();
 
         tempBuffer.GetData(tempPixels, tempBuffer.Size);
-        Texture.SavePNG(filename, (int)texture.Width, (int)texture.Height, texture.Format, tempPixels);
+        //TODO: Save image
+        // Texture.SavePNG(filename, (int)texture.Width, (int)texture.Height, texture.Format, tempPixels);
     }
 }

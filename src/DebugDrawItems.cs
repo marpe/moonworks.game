@@ -58,7 +58,7 @@ public class DebugDrawItems
         {
             if (debugDrawCall.DrawType == DebugDrawType.Text)
             {
-                renderer.DrawFTText(BMFontType.ConsolasMonoSmall, debugDrawCall.Text, debugDrawCall.Rectangle.Min(), debugDrawCall.Color);
+                renderer.DrawFTText(BMFontType.ConsolasMonoSmall, debugDrawCall.Text, debugDrawCall.Rectangle.Min().ToVec2(), debugDrawCall.Color);
             }
             else
             {

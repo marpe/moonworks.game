@@ -173,7 +173,7 @@ public class ContentManager
     private static TextureAsset LoadTexture(string assetName, GraphicsDevice device)
     {
         var commandBuffer = device.AcquireCommandBuffer();
-        var texture = Texture.LoadPNG(device, commandBuffer, assetName);
+        var texture = Texture.FromImageFile(device, commandBuffer, assetName);
         device.Submit(commandBuffer);
         return new TextureAsset(texture);
     }

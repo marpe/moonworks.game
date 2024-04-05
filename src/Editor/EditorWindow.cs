@@ -239,7 +239,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         ImGui.SetNextWindowSize(new System.Numerics.Vector2(300, 0), ImGuiCond.Always);
 
-        var popupPos = GetWorldPosInScreen(level.WorldPos + instance.Position + new Vector2(0, layerDef.GridSize));
+        var popupPos = GetWorldPosInScreen(level.WorldPos.ToVec2() + instance.Position.ToVec2() + new Vector2(0, layerDef.GridSize));
         if (_entityPopupPos == 0)
         {
             ImGui.SetNextWindowPos(popupPos, ImGuiCond.Appearing, System.Numerics.Vector2.Zero);
@@ -825,7 +825,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             {
                 var (mouseSnappedToGrid, mouseCell, mouseInLevel) = GetMouseInLevel(level);
                 ImGuiExt.PrintVector("MousePosInLevel", mouseInLevel);
-                ImGuiExt.PrintVector("MouseCell", mouseCell);
+                ImGuiExt.PrintVector("MouseCell", mouseCell.ToVec2());
             }
 
             if (GetSelectedLayerInstance(out var world, out var lvl, out var layerInstance, out var layerDef))
@@ -1288,8 +1288,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
                 if (ImGui.IsItemHovered())
                 {
-                    var boundsMin = GetWorldPosInScreen(level.WorldPos + instance.Position);
-                    var boundsMax = GetWorldPosInScreen(level.WorldPos + instance.Position + instance.Size.ToPoint());
+                    var boundsMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + instance.Position.ToVec2());
+                    var boundsMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + instance.Position.ToVec2() + instance.Size.ToVec2());
                     dl->AddRect(boundsMin, boundsMax, Color.Red.PackedValue, 0, ImDrawFlags.None, _cameraZoom * 4f);
                 }
 
@@ -1308,8 +1308,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static void DrawLevel(Level level, int levelIndex)
     {
-        var levelMin = GetWorldPosInScreen(level.WorldPos);
-        var levelMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2());
+        var levelMin = GetWorldPosInScreen(level.WorldPos.ToVec2());
+        var levelMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + level.Size.ToVec2());
         var dl = ImGui.GetWindowDrawList();
 
         dl->AddRectFilled(levelMin, levelMax, level.BackgroundColor.PackedValue);
@@ -1322,8 +1322,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
         if (isSelectedLevel && _cameraZoom >= 0.5f)
         {
-            var gridMin = GetWorldPosInScreen(level.WorldPos);
-            var gridMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2());
+            var gridMin = GetWorldPosInScreen(level.WorldPos.ToVec2());
+            var gridMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + level.Size.ToVec2());
             DrawGrid(dl, gridMin, gridMax, gridSize * _cameraZoom, GridColor, _cameraZoom * GridThickness);
         }
 
@@ -1334,8 +1334,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             var thickness = 2f * _cameraZoom;
             var padding = new Vector2(thickness * 0.5f / _cameraZoom);
-            var rectMin = GetWorldPosInScreen(level.WorldPos - padding);
-            var rectMax = GetWorldPosInScreen(level.WorldPos + level.Size.ToVec2() + padding);
+            var rectMin = GetWorldPosInScreen(level.WorldPos.ToVec2() - padding);
+            var rectMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + level.Size.ToVec2() + padding);
             dl->AddRect(rectMin, rectMax, color.PackedValue, 0, ImDrawFlags.None, thickness);
         }
 
@@ -1459,7 +1459,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             );
             offset = (numCells - instance.Size) * entityDef.Pivot;
         }
-        var (snapped, _) = SnapToGrid(instance.Position + offset, gridSize);
+        var (snapped, _) = SnapToGrid(instance.Position.ToVec2() + offset, gridSize);
         return (snapped + offset).ToPoint();
     }
 
@@ -1483,7 +1483,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var col = MathF.FloorToInt(x / gridSize);
         var row = MathF.FloorToInt(y / gridSize);
         var cell = new Point(col, row);
-        var snapped = cell * (int)gridSize;
+        var snapped = new Vector2(cell.X * (int)gridSize, cell.Y * (int)gridSize);
         return (snapped, cell);
     }
 
@@ -1531,8 +1531,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             var sprite = LevelRenderer.GetTileSprite(texture, tile.TileId, tileSetDef);
             var uvMin = sprite.UV.TopLeft.ToNumerics();
             var uvMax = sprite.UV.BottomRight.ToNumerics();
-            var iconMin = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize);
-            var iconMax = GetWorldPosInScreen(level.WorldPos + tile.Cell.ToVec2() * layerDef.GridSize + new Vector2(layerDef.GridSize));
+            var iconMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + tile.Cell.ToVec2() * layerDef.GridSize);
+            var iconMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + tile.Cell.ToVec2() * layerDef.GridSize + new Vector2(layerDef.GridSize));
             var tint = isSelectedLayer ? Color.White : Color.White.MultiplyAlpha(DeselectedAutoLayerAlpha);
             dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, tint.PackedValue);
         }
@@ -1569,7 +1569,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var entityDefId = entityInstance.EntityDefId;
         if (!GetEntityDef(entityDefId, out var entityDef))
         {
-            DrawWarningRect(dl, level.WorldPos, entityInstance.Position, entityInstance.Size);
+            DrawWarningRect(dl, level.WorldPos.ToVec2(), entityInstance.Position.ToVec2(), entityInstance.Size);
             return;
         }
 
@@ -1603,8 +1603,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         var contentMin = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMin();
         var contentMax = ImGui.GetWindowPos() + ImGui.GetWindowContentRegionMax();
 
-        var boundsMin = GetWorldPosInScreen(level.WorldPos + entityInstance.Position);
-        var boundsMax = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToPoint());
+        var boundsMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + entityInstance.Position.ToVec2());
+        var boundsMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + entityInstance.Position.ToVec2() + entityInstance.Size.ToPoint().ToVec2());
 
         if (boundsMin.X > contentMax.X || boundsMin.Y > contentMax.Y ||
             boundsMax.X < contentMin.X || boundsMax.Y < contentMin.Y)
@@ -1726,7 +1726,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
             // Draw blinking rect if there are field instances without matching field definitions
             if (!GetFieldDef(entityDef, fieldInstance.FieldDefId, out var fieldDef))
             {
-                DrawWarningRect(dl, level.WorldPos, entityInstance.Position, entityInstance.Size);
+                DrawWarningRect(dl, level.WorldPos.ToVec2(), entityInstance.Position.ToVec2(), entityInstance.Size);
             }
             else if (fieldDef.EditorDisplayMode != EditorDisplayMode.Hidden && isSelectedLayer)
             {
@@ -1761,7 +1761,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var coneAngle = (float)coneAngleInstance.Value! * MathF.Deg2Rad;
                     var intensity = (float)intensityInstance.Value!;
 
-                    var center = GetWorldPosInScreen(level.WorldPos + entityInstance.Position + entityInstance.Size.ToVec2() * 0.5f);
+                    var center = GetWorldPosInScreen(level.WorldPos.ToVec2() + entityInstance.Position.ToVec2() + entityInstance.Size.ToVec2() * 0.5f);
                     var radius = entityInstance.Size.X * 0.5f * _cameraZoom;
 
                     ImGuiExt.DrawCone(dl, center, coneAngle, angle, radius, fillColor.MultiplyAlpha(intensity));
@@ -1938,8 +1938,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             var (x, y) = (j % cols, j / cols);
             var tilePos = new Vector2(x, y) * layerDef.GridSize;
-            var iconMin = GetWorldPosInScreen(level.WorldPos + tilePos);
-            var iconMax = GetWorldPosInScreen(level.WorldPos + tilePos + new Vector2(layerDef.GridSize));
+            var iconMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + tilePos);
+            var iconMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + tilePos + new Vector2(layerDef.GridSize));
             if (iconMin.X > contentMax.X || iconMin.Y > contentMax.Y ||
                 iconMax.X < contentMin.X || iconMax.Y < contentMin.Y)
             {
@@ -1952,7 +1952,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
     private static (Vector2 snapped, Point cell, Vector2 mouseInLevel) GetMouseInLevel(Level level)
     {
-        var mouseInWorld = GetScreenPosInWorld(ImGui.GetMousePos()) - level.WorldPos;
+        var mousePos = ImGui.GetMousePos();
+        var mouseInWorld = GetScreenPosInWorld(new Num.Vector2(mousePos.X, mousePos.Y)) - level.WorldPos.ToVec2();
         var mouseInLevel = mouseInWorld;
         var (snapped, cell) = SnapToGrid(mouseInLevel, ((MyEditorMain)Shared.Game).RootJson.DefaultGridSize);
         return (snapped, cell, mouseInLevel);
@@ -2029,7 +2030,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     entityInstance.Position = mouseGridPoint;
                     entityInstance.Position = SnapToGrid(entityInstance, entityDef, layerDef.GridSize);
 
-                    var entityInstanceCell = Entity.ToCell(entityInstance.Position);
+                    var entityInstanceCell = Entity.ToCell(entityInstance.Position.ToVec2());
 
                     GetEntitiesInCell(entityInstanceCell, layerInstance.EntityInstances, _tempEntityList);
                     foreach (var entity in _tempEntityList)
@@ -2071,8 +2072,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
                     var sprite = LevelRenderer.GetTileSprite(texture, entityDef.TileId, tileSetDef);
                     var uvMin = sprite.UV.TopLeft.ToNumerics();
                     var uvMax = sprite.UV.BottomRight.ToNumerics();
-                    var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
-                    var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
+                    var iconMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + mouseSnappedToGrid);
+                    var iconMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
                     var color = Color.White.MultiplyAlpha(0.33f);
                     dl->AddImage((void*)sprite.TextureSlice.Texture.Handle, iconMin, iconMax, uvMin, uvMax, color.PackedValue);
 
@@ -2096,8 +2097,8 @@ public unsafe class EditorWindow : ImGuiEditorWindow
 
             var intGridValue = layerDef.IntGridValues[_selectedIntGridValueIndex];
 
-            var iconMin = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid);
-            var iconMax = GetWorldPosInScreen(level.WorldPos + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
+            var iconMin = GetWorldPosInScreen(level.WorldPos.ToVec2() + mouseSnappedToGrid);
+            var iconMax = GetWorldPosInScreen(level.WorldPos.ToVec2() + mouseSnappedToGrid + new Vector2(layerDef.GridSize));
 
             var color = intGridValue.Color.MultiplyAlpha(0.33f);
             dl->AddRectFilled(iconMin, iconMax, color.PackedValue);
@@ -2260,7 +2261,7 @@ public unsafe class EditorWindow : ImGuiEditorWindow
         for (var i = 0; i < entities.Count; i++)
         {
             var instance = entities[i];
-            var (minCell, maxCell) = Entity.GetMinMaxCell(instance.Position, instance.Size);
+            var (minCell, maxCell) = Entity.GetMinMaxCell(instance.Position.ToVec2(), instance.Size);
             for (var y = minCell.Y; y <= maxCell.Y; y++)
             {
                 for (var x = minCell.X; x <= maxCell.X; x++)

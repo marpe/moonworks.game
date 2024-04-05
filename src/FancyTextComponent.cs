@@ -253,8 +253,8 @@ public class FancyTextComponent
 
                 var finalColors = GetColors(part, Alpha, color);
 
-                var partPos = -origin + shakeOffset + waveOffset + partOffset;
-                var partOrigin = charSize / 2;
+                var partPos = -origin + shakeOffset + waveOffset + partOffset.ToVec2();
+                var partOrigin = charSize.ToVec2() / 2;
                 var finalPos = partOrigin + position + Vector2.Transform(partPos * Scale, rotation);
 
                 renderer.DrawBMText(fontType, part.Character, new Vector2((int)finalPos.X, (int)finalPos.Y), partOrigin, Scale * part.Scale,
@@ -303,7 +303,7 @@ public class FancyTextComponent
             var s = 0.01f;
 
             var position = new Vector2(part.Offset.X, part.Offset.Y) + Vector2.One * Shared.Game.Time.TotalElapsedTime * 0.025f;
-            var t = Matrix3x2.CreateTranslation(-Vector2.Half) *
+            var t = Matrix3x2.CreateTranslation(-Vector2.One * 0.5f) *
                     Matrix3x2.CreateScale(Vector2.One * s) *
                     Matrix3x2.CreateRotation(45 * MathF.Deg2Rad) *
                     Matrix3x2.CreateTranslation(position);

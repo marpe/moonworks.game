@@ -394,7 +394,7 @@ public class EntityDef
     public uint TileId;
     public double PivotX;
     public double PivotY;
-    [JsonIgnore] public Vector2 Pivot => new Vector2(PivotX, PivotY);
+    [JsonIgnore] public Vector2 Pivot => new Vector2((float)PivotX, (float)PivotY);
     public List<string> Tags = new();
 
     public EntityDef()

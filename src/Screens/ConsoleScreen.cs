@@ -144,7 +144,7 @@ public class ConsoleScreen
         }
 
         var height = windowHeight * ConsoleSettings.RelativeConsoleHeight;
-        var t = Easing.Function.Get(_easeFunc).Invoke(0f, 1f, _transitionPercentage, 1f);
+        var t = Easing.Function.Get(_easeFunc).Invoke(_transitionPercentage); // .Invoke(0f, 1f, _transitionPercentage, 1f);
         _backgroundRect.Y = (int)(-height + height * t);
         _backgroundRect.Height = (int)height;
         _backgroundRect.Width = (int)windowWidth;
@@ -432,8 +432,8 @@ public class ConsoleScreen
         );
 
         var marginColor = Color.Orange * 0.5f;
-        renderer.DrawLine(textArea.Min(), textArea.BottomLeft(), marginColor, 1f);
-        renderer.DrawLine(textArea.TopRight(), textArea.Max(), marginColor, 1f);
+        renderer.DrawLine(textArea.Min().ToVec2(), textArea.BottomLeft().ToVec2(), marginColor, 1f);
+        renderer.DrawLine(textArea.TopRight().ToVec2(), textArea.Max().ToVec2(), marginColor, 1f);
 
         var hasScrolled = TwConsole.ScreenBuffer.DisplayY != TwConsole.ScreenBuffer.CursorY;
         if (hasScrolled)
@@ -555,7 +555,7 @@ public class ConsoleScreen
                 var y = i / _inputField.MaxWidth;
 
                 _tmpArr[0] = _inputField.Buffer[i];
-                DrawText(renderer, _tmpArr, inputPosition + new Vector2(x, y) * CharSize, 0, inputColor);
+                DrawText(renderer, _tmpArr, inputPosition + new Vector2(x, y) * CharSize.ToVec2(), 0, inputColor);
             }
 
             // Draw caret

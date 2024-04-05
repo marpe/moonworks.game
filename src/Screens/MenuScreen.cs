@@ -294,7 +294,7 @@ public abstract class MenuScreen
             if (Debug)
             {
                 var bounds = menuItem.Bounds;
-                renderer.DrawRectOutline(bounds.Min(), bounds.Max(), MenuItemDebugOutlineColor, 2f);
+                renderer.DrawRectOutline(bounds.Min().ToVec2(), bounds.Max().ToVec2(), MenuItemDebugOutlineColor, 2f);
             }
         }
     }

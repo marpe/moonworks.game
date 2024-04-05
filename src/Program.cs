@@ -51,7 +51,7 @@ internal class Program
             );
         }
 
-        gameMain.MainWindow.IsMaximized = true;
+        // gameMain.MainWindow.IsMaximized = true;
 
         gameMain.Run();
     }

@@ -34,8 +34,8 @@ public class LevelRenderer
 
     private static void DrawLayer(Renderer renderer, World world, RootJson root, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
-        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
-        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
+        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos.ToVec2());
+        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos.ToVec2());
 
         var tileSetDef = world.GetTileSetDef(layerDef.TileSetDefId);
         var texturePath = world.GetTileSetTexture(tileSetDef.Uid);
@@ -67,13 +67,13 @@ public class LevelRenderer
             DrawLayerDebug(renderer, world, level, layer, layerDef, (Rectangle)cameraBounds);
         }
 
-        renderer.DrawRectOutline(level.WorldPos, level.WorldPos + level.Size.ToVec2(), Color.Blue, 1.0f);
+        renderer.DrawRectOutline(level.WorldPos.ToVec2(), level.WorldPos.ToVec2() + level.Size.ToVec2(), Color.Blue, 1.0f);
     }
 
     private static void DrawLayerDebug(Renderer renderer, World world, Level level, LayerInstance layer, LayerDef layerDef, Rectangle cameraBounds)
     {
-        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos);
-        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos);
+        var boundsMin = Entity.ToCell(cameraBounds.MinVec() - level.WorldPos.ToVec2());
+        var boundsMax = Entity.ToCell(cameraBounds.MaxVec() - level.WorldPos.ToVec2());
 
         var cols = level.Width / layerDef.GridSize;
         var rows = level.Height / layerDef.GridSize;
@@ -101,7 +101,7 @@ public class LevelRenderer
 
                 var enumValue = (LayerDefs.Tiles)value;
                 var gridSize = layerDef.GridSize;
-                var min = level.WorldPos + new Vector2(x, y) * gridSize;
+                var min = level.WorldPos.ToVec2() + new Vector2(x, y) * gridSize;
                 var max = min + new Vector2(gridSize, gridSize);
 
                 var color = LayerDefs.TilesColors[enumValue];

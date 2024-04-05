@@ -32,7 +32,7 @@ public class Entity
     public Vector2 Center
     {
         get => new(Position.Current.X + 0.5f * Size.X, Position.Current.Y + 0.5f * Size.Y);
-        set => Position.Current = value - HalfSize;
+        set => Position.Current = value - HalfSize.ToVec2();
     }
 
     private World? _world;
@@ -156,13 +156,13 @@ public class Entity
     public virtual void DrawDebug(Renderer renderer, bool drawCoords, double alpha)
     {
         var cell = Cell;
-        var cellInScreen = cell * World.DefaultGridSize;
+        var cellInScreen = cell.ToVec2() * World.DefaultGridSize;
         renderer.DrawPoint(Position.Current, SmartColor, 2);
 
         // draw small crosshair
         {
-            renderer.DrawRect(new Rectangle(cellInScreen.X - 1, cellInScreen.Y, 3, 1), SmartColor);
-            renderer.DrawRect(new Rectangle(cellInScreen.X, cellInScreen.Y - 1, 1, 3), SmartColor);
+            renderer.DrawRect(new Rectangle((int)(cellInScreen.X - 1), (int)cellInScreen.Y, 3, 1), SmartColor);
+            renderer.DrawRect(new Rectangle((int)cellInScreen.X, (int)(cellInScreen.Y - 1), 1, 3), SmartColor);
         }
 
         renderer.DrawRectOutline(Bounds.Min, Bounds.Max, SmartColor, 1.0f);

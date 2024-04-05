@@ -57,7 +57,7 @@ public static class RectangleExt
 
     public static Rectangle FromPositionAndSize(Vector2 position, Vector2 size)
     {
-        return FromPositionAndSize(position, size, Vector2.Half);
+        return FromPositionAndSize(position, size, Vector2.One * 0.5f);
     }
 
     public static Rectangle FromPositionAndSize(Vector2 position, Vector2 size, Vector2 origin)

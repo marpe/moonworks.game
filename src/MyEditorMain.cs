@@ -494,13 +494,15 @@ public unsafe class MyEditorMain : MyGameMain
                     filename = Path.Combine(dirname, "screenshot_" + (i++) + ".png");
                 }
 
+                // TODO: Fix saving of screenshots
+                /*
                 Texture.SavePNG(
                     filename,
                     (int)RenderTargets.CompositeRender.Width,
                     (int)RenderTargets.CompositeRender.Height,
                     RenderTargets.CompositeRender.Target.Format,
                     _screenshotPixels
-                );
+                );*/
                 Logs.LogInfo($"Screenshot saved to {filename}");
             });
 

@@ -162,7 +162,7 @@ public class DrawComponent
             if (spriteOrigin == Vector2.Zero)
                 spriteOrigin = Parent.Pivot * World.DefaultGridSize;
 
-            var origin = Parent.Size * Parent.Pivot;
+            var origin = Parent.Size.ToVec2() * Parent.Pivot;
 
             var squash = Matrix3x2.CreateTranslation(-origin) *
                          Matrix3x2.CreateScale(EnableSquash ? Squash : Vector2.One) *
